@@ -86,7 +86,9 @@
     "openLabs": "Abrir Labs",
     "exploreLabs": "Explorar Labs",
     "earlyAccessOn": "Acceso anticipado: disponible para ti",
-    "earlyAccessAgencyOnly": "Exclusivo de Agency"
+    "earlyAccessAgencyOnly": "Exclusivo de Agency",
+    "checkoutUnavailable": "El pago de este plan no está disponible ahora mismo. No se cambió nada. Inténtalo más tarde o contacta con soporte.",
+    "invoiceDownloadFailed": "No se pudo descargar la factura. Inténtalo de nuevo."
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "Zona de peligro",
     "irreversibleActions": "Acciones irreversibles",
     "deleteAccountWarning": "Elimina tu cuenta: elimina permanentemente todos tus videos, publicaciones, cuentas conectadas y suscripciones. Esto no se puede deshacer.",
-    "deleteAccount": "Eliminar cuenta"
+    "deleteAccount": "Eliminar cuenta",
+    "loadFailedSaveBlocked": "No pudimos cargar tu configuración guardada. Guardar está desactivado hasta que se cargue, para que tu configuración real no se reemplace por los valores predeterminados.",
+    "saveBlockedNotLoaded": "Tu configuración guardada aún no se ha cargado. Inténtalo de nuevo antes de guardar.",
+    "apiKeySavedPlaceholder": "Clave guardada que termina en {{last4}}. Ingresa una nueva para reemplazarla"
   },
   "common": {
     "save": "Guardar",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "Analizando…",
     "predictiveTelemetry": "Pronóstico de rendimiento",
     "predictiveTelemetryDesc": "Pronósticos de cómo podría rendir tu contenido.",
-    "scanningTrajectories": "Escaneando trayectorias..."
+    "scanningTrajectories": "Escaneando trayectorias...",
+    "errorStatusCheckFailed": "No se pudo comprobar el estado de tu contenido. Puede que aún termine; búscalo en tu biblioteca.",
+    "errorGenerationTimeout": "Esto está tardando más de lo normal. Puede que aún termine; búscalo en tu biblioteca en unos minutos.",
+    "errorTemplateLoadFailed": "No se pudo cargar esa plantilla. Aun así puedes escribir la tuya."
   },
   "forgePage": {
     "documentTitle": "Creador de contenido de IA | Hacer clic",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "Abrir",
     "resonanceAck": "Marcar como leída",
     "confirmPurgeSignal": "¿Eliminar esta notificación?",
-    "purgeSignal": "Eliminar"
+    "purgeSignal": "Eliminar",
+    "category_task": "Tareas",
+    "category_project": "Proyectos",
+    "category_content": "Contenido",
+    "category_approval": "Aprobaciones",
+    "category_mention": "Menciones",
+    "category_system": "Sistema",
+    "category_workflow": "Flujos de trabajo",
+    "category_publishing": "Publicación",
+    "category_recurring": "Publicaciones recurrentes",
+    "category_brief": "Resumen diario",
+    "bulkReadFailed": "No se pudieron marcar como leídas {{failed}} de {{total}}.",
+    "bulkDeleteFailed": "No se pudieron eliminar {{failed}} de {{total}}.",
+    "loadFailed": "No se pudieron cargar las notificaciones."
   },
   "onboardingPage": {
     "loading": "Cargando",
@@ -1721,7 +1742,8 @@
     "statusPublished": "Publicado",
     "statusFailed": "Fallido",
     "statusDraft": "Borrador",
-    "viewSequenceDetails": "Ver detalles"
+    "viewSequenceDetails": "Ver detalles",
+    "toastScheduledPartial": "Se programaron {{ok}} de {{total}} publicaciones. El resto falló: {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "No se pudieron cargar los guiones",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "¿Eliminar guion?",
     "purgeNodeBody": "El guion se eliminará de forma permanente. Esta acción no se puede deshacer.",
     "abortPurge": "Cancelar",
-    "commitPurge": "Eliminar"
+    "commitPurge": "Eliminar",
+    "toastTemplateLoadFailed": "No se pudo cargar esa plantilla."
   },
   "searchPage": {
     "reconFailed": "La búsqueda tardó demasiado. Inténtalo de nuevo.",
@@ -1929,7 +1952,8 @@
     "transmitting": "Refrescante…",
     "transmit": "TRANSMITIR",
     "terminateProtocol": "Eliminar tarea",
-    "secureAndLeave": "SEGURO_&_DEJAR"
+    "secureAndLeave": "SEGURO_&_DEJAR",
+    "toastLoadFailed": "No se pudieron cargar tus tareas."
   },
   "templatesPage": {
     "toastSyncFailed": "No se pudieron cargar las plantillas",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "Progreso",
     "anomalyIntercepted": "Error",
     "procTime": "Tiempo de procesamiento: {{time}}",
-    "retryThreshold": "Reintento n.º {{attempts}}"
+    "retryThreshold": "Reintento n.º {{attempts}}",
+    "cancelled": "Trabajo cancelado.",
+    "cancelFailed": "No se pudo cancelar este trabajo."
   },
   "strategistPage": {
     "clickIntelligence": "Haga clic en inteligencia",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "Atractivo emocional",
     "dominantLabel": "Dominante: {{emotion}}",
     "missingTriggerLabel": "Falta el disparador de alto impacto:",
-    "optimalPostingWindows": "Ventanas de publicación óptimas"
+    "optimalPostingWindows": "Ventanas de publicación óptimas",
+    "syncFailed": "No se pudo sincronizar. Inténtalo de nuevo.",
+    "playbookFallbackNote": "La IA no está disponible ahora mismo, así que estas ideas vienen de la guía del nicho.",
+    "trendHooks": "Ganchos para probar",
+    "trendFormats": "Formatos",
+    "trendSounds": "Ideas de sonido",
+    "trendHashtags": "Hashtags",
+    "momentumRising": "En ascenso",
+    "momentumSteady": "Estable",
+    "momentumPeaking": "En su punto máximo",
+    "nicheVoice": "Tono",
+    "pitfalls": "Evitar",
+    "retentionFloorLabel": "Retén al menos al {{value}} % de los espectadores",
+    "retentionTargetLabel": "Apunta al {{value}} %",
+    "retentionGuidelineNote": "Una referencia para {{platform}} basada en su ventana del gancho, no una medición de tus publicaciones.",
+    "sequenceStepLabel": "Paso {{step}} · {{timing}}",
+    "campaignVideoLabel": "Video {{num}} · {{mark}}",
+    "angleNumber": "Enfoque {{num}}",
+    "promptGroupSave": "Conseguir guardados",
+    "promptGroupComment": "Conseguir comentarios",
+    "promptGroupShare": "Conseguir compartidos",
+    "promptGroupDm": "Conseguir DMs",
+    "promptGroupFollow": "Conseguir seguidores",
+    "benchIdealLength": "Duración ideal",
+    "benchHookWindow": "Ventana del gancho",
+    "benchCaptionStyle": "Estilo de texto",
+    "benchHashtags": "Hashtags",
+    "benchSoundStrategy": "Sonido",
+    "benchAvoid": "Evitar en {{platform}}",
+    "verdictPublishReady": "Listo para publicar",
+    "verdictNeedsTightening": "Hay que ajustarlo",
+    "verdictRewrite": "Hay que reescribirlo",
+    "wordCountLabel": "{{count}} palabras",
+    "scoreRuleBasedNote": "Revisión basada en reglas según la guía de {{platform}}.",
+    "notesTitle": "Qué cambiar"
   },
   "teamDetailPage": {
     "toastLoadFailed": "No se pudo cargar el equipo",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "Configuración de solo lectura",
     "latticeMetadata": "Detalles del equipo",
     "clusterId": "ID del equipo",
-    "ownerHash": "Propietario"
+    "ownerHash": "Propietario",
+    "inviteEmailFailed": "La invitación está lista, pero no se pudo enviar el correo. Copia el enlace y envíalo tú.",
+    "inviteLinkLabel": "Enlace de invitación",
+    "copyInviteLink": "Copiar enlace",
+    "inviteLinkCopied": "✓ Enlace copiado"
   },
   "teamsPage": {
     "toastLoadFailed": "No se pudieron cargar los equipos",
@@ -4195,7 +4259,9 @@
     "postComment": "Publicar comentario",
     "resolved": "Resuelto",
     "helpful": "Útil",
-    "empty": "Aún no hay comentarios. ¡Sé el primero en comentar!"
+    "empty": "Aún no hay comentarios. ¡Sé el primero en comentar!",
+    "needsTeam": "Los comentarios se comparten con un equipo.",
+    "needsTeamCta": "Crear o unirse a un equipo"
   },
   "complianceDashboard": {
     "outOf100": "/ 100",
@@ -4281,7 +4347,19 @@
     "colChecked": "Comprobado",
     "untitled": "(Intitulado)",
     "noHistory": "Aún no hay historial de cumplimiento.",
-    "noHistoryHint": "Ejecute una verificación de su contenido para comenzar a rastrear."
+    "noHistoryHint": "Ejecute una verificación de su contenido para comenzar a rastrear.",
+    "rulesLoadFailed": "No se pudieron cargar tus reglas.",
+    "ruleSaveFailed": "No se pudo guardar la regla.",
+    "ruleDeleteFailed": "No se pudo eliminar la regla.",
+    "policiesLoadFailed": "No se pudieron cargar las políticas de las plataformas.",
+    "historyLoadFailed": "No se pudo cargar el historial de cumplimiento.",
+    "totalRulesStat": "Reglas",
+    "activeRulesStat": "Reglas activas",
+    "totalTriggersStat": "Veces activadas",
+    "colRule": "Regla",
+    "colTriggers": "Activaciones",
+    "colLastTriggered": "Última activación",
+    "noTriggersYet": "Ninguna de tus reglas se ha activado todavía."
   },
   "confirmDialog": {
     "confirm": "Confirmar",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}}% óptimo",
     "dayAtTime": "{{day}} a las {{time}}",
     "schedule": "Cronograma",
-    "viewAllOptimalTimes": "Ver todos los tiempos óptimos →"
+    "viewAllOptimalTimes": "Ver todos los tiempos óptimos →",
+    "loadFailed": "No se pudieron cargar los horarios de publicación."
   },
   "contentSuggestions": {
     "loadFailed": "No se pudieron cargar sugerencias",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "Describe qué hace este flujo de trabajo...",
     "trigger": "Desencadenar",
     "enableWorkflow": "Habilitar flujo de trabajo",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "notExecuted": "El flujo de trabajo no se ejecutó: {{reason}}",
+    "someActionsFailed": "El flujo de trabajo se ejecutó, pero estos pasos fallaron: {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "Gobernanza empresarial",
@@ -5710,7 +5791,9 @@
     "retrying": "Reintentando...",
     "retryJob": "Reintentar trabajo",
     "close": "Cerca",
-    "jobNotFound": "Trabajo no encontrado"
+    "jobNotFound": "Trabajo no encontrado",
+    "retryQueued": "Trabajo en cola para ejecutarse de nuevo.",
+    "retryFailed": "No se pudo reintentar este trabajo."
   },
   "jobProgressViewer": {
     "loadingJobStatus": "Cargando estado del trabajo...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "Próximos pasos sugeridos",
     "nextStep": "Siguiente paso",
-    "continueSetup": "Continuar con la configuración"
+    "continueSetup": "Continuar con la configuración",
+    "workflowFailed": "No se pudo ejecutar ese flujo de trabajo."
   },
   "multiClientRollupDashboard": {
     "title": "Panel de resumen multicliente",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "Generador de ideas",
     "autoFoley": "Foley automático",
     "brollAgent": "Agente B-Roll",
-    "captionSwarm": "Subtítulos con IA"
+    "captionSwarm": "Subtítulos con IA",
+    "noTrendsYet": "No hay tendencias en vivo ahora mismo. Inténtalo más tarde.",
+    "kindSound": "Sonido",
+    "kindHashtag": "Hashtag",
+    "kindTopic": "Tema"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "Publique su próximo video esta noche a las 10 p.m.: los jueves por la noche están un 23% por encima del promedio en viralidad de formato corto.",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "Marcar todo como leído",
     "loading": "Cargando...",
     "noNotifications": "Sin notificaciones",
-    "view": "Vista"
+    "view": "Vista",
+    "markReadFailed": "No se pudo marcar como leída. Inténtalo de nuevo."
   },
   "notificationPreferences": {
     "title": "Preferencias de notificación",
@@ -6309,7 +6398,9 @@
     "push": "Empujar",
     "pushDescription": "Notificaciones push del navegador",
     "saving": "Ahorro...",
-    "savePreferences": "Guardar preferencias"
+    "savePreferences": "Guardar preferencias",
+    "loadFailed": "No pudimos cargar tus preferencias de notificación. Guardar está desactivado hasta que se carguen.",
+    "saveFailed": "No se pudieron guardar tus preferencias de notificación. Inténtalo de nuevo."
   },
   "offlineIndicator": {
     "backOnline": "De nuevo en línea",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ Consejo profesional:",
     "allSet": "¡Estás listo!",
     "clickTunedFor": "HAGA CLIC está sintonizado para",
-    "makeFirstVideoViral": "Haz que tu primer vídeo se vuelva viral."
+    "makeFirstVideoViral": "Haz que tu primer vídeo se vuelva viral.",
+    "syncFailed": "No se pudieron guardar tus respuestas en tu cuenta. Siguen aplicándose en este dispositivo."
   },
   "oneClickPublish": {
     "salvageLowCtr": "Tasa de clics inicial baja en TikTok. Considera probar otra versión.",
@@ -6477,7 +6569,9 @@
     "variantB": "Variante B",
     "ignore": "Ignorar",
     "swapToVariantB": "Cambiar a la variante B",
-    "swapVariantB": "Intercambiar variante B"
+    "swapVariantB": "Intercambiar variante B",
+    "someFailed": "No publicado en: {{platforms}}",
+    "allFailed": "No se pudo publicar en: {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "Cargando {{alt}}",
@@ -6688,7 +6782,10 @@
     "reach": "Alcanzar",
     "virality": "Viralidad",
     "keyInsights": "Información clave",
-    "recommendations": "Recomendaciones"
+    "recommendations": "Recomendaciones",
+    "ruleBasedNote": "Puntuación basada en reglas según longitud, hashtags, emojis y preguntas. No es una previsión de vistas ni de alcance.",
+    "predictFailed": "No se pudo puntuar este contenido. Inténtalo de nuevo.",
+    "needsText": "Agrega algo de texto para puntuarlo."
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "Análisis sincronizados correctamente",
@@ -6711,7 +6808,9 @@
     "expectedViews": "Vistas esperadas",
     "engagementRate": "Tasa de participación",
     "positiveFactors": "Factores Positivos",
-    "recommendations": "Recomendaciones"
+    "recommendations": "Recomendaciones",
+    "predictFailed": "No se pudo predecir el rendimiento. Inténtalo de nuevo.",
+    "ruleBasedNote": "La IA no está disponible, así que esta es una puntuación basada en reglas según longitud, hashtags, preguntas y llamadas a la acción. No se muestra una estimación de vistas."
   },
   "phase8Dashboard": {
     "howItWorks": "Cómo funciona:",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "Analizado por IA // A partir del rendimiento de su publicación publicada",
     "coldStartHint": "Publica publicaciones para que Click pueda analizar qué funciona",
     "noInsightsYet": "Aún no hay información",
-    "impact": "Impacto: {{impact}}"
+    "impact": "Impacto: {{impact}}",
+    "loadFailed": "No se pudieron cargar los insights."
   },
   "scalingHub": {
     "neuralThroughput": "Rendimiento",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "Ritmo de ejemplo: {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "Se recortó el cuadro a {{ratio}}. Exporta con un preajuste {{ratio}} para conservar el cuadro completo.",
+    "reframeNotApplied": "No se pudo aplicar el recorte {{ratio}} porque aún no se conoce el tamaño de cuadro del video. Inténtalo de nuevo cuando haya cargado.",
+    "resultAddedToTimeline": "{{tool}}: se agregó la nueva versión a tu línea de tiempo.",
+    "resultReady": "{{tool}} terminó. Abre el resultado abajo.",
+    "noOutput": "{{tool}} terminó, pero no devolvió ningún archivo. Inténtalo de nuevo.",
+    "speedRampMarker": "Velocidad {{speed}}x",
+    "speedRampMarked": "Se agregaron {{count}} marcadores de rampa de velocidad a tu línea de tiempo. Ajusta la velocidad en cada marcador para aplicarlas.",
+    "speedRampPlanOnly": "Se planificaron {{count}} rampas de velocidad. No se han aplicado a tu video.",
+    "dubAddedToTimeline": "Se agregó la pista de voz en español a tu línea de tiempo. Silencia el audio original para escuchar solo el doblaje.",
+    "openResult": "Abrir resultado",
     "reframeStarting": "Reencuadrando tu video alrededor del sujeto principal…",
     "reframeDone": "Reencuadre automático terminado.",
     "reframeFailed": "El reencuadre automático no funcionó. Inténtalo de nuevo.",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "Cerrar atajos",
     "searchTools": "Buscar herramientas"
   },
+  "aiTimelineChat": {
+    "title": "Asistente de línea de tiempo",
+    "greeting": "Dime qué cambiar. Puedo aplicar una gradación de color, agregar un título, cambiar la velocidad de reproducción o abrir Exportar para elegir otro formato de cuadro.",
+    "placeholder": "p. ej. Make it cinematic",
+    "send": "Enviar mensaje",
+    "appliedGrade": "Se aplicó la gradación de color {{grade}}.",
+    "gradeNotApplied": "No pude aplicar la gradación de color {{grade}}.",
+    "addedText": "Se agregó el título «{{text}}» en el cabezal de reproducción.",
+    "textNeedsQuotes": "Pon el título entre comillas, por ejemplo: add title \"Big news\".",
+    "speedSet": "Velocidad de reproducción ajustada a {{speed}}x.",
+    "aspectOpenExport": "El formato del cuadro se elige al exportar. Abrí Exportar: elige ahí un preajuste {{ratio}}.",
+    "aspectNoExport": "El formato del cuadro se elige al exportar. Abre Exportar y elige un preajuste {{ratio}}.",
+    "notUnderstood": "No cambié nada. Puedo aplicar una gradación de color (por ejemplo cinematic, warm o vintage), agregar un título entre comillas, cambiar la velocidad (por ejemplo 1.5x o slow motion) o abrir Exportar para un cuadro 9:16 o 1:1.",
+    "badgeGrade": "Gradación de color: {{grade}}",
+    "badgeText": "Título agregado",
+    "badgeSpeed": "Velocidad {{speed}}x",
+    "badgeExport": "Exportar abierto"
+  },
+  "repurposeView": {
+    "renderFailed": "Falló la versión {{format}}: {{error}}",
+    "renderFailedGeneric": "Falló el renderizado.",
+    "renderTimedOut": "El renderizado está tardando demasiado y dejó de responder. Inténtalo de nuevo."
+  },
+  "musicPicker": {
+    "generationFailed": "Falló la generación de música con IA. Inténtalo de nuevo.",
+    "generationFailedReason": "Falló la generación de música con IA: {{error}}",
+    "generationNoTrack": "La pista se generó, pero no se pudo guardar. Vuelve a generarla."
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "No se pudo eliminar este look. Sigue guardado."
+  },
   "editorHUD": {
+    "saveFailedRetry": "Aún no se guardó en tu cuenta. Haz clic para reintentar.",
     "section": {
       "edit": "Edición",
       "color": "Color",
@@ -8846,6 +8988,7 @@
     "export": "Exportar"
   },
   "quickActionsBar": {
+    "trendsList": "Tendencia en TikTok ahora: {{list}}",
     "variantsNeedBase": "Añade primero un subtítulo o un hook para que el generador de variantes tenga con qué trabajar.",
     "noVariants": "No se generaron variantes: prueba con un hook base más largo.",
     "variantsGenerated": "Se generaron {{count}} variantes: abre el selector A/B para verlas.",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "Análisis de la competencia"
     },
     "err": {
+      "analyzeFailed": "No se pudo analizar este video. Inténtalo de nuevo en un momento.",
       "videoNotFound": "No se encontraron los datos del video en la respuesta",
       "loadFailed": "No se pudo cargar el video. Inténtalo de nuevo.",
       "missingSource": "A este video le falta el archivo original. Vuelve a subirlo e inténtalo de nuevo.",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "Aquí verás la retención, la fuerza del hook y el análisis del ritmo cuando tu video se haya analizado.",
       "transcript": "Transcripción"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "Procesando tu invitación…",
+    "body": "Te estamos agregando al equipo. Solo tardará un momento.",
+    "noToken": "A este enlace de invitación le falta el código. Pide una nueva invitación.",
+    "joined": "✓ Te uniste al equipo",
+    "failed": "No se pudo aceptar la invitación"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "Demasiadas solicitudes de restablecimiento. Espera unos minutos y vuelve a intentarlo.",
+    "sendFailed": "No pudimos enviar el enlace de restablecimiento ahora mismo. Revisa tu conexión e inténtalo de nuevo."
+  },
+  "governanceDashboard": {
+    "loadFailed": "No se pudo cargar el registro de auditoría."
+  },
+  "clickIsland": {
+    "chatEmpty": "No pude generar una respuesta ahora mismo. Prueba a reformularlo o envíalo de nuevo.",
+    "chatRateLimited": "Alcanzaste el límite de IA por ahora. Vuelve a intentarlo en un rato.",
+    "chatUnavailable": "La IA no pudo responder ahora mismo. Inténtalo de nuevo en un momento.",
+    "chatOffline": "No puedo conectar con el asistente ahora mismo. Revisa tu conexión e inténtalo de nuevo."
+  },
+  "postStatus": {
+    "scheduled": "Programado",
+    "awaitingApproval": "Pendiente de aprobación",
+    "publishing": "Publicando",
+    "published": "Publicado",
+    "retrying": "Reintentando",
+    "failed": "Fallido",
+    "cancelled": "Cancelado"
+  },
+  "creatorTools": {
+    "noResults": "Esta vez no hay resultados. Inténtalo de nuevo o reformúlalo.",
+    "variantNotAdapted": "La IA no pudo adaptar esta variante. Este es tu texto original."
+  },
+  "contentRecycling": {
+    "loadFailed": "No se pudieron cargar los datos de reciclaje.",
+    "planCreated": "Plan de reciclaje creado.",
+    "createFailed": "No se pudo crear el plan de reciclaje.",
+    "toggleFailed": "No se pudo actualizar el plan de reciclaje."
   }
 }

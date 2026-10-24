@@ -86,7 +86,9 @@
     "openLabs": "Labsを開く",
     "exploreLabs": "Labsを見る",
     "earlyAccessOn": "アーリーアクセス：ご利用いただけます",
-    "earlyAccessAgencyOnly": "Agency限定"
+    "earlyAccessAgencyOnly": "Agency限定",
+    "checkoutUnavailable": "このプランの購入手続きは現在ご利用いただけません。変更は行われていません。しばらくしてから再度お試しいただくか、サポートにお問い合わせください。",
+    "invoiceDownloadFailed": "請求書をダウンロードできませんでした。もう一度お試しください。"
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "危険地帯",
     "irreversibleActions": "取り消しできないアクション",
     "deleteAccountWarning": "アカウントを削除する: すべてのビデオ、投稿、接続されているアカウント、サブスクリプションを完全に削除します。これを元に戻すことはできません。",
-    "deleteAccount": "アカウントを削除する"
+    "deleteAccount": "アカウントを削除する",
+    "loadFailedSaveBlocked": "保存済みの設定を読み込めませんでした。実際の設定が初期値で上書きされないよう、読み込まれるまで保存はオフになっています。",
+    "saveBlockedNotLoaded": "保存済みの設定がまだ読み込まれていません。保存する前にもう一度お試しください。",
+    "apiKeySavedPlaceholder": "末尾 {{last4}} のキーを保存済み。置き換えるには新しいキーを入力してください"
   },
   "common": {
     "save": "保存",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "分析中…",
     "predictiveTelemetry": "パフォーマンス予測",
     "predictiveTelemetryDesc": "コンテンツのパフォーマンス予測です。",
-    "scanningTrajectories": "軌跡をスキャン中..."
+    "scanningTrajectories": "軌跡をスキャン中...",
+    "errorStatusCheckFailed": "コンテンツの状況を確認できませんでした。まだ完了する可能性があるので、ライブラリを確認してください。",
+    "errorGenerationTimeout": "通常より時間がかかっています。まだ完了する可能性があるので、数分後にライブラリを確認してください。",
+    "errorTemplateLoadFailed": "そのテンプレートを読み込めませんでした。自分で書くこともできます。"
   },
   "forgePage": {
     "documentTitle": "AIコンテンツクリエイター |クリック",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "開く",
     "resonanceAck": "既読にする",
     "confirmPurgeSignal": "この通知を削除しますか?",
-    "purgeSignal": "削除"
+    "purgeSignal": "削除",
+    "category_task": "タスク",
+    "category_project": "プロジェクト",
+    "category_content": "コンテンツ",
+    "category_approval": "承認",
+    "category_mention": "メンション",
+    "category_system": "システム",
+    "category_workflow": "ワークフロー",
+    "category_publishing": "公開",
+    "category_recurring": "定期投稿",
+    "category_brief": "デイリーブリーフ",
+    "bulkReadFailed": "{{total}} 件中 {{failed}} 件を既読にできませんでした。",
+    "bulkDeleteFailed": "{{total}} 件中 {{failed}} 件を削除できませんでした。",
+    "loadFailed": "通知を読み込めませんでした。"
   },
   "onboardingPage": {
     "loading": "読み込み中",
@@ -1721,7 +1742,8 @@
     "statusPublished": "発行済み",
     "statusFailed": "失敗した",
     "statusDraft": "下書き",
-    "viewSequenceDetails": "詳細を見る"
+    "viewSequenceDetails": "詳細を見る",
+    "toastScheduledPartial": "{{total}} 件中 {{ok}} 件の投稿を予約しました。残りは失敗しました: {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "台本を読み込めませんでした",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "台本を削除しますか?",
     "purgeNodeBody": "この台本は完全に削除されます。この操作は元に戻せません。",
     "abortPurge": "キャンセル",
-    "commitPurge": "削除"
+    "commitPurge": "削除",
+    "toastTemplateLoadFailed": "そのテンプレートを読み込めませんでした。"
   },
   "searchPage": {
     "reconFailed": "検索がタイムアウトしました。もう一度お試しください。",
@@ -1929,7 +1952,8 @@
     "transmitting": "爽やか…",
     "transmit": "送信",
     "terminateProtocol": "タスクを削除",
-    "secureAndLeave": "SECURE_&_LEAVE"
+    "secureAndLeave": "SECURE_&_LEAVE",
+    "toastLoadFailed": "タスクを読み込めませんでした。"
   },
   "templatesPage": {
     "toastSyncFailed": "テンプレートを読み込めませんでした",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "進行状況",
     "anomalyIntercepted": "エラー",
     "procTime": "処理時間: {{time}}",
-    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}"
+    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}",
+    "cancelled": "ジョブをキャンセルしました。",
+    "cancelFailed": "このジョブをキャンセルできませんでした。"
   },
   "strategistPage": {
     "clickIntelligence": "クリックインテリジェンス",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "感情への訴求力",
     "dominantLabel": "ドミナント: {{emotion}}",
     "missingTriggerLabel": "インパクトの強いトリガーがありません:",
-    "optimalPostingWindows": "最適な投稿ウィンドウ"
+    "optimalPostingWindows": "最適な投稿ウィンドウ",
+    "syncFailed": "同期できませんでした。もう一度お試しください。",
+    "playbookFallbackNote": "現在 AI を利用できないため、これらのアイデアはニッチ別のプレイブックから提案しています。",
+    "trendHooks": "試したいフック",
+    "trendFormats": "フォーマット",
+    "trendSounds": "サウンドのアイデア",
+    "trendHashtags": "ハッシュタグ",
+    "momentumRising": "上昇中",
+    "momentumSteady": "安定",
+    "momentumPeaking": "ピーク",
+    "nicheVoice": "トーン",
+    "pitfalls": "避けること",
+    "retentionFloorLabel": "視聴者の {{value}}% 以上を維持",
+    "retentionTargetLabel": "目標 {{value}}%",
+    "retentionGuidelineNote": "{{platform}} のフックの時間枠に基づく目安であり、あなたの投稿の測定値ではありません。",
+    "sequenceStepLabel": "ステップ {{step}} · {{timing}}",
+    "campaignVideoLabel": "動画 {{num}} · {{mark}}",
+    "angleNumber": "切り口 {{num}}",
+    "promptGroupSave": "保存を増やす",
+    "promptGroupComment": "コメントを増やす",
+    "promptGroupShare": "シェアを増やす",
+    "promptGroupDm": "DM を増やす",
+    "promptGroupFollow": "フォロワーを増やす",
+    "benchIdealLength": "理想の長さ",
+    "benchHookWindow": "フックの時間枠",
+    "benchCaptionStyle": "キャプションのスタイル",
+    "benchHashtags": "ハッシュタグ",
+    "benchSoundStrategy": "サウンド",
+    "benchAvoid": "{{platform}} で避けること",
+    "verdictPublishReady": "公開できます",
+    "verdictNeedsTightening": "引き締めが必要",
+    "verdictRewrite": "書き直しが必要",
+    "wordCountLabel": "{{count}} 語",
+    "scoreRuleBasedNote": "{{platform}} のプレイブックに基づくルールベースのチェックです。",
+    "notesTitle": "変更すべき点"
   },
   "teamDetailPage": {
     "toastLoadFailed": "チームを読み込めませんでした",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "閲覧のみの設定",
     "latticeMetadata": "チームの詳細",
     "clusterId": "チームID",
-    "ownerHash": "オーナー"
+    "ownerHash": "オーナー",
+    "inviteEmailFailed": "招待の準備はできましたが、メールを送信できませんでした。リンクをコピーしてご自身で送ってください。",
+    "inviteLinkLabel": "招待リンク",
+    "copyInviteLink": "リンクをコピー",
+    "inviteLinkCopied": "✓ リンクをコピーしました"
   },
   "teamsPage": {
     "toastLoadFailed": "チームのロードに失敗しました",
@@ -4195,7 +4259,9 @@
     "postComment": "コメントを投稿する",
     "resolved": "解決済み",
     "helpful": "役立つ",
-    "empty": "コメントはまだありません。最初にコメントしてみませんか!"
+    "empty": "コメントはまだありません。最初にコメントしてみませんか!",
+    "needsTeam": "コメントはチームで共有されます。",
+    "needsTeamCta": "チームを作成または参加"
   },
   "complianceDashboard": {
     "outOf100": "/ 100",
@@ -4281,7 +4347,19 @@
     "colChecked": "チェック済み",
     "untitled": "(無題)",
     "noHistory": "コンプライアンス履歴はまだありません。",
-    "noHistoryHint": "コンテンツのチェックを実行して追跡を開始します。"
+    "noHistoryHint": "コンテンツのチェックを実行して追跡を開始します。",
+    "rulesLoadFailed": "ルールを読み込めませんでした。",
+    "ruleSaveFailed": "ルールを保存できませんでした。",
+    "ruleDeleteFailed": "ルールを削除できませんでした。",
+    "policiesLoadFailed": "プラットフォームのポリシーを読み込めませんでした。",
+    "historyLoadFailed": "コンプライアンス履歴を読み込めませんでした。",
+    "totalRulesStat": "ルール",
+    "activeRulesStat": "有効なルール",
+    "totalTriggersStat": "検出回数",
+    "colRule": "ルール",
+    "colTriggers": "検出回数",
+    "colLastTriggered": "最終検出",
+    "noTriggersYet": "まだどのルールも検出されていません。"
   },
   "confirmDialog": {
     "confirm": "確認する",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}}% 最適",
     "dayAtTime": "{{time}}で{{day}}",
     "schedule": "スケジュール",
-    "viewAllOptimalTimes": "すべての最適な時間を表示 →"
+    "viewAllOptimalTimes": "すべての最適な時間を表示 →",
+    "loadFailed": "投稿時間を読み込めませんでした。"
   },
   "contentSuggestions": {
     "loadFailed": "提案を読み込めませんでした",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "このワークフローが何を行うのか説明してください...",
     "trigger": "トリガー",
     "enableWorkflow": "ワークフローを有効にする",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "notExecuted": "ワークフローは実行されませんでした: {{reason}}",
+    "someActionsFailed": "ワークフローは実行されましたが、次のステップが失敗しました: {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "エンタープライズガバナンス",
@@ -5710,7 +5791,9 @@
     "retrying": "再試行中...",
     "retryJob": "ジョブの再試行",
     "close": "近い",
-    "jobNotFound": "ジョブが見つかりません"
+    "jobNotFound": "ジョブが見つかりません",
+    "retryQueued": "ジョブを再実行のキューに追加しました。",
+    "retryFailed": "このジョブを再試行できませんでした。"
   },
   "jobProgressViewer": {
     "loadingJobStatus": "ジョブ ステータスを読み込んでいます...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "推奨される次のステップ",
     "nextStep": "次のステップ",
-    "continueSetup": "セットアップを続行する"
+    "continueSetup": "セットアップを続行する",
+    "workflowFailed": "そのワークフローを実行できませんでした。"
   },
   "multiClientRollupDashboard": {
     "title": "マルチクライアントロールアップダッシュボード",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "アイデアジェネレーター",
     "autoFoley": "オートフォーリー",
     "brollAgent": "Bロールエージェント",
-    "captionSwarm": "AI字幕"
+    "captionSwarm": "AI字幕",
+    "noTrendsYet": "現在ライブのトレンドはありません。後でもう一度お試しください。",
+    "kindSound": "サウンド",
+    "kindHashtag": "ハッシュタグ",
+    "kindTopic": "トピック"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "今夜の午後 10 時に次の動画を投稿してください。木曜の夜は、短編のバイラリティが平均より 23% 高くなります。",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "すべて既読としてマークする",
     "loading": "読み込み中...",
     "noNotifications": "通知はありません",
-    "view": "ビュー"
+    "view": "ビュー",
+    "markReadFailed": "既読にできませんでした。もう一度お試しください。"
   },
   "notificationPreferences": {
     "title": "通知設定",
@@ -6309,7 +6398,9 @@
     "push": "押す",
     "pushDescription": "ブラウザのプッシュ通知",
     "saving": "保存中...",
-    "savePreferences": "設定の保存"
+    "savePreferences": "設定の保存",
+    "loadFailed": "通知設定を読み込めませんでした。読み込まれるまで保存はできません。",
+    "saveFailed": "通知設定を保存できませんでした。もう一度お試しください。"
   },
   "offlineIndicator": {
     "backOnline": "オンラインに戻る",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ プロのヒント:",
     "allSet": "準備は完了です!",
     "clickTunedFor": "CLICK は次のように調整されています",
-    "makeFirstVideoViral": "初めてのビデオをバイラルに広めましょう。"
+    "makeFirstVideoViral": "初めてのビデオをバイラルに広めましょう。",
+    "syncFailed": "回答をアカウントに保存できませんでした。このデバイスでは引き続き反映されます。"
   },
   "oneClickPublish": {
     "salvageLowCtr": "TikTokでの初期クリック率が低めです。別のバージョンを試してみましょう。",
@@ -6477,7 +6569,9 @@
     "variantB": "バリアント B",
     "ignore": "無視する",
     "swapToVariantB": "バリアント B に交換",
-    "swapVariantB": "スワップバリアントB"
+    "swapVariantB": "スワップバリアントB",
+    "someFailed": "未公開: {{platforms}}",
+    "allFailed": "公開できませんでした: {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "読み込み中 {{alt}}",
@@ -6688,7 +6782,10 @@
     "reach": "到着",
     "virality": "バイラリティ",
     "keyInsights": "重要な洞察",
-    "recommendations": "推奨事項"
+    "recommendations": "推奨事項",
+    "ruleBasedNote": "長さ、ハッシュタグ、絵文字、質問に基づくルールベースのスコアです。再生数やリーチの予測ではありません。",
+    "predictFailed": "このコンテンツをスコア化できませんでした。もう一度お試しください。",
+    "needsText": "スコアを出すにはテキストを追加してください。"
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "分析は正常に同期されました",
@@ -6711,7 +6808,9 @@
     "expectedViews": "期待される視聴数",
     "engagementRate": "エンゲージメント率",
     "positiveFactors": "プラスの要因",
-    "recommendations": "推奨事項"
+    "recommendations": "推奨事項",
+    "predictFailed": "パフォーマンスを予測できませんでした。もう一度お試しください。",
+    "ruleBasedNote": "AI を利用できないため、長さ、ハッシュタグ、質問、行動喚起に基づくルールベースのスコアを表示しています。再生数の見込みは表示されません。"
   },
   "phase8Dashboard": {
     "howItWorks": "仕組み:",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "AI 分析 // 公開後のパフォーマンスから",
     "coldStartHint": "投稿を公開して、Click が何が機能するかを分析できるようにする",
     "noInsightsYet": "まだ洞察はありません",
-    "impact": "影響: {{impact}}"
+    "impact": "影響: {{impact}}",
+    "loadFailed": "インサイトを読み込めませんでした。"
   },
   "scalingHub": {
     "neuralThroughput": "スループット",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "テンポの例: {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "画面を {{ratio}} にクロップしました。画面全体を残すには {{ratio}} のプリセットでエクスポートしてください。",
+    "reframeNotApplied": "動画のフレームサイズがまだわからないため、{{ratio}} のクロップを適用できませんでした。読み込みが終わってからもう一度お試しください。",
+    "resultAddedToTimeline": "{{tool}}: 新しいバージョンをタイムラインに追加しました。",
+    "resultReady": "{{tool}} が完了しました。下の結果を開いてください。",
+    "noOutput": "{{tool}} は完了しましたが、ファイルが返されませんでした。もう一度お試しください。",
+    "speedRampMarker": "速度 {{speed}}x",
+    "speedRampMarked": "タイムラインにスピードランプのマーカーを {{count}} 個追加しました。各マーカーで速度を設定すると適用されます。",
+    "speedRampPlanOnly": "スピードランプを {{count}} 件計画しました。まだ動画には適用されていません。",
+    "dubAddedToTimeline": "スペイン語の音声トラックをタイムラインに追加しました。吹き替えだけを聞くには、元の音声をミュートしてください。",
+    "openResult": "結果を開く",
     "reframeStarting": "メインの被写体に合わせて動画をリフレームしています…",
     "reframeDone": "自動リフレームが完了しました。",
     "reframeFailed": "自動リフレームがうまくいきませんでした。もう一度お試しください。",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "ショートカットを閉じる",
     "searchTools": "ツールを検索"
   },
+  "aiTimelineChat": {
+    "title": "タイムラインアシスタント",
+    "greeting": "変更したい内容を教えてください。カラーグレードの適用、タイトルの追加、再生速度の変更、別の画面比率を選ぶためのエクスポート画面を開くことができます。",
+    "placeholder": "例: シネマティックにして",
+    "send": "メッセージを送信",
+    "appliedGrade": "{{grade}} のカラーグレードを適用しました。",
+    "gradeNotApplied": "{{grade}} のカラーグレードを適用できませんでした。",
+    "addedText": "再生ヘッドの位置にタイトル「{{text}}」を追加しました。",
+    "textNeedsQuotes": "タイトルは引用符で囲んでください。例: タイトルを追加 \"ビッグニュース\"",
+    "speedSet": "再生速度を {{speed}}x にしました。",
+    "aspectOpenExport": "画面の比率はエクスポート時に選びます。エクスポートを開いたので、{{ratio}} のプリセットを選んでください。",
+    "aspectNoExport": "画面の比率はエクスポート時に選びます。エクスポートを開いて {{ratio}} のプリセットを選んでください。",
+    "notUnderstood": "何も変更していません。カラーグレードの適用（例: シネマティック、暖色、ビンテージ）、引用符で囲んだタイトルの追加、速度の変更（例: 1.5x、スローモーション）、9:16 や 1:1 の画面にするためのエクスポート画面を開くことができます。",
+    "badgeGrade": "カラーグレード: {{grade}}",
+    "badgeText": "タイトルを追加しました",
+    "badgeSpeed": "速度 {{speed}}x",
+    "badgeExport": "エクスポートを開きました"
+  },
+  "repurposeView": {
+    "renderFailed": "{{format}} バージョンの作成に失敗しました: {{error}}",
+    "renderFailedGeneric": "レンダリングに失敗しました。",
+    "renderTimedOut": "レンダリングに時間がかかりすぎており、進捗の報告が止まりました。もう一度お試しください。"
+  },
+  "musicPicker": {
+    "generationFailed": "AI による音楽の生成に失敗しました。もう一度お試しください。",
+    "generationFailedReason": "AI による音楽の生成に失敗しました: {{error}}",
+    "generationNoTrack": "トラックは生成されましたが、保存できませんでした。もう一度生成してください。"
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "このルックを削除できませんでした。保存されたままです。"
+  },
   "editorHUD": {
+    "saveFailedRetry": "まだアカウントに保存されていません。クリックして再試行してください。",
     "section": {
       "edit": "編集",
       "color": "カラー",
@@ -8846,6 +8988,7 @@
     "export": "書き出し"
   },
   "quickActionsBar": {
+    "trendsList": "TikTok で今トレンド中: {{list}}",
     "variantsNeedBase": "バリエーションを生成するには、先にキャプションかフックを追加してください。",
     "noVariants": "バリエーションが返されませんでした — もっと長いフックで試してください。",
     "variantsGenerated": "バリエーションを{{count}}件生成しました — A/B選択画面を開いてプレビューしてください。",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "競合インサイト"
     },
     "err": {
+      "analyzeFailed": "この動画を分析できませんでした。しばらくしてからもう一度お試しください。",
       "videoNotFound": "レスポンスに動画データが見つかりません",
       "loadFailed": "動画を読み込めませんでした。もう一度お試しください。",
       "missingSource": "この動画の元ファイルがありません。再アップロードしてもう一度お試しください。",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "動画の分析が終わると、視聴維持率・フックの強さ・テンポの分析がここに表示されます。",
       "transcript": "文字起こし"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "招待を処理しています…",
+    "body": "チームに追加しています。少々お待ちください。",
+    "noToken": "この招待リンクにはコードが含まれていません。新しい招待を依頼してください。",
+    "joined": "✓ チームに参加しました",
+    "failed": "招待を承認できませんでした"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "リセットのリクエストが多すぎます。数分待ってからもう一度お試しください。",
+    "sendFailed": "現在リセットリンクを送信できません。接続を確認して、もう一度お試しください。"
+  },
+  "governanceDashboard": {
+    "loadFailed": "監査ログを読み込めませんでした。"
+  },
+  "clickIsland": {
+    "chatEmpty": "今は回答を生成できませんでした。言い方を変えるか、もう一度送信してください。",
+    "chatRateLimited": "AI の利用上限に達しました。しばらくしてからもう一度お試しください。",
+    "chatUnavailable": "現在 AI が回答できません。しばらくしてからもう一度お試しください。",
+    "chatOffline": "現在アシスタントに接続できません。接続を確認して、もう一度お試しください。"
+  },
+  "postStatus": {
+    "scheduled": "予約済み",
+    "awaitingApproval": "承認待ち",
+    "publishing": "公開中",
+    "published": "公開済み",
+    "retrying": "再試行中",
+    "failed": "失敗",
+    "cancelled": "キャンセル済み"
+  },
+  "creatorTools": {
+    "noResults": "今回は結果がありませんでした。もう一度試すか、言い方を変えてください。",
+    "variantNotAdapted": "AI はこれを調整できませんでした。元のテキストを表示しています。"
+  },
+  "contentRecycling": {
+    "loadFailed": "再利用データを読み込めませんでした。",
+    "planCreated": "再利用プランを作成しました。",
+    "createFailed": "再利用プランを作成できませんでした。",
+    "toggleFailed": "再利用プランを更新できませんでした。"
   }
 }

@@ -86,7 +86,9 @@
     "openLabs": "Ouvrir Labs",
     "exploreLabs": "Découvrir Labs",
     "earlyAccessOn": "Accès anticipé : disponible pour vous",
-    "earlyAccessAgencyOnly": "Exclusif Agence"
+    "earlyAccessAgencyOnly": "Exclusif Agence",
+    "checkoutUnavailable": "Le paiement pour cette offre n'est pas disponible pour le moment. Rien n'a été modifié. Réessayez plus tard ou contactez le support.",
+    "invoiceDownloadFailed": "Impossible de télécharger la facture. Veuillez réessayer."
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "Zone dangereuse",
     "irreversibleActions": "Actions irréversibles",
     "deleteAccountWarning": "Supprimez votre compte : supprimez définitivement toutes vos vidéos, publications, comptes connectés et abonnement. Cela ne peut pas être annulé.",
-    "deleteAccount": "Supprimer le compte"
+    "deleteAccount": "Supprimer le compte",
+    "loadFailedSaveBlocked": "Nous n'avons pas pu charger vos paramètres enregistrés. L'enregistrement est désactivé jusqu'à leur chargement, pour que vos vrais paramètres ne soient pas remplacés par les valeurs par défaut.",
+    "saveBlockedNotLoaded": "Vos paramètres enregistrés ne sont pas encore chargés. Réessayez avant d'enregistrer.",
+    "apiKeySavedPlaceholder": "Clé enregistrée se terminant par {{last4}}. Saisissez une nouvelle clé pour la remplacer"
   },
   "common": {
     "save": "Enregistrer",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "Analyse…",
     "predictiveTelemetry": "Prévision de performance",
     "predictiveTelemetryDesc": "Prévisions des performances possibles de votre contenu.",
-    "scanningTrajectories": "Analyse des trajectoires..."
+    "scanningTrajectories": "Analyse des trajectoires...",
+    "errorStatusCheckFailed": "Impossible de vérifier l'état de votre contenu. Il peut encore aboutir : vérifiez votre bibliothèque.",
+    "errorGenerationTimeout": "Cela prend plus de temps que d'habitude. Le contenu peut encore aboutir : vérifiez votre bibliothèque dans quelques minutes.",
+    "errorTemplateLoadFailed": "Impossible de charger ce modèle. Vous pouvez toujours écrire le vôtre."
   },
   "forgePage": {
     "documentTitle": "Créateur de contenu IA | Cliquez",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "Ouvrir",
     "resonanceAck": "Marquer comme lu",
     "confirmPurgeSignal": "Supprimer cette notification ?",
-    "purgeSignal": "Supprimer"
+    "purgeSignal": "Supprimer",
+    "category_task": "Tâches",
+    "category_project": "Projets",
+    "category_content": "Contenu",
+    "category_approval": "Validations",
+    "category_mention": "Mentions",
+    "category_system": "Système",
+    "category_workflow": "Workflows",
+    "category_publishing": "Publication",
+    "category_recurring": "Posts récurrents",
+    "category_brief": "Brief du jour",
+    "bulkReadFailed": "{{failed}} sur {{total}} n'ont pas pu être marquées comme lues.",
+    "bulkDeleteFailed": "{{failed}} sur {{total}} n'ont pas pu être supprimées.",
+    "loadFailed": "Impossible de charger les notifications."
   },
   "onboardingPage": {
     "loading": "Chargement",
@@ -1721,7 +1742,8 @@
     "statusPublished": "Publié",
     "statusFailed": "Échoué",
     "statusDraft": "Brouillon",
-    "viewSequenceDetails": "Afficher les détails"
+    "viewSequenceDetails": "Afficher les détails",
+    "toastScheduledPartial": "{{ok}} posts sur {{total}} programmés. Les autres ont échoué : {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "Impossible de charger les scripts",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "Supprimer le script ?",
     "purgeNodeBody": "Le script sera supprimé définitivement. Cette action est irréversible.",
     "abortPurge": "Annuler",
-    "commitPurge": "Supprimer"
+    "commitPurge": "Supprimer",
+    "toastTemplateLoadFailed": "Impossible de charger ce modèle."
   },
   "searchPage": {
     "reconFailed": "La recherche a expiré. Réessayez.",
@@ -1929,7 +1952,8 @@
     "transmitting": "Rafraîchissant…",
     "transmit": "TRANSMETTRE",
     "terminateProtocol": "Supprimer la tâche",
-    "secureAndLeave": "SECURE_&_LEAVE"
+    "secureAndLeave": "SECURE_&_LEAVE",
+    "toastLoadFailed": "Impossible de charger vos tâches."
   },
   "templatesPage": {
     "toastSyncFailed": "Impossible de charger les modèles",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "Progression",
     "anomalyIntercepted": "Erreur",
     "procTime": "Temps de traitement : {{time}}",
-    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}"
+    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}",
+    "cancelled": "Traitement annulé.",
+    "cancelFailed": "Impossible d'annuler ce traitement."
   },
   "strategistPage": {
     "clickIntelligence": "Cliquez sur Intelligence",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "Impact émotionnel",
     "dominantLabel": "Dominante : {{emotion}}",
     "missingTriggerLabel": "Déclencheur à fort impact manquant :",
-    "optimalPostingWindows": "Fenêtres de publication optimales"
+    "optimalPostingWindows": "Fenêtres de publication optimales",
+    "syncFailed": "Échec de la synchronisation. Réessayez.",
+    "playbookFallbackNote": "L'IA est indisponible pour le moment, ces idées viennent donc du guide de la niche.",
+    "trendHooks": "Accroches à tester",
+    "trendFormats": "Formats",
+    "trendSounds": "Idées de sons",
+    "trendHashtags": "Hashtags",
+    "momentumRising": "En hausse",
+    "momentumSteady": "Stable",
+    "momentumPeaking": "Au sommet",
+    "nicheVoice": "Ton",
+    "pitfalls": "À éviter",
+    "retentionFloorLabel": "Garder au moins {{value}} % des spectateurs",
+    "retentionTargetLabel": "Viser {{value}} %",
+    "retentionGuidelineNote": "Un repère pour {{platform}} basé sur sa fenêtre d'accroche, pas une mesure de vos posts.",
+    "sequenceStepLabel": "Étape {{step}} · {{timing}}",
+    "campaignVideoLabel": "Vidéo {{num}} · {{mark}}",
+    "angleNumber": "Angle {{num}}",
+    "promptGroupSave": "Obtenir des enregistrements",
+    "promptGroupComment": "Obtenir des commentaires",
+    "promptGroupShare": "Obtenir des partages",
+    "promptGroupDm": "Obtenir des DM",
+    "promptGroupFollow": "Obtenir des abonnés",
+    "benchIdealLength": "Durée idéale",
+    "benchHookWindow": "Fenêtre d'accroche",
+    "benchCaptionStyle": "Style de légende",
+    "benchHashtags": "Hashtags",
+    "benchSoundStrategy": "Son",
+    "benchAvoid": "À éviter sur {{platform}}",
+    "verdictPublishReady": "Prêt à publier",
+    "verdictNeedsTightening": "À resserrer",
+    "verdictRewrite": "À réécrire",
+    "wordCountLabel": "{{count}} mots",
+    "scoreRuleBasedNote": "Vérification basée sur des règles, selon le guide {{platform}}.",
+    "notesTitle": "À modifier"
   },
   "teamDetailPage": {
     "toastLoadFailed": "Impossible de charger l'équipe",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "Paramètres en lecture seule",
     "latticeMetadata": "Détails de l'équipe",
     "clusterId": "ID de l'équipe",
-    "ownerHash": "Propriétaire"
+    "ownerHash": "Propriétaire",
+    "inviteEmailFailed": "L'invitation est prête, mais l'e-mail n'a pas pu être envoyé. Copiez le lien et envoyez-le vous-même.",
+    "inviteLinkLabel": "Lien d'invitation",
+    "copyInviteLink": "Copier le lien",
+    "inviteLinkCopied": "✓ Lien copié"
   },
   "teamsPage": {
     "toastLoadFailed": "Échec du chargement des équipes",
@@ -4195,7 +4259,9 @@
     "postComment": "Publier un commentaire",
     "resolved": "Résolu",
     "helpful": "Utile",
-    "empty": "Pas encore de commentaires. Soyez le premier à commenter !"
+    "empty": "Pas encore de commentaires. Soyez le premier à commenter !",
+    "needsTeam": "Les commentaires sont partagés avec une équipe.",
+    "needsTeamCta": "Créer ou rejoindre une équipe"
   },
   "complianceDashboard": {
     "outOf100": "/100",
@@ -4281,7 +4347,19 @@
     "colChecked": "À carreaux",
     "untitled": "(Sans titre)",
     "noHistory": "Aucun historique de conformité pour l'instant.",
-    "noHistoryHint": "Exécutez une vérification de votre contenu pour commencer le suivi."
+    "noHistoryHint": "Exécutez une vérification de votre contenu pour commencer le suivi.",
+    "rulesLoadFailed": "Impossible de charger vos règles.",
+    "ruleSaveFailed": "Impossible d'enregistrer la règle.",
+    "ruleDeleteFailed": "Impossible de supprimer la règle.",
+    "policiesLoadFailed": "Impossible de charger les règles des plateformes.",
+    "historyLoadFailed": "Impossible de charger l'historique de conformité.",
+    "totalRulesStat": "Règles",
+    "activeRulesStat": "Règles actives",
+    "totalTriggersStat": "Déclenchements",
+    "colRule": "Règle",
+    "colTriggers": "Déclenchements",
+    "colLastTriggered": "Dernier déclenchement",
+    "noTriggersYet": "Aucune de vos règles ne s'est encore déclenchée."
   },
   "confirmDialog": {
     "confirm": "Confirmer",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}} % optimal",
     "dayAtTime": "{{day}} à {{time}}",
     "schedule": "Calendrier",
-    "viewAllOptimalTimes": "Afficher tous les temps optimaux →"
+    "viewAllOptimalTimes": "Afficher tous les temps optimaux →",
+    "loadFailed": "Impossible de charger les horaires de publication."
   },
   "contentSuggestions": {
     "loadFailed": "Échec du chargement des suggestions",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "Décrivez ce que fait ce flux de travail...",
     "trigger": "Déclenchement",
     "enableWorkflow": "Activer le flux de travail",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "notExecuted": "Le workflow ne s'est pas exécuté : {{reason}}",
+    "someActionsFailed": "Le workflow s'est exécuté, mais ces étapes ont échoué : {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "Gouvernance d'entreprise",
@@ -5710,7 +5791,9 @@
     "retrying": "Nouvelle tentative...",
     "retryJob": "Réessayer le travail",
     "close": "Fermer",
-    "jobNotFound": "Emploi introuvable"
+    "jobNotFound": "Emploi introuvable",
+    "retryQueued": "Traitement remis en file d'attente.",
+    "retryFailed": "Impossible de relancer ce traitement."
   },
   "jobProgressViewer": {
     "loadingJobStatus": "Chargement du statut de la tâche...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "Prochaines étapes suggérées",
     "nextStep": "Étape suivante",
-    "continueSetup": "Continuer la configuration"
+    "continueSetup": "Continuer la configuration",
+    "workflowFailed": "Impossible d'exécuter ce workflow."
   },
   "multiClientRollupDashboard": {
     "title": "Tableau de bord de cumul multi-clients",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "Générateur d'idées",
     "autoFoley": "Foley automatique",
     "brollAgent": "Agent B-Roll",
-    "captionSwarm": "Légendes IA"
+    "captionSwarm": "Légendes IA",
+    "noTrendsYet": "Aucune tendance en direct pour le moment. Réessayez plus tard.",
+    "kindSound": "Son",
+    "kindHashtag": "Hashtag",
+    "kindTopic": "Sujet"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "Publiez votre prochaine vidéo ce soir à 22 heures – les jeudis soirs sont 23 % au-dessus de la moyenne pour la viralité courte.",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "Marquer tout comme lu",
     "loading": "Chargement...",
     "noNotifications": "Aucune notification",
-    "view": "Voir"
+    "view": "Voir",
+    "markReadFailed": "Impossible de marquer comme lu. Réessayez."
   },
   "notificationPreferences": {
     "title": "Préférences de notifications",
@@ -6309,7 +6398,9 @@
     "push": "Pousser",
     "pushDescription": "Notifications push du navigateur",
     "saving": "Économie...",
-    "savePreferences": "Enregistrer les préférences"
+    "savePreferences": "Enregistrer les préférences",
+    "loadFailed": "Nous n'avons pas pu charger vos préférences de notification. L'enregistrement est désactivé jusqu'à leur chargement.",
+    "saveFailed": "Impossible d'enregistrer vos préférences de notification. Veuillez réessayer."
   },
   "offlineIndicator": {
     "backOnline": "De retour en ligne",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ Conseil de pro :",
     "allSet": "Vous êtes prêt !",
     "clickTunedFor": "CLICK est réglé pour",
-    "makeFirstVideoViral": "Rendez votre première vidéo virale."
+    "makeFirstVideoViral": "Rendez votre première vidéo virale.",
+    "syncFailed": "Impossible d'enregistrer vos réponses sur votre compte. Elles restent appliquées sur cet appareil."
   },
   "oneClickPublish": {
     "salvageLowCtr": "Faible taux de clic au démarrage sur TikTok. Essayez peut-être une autre version.",
@@ -6477,7 +6569,9 @@
     "variantB": "Variante B",
     "ignore": "Ignorer",
     "swapToVariantB": "Passer à la variante B",
-    "swapVariantB": "Échanger la variante B"
+    "swapVariantB": "Échanger la variante B",
+    "someFailed": "Non publié sur : {{platforms}}",
+    "allFailed": "Échec de la publication sur : {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "Chargement {{alt}}",
@@ -6688,7 +6782,10 @@
     "reach": "Atteindre",
     "virality": "Viralité",
     "keyInsights": "Informations clés",
-    "recommendations": "Recommandations"
+    "recommendations": "Recommandations",
+    "ruleBasedNote": "Score basé sur des règles : longueur, hashtags, emojis et questions. Ce n'est pas une prévision des vues ou de la portée.",
+    "predictFailed": "Impossible d'évaluer ce contenu. Réessayez.",
+    "needsText": "Ajoutez du texte pour obtenir un score."
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "Les analyses ont bien été synchronisées",
@@ -6711,7 +6808,9 @@
     "expectedViews": "Vues attendues",
     "engagementRate": "Taux d'engagement",
     "positiveFactors": "Facteurs positifs",
-    "recommendations": "Recommandations"
+    "recommendations": "Recommandations",
+    "predictFailed": "Impossible de prédire les performances. Réessayez.",
+    "ruleBasedNote": "L'IA est indisponible : ce score est basé sur des règles (longueur, hashtags, questions et appels à l'action). Aucune estimation de vues n'est affichée."
   },
   "phase8Dashboard": {
     "howItWorks": "Comment ça marche :",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "AI-Analysed // À partir des performances de votre publication",
     "coldStartHint": "Publiez des articles pour que Click puisse analyser ce qui fonctionne",
     "noInsightsYet": "Aucune information pour l'instant",
-    "impact": "Impact : {{impact}}"
+    "impact": "Impact : {{impact}}",
+    "loadFailed": "Impossible de charger les insights."
   },
   "scalingHub": {
     "neuralThroughput": "Débit",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "Rythme d'exemple : {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "Image recadrée en {{ratio}}. Exportez avec un préréglage {{ratio}} pour garder l'image entière.",
+    "reframeNotApplied": "Impossible d'appliquer le recadrage {{ratio}} : la taille d'image de la vidéo n'est pas encore connue. Réessayez une fois la vidéo chargée.",
+    "resultAddedToTimeline": "{{tool}} : la nouvelle version a été ajoutée à votre timeline.",
+    "resultReady": "{{tool}} a terminé. Ouvrez le résultat ci-dessous.",
+    "noOutput": "{{tool}} a terminé mais n'a renvoyé aucun fichier. Veuillez réessayer.",
+    "speedRampMarker": "Vitesse {{speed}}x",
+    "speedRampMarked": "{{count}} marqueurs de rampe de vitesse ajoutés à votre timeline. Réglez la vitesse à chaque marqueur pour les appliquer.",
+    "speedRampPlanOnly": "{{count}} rampes de vitesse prévues. Elles n'ont pas été appliquées à votre vidéo.",
+    "dubAddedToTimeline": "Piste vocale espagnole ajoutée à votre timeline. Coupez le son d'origine pour n'entendre que le doublage.",
+    "openResult": "Ouvrir le résultat",
     "reframeStarting": "Recadrage de votre vidéo autour du sujet principal…",
     "reframeDone": "Recadrage auto terminé.",
     "reframeFailed": "Le recadrage auto n'a pas fonctionné. Veuillez réessayer.",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "Fermer les raccourcis",
     "searchTools": "Rechercher un outil"
   },
+  "aiTimelineChat": {
+    "title": "Assistant timeline",
+    "greeting": "Dites-moi quoi modifier. Je peux appliquer un étalonnage, ajouter un titre, changer la vitesse de lecture ou ouvrir Exporter pour choisir un autre format d'image.",
+    "placeholder": "ex. Make it cinematic",
+    "send": "Envoyer le message",
+    "appliedGrade": "Étalonnage {{grade}} appliqué.",
+    "gradeNotApplied": "Je n'ai pas pu appliquer l'étalonnage {{grade}}.",
+    "addedText": "Titre « {{text}} » ajouté à la tête de lecture.",
+    "textNeedsQuotes": "Mettez le titre entre guillemets, par exemple : add title \"Big news\".",
+    "speedSet": "Vitesse de lecture réglée sur {{speed}}x.",
+    "aspectOpenExport": "Le format d'image se choisit à l'export. J'ai ouvert Exporter : choisissez-y un préréglage {{ratio}}.",
+    "aspectNoExport": "Le format d'image se choisit à l'export. Ouvrez Exporter et choisissez un préréglage {{ratio}}.",
+    "notUnderstood": "Je n'ai rien modifié. Je peux appliquer un étalonnage (par exemple cinematic, warm ou vintage), ajouter un titre entre guillemets, changer la vitesse (par exemple 1.5x ou slow motion) ou ouvrir Exporter pour un format 9:16 ou 1:1.",
+    "badgeGrade": "Étalonnage : {{grade}}",
+    "badgeText": "Titre ajouté",
+    "badgeSpeed": "Vitesse {{speed}}x",
+    "badgeExport": "Export ouvert"
+  },
+  "repurposeView": {
+    "renderFailed": "La version {{format}} a échoué : {{error}}",
+    "renderFailedGeneric": "Le rendu a échoué.",
+    "renderTimedOut": "Le rendu prend trop de temps et ne donne plus de nouvelles. Veuillez réessayer."
+  },
+  "musicPicker": {
+    "generationFailed": "La génération de musique par IA a échoué. Veuillez réessayer.",
+    "generationFailedReason": "La génération de musique par IA a échoué : {{error}}",
+    "generationNoTrack": "Le morceau a été généré mais n'a pas pu être enregistré. Veuillez le générer à nouveau."
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "Impossible de supprimer ce look. Il est toujours enregistré."
+  },
   "editorHUD": {
+    "saveFailedRetry": "Pas encore enregistré sur votre compte. Cliquez pour réessayer.",
     "section": {
       "edit": "Montage",
       "color": "Couleur",
@@ -8846,6 +8988,7 @@
     "export": "Exporter"
   },
   "quickActionsBar": {
+    "trendsList": "En tendance sur TikTok : {{list}}",
     "variantsNeedBase": "Ajoutez d'abord un sous-titre ou une accroche pour que le générateur de variantes ait une base.",
     "noVariants": "Aucune variante renvoyée — essayez une accroche de base plus longue.",
     "variantsGenerated": "{{count}} variantes générées — ouvrez le sélecteur A/B pour les prévisualiser.",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "Analyse de la concurrence"
     },
     "err": {
+      "analyzeFailed": "Impossible d'analyser cette vidéo. Réessayez dans un instant.",
       "videoNotFound": "Données vidéo introuvables dans la réponse",
       "loadFailed": "Impossible de charger la vidéo. Veuillez réessayer.",
       "missingSource": "Le fichier source de cette vidéo est manquant. Importez-la à nouveau et réessayez.",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "Les analyses de rétention, de force de l'accroche et de rythme apparaîtront ici une fois votre vidéo analysée.",
       "transcript": "Transcription"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "Traitement de votre invitation…",
+    "body": "Nous vous ajoutons à l'équipe. Cela ne prend qu'un instant.",
+    "noToken": "Il manque le code dans ce lien d'invitation. Demandez une nouvelle invitation.",
+    "joined": "✓ Vous avez rejoint l'équipe",
+    "failed": "Impossible d'accepter l'invitation"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "Trop de demandes de réinitialisation. Patientez quelques minutes, puis réessayez.",
+    "sendFailed": "Nous n'avons pas pu envoyer le lien de réinitialisation pour le moment. Vérifiez votre connexion et réessayez."
+  },
+  "governanceDashboard": {
+    "loadFailed": "Impossible de charger le journal d'audit."
+  },
+  "clickIsland": {
+    "chatEmpty": "Je n'ai pas pu générer de réponse pour l'instant. Reformulez ou renvoyez votre message.",
+    "chatRateLimited": "Vous avez atteint la limite d'IA pour le moment. Réessayez un peu plus tard.",
+    "chatUnavailable": "L'IA n'a pas pu répondre pour le moment. Réessayez dans un instant.",
+    "chatOffline": "Je ne parviens pas à joindre l'assistant pour le moment. Vérifiez votre connexion et réessayez."
+  },
+  "postStatus": {
+    "scheduled": "Programmé",
+    "awaitingApproval": "En attente de validation",
+    "publishing": "Publication…",
+    "published": "Publié",
+    "retrying": "Nouvel essai",
+    "failed": "Échec",
+    "cancelled": "Annulé"
+  },
+  "creatorTools": {
+    "noResults": "Aucun résultat cette fois. Réessayez ou reformulez.",
+    "variantNotAdapted": "L'IA n'a pas pu adapter cette variante. Voici votre texte d'origine."
+  },
+  "contentRecycling": {
+    "loadFailed": "Impossible de charger les données de recyclage.",
+    "planCreated": "Plan de recyclage créé.",
+    "createFailed": "Impossible de créer le plan de recyclage.",
+    "toggleFailed": "Impossible de mettre à jour le plan de recyclage."
   }
 }

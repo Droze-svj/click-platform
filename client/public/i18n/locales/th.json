@@ -86,7 +86,9 @@
     "openLabs": "เปิด Labs",
     "exploreLabs": "สำรวจ Labs",
     "earlyAccessOn": "เข้าถึงก่อนใคร — ใช้ได้แล้ว",
-    "earlyAccessAgencyOnly": "เฉพาะ Agency"
+    "earlyAccessAgencyOnly": "เฉพาะ Agency",
+    "checkoutUnavailable": "ตอนนี้ยังชำระเงินสำหรับแพ็กเกจนี้ไม่ได้ ไม่มีอะไรถูกเปลี่ยนแปลง โปรดลองใหม่ภายหลังหรือติดต่อฝ่ายสนับสนุน",
+    "invoiceDownloadFailed": "ดาวน์โหลดใบแจ้งหนี้ไม่ได้ โปรดลองอีกครั้ง"
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "โซนอันตราย",
     "irreversibleActions": "การกระทำที่ย้อนกลับไม่ได้",
     "deleteAccountWarning": "ลบบัญชีของคุณ: ลบวิดีโอ โพสต์ บัญชีที่เชื่อมต่อ และการสมัครรับข้อมูลทั้งหมดของคุณอย่างถาวร สิ่งนี้ไม่สามารถยกเลิกได้",
-    "deleteAccount": "ลบบัญชี"
+    "deleteAccount": "ลบบัญชี",
+    "loadFailedSaveBlocked": "โหลดการตั้งค่าที่บันทึกไว้ไม่ได้ ปิดการบันทึกไว้จนกว่าจะโหลดเสร็จ เพื่อไม่ให้ค่าเริ่มต้นมาแทนที่การตั้งค่าจริงของคุณ",
+    "saveBlockedNotLoaded": "การตั้งค่าที่บันทึกไว้ยังโหลดไม่เสร็จ ลองอีกครั้งก่อนบันทึก",
+    "apiKeySavedPlaceholder": "คีย์ที่บันทึกไว้ลงท้ายด้วย {{last4}} ป้อนคีย์ใหม่เพื่อแทนที่"
   },
   "common": {
     "save": "บันทึก",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "กำลังวิเคราะห์…",
     "predictiveTelemetry": "การคาดการณ์ผลงาน",
     "predictiveTelemetryDesc": "การคาดการณ์ว่าคอนเทนต์ของคุณอาจทำผลงานได้อย่างไร",
-    "scanningTrajectories": "กำลังสแกนวิถี..."
+    "scanningTrajectories": "กำลังสแกนวิถี...",
+    "errorStatusCheckFailed": "ตรวจสอบสถานะคอนเทนต์ของคุณไม่ได้ อาจยังเสร็จได้ ลองดูในคลังของคุณ",
+    "errorGenerationTimeout": "ใช้เวลานานกว่าปกติ อาจยังเสร็จได้ ลองดูในคลังของคุณอีกไม่กี่นาที",
+    "errorTemplateLoadFailed": "โหลดเทมเพลตนั้นไม่ได้ คุณยังเขียนเองได้"
   },
   "forgePage": {
     "documentTitle": "ผู้สร้างเนื้อหา AI | คลิก",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "เปิด",
     "resonanceAck": "ทำเครื่องหมายว่าอ่านแล้ว",
     "confirmPurgeSignal": "ลบการแจ้งเตือนนี้?",
-    "purgeSignal": "ลบ"
+    "purgeSignal": "ลบ",
+    "category_task": "งาน",
+    "category_project": "โปรเจกต์",
+    "category_content": "คอนเทนต์",
+    "category_approval": "การอนุมัติ",
+    "category_mention": "การกล่าวถึง",
+    "category_system": "ระบบ",
+    "category_workflow": "เวิร์กโฟลว์",
+    "category_publishing": "การเผยแพร่",
+    "category_recurring": "โพสต์ที่เกิดซ้ำ",
+    "category_brief": "สรุปรายวัน",
+    "bulkReadFailed": "ทำเครื่องหมายว่าอ่านแล้วไม่ได้ {{failed}} จาก {{total}} รายการ",
+    "bulkDeleteFailed": "ลบไม่ได้ {{failed}} จาก {{total}} รายการ",
+    "loadFailed": "โหลดการแจ้งเตือนไม่ได้"
   },
   "onboardingPage": {
     "loading": "กำลังโหลด",
@@ -1721,7 +1742,8 @@
     "statusPublished": "ที่ตีพิมพ์",
     "statusFailed": "ล้มเหลว",
     "statusDraft": "ร่าง",
-    "viewSequenceDetails": "ดูรายละเอียด"
+    "viewSequenceDetails": "ดูรายละเอียด",
+    "toastScheduledPartial": "ตั้งเวลาโพสต์แล้ว {{ok}} จาก {{total}} โพสต์ ที่เหลือล้มเหลว: {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "โหลดสคริปต์ไม่ได้",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "ลบสคริปต์?",
     "purgeNodeBody": "สคริปต์นี้จะถูกลบถาวร การกระทำนี้ย้อนกลับไม่ได้",
     "abortPurge": "ยกเลิก",
-    "commitPurge": "ลบ"
+    "commitPurge": "ลบ",
+    "toastTemplateLoadFailed": "โหลดเทมเพลตนั้นไม่ได้"
   },
   "searchPage": {
     "reconFailed": "การค้นหาหมดเวลา ลองอีกครั้ง",
@@ -1929,7 +1952,8 @@
     "transmitting": "กำลังสดชื่น...",
     "transmit": "ส่ง",
     "terminateProtocol": "ลบงาน",
-    "secureAndLeave": "ปลอดภัย_&_ออก"
+    "secureAndLeave": "ปลอดภัย_&_ออก",
+    "toastLoadFailed": "โหลดงานของคุณไม่ได้"
   },
   "templatesPage": {
     "toastSyncFailed": "โหลดเทมเพลตไม่ได้",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "ความคืบหน้า",
     "anomalyIntercepted": "ข้อผิดพลาด",
     "procTime": "เวลาประมวลผล: {{time}}",
-    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}"
+    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}",
+    "cancelled": "ยกเลิกงานแล้ว",
+    "cancelFailed": "ยกเลิกงานนี้ไม่ได้"
   },
   "strategistPage": {
     "clickIntelligence": "คลิก ความฉลาด",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "ความดึงดูดทางอารมณ์",
     "dominantLabel": "เด่น: {{emotion}}",
     "missingTriggerLabel": "ไม่มีทริกเกอร์ที่มีผลกระทบสูง:",
-    "optimalPostingWindows": "หน้าต่างการโพสต์ที่เหมาะสมที่สุด"
+    "optimalPostingWindows": "หน้าต่างการโพสต์ที่เหมาะสมที่สุด",
+    "syncFailed": "ซิงค์ไม่ได้ ลองอีกครั้ง",
+    "playbookFallbackNote": "ตอนนี้ AI ใช้งานไม่ได้ ไอเดียเหล่านี้จึงมาจากเพลย์บุ๊กของนิช",
+    "trendHooks": "ฮุกที่น่าลอง",
+    "trendFormats": "รูปแบบ",
+    "trendSounds": "ไอเดียเสียง",
+    "trendHashtags": "แฮชแท็ก",
+    "momentumRising": "กำลังมาแรง",
+    "momentumSteady": "คงที่",
+    "momentumPeaking": "กำลังพีค",
+    "nicheVoice": "น้ำเสียง",
+    "pitfalls": "ควรเลี่ยง",
+    "retentionFloorLabel": "รักษาผู้ชมไว้อย่างน้อย {{value}}%",
+    "retentionTargetLabel": "ตั้งเป้า {{value}}%",
+    "retentionGuidelineNote": "แนวทางสำหรับ {{platform}} ตามช่วงเวลาฮุกของแพลตฟอร์ม ไม่ใช่ผลวัดจากโพสต์ของคุณ",
+    "sequenceStepLabel": "ขั้นที่ {{step}} · {{timing}}",
+    "campaignVideoLabel": "วิดีโอ {{num}} · {{mark}}",
+    "angleNumber": "มุมที่ {{num}}",
+    "promptGroupSave": "เพิ่มการบันทึก",
+    "promptGroupComment": "เพิ่มคอมเมนต์",
+    "promptGroupShare": "เพิ่มการแชร์",
+    "promptGroupDm": "เพิ่ม DM",
+    "promptGroupFollow": "เพิ่มผู้ติดตาม",
+    "benchIdealLength": "ความยาวที่เหมาะ",
+    "benchHookWindow": "ช่วงเวลาฮุก",
+    "benchCaptionStyle": "สไตล์แคปชัน",
+    "benchHashtags": "แฮชแท็ก",
+    "benchSoundStrategy": "เสียง",
+    "benchAvoid": "สิ่งที่ควรเลี่ยงบน {{platform}}",
+    "verdictPublishReady": "พร้อมเผยแพร่",
+    "verdictNeedsTightening": "ควรกระชับขึ้น",
+    "verdictRewrite": "ควรเขียนใหม่",
+    "wordCountLabel": "{{count}} คำ",
+    "scoreRuleBasedNote": "ตรวจตามกฎโดยอิงเพลย์บุ๊กของ {{platform}}",
+    "notesTitle": "สิ่งที่ควรเปลี่ยน"
   },
   "teamDetailPage": {
     "toastLoadFailed": "โหลดทีมไม่ได้",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "การตั้งค่าแบบอ่านอย่างเดียว",
     "latticeMetadata": "รายละเอียดทีม",
     "clusterId": "ID ทีม",
-    "ownerHash": "เจ้าของ"
+    "ownerHash": "เจ้าของ",
+    "inviteEmailFailed": "คำเชิญพร้อมแล้ว แต่ส่งอีเมลไม่ได้ คัดลอกลิงก์แล้วส่งเองได้เลย",
+    "inviteLinkLabel": "ลิงก์คำเชิญ",
+    "copyInviteLink": "คัดลอกลิงก์",
+    "inviteLinkCopied": "✓ คัดลอกลิงก์แล้ว"
   },
   "teamsPage": {
     "toastLoadFailed": "โหลดทีมไม่สำเร็จ",
@@ -4195,7 +4259,9 @@
     "postComment": "โพสต์ความคิดเห็น",
     "resolved": "แก้ไขแล้ว",
     "helpful": "มีประโยชน์",
-    "empty": "ยังไม่มีความคิดเห็น เป็นคนแรกที่แสดงความคิดเห็น!"
+    "empty": "ยังไม่มีความคิดเห็น เป็นคนแรกที่แสดงความคิดเห็น!",
+    "needsTeam": "ความคิดเห็นจะแชร์กับทีม",
+    "needsTeamCta": "สร้างหรือเข้าร่วมทีม"
   },
   "complianceDashboard": {
     "outOf100": "/100",
@@ -4281,7 +4347,19 @@
     "colChecked": "ตรวจสอบแล้ว",
     "untitled": "(ไม่มีชื่อ)",
     "noHistory": "ยังไม่มีประวัติการปฏิบัติตาม",
-    "noHistoryHint": "ดำเนินการตรวจสอบเนื้อหาของคุณเพื่อเริ่มการติดตาม"
+    "noHistoryHint": "ดำเนินการตรวจสอบเนื้อหาของคุณเพื่อเริ่มการติดตาม",
+    "rulesLoadFailed": "โหลดกฎของคุณไม่ได้",
+    "ruleSaveFailed": "บันทึกกฎไม่ได้",
+    "ruleDeleteFailed": "ลบกฎไม่ได้",
+    "policiesLoadFailed": "โหลดนโยบายของแพลตฟอร์มไม่ได้",
+    "historyLoadFailed": "โหลดประวัติการปฏิบัติตามข้อกำหนดไม่ได้",
+    "totalRulesStat": "กฎ",
+    "activeRulesStat": "กฎที่ใช้งานอยู่",
+    "totalTriggersStat": "จำนวนครั้งที่ทำงาน",
+    "colRule": "กฎ",
+    "colTriggers": "จำนวนครั้งที่ทำงาน",
+    "colLastTriggered": "ทำงานล่าสุด",
+    "noTriggersYet": "ยังไม่มีกฎของคุณข้อใดทำงาน"
   },
   "confirmDialog": {
     "confirm": "ยืนยัน",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}}% เหมาะสมที่สุด",
     "dayAtTime": "{{day}} ที่ {{time}}",
     "schedule": "กำหนดการ",
-    "viewAllOptimalTimes": "ดูเวลาที่เหมาะสมทั้งหมด →"
+    "viewAllOptimalTimes": "ดูเวลาที่เหมาะสมทั้งหมด →",
+    "loadFailed": "โหลดเวลาโพสต์ไม่ได้"
   },
   "contentSuggestions": {
     "loadFailed": "โหลดคำแนะนำไม่สำเร็จ",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "อธิบายว่าเวิร์กโฟลว์นี้ทำอะไร...",
     "trigger": "สิ่งกระตุ้น",
     "enableWorkflow": "เปิดใช้งานเวิร์กโฟลว์",
-    "cancel": "ยกเลิก"
+    "cancel": "ยกเลิก",
+    "notExecuted": "เวิร์กโฟลว์ไม่ได้ทำงาน: {{reason}}",
+    "someActionsFailed": "เวิร์กโฟลว์ทำงานแล้ว แต่ขั้นตอนเหล่านี้ล้มเหลว: {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "การกำกับดูแลกิจการ",
@@ -5710,7 +5791,9 @@
     "retrying": "กำลังลองอีกครั้ง...",
     "retryJob": "ลองงานอีกครั้ง",
     "close": "ปิด",
-    "jobNotFound": "ไม่พบงาน"
+    "jobNotFound": "ไม่พบงาน",
+    "retryQueued": "ใส่งานเข้าคิวให้ทำงานอีกครั้งแล้ว",
+    "retryFailed": "ลองงานนี้อีกครั้งไม่ได้"
   },
   "jobProgressViewer": {
     "loadingJobStatus": "กำลังโหลดสถานะงาน...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "แนะนำขั้นตอนต่อไป",
     "nextStep": "ขั้นตอนต่อไป",
-    "continueSetup": "ตั้งค่าต่อ"
+    "continueSetup": "ตั้งค่าต่อ",
+    "workflowFailed": "เรียกใช้เวิร์กโฟลว์นั้นไม่ได้"
   },
   "multiClientRollupDashboard": {
     "title": "แดชบอร์ด Rollup Multi-Client",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "ตัวสร้างไอเดีย",
     "autoFoley": "ออโต้-โฟลลี่ย์",
     "brollAgent": "ตัวแทนบีโรล",
-    "captionSwarm": "แคปชัน AI"
+    "captionSwarm": "แคปชัน AI",
+    "noTrendsYet": "ตอนนี้ไม่มีเทรนด์สด ลองใหม่ภายหลัง",
+    "kindSound": "เสียง",
+    "kindHashtag": "แฮชแท็ก",
+    "kindTopic": "หัวข้อ"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "โพสต์วิดีโอถัดไปของคุณคืนนี้เวลา 22.00 น. คืนวันพฤหัสบดีสูงกว่าค่าเฉลี่ย 23% สำหรับกระแสไวรัลแบบสั้น",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "ทำเครื่องหมายทั้งหมดว่าอ่านแล้ว",
     "loading": "กำลังโหลด...",
     "noNotifications": "ไม่มีการแจ้งเตือน",
-    "view": "ดู"
+    "view": "ดู",
+    "markReadFailed": "ทำเครื่องหมายว่าอ่านแล้วไม่ได้ ลองอีกครั้ง"
   },
   "notificationPreferences": {
     "title": "การตั้งค่าการแจ้งเตือน",
@@ -6309,7 +6398,9 @@
     "push": "ดัน",
     "pushDescription": "การแจ้งเตือนแบบพุชของเบราว์เซอร์",
     "saving": "ประหยัด...",
-    "savePreferences": "บันทึกการตั้งค่า"
+    "savePreferences": "บันทึกการตั้งค่า",
+    "loadFailed": "โหลดการตั้งค่าการแจ้งเตือนของคุณไม่ได้ ปิดการบันทึกไว้จนกว่าจะโหลดเสร็จ",
+    "saveFailed": "บันทึกการตั้งค่าการแจ้งเตือนของคุณไม่ได้ โปรดลองอีกครั้ง"
   },
   "offlineIndicator": {
     "backOnline": "กลับมาออนไลน์อีกครั้ง",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ เคล็ดลับสำหรับมือโปร:",
     "allSet": "คุณพร้อมแล้ว!",
     "clickTunedFor": "CLICK ได้รับการปรับให้เหมาะสม",
-    "makeFirstVideoViral": "ทำให้วิดีโอแรกของคุณกลายเป็นไวรัล"
+    "makeFirstVideoViral": "ทำให้วิดีโอแรกของคุณกลายเป็นไวรัล",
+    "syncFailed": "บันทึกคำตอบลงบัญชีของคุณไม่ได้ แต่ยังใช้งานได้บนอุปกรณ์นี้"
   },
   "oneClickPublish": {
     "salvageLowCtr": "อัตราการคลิกช่วงแรกบน TikTok ต่ำ ลองใช้เวอร์ชันอื่นดู",
@@ -6477,7 +6569,9 @@
     "variantB": "รุ่น B",
     "ignore": "ไม่สนใจ",
     "swapToVariantB": "สลับเป็นรุ่น B",
-    "swapVariantB": "สลับตัวแปร B"
+    "swapVariantB": "สลับตัวแปร B",
+    "someFailed": "ยังไม่ได้เผยแพร่ที่: {{platforms}}",
+    "allFailed": "เผยแพร่ไม่ได้ที่: {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "กำลังโหลด {{alt}}",
@@ -6688,7 +6782,10 @@
     "reach": "เข้าถึง",
     "virality": "ไวรัส",
     "keyInsights": "ข้อมูลเชิงลึกที่สำคัญ",
-    "recommendations": "ข้อแนะนำ"
+    "recommendations": "ข้อแนะนำ",
+    "ruleBasedNote": "คะแนนตามกฎจากความยาว แฮชแท็ก อีโมจิ และคำถาม ไม่ใช่การคาดการณ์ยอดวิวหรือการเข้าถึง",
+    "predictFailed": "ให้คะแนนคอนเทนต์นี้ไม่ได้ ลองอีกครั้ง",
+    "needsText": "เพิ่มข้อความเพื่อให้คะแนน"
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "ซิงค์ Analytics สำเร็จแล้ว",
@@ -6711,7 +6808,9 @@
     "expectedViews": "จำนวนการดูที่คาดหวัง",
     "engagementRate": "อัตราการมีส่วนร่วม",
     "positiveFactors": "ปัจจัยบวก",
-    "recommendations": "ข้อแนะนำ"
+    "recommendations": "ข้อแนะนำ",
+    "predictFailed": "คาดการณ์ประสิทธิภาพไม่ได้ ลองอีกครั้ง",
+    "ruleBasedNote": "AI ใช้งานไม่ได้ นี่จึงเป็นคะแนนตามกฎจากความยาว แฮชแท็ก คำถาม และคำกระตุ้นให้ลงมือทำ ไม่มีการแสดงยอดวิวโดยประมาณ"
   },
   "phase8Dashboard": {
     "howItWorks": "มันทำงานอย่างไร:",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "วิเคราะห์ด้วย AI // จากประสิทธิภาพโพสต์ที่คุณเผยแพร่",
     "coldStartHint": "เผยแพร่โพสต์เพื่อให้คลิกสามารถวิเคราะห์ได้ว่าอะไรได้ผล",
     "noInsightsYet": "ยังไม่มีข้อมูลเชิงลึก",
-    "impact": "ผลกระทบ: {{impact}}"
+    "impact": "ผลกระทบ: {{impact}}",
+    "loadFailed": "โหลดข้อมูลเชิงลึกไม่ได้"
   },
   "scalingHub": {
     "neuralThroughput": "ปริมาณงาน",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "จังหวะตัวอย่าง: {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "ครอปเฟรมเป็น {{ratio}} แล้ว ส่งออกด้วยพรีเซ็ต {{ratio}} เพื่อให้ได้เฟรมเต็ม",
+    "reframeNotApplied": "ใช้การครอป {{ratio}} ไม่ได้ เพราะยังไม่ทราบขนาดเฟรมของวิดีโอ ลองอีกครั้งเมื่อโหลดเสร็จ",
+    "resultAddedToTimeline": "{{tool}}: เพิ่มเวอร์ชันใหม่ลงในไทม์ไลน์แล้ว",
+    "resultReady": "{{tool}} เสร็จแล้ว เปิดผลลัพธ์ด้านล่าง",
+    "noOutput": "{{tool}} ทำงานเสร็จแต่ไม่ได้ส่งไฟล์กลับมา โปรดลองอีกครั้ง",
+    "speedRampMarker": "ความเร็ว {{speed}}x",
+    "speedRampMarked": "เพิ่มมาร์กเกอร์สปีดแรมป์ {{count}} จุดลงในไทม์ไลน์แล้ว ตั้งความเร็วที่แต่ละมาร์กเกอร์เพื่อใช้งาน",
+    "speedRampPlanOnly": "วางแผนสปีดแรมป์ไว้ {{count}} จุด ยังไม่ได้ใช้กับวิดีโอของคุณ",
+    "dubAddedToTimeline": "เพิ่มแทร็กเสียงภาษาสเปนลงในไทม์ไลน์แล้ว ปิดเสียงต้นฉบับเพื่อฟังเฉพาะเสียงพากย์",
+    "openResult": "เปิดผลลัพธ์",
     "reframeStarting": "กำลังจัดเฟรมวิดีโอให้ตัวแบบหลักอยู่กลางภาพ…",
     "reframeDone": "จัดเฟรมอัตโนมัติเสร็จแล้ว",
     "reframeFailed": "จัดเฟรมอัตโนมัติไม่สำเร็จ โปรดลองอีกครั้ง",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "ปิดแป้นพิมพ์ลัด",
     "searchTools": "ค้นหาเครื่องมือ"
   },
+  "aiTimelineChat": {
+    "title": "ผู้ช่วยไทม์ไลน์",
+    "greeting": "บอกได้เลยว่าอยากเปลี่ยนอะไร ฉันใส่เกรดสี เพิ่มชื่อเรื่อง เปลี่ยนความเร็วการเล่น หรือเปิดส่งออกเพื่อเลือกรูปทรงเฟรมอื่นได้",
+    "placeholder": "เช่น make it cinematic",
+    "send": "ส่งข้อความ",
+    "appliedGrade": "ใช้เกรดสี {{grade}} แล้ว",
+    "gradeNotApplied": "ใช้เกรดสี {{grade}} ไม่ได้",
+    "addedText": "เพิ่มชื่อเรื่อง \"{{text}}\" ที่ตำแหน่งเพลย์เฮดแล้ว",
+    "textNeedsQuotes": "ใส่ชื่อเรื่องในเครื่องหมายคำพูด เช่น: add title \"Big news\"",
+    "speedSet": "ตั้งความเร็วการเล่นเป็น {{speed}}x แล้ว",
+    "aspectOpenExport": "รูปทรงเฟรมจะเลือกตอนส่งออก เปิดหน้าส่งออกให้แล้ว: เลือกพรีเซ็ต {{ratio}} ที่นั่นได้เลย",
+    "aspectNoExport": "รูปทรงเฟรมจะเลือกตอนส่งออก เปิดส่งออกแล้วเลือกพรีเซ็ต {{ratio}}",
+    "notUnderstood": "ยังไม่ได้เปลี่ยนอะไรเลย ฉันใส่เกรดสีได้ (เช่น cinematic, warm หรือ vintage) เพิ่มชื่อเรื่องในเครื่องหมายคำพูด เปลี่ยนความเร็ว (เช่น 1.5x หรือ slow motion) หรือเปิดส่งออกสำหรับเฟรม 9:16 หรือ 1:1",
+    "badgeGrade": "เกรดสี: {{grade}}",
+    "badgeText": "เพิ่มชื่อเรื่องแล้ว",
+    "badgeSpeed": "ความเร็ว {{speed}}x",
+    "badgeExport": "เปิดส่งออกแล้ว"
+  },
+  "repurposeView": {
+    "renderFailed": "เวอร์ชัน {{format}} ล้มเหลว: {{error}}",
+    "renderFailedGeneric": "เรนเดอร์ไม่สำเร็จ",
+    "renderTimedOut": "การเรนเดอร์ใช้เวลานานเกินไปและหยุดส่งสถานะกลับมา โปรดลองอีกครั้ง"
+  },
+  "musicPicker": {
+    "generationFailed": "สร้างเพลงด้วย AI ไม่สำเร็จ โปรดลองอีกครั้ง",
+    "generationFailedReason": "สร้างเพลงด้วย AI ไม่สำเร็จ: {{error}}",
+    "generationNoTrack": "สร้างแทร็กแล้วแต่บันทึกไม่ได้ โปรดสร้างใหม่อีกครั้ง"
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "ลบลุคนี้ไม่ได้ ลุคยังบันทึกอยู่"
+  },
   "editorHUD": {
+    "saveFailedRetry": "ยังไม่ได้บันทึกลงบัญชีของคุณ คลิกเพื่อลองอีกครั้ง",
     "section": {
       "edit": "ตัดต่อ",
       "color": "สี",
@@ -8846,6 +8988,7 @@
     "export": "ส่งออก"
   },
   "quickActionsBar": {
+    "trendsList": "กำลังมาแรงบน TikTok ตอนนี้: {{list}}",
     "variantsNeedBase": "เพิ่มแคปชันหรือฮุกก่อน เพื่อให้ตัวสร้างตัวเลือกมีข้อมูลตั้งต้น",
     "noVariants": "ไม่มีตัวเลือกกลับมา — ลองใช้ฮุกตั้งต้นที่ยาวขึ้น",
     "variantsGenerated": "สร้างตัวเลือกแล้ว {{count}} แบบ — เปิดตัวเลือก A/B เพื่อดูตัวอย่าง",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "ข้อมูลเชิงลึกคู่แข่ง"
     },
     "err": {
+      "analyzeFailed": "วิเคราะห์วิดีโอนี้ไม่ได้ ลองอีกครั้งในอีกสักครู่",
       "videoNotFound": "ไม่พบข้อมูลวิดีโอในการตอบกลับ",
       "loadFailed": "โหลดวิดีโอไม่สำเร็จ โปรดลองอีกครั้ง",
       "missingSource": "วิดีโอนี้ไม่มีไฟล์ต้นฉบับ อัปโหลดใหม่แล้วลองอีกครั้ง",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "ข้อมูลการรักษายอดดู ความแรงของฮุก และจังหวะจะแสดงที่นี่เมื่อวิเคราะห์วิดีโอของคุณแล้ว",
       "transcript": "ทรานสคริปต์"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "กำลังดำเนินการคำเชิญของคุณ…",
+    "body": "กำลังเพิ่มคุณเข้าทีม ใช้เวลาเพียงครู่เดียว",
+    "noToken": "ลิงก์คำเชิญนี้ไม่มีรหัส ขอคำเชิญใหม่",
+    "joined": "✓ คุณเข้าร่วมทีมแล้ว",
+    "failed": "ตอบรับคำเชิญไม่ได้"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "ขอรีเซ็ตบ่อยเกินไป รอสักครู่แล้วลองอีกครั้ง",
+    "sendFailed": "ตอนนี้ส่งลิงก์รีเซ็ตไม่ได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง"
+  },
+  "governanceDashboard": {
+    "loadFailed": "โหลดบันทึกการตรวจสอบไม่ได้"
+  },
+  "clickIsland": {
+    "chatEmpty": "ตอนนี้สร้างคำตอบไม่ได้ ลองเรียบเรียงใหม่หรือส่งอีกครั้ง",
+    "chatRateLimited": "คุณใช้ AI ถึงขีดจำกัดแล้วในตอนนี้ ลองอีกครั้งในอีกสักพัก",
+    "chatUnavailable": "ตอนนี้ AI ตอบไม่ได้ ลองอีกครั้งในอีกสักครู่",
+    "chatOffline": "ตอนนี้ติดต่อผู้ช่วยไม่ได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง"
+  },
+  "postStatus": {
+    "scheduled": "ตั้งเวลาแล้ว",
+    "awaitingApproval": "รออนุมัติ",
+    "publishing": "กำลังเผยแพร่",
+    "published": "เผยแพร่แล้ว",
+    "retrying": "กำลังลองใหม่",
+    "failed": "ล้มเหลว",
+    "cancelled": "ยกเลิกแล้ว"
+  },
+  "creatorTools": {
+    "noResults": "รอบนี้ไม่มีผลลัพธ์ ลองอีกครั้งหรือเรียบเรียงใหม่",
+    "variantNotAdapted": "AI ปรับข้อความนี้ไม่ได้ นี่คือข้อความต้นฉบับของคุณ"
+  },
+  "contentRecycling": {
+    "loadFailed": "โหลดข้อมูลการรีไซเคิลไม่ได้",
+    "planCreated": "สร้างแผนรีไซเคิลแล้ว",
+    "createFailed": "สร้างแผนรีไซเคิลไม่ได้",
+    "toggleFailed": "อัปเดตแผนรีไซเคิลไม่ได้"
   }
 }

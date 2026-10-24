@@ -86,7 +86,9 @@
     "openLabs": "Labs खोलें",
     "exploreLabs": "Labs देखें",
     "earlyAccessOn": "अर्ली एक्सेस — आपके लिए उपलब्ध",
-    "earlyAccessAgencyOnly": "सिर्फ़ एजेंसी के लिए"
+    "earlyAccessAgencyOnly": "सिर्फ़ एजेंसी के लिए",
+    "checkoutUnavailable": "इस प्लान का चेकआउट अभी उपलब्ध नहीं है। कुछ भी नहीं बदला गया। बाद में फिर से कोशिश करें या सपोर्ट से संपर्क करें।",
+    "invoiceDownloadFailed": "इनवॉइस डाउनलोड नहीं हो सका। फिर से कोशिश करें।"
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "खतरा क्षेत्र",
     "irreversibleActions": "अपरिवर्तनीय क्रियाएं",
     "deleteAccountWarning": "अपना खाता हटाएं: अपने सभी वीडियो, पोस्ट, कनेक्टेड खाते और सदस्यता को स्थायी रूप से हटा दें। इसे असंपादित नहीं किया जा सकता है।",
-    "deleteAccount": "खाता हटा दो"
+    "deleteAccount": "खाता हटा दो",
+    "loadFailedSaveBlocked": "आपकी सेव की गई सेटिंग्स लोड नहीं हो सकीं। लोड होने तक सेव करना बंद है, ताकि आपकी असली सेटिंग्स डिफ़ॉल्ट से न बदलें।",
+    "saveBlockedNotLoaded": "आपकी सेव की गई सेटिंग्स अभी लोड नहीं हुई हैं। सेव करने से पहले फिर से कोशिश करें।",
+    "apiKeySavedPlaceholder": "सेव की गई की जिसके आखिर में {{last4}} है। बदलने के लिए नई की डालें"
   },
   "common": {
     "save": "सहेजें",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "विश्लेषण हो रहा है…",
     "predictiveTelemetry": "परफ़ॉर्मेंस का अनुमान",
     "predictiveTelemetryDesc": "आपका कंटेंट कैसा परफ़ॉर्म कर सकता है, इसके पूर्वानुमान।",
-    "scanningTrajectories": "प्रक्षेपपथ को स्कैन किया जा रहा है..."
+    "scanningTrajectories": "प्रक्षेपपथ को स्कैन किया जा रहा है...",
+    "errorStatusCheckFailed": "आपके कंटेंट का स्टेटस नहीं जाँचा जा सका। यह फिर भी पूरा हो सकता है; अपनी लाइब्रेरी में देखें।",
+    "errorGenerationTimeout": "इसमें सामान्य से ज़्यादा समय लग रहा है। यह फिर भी पूरा हो सकता है; कुछ मिनट बाद अपनी लाइब्रेरी में देखें।",
+    "errorTemplateLoadFailed": "वह टेम्पलेट लोड नहीं हो सका। आप फिर भी खुद लिख सकते हैं।"
   },
   "forgePage": {
     "documentTitle": "एआई कंटेंट क्रिएटर | क्लिक",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "खोलें",
     "resonanceAck": "पढ़ा हुआ मार्क करें",
     "confirmPurgeSignal": "यह नोटिफ़िकेशन डिलीट करें?",
-    "purgeSignal": "डिलीट करें"
+    "purgeSignal": "डिलीट करें",
+    "category_task": "टास्क",
+    "category_project": "प्रोजेक्ट",
+    "category_content": "कंटेंट",
+    "category_approval": "अप्रूवल",
+    "category_mention": "मेंशन",
+    "category_system": "सिस्टम",
+    "category_workflow": "वर्कफ़्लो",
+    "category_publishing": "पब्लिशिंग",
+    "category_recurring": "रिकरिंग पोस्ट",
+    "category_brief": "डेली ब्रीफ़",
+    "bulkReadFailed": "{{total}} में से {{failed}} पढ़े हुए मार्क नहीं हो सके।",
+    "bulkDeleteFailed": "{{total}} में से {{failed}} डिलीट नहीं हो सके।",
+    "loadFailed": "नोटिफ़िकेशन लोड नहीं हो सके।"
   },
   "onboardingPage": {
     "loading": "लोड हो रहा है",
@@ -1721,7 +1742,8 @@
     "statusPublished": "प्रकाशित",
     "statusFailed": "असफल",
     "statusDraft": "मसौदा",
-    "viewSequenceDetails": "विवरण देखें"
+    "viewSequenceDetails": "विवरण देखें",
+    "toastScheduledPartial": "{{total}} में से {{ok}} पोस्ट शेड्यूल हुईं। बाकी फ़ेल हो गईं: {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "स्क्रिप्ट लोड नहीं हो सकीं",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "स्क्रिप्ट डिलीट करें?",
     "purgeNodeBody": "यह स्क्रिप्ट हमेशा के लिए डिलीट हो जाएगी। यह वापस नहीं होगा।",
     "abortPurge": "रद्द करें",
-    "commitPurge": "डिलीट करें"
+    "commitPurge": "डिलीट करें",
+    "toastTemplateLoadFailed": "वह टेम्पलेट लोड नहीं हो सका।"
   },
   "searchPage": {
     "reconFailed": "खोज में बहुत समय लगा। फिर से कोशिश करें।",
@@ -1929,7 +1952,8 @@
     "transmitting": "ताज़ा...",
     "transmit": "संचारित",
     "terminateProtocol": "टास्क डिलीट करें",
-    "secureAndLeave": "सुरक्षित_&_छोड़ें"
+    "secureAndLeave": "सुरक्षित_&_छोड़ें",
+    "toastLoadFailed": "आपके टास्क लोड नहीं हो सके।"
   },
   "templatesPage": {
     "toastSyncFailed": "टेम्पलेट लोड नहीं हो सके",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "प्रगति",
     "anomalyIntercepted": "एरर",
     "procTime": "प्रोसेसिंग समय: {{time}}",
-    "retryThreshold": "पुनः प्रयास करें_THRESHOLD_CYCLE_0{{attempts}}"
+    "retryThreshold": "पुनः प्रयास करें_THRESHOLD_CYCLE_0{{attempts}}",
+    "cancelled": "जॉब रद्द कर दिया गया।",
+    "cancelFailed": "इस जॉब को रद्द नहीं किया जा सका।"
   },
   "strategistPage": {
     "clickIntelligence": "इंटेलिजेंस पर क्लिक करें",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "भावनात्मक असर",
     "dominantLabel": "प्रमुख: {{emotion}}",
     "missingTriggerLabel": "उच्च-प्रभाव ट्रिगर गुम:",
-    "optimalPostingWindows": "इष्टतम पोस्टिंग विंडोज़"
+    "optimalPostingWindows": "इष्टतम पोस्टिंग विंडोज़",
+    "syncFailed": "सिंक नहीं हो सका। फिर से कोशिश करें।",
+    "playbookFallbackNote": "AI अभी उपलब्ध नहीं है, इसलिए ये आइडिया निश प्लेबुक से हैं।",
+    "trendHooks": "आज़माने लायक हुक",
+    "trendFormats": "फ़ॉर्मेट",
+    "trendSounds": "साउंड आइडिया",
+    "trendHashtags": "हैशटैग",
+    "momentumRising": "बढ़ रहा है",
+    "momentumSteady": "स्थिर",
+    "momentumPeaking": "चरम पर",
+    "nicheVoice": "टोन",
+    "pitfalls": "इनसे बचें",
+    "retentionFloorLabel": "कम से कम {{value}}% दर्शकों को बनाए रखें",
+    "retentionTargetLabel": "{{value}}% का लक्ष्य रखें",
+    "retentionGuidelineNote": "{{platform}} की हुक विंडो पर आधारित एक दिशानिर्देश, आपकी पोस्ट का माप नहीं।",
+    "sequenceStepLabel": "स्टेप {{step}} · {{timing}}",
+    "campaignVideoLabel": "वीडियो {{num}} · {{mark}}",
+    "angleNumber": "एंगल {{num}}",
+    "promptGroupSave": "सेव पाएँ",
+    "promptGroupComment": "कमेंट्स पाएँ",
+    "promptGroupShare": "शेयर पाएँ",
+    "promptGroupDm": "DM पाएँ",
+    "promptGroupFollow": "फ़ॉलो पाएँ",
+    "benchIdealLength": "आदर्श लंबाई",
+    "benchHookWindow": "हुक विंडो",
+    "benchCaptionStyle": "कैप्शन स्टाइल",
+    "benchHashtags": "हैशटैग",
+    "benchSoundStrategy": "साउंड",
+    "benchAvoid": "{{platform}} पर इनसे बचें",
+    "verdictPublishReady": "पब्लिश के लिए तैयार",
+    "verdictNeedsTightening": "थोड़ा कसना होगा",
+    "verdictRewrite": "दोबारा लिखना होगा",
+    "wordCountLabel": "{{count}} शब्द",
+    "scoreRuleBasedNote": "{{platform}} प्लेबुक के आधार पर नियम-आधारित जाँच।",
+    "notesTitle": "क्या बदलें"
   },
   "teamDetailPage": {
     "toastLoadFailed": "टीम लोड नहीं हो सकी",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "सिर्फ़ देखने लायक सेटिंग्स",
     "latticeMetadata": "टीम की जानकारी",
     "clusterId": "टीम ID",
-    "ownerHash": "ओनर"
+    "ownerHash": "ओनर",
+    "inviteEmailFailed": "इनवाइट तैयार है, लेकिन ईमेल नहीं भेजा जा सका। लिंक कॉपी करके खुद भेजें।",
+    "inviteLinkLabel": "इनवाइट लिंक",
+    "copyInviteLink": "लिंक कॉपी करें",
+    "inviteLinkCopied": "✓ लिंक कॉपी हो गया"
   },
   "teamsPage": {
     "toastLoadFailed": "टीमें लोड करने में विफल",
@@ -4195,7 +4259,9 @@
     "postComment": "तेज़ी से टिप्पणी करना",
     "resolved": "हल किया",
     "helpful": "मददगार",
-    "empty": "अब तक कोई टिप्पणी नहीं। टिप्पणी करने वाले पहले बनो!"
+    "empty": "अब तक कोई टिप्पणी नहीं। टिप्पणी करने वाले पहले बनो!",
+    "needsTeam": "कमेंट्स टीम के साथ शेयर होते हैं।",
+    "needsTeamCta": "टीम बनाएँ या जॉइन करें"
   },
   "complianceDashboard": {
     "outOf100": "/ 100",
@@ -4281,7 +4347,19 @@
     "colChecked": "चेक किए गए",
     "untitled": "(शीर्षक रहित)",
     "noHistory": "अभी तक कोई अनुपालन इतिहास नहीं है.",
-    "noHistoryHint": "ट्रैकिंग शुरू करने के लिए अपनी सामग्री की जाँच करें।"
+    "noHistoryHint": "ट्रैकिंग शुरू करने के लिए अपनी सामग्री की जाँच करें।",
+    "rulesLoadFailed": "आपके नियम लोड नहीं हो सके।",
+    "ruleSaveFailed": "नियम सेव नहीं हो सका।",
+    "ruleDeleteFailed": "नियम डिलीट नहीं हो सका।",
+    "policiesLoadFailed": "प्लेटफ़ॉर्म नीतियाँ लोड नहीं हो सकीं।",
+    "historyLoadFailed": "कम्प्लायंस हिस्ट्री लोड नहीं हो सकी।",
+    "totalRulesStat": "नियम",
+    "activeRulesStat": "सक्रिय नियम",
+    "totalTriggersStat": "कितनी बार ट्रिगर हुआ",
+    "colRule": "नियम",
+    "colTriggers": "ट्रिगर",
+    "colLastTriggered": "आखिरी बार ट्रिगर",
+    "noTriggersYet": "आपका कोई भी नियम अभी तक ट्रिगर नहीं हुआ है।"
   },
   "confirmDialog": {
     "confirm": "पुष्टि करना",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}}% इष्टतम",
     "dayAtTime": "{{day}} पर {{time}}",
     "schedule": "अनुसूची",
-    "viewAllOptimalTimes": "सभी इष्टतम समय देखें →"
+    "viewAllOptimalTimes": "सभी इष्टतम समय देखें →",
+    "loadFailed": "पोस्टिंग के समय लोड नहीं हो सके।"
   },
   "contentSuggestions": {
     "loadFailed": "सुझाव लोड करने में विफल",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "वर्णन करें कि यह वर्कफ़्लो क्या करता है...",
     "trigger": "चालू कर देना",
     "enableWorkflow": "वर्कफ़्लो सक्षम करें",
-    "cancel": "रद्द करना"
+    "cancel": "रद्द करना",
+    "notExecuted": "वर्कफ़्लो नहीं चला: {{reason}}",
+    "someActionsFailed": "वर्कफ़्लो चला, लेकिन ये स्टेप फ़ेल हुए: {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "उद्यम प्रशासन",
@@ -5710,7 +5791,9 @@
     "retrying": "पुनः प्रयास कर रहा हूँ...",
     "retryJob": "कार्य पुनः प्रयास करें",
     "close": "बंद करना",
-    "jobNotFound": "नौकरी नहीं मिली"
+    "jobNotFound": "नौकरी नहीं मिली",
+    "retryQueued": "जॉब दोबारा चलने के लिए कतार में है।",
+    "retryFailed": "इस जॉब को दोबारा नहीं चलाया जा सका।"
   },
   "jobProgressViewer": {
     "loadingJobStatus": "कार्य स्थिति लोड हो रही है...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "अगले कदम सुझाए गए",
     "nextStep": "अगला कदम",
-    "continueSetup": "सेटअप जारी रखें"
+    "continueSetup": "सेटअप जारी रखें",
+    "workflowFailed": "वह वर्कफ़्लो नहीं चल सका।"
   },
   "multiClientRollupDashboard": {
     "title": "मल्टी-क्लाइंट रोलअप डैशबोर्ड",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "आइडिया जनरेटर",
     "autoFoley": "ऑटो-फ़ोले",
     "brollAgent": "बी-रोल एजेंट",
-    "captionSwarm": "AI कैप्शन"
+    "captionSwarm": "AI कैप्शन",
+    "noTrendsYet": "अभी कोई लाइव ट्रेंड नहीं है। बाद में फिर से कोशिश करें।",
+    "kindSound": "साउंड",
+    "kindHashtag": "हैशटैग",
+    "kindTopic": "टॉपिक"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "अपना अगला वीडियो आज रात 10 बजे पोस्ट करें - शॉर्ट-फॉर्म वायरलिटी के लिए गुरुवार की रात औसत से 23% अधिक है।",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "सभी को पढ़ा हुआ मार्क करें",
     "loading": "लोड हो रहा है...",
     "noNotifications": "कोई सूचना नहीं",
-    "view": "देखना"
+    "view": "देखना",
+    "markReadFailed": "इसे पढ़ा हुआ मार्क नहीं किया जा सका। फिर से कोशिश करें।"
   },
   "notificationPreferences": {
     "title": "अधिसूचना प्राथमिकताएँ",
@@ -6309,7 +6398,9 @@
     "push": "धकेलना",
     "pushDescription": "ब्राउज़र पुश सूचनाएँ",
     "saving": "सहेजा जा रहा है...",
-    "savePreferences": "प्राथमिकताएँ सहेजें"
+    "savePreferences": "प्राथमिकताएँ सहेजें",
+    "loadFailed": "आपकी नोटिफ़िकेशन प्राथमिकताएँ लोड नहीं हो सकीं। लोड होने तक सेव करना बंद है।",
+    "saveFailed": "आपकी नोटिफ़िकेशन प्राथमिकताएँ सेव नहीं हो सकीं। फिर से कोशिश करें।"
   },
   "offlineIndicator": {
     "backOnline": "वापस ऑनलाइन",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ प्रो टिप:",
     "allSet": "तुम सब सेट हो!",
     "clickTunedFor": "क्लिक के लिए तैयार है",
-    "makeFirstVideoViral": "अपना पहला वीडियो वायरल करें."
+    "makeFirstVideoViral": "अपना पहला वीडियो वायरल करें.",
+    "syncFailed": "आपके जवाब अकाउंट में सेव नहीं हो सके। इस डिवाइस पर वे फिर भी लागू हैं।"
   },
   "oneClickPublish": {
     "salvageLowCtr": "TikTok पर शुरुआती क्लिक-थ्रू रेट कम है। कोई दूसरा वर्शन आज़माकर देखें।",
@@ -6477,7 +6569,9 @@
     "variantB": "वेरिएंट बी",
     "ignore": "अनदेखा करना",
     "swapToVariantB": "वेरिएंट बी पर स्वैप करें",
-    "swapVariantB": "स्वैप वेरिएंट बी"
+    "swapVariantB": "स्वैप वेरिएंट बी",
+    "someFailed": "इन पर पब्लिश नहीं हुआ: {{platforms}}",
+    "allFailed": "इन पर पब्लिश नहीं हो सका: {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "लोड हो रहा है {{alt}}",
@@ -6688,7 +6782,10 @@
     "reach": "पहुँचना",
     "virality": "पौरूष",
     "keyInsights": "महत्वपूर्ण अंतर्दृष्टि",
-    "recommendations": "सिफारिशों"
+    "recommendations": "सिफारिशों",
+    "ruleBasedNote": "लंबाई, हैशटैग, इमोजी और सवालों पर आधारित नियम-आधारित स्कोर। यह व्यूज़ या रीच का अनुमान नहीं है।",
+    "predictFailed": "इस कंटेंट को स्कोर नहीं किया जा सका। फिर से कोशिश करें।",
+    "needsText": "स्कोर के लिए कुछ टेक्स्ट जोड़ें।"
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "एनालिटिक्स सफलतापूर्वक समन्वयित हुआ",
@@ -6711,7 +6808,9 @@
     "expectedViews": "अपेक्षित दृश्य",
     "engagementRate": "भर्ती दर",
     "positiveFactors": "सकारात्मक कारक",
-    "recommendations": "सिफारिशों"
+    "recommendations": "सिफारिशों",
+    "predictFailed": "परफ़ॉर्मेंस का अनुमान नहीं लग सका। फिर से कोशिश करें।",
+    "ruleBasedNote": "AI उपलब्ध नहीं है, इसलिए यह लंबाई, हैशटैग, सवालों और कॉल टू एक्शन पर आधारित नियम-आधारित स्कोर है। व्यूज़ का कोई अनुमान नहीं दिखाया गया है।"
   },
   "phase8Dashboard": {
     "howItWorks": "यह काम किस प्रकार करता है:",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "एआई-विश्लेषण // आपके प्रकाशित-पोस्ट प्रदर्शन से",
     "coldStartHint": "पोस्ट प्रकाशित करें ताकि क्लिक विश्लेषण कर सके कि क्या काम करता है",
     "noInsightsYet": "अभी तक कोई अंतर्दृष्टि नहीं",
-    "impact": "प्रभाव: {{impact}}"
+    "impact": "प्रभाव: {{impact}}",
+    "loadFailed": "इनसाइट्स लोड नहीं हो सकीं।"
   },
   "scalingHub": {
     "neuralThroughput": "थ्रूपुट",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "उदाहरण पेसिंग: {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "फ्रेम को {{ratio}} में क्रॉप कर दिया। पूरा फ्रेम बनाए रखने के लिए {{ratio}} प्रीसेट से एक्सपोर्ट करें।",
+    "reframeNotApplied": "{{ratio}} क्रॉप लागू नहीं हो सका, क्योंकि वीडियो के फ्रेम का साइज़ अभी पता नहीं है। वीडियो लोड होने के बाद फिर से कोशिश करें।",
+    "resultAddedToTimeline": "{{tool}}: नया वर्शन आपकी टाइमलाइन में जोड़ दिया गया।",
+    "resultReady": "{{tool}} पूरा हो गया। नीचे नतीजा खोलें।",
+    "noOutput": "{{tool}} पूरा हुआ, लेकिन कोई फ़ाइल नहीं मिली। फिर से कोशिश करें।",
+    "speedRampMarker": "स्पीड {{speed}}x",
+    "speedRampMarked": "आपकी टाइमलाइन में {{count}} स्पीड-रैंप मार्कर जोड़े गए। इन्हें लागू करने के लिए हर मार्कर पर स्पीड सेट करें।",
+    "speedRampPlanOnly": "{{count}} स्पीड रैंप प्लान किए गए। ये आपके वीडियो पर लागू नहीं किए गए हैं।",
+    "dubAddedToTimeline": "स्पैनिश वॉइस ट्रैक आपकी टाइमलाइन में जोड़ दिया गया। सिर्फ़ डब सुनने के लिए ओरिजिनल ऑडियो म्यूट करें।",
+    "openResult": "नतीजा खोलें",
     "reframeStarting": "आपके वीडियो को मुख्य सब्जेक्ट के आसपास रीफ़्रेम किया जा रहा है…",
     "reframeDone": "ऑटो-रीफ़्रेम पूरा हुआ।",
     "reframeFailed": "ऑटो-रीफ़्रेम काम नहीं किया। कृपया फिर से कोशिश करें।",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "शॉर्टकट बंद करें",
     "searchTools": "टूल खोजें"
   },
+  "aiTimelineChat": {
+    "title": "टाइमलाइन असिस्टेंट",
+    "greeting": "बताइए क्या बदलना है। मैं कलर ग्रेड लगा सकता हूँ, टाइटल जोड़ सकता हूँ, प्लेबैक स्पीड बदल सकता हूँ, या दूसरा फ्रेम आकार चुनने के लिए एक्सपोर्ट खोल सकता हूँ।",
+    "placeholder": "जैसे: make it cinematic",
+    "send": "मैसेज भेजें",
+    "appliedGrade": "{{grade}} कलर ग्रेड लगा दिया।",
+    "gradeNotApplied": "मैं {{grade}} कलर ग्रेड नहीं लगा सका।",
+    "addedText": "प्लेहेड पर टाइटल \"{{text}}\" जोड़ दिया।",
+    "textNeedsQuotes": "टाइटल को कोट्स में लिखें, जैसे: add title \"Big news\"।",
+    "speedSet": "प्लेबैक स्पीड {{speed}}x कर दी।",
+    "aspectOpenExport": "फ्रेम का आकार एक्सपोर्ट करते समय चुना जाता है। मैंने एक्सपोर्ट खोल दिया है: वहाँ {{ratio}} प्रीसेट चुनें।",
+    "aspectNoExport": "फ्रेम का आकार एक्सपोर्ट करते समय चुना जाता है। एक्सपोर्ट खोलें और {{ratio}} प्रीसेट चुनें।",
+    "notUnderstood": "मैंने कुछ नहीं बदला। मैं कलर ग्रेड लगा सकता हूँ (जैसे cinematic, warm या vintage), कोट्स में टाइटल जोड़ सकता हूँ, स्पीड बदल सकता हूँ (जैसे 1.5x या slow motion), या 9:16 या 1:1 फ्रेम के लिए एक्सपोर्ट खोल सकता हूँ।",
+    "badgeGrade": "कलर ग्रेड: {{grade}}",
+    "badgeText": "टाइटल जोड़ा गया",
+    "badgeSpeed": "स्पीड {{speed}}x",
+    "badgeExport": "एक्सपोर्ट खोला"
+  },
+  "repurposeView": {
+    "renderFailed": "{{format}} वर्शन फ़ेल हो गया: {{error}}",
+    "renderFailedGeneric": "रेंडर फ़ेल हो गया।",
+    "renderTimedOut": "रेंडर में बहुत ज़्यादा समय लग रहा है और इसकी अपडेट आनी बंद हो गई है। फिर से कोशिश करें।"
+  },
+  "musicPicker": {
+    "generationFailed": "AI म्यूज़िक नहीं बन सका। फिर से कोशिश करें।",
+    "generationFailedReason": "AI म्यूज़िक नहीं बन सका: {{error}}",
+    "generationNoTrack": "ट्रैक बन गया, लेकिन सेव नहीं हो सका। कृपया इसे फिर से बनाएँ।"
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "यह लुक डिलीट नहीं हो सका। यह अभी भी सेव है।"
+  },
   "editorHUD": {
+    "saveFailedRetry": "अभी आपके अकाउंट में सेव नहीं हुआ। दोबारा कोशिश के लिए क्लिक करें।",
     "section": {
       "edit": "एडिटिंग",
       "color": "रंग",
@@ -8846,6 +8988,7 @@
     "export": "एक्सपोर्ट"
   },
   "quickActionsBar": {
+    "trendsList": "अभी TikTok पर ट्रेंडिंग: {{list}}",
     "variantsNeedBase": "पहले एक कैप्शन या हुक जोड़ें, ताकि वैरिएंट जनरेटर के पास काम करने को कुछ हो।",
     "noVariants": "कोई वैरिएंट नहीं मिला — लंबा बेस हुक आज़माएँ।",
     "variantsGenerated": "{{count}} वैरिएंट बने — प्रीव्यू के लिए A/B पिकर खोलें।",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "प्रतिस्पर्धी इनसाइट्स"
     },
     "err": {
+      "analyzeFailed": "इस वीडियो का विश्लेषण नहीं हो सका। थोड़ी देर में फिर से कोशिश करें।",
       "videoNotFound": "जवाब में वीडियो डेटा नहीं मिला",
       "loadFailed": "वीडियो लोड नहीं हो सका। कृपया फिर से कोशिश करें।",
       "missingSource": "इस वीडियो की सोर्स फ़ाइल नहीं मिली। दोबारा अपलोड करके फिर कोशिश करें।",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "आपके वीडियो का विश्लेषण हो जाने के बाद रिटेंशन, हुक की ताकत और रफ़्तार के आँकड़े यहाँ दिखेंगे।",
       "transcript": "ट्रांसक्रिप्ट"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "आपका इनवाइट प्रोसेस हो रहा है…",
+    "body": "हम आपको टीम में जोड़ रहे हैं। इसमें बस एक पल लगेगा।",
+    "noToken": "इस इनवाइट लिंक में कोड नहीं है। नया इनवाइट माँगें।",
+    "joined": "✓ आप टीम में शामिल हो गए",
+    "failed": "इनवाइट स्वीकार नहीं हो सका"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "रीसेट के बहुत ज़्यादा अनुरोध हुए। कुछ मिनट रुकें, फिर से कोशिश करें।",
+    "sendFailed": "अभी रीसेट लिंक नहीं भेजा जा सका। अपना कनेक्शन जाँचें और फिर से कोशिश करें।"
+  },
+  "governanceDashboard": {
+    "loadFailed": "ऑडिट लॉग लोड नहीं हो सका।"
+  },
+  "clickIsland": {
+    "chatEmpty": "अभी जवाब नहीं बन सका। दूसरे शब्दों में पूछें या फिर से भेजें।",
+    "chatRateLimited": "आप फ़िलहाल AI की सीमा तक पहुँच गए हैं। थोड़ी देर बाद फिर से कोशिश करें।",
+    "chatUnavailable": "AI अभी जवाब नहीं दे सका। थोड़ी देर में फिर से कोशिश करें।",
+    "chatOffline": "अभी असिस्टेंट से कनेक्ट नहीं हो पा रहा। अपना कनेक्शन जाँचें और फिर से कोशिश करें।"
+  },
+  "postStatus": {
+    "scheduled": "शेड्यूल है",
+    "awaitingApproval": "अप्रूवल बाकी",
+    "publishing": "पब्लिश हो रहा है",
+    "published": "पब्लिश हुआ",
+    "retrying": "फिर से कोशिश",
+    "failed": "फ़ेल",
+    "cancelled": "रद्द"
+  },
+  "creatorTools": {
+    "noResults": "इस बार कोई नतीजा नहीं। फिर से कोशिश करें या शब्द बदलें।",
+    "variantNotAdapted": "AI इसे बदल नहीं सका। यह आपका ओरिजिनल टेक्स्ट है।"
+  },
+  "contentRecycling": {
+    "loadFailed": "रीसाइक्लिंग डेटा लोड नहीं हो सका।",
+    "planCreated": "रीसाइक्लिंग प्लान बन गया।",
+    "createFailed": "रीसाइक्लिंग प्लान नहीं बन सका।",
+    "toggleFailed": "रीसाइक्लिंग प्लान अपडेट नहीं हो सका।"
   }
 }

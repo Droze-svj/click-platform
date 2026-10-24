@@ -86,7 +86,9 @@
     "openLabs": "Перейти в Labs",
     "exploreLabs": "Открыть Labs",
     "earlyAccessOn": "Ранний доступ — доступен вам",
-    "earlyAccessAgencyOnly": "Только для Agency"
+    "earlyAccessAgencyOnly": "Только для Agency",
+    "checkoutUnavailable": "Оплата этого тарифа сейчас недоступна. Ничего не изменено. Попробуйте позже или обратитесь в поддержку.",
+    "invoiceDownloadFailed": "Не удалось скачать счёт. Попробуйте ещё раз."
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "Опасная зона",
     "irreversibleActions": "Необратимые действия",
     "deleteAccountWarning": "Удалите свою учетную запись: навсегда удалите все свои видео, публикации, подключенные учетные записи и подписки. Это невозможно отменить.",
-    "deleteAccount": "Удалить аккаунт"
+    "deleteAccount": "Удалить аккаунт",
+    "loadFailedSaveBlocked": "Не удалось загрузить сохранённые настройки. Сохранение отключено, пока они не загрузятся, чтобы ваши настройки не заменились значениями по умолчанию.",
+    "saveBlockedNotLoaded": "Сохранённые настройки ещё не загрузились. Попробуйте ещё раз перед сохранением.",
+    "apiKeySavedPlaceholder": "Сохранённый ключ заканчивается на {{last4}}. Введите новый ключ, чтобы заменить его"
   },
   "common": {
     "save": "Сохранить",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "Анализируем…",
     "predictiveTelemetry": "Прогноз эффективности",
     "predictiveTelemetryDesc": "Прогнозы того, как может сработать ваш контент.",
-    "scanningTrajectories": "Сканирование траекторий..."
+    "scanningTrajectories": "Сканирование траекторий...",
+    "errorStatusCheckFailed": "Не удалось проверить статус контента. Генерация ещё может завершиться — загляните в библиотеку.",
+    "errorGenerationTimeout": "Это занимает больше времени, чем обычно. Генерация ещё может завершиться — загляните в библиотеку через несколько минут.",
+    "errorTemplateLoadFailed": "Не удалось загрузить этот шаблон. Вы всё равно можете написать текст сами."
   },
   "forgePage": {
     "documentTitle": "Создатель ИИ-контента | Нажмите",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "Открыть",
     "resonanceAck": "Отметить как прочитанное",
     "confirmPurgeSignal": "Удалить это уведомление?",
-    "purgeSignal": "Удалить"
+    "purgeSignal": "Удалить",
+    "category_task": "Задачи",
+    "category_project": "Проекты",
+    "category_content": "Контент",
+    "category_approval": "Согласования",
+    "category_mention": "Упоминания",
+    "category_system": "Система",
+    "category_workflow": "Сценарии",
+    "category_publishing": "Публикация",
+    "category_recurring": "Регулярные посты",
+    "category_brief": "Ежедневная сводка",
+    "bulkReadFailed": "Не удалось отметить как прочитанные: {{failed}} из {{total}}.",
+    "bulkDeleteFailed": "Не удалось удалить: {{failed}} из {{total}}.",
+    "loadFailed": "Не удалось загрузить уведомления."
   },
   "onboardingPage": {
     "loading": "Загрузка",
@@ -1721,7 +1742,8 @@
     "statusPublished": "Опубликовано",
     "statusFailed": "Неуспешный",
     "statusDraft": "Черновик",
-    "viewSequenceDetails": "Посмотреть детали"
+    "viewSequenceDetails": "Посмотреть детали",
+    "toastScheduledPartial": "Запланировано постов: {{ok}} из {{total}}. Остальные — с ошибкой: {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "Не удалось загрузить сценарии",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "Удалить сценарий?",
     "purgeNodeBody": "Сценарий будет удалён навсегда. Это действие нельзя отменить.",
     "abortPurge": "Отмена",
-    "commitPurge": "Удалить"
+    "commitPurge": "Удалить",
+    "toastTemplateLoadFailed": "Не удалось загрузить этот шаблон."
   },
   "searchPage": {
     "reconFailed": "Время поиска истекло. Попробуйте ещё раз.",
@@ -1929,7 +1952,8 @@
     "transmitting": "Обновление…",
     "transmit": "ПЕРЕДАЧА",
     "terminateProtocol": "Удалить задачу",
-    "secureAndLeave": "БЕЗОПАСНО_&_ВЫЙТИ"
+    "secureAndLeave": "БЕЗОПАСНО_&_ВЫЙТИ",
+    "toastLoadFailed": "Не удалось загрузить ваши задачи."
   },
   "templatesPage": {
     "toastSyncFailed": "Не удалось загрузить шаблоны",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "Прогресс",
     "anomalyIntercepted": "Ошибка",
     "procTime": "Время обработки: {{time}}",
-    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}"
+    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}",
+    "cancelled": "Задача отменена.",
+    "cancelFailed": "Не удалось отменить эту задачу."
   },
   "strategistPage": {
     "clickIntelligence": "Нажмите «Интеллект»",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "Эмоциональный отклик",
     "dominantLabel": "Доминант: {{emotion}}",
     "missingTriggerLabel": "Отсутствует мощный триггер:",
-    "optimalPostingWindows": "Оптимальные окна проводки"
+    "optimalPostingWindows": "Оптимальные окна проводки",
+    "syncFailed": "Не удалось синхронизировать. Попробуйте ещё раз.",
+    "playbookFallbackNote": "ИИ сейчас недоступен, поэтому эти идеи взяты из плейбука ниши.",
+    "trendHooks": "Хуки, которые стоит попробовать",
+    "trendFormats": "Форматы",
+    "trendSounds": "Идеи для звука",
+    "trendHashtags": "Хештеги",
+    "momentumRising": "Растёт",
+    "momentumSteady": "Стабильно",
+    "momentumPeaking": "На пике",
+    "nicheVoice": "Голос",
+    "pitfalls": "Чего избегать",
+    "retentionFloorLabel": "Удерживайте не менее {{value}}% зрителей",
+    "retentionTargetLabel": "Цель: {{value}}%",
+    "retentionGuidelineNote": "Ориентир для {{platform}} на основе окна хука, а не замер ваших постов.",
+    "sequenceStepLabel": "Шаг {{step}} · {{timing}}",
+    "campaignVideoLabel": "Видео {{num}} · {{mark}}",
+    "angleNumber": "Подход {{num}}",
+    "promptGroupSave": "Больше сохранений",
+    "promptGroupComment": "Больше комментариев",
+    "promptGroupShare": "Больше репостов",
+    "promptGroupDm": "Больше сообщений в директ",
+    "promptGroupFollow": "Больше подписчиков",
+    "benchIdealLength": "Идеальная длина",
+    "benchHookWindow": "Окно хука",
+    "benchCaptionStyle": "Стиль подписей",
+    "benchHashtags": "Хештеги",
+    "benchSoundStrategy": "Звук",
+    "benchAvoid": "Чего избегать в {{platform}}",
+    "verdictPublishReady": "Готово к публикации",
+    "verdictNeedsTightening": "Нужно сократить",
+    "verdictRewrite": "Нужно переписать",
+    "wordCountLabel": "Слов: {{count}}",
+    "scoreRuleBasedNote": "Проверка по правилам плейбука {{platform}}.",
+    "notesTitle": "Что изменить"
   },
   "teamDetailPage": {
     "toastLoadFailed": "Не удалось загрузить команду",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "Настройки только для чтения",
     "latticeMetadata": "О команде",
     "clusterId": "ID команды",
-    "ownerHash": "Владелец"
+    "ownerHash": "Владелец",
+    "inviteEmailFailed": "Приглашение готово, но письмо отправить не удалось. Скопируйте ссылку и отправьте её сами.",
+    "inviteLinkLabel": "Ссылка-приглашение",
+    "copyInviteLink": "Копировать ссылку",
+    "inviteLinkCopied": "✓ Ссылка скопирована"
   },
   "teamsPage": {
     "toastLoadFailed": "Не удалось загрузить команды.",
@@ -4195,7 +4259,9 @@
     "postComment": "Опубликовать комментарий",
     "resolved": "Решено",
     "helpful": "Полезный",
-    "empty": "Комментариев пока нет. Будьте первым, кто оставит комментарий!"
+    "empty": "Комментариев пока нет. Будьте первым, кто оставит комментарий!",
+    "needsTeam": "Комментарии доступны в команде.",
+    "needsTeamCta": "Создать команду или вступить в неё"
   },
   "complianceDashboard": {
     "outOf100": "/ 100",
@@ -4281,7 +4347,19 @@
     "colChecked": "Проверено",
     "untitled": "(Без названия)",
     "noHistory": "Истории соответствия пока нет.",
-    "noHistoryHint": "Запустите проверку своего контента, чтобы начать отслеживание."
+    "noHistoryHint": "Запустите проверку своего контента, чтобы начать отслеживание.",
+    "rulesLoadFailed": "Не удалось загрузить ваши правила.",
+    "ruleSaveFailed": "Не удалось сохранить правило.",
+    "ruleDeleteFailed": "Не удалось удалить правило.",
+    "policiesLoadFailed": "Не удалось загрузить правила платформ.",
+    "historyLoadFailed": "Не удалось загрузить историю проверок соответствия.",
+    "totalRulesStat": "Правила",
+    "activeRulesStat": "Активные правила",
+    "totalTriggersStat": "Срабатываний",
+    "colRule": "Правило",
+    "colTriggers": "Срабатывания",
+    "colLastTriggered": "Последнее срабатывание",
+    "noTriggersYet": "Ни одно из ваших правил пока не сработало."
   },
   "confirmDialog": {
     "confirm": "Подтверждать",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}}% оптимально",
     "dayAtTime": "{{day}} в {{time}}",
     "schedule": "Расписание",
-    "viewAllOptimalTimes": "Посмотреть все оптимальное время →"
+    "viewAllOptimalTimes": "Посмотреть все оптимальное время →",
+    "loadFailed": "Не удалось загрузить время публикаций."
   },
   "contentSuggestions": {
     "loadFailed": "Не удалось загрузить предложения.",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "Опишите, что делает этот рабочий процесс...",
     "trigger": "Курок",
     "enableWorkflow": "Включить рабочий процесс",
-    "cancel": "Отмена"
+    "cancel": "Отмена",
+    "notExecuted": "Сценарий не запущен: {{reason}}",
+    "someActionsFailed": "Сценарий выполнен, но эти шаги завершились с ошибкой: {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "Управление предприятием",
@@ -5710,7 +5791,9 @@
     "retrying": "Повторная попытка...",
     "retryJob": "Повторить задание",
     "close": "Закрывать",
-    "jobNotFound": "Работа не найдена"
+    "jobNotFound": "Работа не найдена",
+    "retryQueued": "Задача снова поставлена в очередь.",
+    "retryFailed": "Не удалось перезапустить эту задачу."
   },
   "jobProgressViewer": {
     "loadingJobStatus": "Загрузка статуса задания...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "Предлагаемые дальнейшие шаги",
     "nextStep": "Следующий шаг",
-    "continueSetup": "Продолжить настройку"
+    "continueSetup": "Продолжить настройку",
+    "workflowFailed": "Не удалось запустить этот сценарий."
   },
   "multiClientRollupDashboard": {
     "title": "Мультиклиентская сводная панель мониторинга",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "Генератор идей",
     "autoFoley": "Авто-Фоли",
     "brollAgent": "Агент B-Roll",
-    "captionSwarm": "ИИ-подписи"
+    "captionSwarm": "ИИ-подписи",
+    "noTrendsYet": "Сейчас нет актуальных трендов. Попробуйте позже.",
+    "kindSound": "Звук",
+    "kindHashtag": "Хештег",
+    "kindTopic": "Тема"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "Опубликуйте следующее видео сегодня вечером в 22:00 — в четверг вечером вирусность коротких видео на 23% выше среднего.",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "Отметить все как прочитанное",
     "loading": "Загрузка...",
     "noNotifications": "Нет уведомлений",
-    "view": "Вид"
+    "view": "Вид",
+    "markReadFailed": "Не удалось отметить как прочитанное. Попробуйте ещё раз."
   },
   "notificationPreferences": {
     "title": "Настройки уведомлений",
@@ -6309,7 +6398,9 @@
     "push": "Толкать",
     "pushDescription": "Push-уведомления браузера",
     "saving": "Сохранение...",
-    "savePreferences": "Сохранить настройки"
+    "savePreferences": "Сохранить настройки",
+    "loadFailed": "Не удалось загрузить настройки уведомлений. Сохранение отключено, пока они не загрузятся.",
+    "saveFailed": "Не удалось сохранить настройки уведомлений. Попробуйте ещё раз."
   },
   "offlineIndicator": {
     "backOnline": "Вернуться в онлайн",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ Совет от профессионала:",
     "allSet": "Все готово!",
     "clickTunedFor": "CLICK настроен на",
-    "makeFirstVideoViral": "Сделайте свое первое видео вирусным."
+    "makeFirstVideoViral": "Сделайте свое первое видео вирусным.",
+    "syncFailed": "Не удалось сохранить ответы в аккаунте. На этом устройстве они по-прежнему действуют."
   },
   "oneClickPublish": {
     "salvageLowCtr": "Низкий ранний CTR в TikTok. Попробуйте другую версию.",
@@ -6477,7 +6569,9 @@
     "variantB": "Вариант Б",
     "ignore": "игнорировать",
     "swapToVariantB": "Обмен на вариант Б",
-    "swapVariantB": "Обмен вариант Б"
+    "swapVariantB": "Обмен вариант Б",
+    "someFailed": "Не опубликовано в: {{platforms}}",
+    "allFailed": "Не удалось опубликовать в: {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "Загрузка {{alt}}",
@@ -6688,7 +6782,10 @@
     "reach": "Достигать",
     "virality": "Виральность",
     "keyInsights": "Ключевые выводы",
-    "recommendations": "Рекомендации"
+    "recommendations": "Рекомендации",
+    "ruleBasedNote": "Оценка по правилам: длина, хештеги, эмодзи и вопросы. Это не прогноз просмотров или охвата.",
+    "predictFailed": "Не удалось оценить этот контент. Попробуйте ещё раз.",
+    "needsText": "Добавьте текст, чтобы получить оценку."
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "Аналитика успешно синхронизирована",
@@ -6711,7 +6808,9 @@
     "expectedViews": "Ожидаемые просмотры",
     "engagementRate": "Уровень вовлеченности",
     "positiveFactors": "Положительные факторы",
-    "recommendations": "Рекомендации"
+    "recommendations": "Рекомендации",
+    "predictFailed": "Не удалось спрогнозировать результаты. Попробуйте ещё раз.",
+    "ruleBasedNote": "ИИ недоступен, поэтому это оценка по правилам: длина, хештеги, вопросы и призывы к действию. Прогноз просмотров не показывается."
   },
   "phase8Dashboard": {
     "howItWorks": "Как это работает:",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "AI-Analyzed // Из вашего опубликованного поста",
     "coldStartHint": "Публикуйте публикации, чтобы Click мог проанализировать, что работает.",
     "noInsightsYet": "Пока нет статистики",
-    "impact": "Влияние: {{impact}}"
+    "impact": "Влияние: {{impact}}",
+    "loadFailed": "Не удалось загрузить аналитику."
   },
   "scalingHub": {
     "neuralThroughput": "Пропускная способность",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "Пример темпа: {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "Кадр обрезан до {{ratio}}. Экспортируйте с пресетом {{ratio}}, чтобы сохранить весь кадр.",
+    "reframeNotApplied": "Не удалось обрезать кадр до {{ratio}}: размер кадра видео пока неизвестен. Попробуйте ещё раз, когда видео загрузится.",
+    "resultAddedToTimeline": "{{tool}}: новая версия добавлена на таймлайн.",
+    "resultReady": "{{tool}}: готово. Откройте результат ниже.",
+    "noOutput": "{{tool}}: обработка завершена, но файл не получен. Попробуйте ещё раз.",
+    "speedRampMarker": "Скорость {{speed}}x",
+    "speedRampMarked": "На таймлайн добавлены маркеры изменения скорости: {{count}}. Задайте скорость у каждого маркера, чтобы применить их.",
+    "speedRampPlanOnly": "Запланировано изменений скорости: {{count}}. К видео они пока не применены.",
+    "dubAddedToTimeline": "Испанская голосовая дорожка добавлена на таймлайн. Отключите звук оригинала, чтобы слышать только дубляж.",
+    "openResult": "Открыть результат",
     "reframeStarting": "Кадрируем видео по главному объекту…",
     "reframeDone": "Автокадрирование завершено.",
     "reframeFailed": "Автокадрирование не сработало. Попробуйте ещё раз.",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "Закрыть горячие клавиши",
     "searchTools": "Поиск инструментов"
   },
+  "aiTimelineChat": {
+    "title": "Ассистент таймлайна",
+    "greeting": "Скажите, что изменить. Я могу применить цветокоррекцию, добавить заголовок, изменить скорость воспроизведения или открыть «Экспорт», чтобы выбрать другой формат кадра.",
+    "placeholder": "например, Сделай в стиле cinematic",
+    "send": "Отправить сообщение",
+    "appliedGrade": "Применена цветокоррекция {{grade}}.",
+    "gradeNotApplied": "Не удалось применить цветокоррекцию {{grade}}.",
+    "addedText": "Заголовок «{{text}}» добавлен в позицию курсора воспроизведения.",
+    "textNeedsQuotes": "Укажите заголовок в кавычках, например: add title \"Важная новость\".",
+    "speedSet": "Скорость воспроизведения: {{speed}}x.",
+    "aspectOpenExport": "Формат кадра выбирается при экспорте. «Экспорт» уже открыт: выберите там пресет {{ratio}}.",
+    "aspectNoExport": "Формат кадра выбирается при экспорте. Откройте «Экспорт» и выберите пресет {{ratio}}.",
+    "notUnderstood": "Ничего не изменено. Я могу применить цветокоррекцию (например, cinematic, warm или vintage), добавить заголовок в кавычках, изменить скорость (например, 1.5x или slow motion) или открыть «Экспорт» для кадра 9:16 или 1:1.",
+    "badgeGrade": "Цветокоррекция: {{grade}}",
+    "badgeText": "Заголовок добавлен",
+    "badgeSpeed": "Скорость {{speed}}x",
+    "badgeExport": "Экспорт открыт"
+  },
+  "repurposeView": {
+    "renderFailed": "Не удалось создать версию {{format}}: {{error}}",
+    "renderFailedGeneric": "Ошибка рендеринга.",
+    "renderTimedOut": "Рендеринг идёт слишком долго и перестал сообщать о ходе работы. Попробуйте ещё раз."
+  },
+  "musicPicker": {
+    "generationFailed": "Не удалось сгенерировать музыку с ИИ. Попробуйте ещё раз.",
+    "generationFailedReason": "Не удалось сгенерировать музыку с ИИ: {{error}}",
+    "generationNoTrack": "Трек сгенерирован, но сохранить его не удалось. Сгенерируйте его ещё раз."
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "Не удалось удалить этот стиль. Он по-прежнему сохранён."
+  },
   "editorHUD": {
+    "saveFailedRetry": "Ещё не сохранено в аккаунте. Нажмите, чтобы повторить.",
     "section": {
       "edit": "Монтаж",
       "color": "Цвет",
@@ -8846,6 +8988,7 @@
     "export": "Экспорт"
   },
   "quickActionsBar": {
+    "trendsList": "Сейчас в тренде в TikTok: {{list}}",
     "variantsNeedBase": "Сначала добавьте подпись или хук, чтобы генератору вариантов было с чем работать.",
     "noVariants": "Варианты не получены — попробуйте более длинный базовый хук.",
     "variantsGenerated": "Создано вариантов: {{count}} — откройте A/B-выбор для предпросмотра.",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "Анализ конкурентов"
     },
     "err": {
+      "analyzeFailed": "Не удалось проанализировать это видео. Попробуйте ещё раз чуть позже.",
       "videoNotFound": "В ответе нет данных видео",
       "loadFailed": "Не удалось загрузить видео. Попробуйте ещё раз.",
       "missingSource": "У этого видео нет исходного файла. Загрузите его заново и попробуйте ещё раз.",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "Аналитика удержания, силы хука и темпа появится здесь после анализа видео.",
       "transcript": "Расшифровка"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "Обрабатываем приглашение…",
+    "body": "Добавляем вас в команду. Это не займёт много времени.",
+    "noToken": "В этой ссылке-приглашении нет кода. Попросите новое приглашение.",
+    "joined": "✓ Вы в команде",
+    "failed": "Не удалось принять приглашение"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "Слишком много запросов на сброс. Подождите несколько минут и попробуйте снова.",
+    "sendFailed": "Сейчас не удалось отправить ссылку для сброса. Проверьте подключение и попробуйте ещё раз."
+  },
+  "governanceDashboard": {
+    "loadFailed": "Не удалось загрузить журнал аудита."
+  },
+  "clickIsland": {
+    "chatEmpty": "Сейчас не получилось сформировать ответ. Переформулируйте или отправьте ещё раз.",
+    "chatRateLimited": "Лимит ИИ пока исчерпан. Попробуйте ещё раз немного позже.",
+    "chatUnavailable": "ИИ сейчас не смог ответить. Попробуйте ещё раз чуть позже.",
+    "chatOffline": "Сейчас не удаётся связаться с ассистентом. Проверьте подключение и попробуйте ещё раз."
+  },
+  "postStatus": {
+    "scheduled": "Запланировано",
+    "awaitingApproval": "Ждёт согласования",
+    "publishing": "Публикуется",
+    "published": "Опубликовано",
+    "retrying": "Повтор",
+    "failed": "Ошибка",
+    "cancelled": "Отменено"
+  },
+  "creatorTools": {
+    "noResults": "На этот раз ничего не найдено. Попробуйте ещё раз или переформулируйте.",
+    "variantNotAdapted": "ИИ не смог адаптировать этот вариант. Это ваш исходный текст."
+  },
+  "contentRecycling": {
+    "loadFailed": "Не удалось загрузить данные о переиспользовании.",
+    "planCreated": "План переиспользования создан.",
+    "createFailed": "Не удалось создать план переиспользования.",
+    "toggleFailed": "Не удалось обновить план переиспользования."
   }
 }

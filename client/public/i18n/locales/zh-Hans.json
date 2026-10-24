@@ -86,7 +86,9 @@
     "openLabs": "打开 Labs",
     "exploreLabs": "探索 Labs",
     "earlyAccessOn": "抢先体验——已为你开放",
-    "earlyAccessAgencyOnly": "机构版专享"
+    "earlyAccessAgencyOnly": "机构版专享",
+    "checkoutUnavailable": "此套餐暂时无法结账，未做任何更改。请稍后重试或联系支持团队。",
+    "invoiceDownloadFailed": "无法下载发票，请重试。"
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "危险区域",
     "irreversibleActions": "不可逆转的行动",
     "deleteAccountWarning": "删除您的帐户：永久删除您的所有视频、帖子、关联帐户和订阅。此操作无法撤消。",
-    "deleteAccount": "删除帐户"
+    "deleteAccount": "删除帐户",
+    "loadFailedSaveBlocked": "无法加载你已保存的设置。加载完成前将暂停保存，以免默认值覆盖你的实际设置。",
+    "saveBlockedNotLoaded": "你已保存的设置尚未加载，请稍后再保存。",
+    "apiKeySavedPlaceholder": "已保存尾号为 {{last4}} 的密钥。输入新密钥即可替换"
   },
   "common": {
     "save": "保存",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "分析中…",
     "predictiveTelemetry": "表现预测",
     "predictiveTelemetryDesc": "预测你的内容可能的表现。",
-    "scanningTrajectories": "扫描轨迹..."
+    "scanningTrajectories": "扫描轨迹...",
+    "errorStatusCheckFailed": "无法查看内容状态。它可能仍会完成，请到内容库中查看。",
+    "errorGenerationTimeout": "耗时比平常更久。它可能仍会完成，请过几分钟到内容库中查看。",
+    "errorTemplateLoadFailed": "无法加载该模板。你仍然可以自己撰写。"
   },
   "forgePage": {
     "documentTitle": "人工智能内容创作者 |点击",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "打开",
     "resonanceAck": "标为已读",
     "confirmPurgeSignal": "删除这条通知？",
-    "purgeSignal": "删除"
+    "purgeSignal": "删除",
+    "category_task": "任务",
+    "category_project": "项目",
+    "category_content": "内容",
+    "category_approval": "审批",
+    "category_mention": "提及",
+    "category_system": "系统",
+    "category_workflow": "工作流",
+    "category_publishing": "发布",
+    "category_recurring": "定期帖子",
+    "category_brief": "每日简报",
+    "bulkReadFailed": "{{total}} 条中有 {{failed}} 条无法标记为已读。",
+    "bulkDeleteFailed": "{{total}} 条中有 {{failed}} 条无法删除。",
+    "loadFailed": "无法加载通知。"
   },
   "onboardingPage": {
     "loading": "加载中",
@@ -1721,7 +1742,8 @@
     "statusPublished": "已发表",
     "statusFailed": "失败的",
     "statusDraft": "草稿",
-    "viewSequenceDetails": "查看详情"
+    "viewSequenceDetails": "查看详情",
+    "toastScheduledPartial": "已排期 {{total}} 条帖子中的 {{ok}} 条，其余失败：{{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "无法加载脚本",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "删除脚本？",
     "purgeNodeBody": "此脚本将被永久删除，且无法撤销。",
     "abortPurge": "取消",
-    "commitPurge": "删除"
+    "commitPurge": "删除",
+    "toastTemplateLoadFailed": "无法加载该模板。"
   },
   "searchPage": {
     "reconFailed": "搜索超时，请重试。",
@@ -1929,7 +1952,8 @@
     "transmitting": "清爽…",
     "transmit": "发送",
     "terminateProtocol": "删除任务",
-    "secureAndLeave": "安全_&_离开"
+    "secureAndLeave": "安全_&_离开",
+    "toastLoadFailed": "无法加载你的任务。"
   },
   "templatesPage": {
     "toastSyncFailed": "无法加载模板",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "进度",
     "anomalyIntercepted": "错误",
     "procTime": "处理时间：{{time}}",
-    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}"
+    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}",
+    "cancelled": "任务已取消。",
+    "cancelFailed": "无法取消此任务。"
   },
   "strategistPage": {
     "clickIntelligence": "点击情报",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "情感吸引力",
     "dominantLabel": "主导：{{emotion}}",
     "missingTriggerLabel": "缺少高影响力的触发器：",
-    "optimalPostingWindows": "最佳发帖窗口"
+    "optimalPostingWindows": "最佳发帖窗口",
+    "syncFailed": "同步失败，请重试。",
+    "playbookFallbackNote": "AI 暂时不可用，因此这些想法来自该领域的运营手册。",
+    "trendHooks": "可尝试的开头钩子",
+    "trendFormats": "形式",
+    "trendSounds": "声音灵感",
+    "trendHashtags": "话题标签",
+    "momentumRising": "上升中",
+    "momentumSteady": "平稳",
+    "momentumPeaking": "热度巅峰",
+    "nicheVoice": "语气",
+    "pitfalls": "应避免",
+    "retentionFloorLabel": "至少留住 {{value}}% 的观众",
+    "retentionTargetLabel": "目标 {{value}}%",
+    "retentionGuidelineNote": "这是根据 {{platform}} 开头钩子时长得出的参考值，并非对你帖子的实测数据。",
+    "sequenceStepLabel": "第 {{step}} 步 · {{timing}}",
+    "campaignVideoLabel": "视频 {{num}} · {{mark}}",
+    "angleNumber": "切入角度 {{num}}",
+    "promptGroupSave": "获取收藏",
+    "promptGroupComment": "获取评论",
+    "promptGroupShare": "获取分享",
+    "promptGroupDm": "获取私信",
+    "promptGroupFollow": "获取关注",
+    "benchIdealLength": "理想时长",
+    "benchHookWindow": "开头钩子时长",
+    "benchCaptionStyle": "文案风格",
+    "benchHashtags": "话题标签",
+    "benchSoundStrategy": "声音",
+    "benchAvoid": "在 {{platform}} 上应避免",
+    "verdictPublishReady": "可以发布",
+    "verdictNeedsTightening": "需要精简",
+    "verdictRewrite": "需要重写",
+    "wordCountLabel": "{{count}} 个词",
+    "scoreRuleBasedNote": "基于 {{platform}} 运营手册的规则检查。",
+    "notesTitle": "需要修改的地方"
   },
   "teamDetailPage": {
     "toastLoadFailed": "无法加载团队",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "只读设置",
     "latticeMetadata": "团队详情",
     "clusterId": "团队 ID",
-    "ownerHash": "所有者"
+    "ownerHash": "所有者",
+    "inviteEmailFailed": "邀请已准备好，但邮件发送失败。请复制链接自行发送。",
+    "inviteLinkLabel": "邀请链接",
+    "copyInviteLink": "复制链接",
+    "inviteLinkCopied": "✓ 链接已复制"
   },
   "teamsPage": {
     "toastLoadFailed": "无法加载团队",
@@ -4195,7 +4259,9 @@
     "postComment": "发表评论",
     "resolved": "已解决",
     "helpful": "有帮助",
-    "empty": "还没有评论。成为第一个发表评论的人！"
+    "empty": "还没有评论。成为第一个发表评论的人！",
+    "needsTeam": "评论会与团队共享。",
+    "needsTeamCta": "创建或加入团队"
   },
   "complianceDashboard": {
     "outOf100": "/100",
@@ -4281,7 +4347,19 @@
     "colChecked": "已检查",
     "untitled": "（无标题）",
     "noHistory": "尚无合规历史记录。",
-    "noHistoryHint": "检查您的内容以开始跟踪。"
+    "noHistoryHint": "检查您的内容以开始跟踪。",
+    "rulesLoadFailed": "无法加载你的规则。",
+    "ruleSaveFailed": "无法保存该规则。",
+    "ruleDeleteFailed": "无法删除该规则。",
+    "policiesLoadFailed": "无法加载平台政策。",
+    "historyLoadFailed": "无法加载合规记录。",
+    "totalRulesStat": "规则",
+    "activeRulesStat": "已启用规则",
+    "totalTriggersStat": "触发次数",
+    "colRule": "规则",
+    "colTriggers": "触发次数",
+    "colLastTriggered": "上次触发",
+    "noTriggersYet": "你的规则还没有被触发过。"
   },
   "confirmDialog": {
     "confirm": "确认",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}}% 最佳",
     "dayAtTime": "{{day}} {{time}}",
     "schedule": "日程",
-    "viewAllOptimalTimes": "查看所有最佳时间 →"
+    "viewAllOptimalTimes": "查看所有最佳时间 →",
+    "loadFailed": "无法加载发布时间。"
   },
   "contentSuggestions": {
     "loadFailed": "无法加载建议",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "描述一下这个工作流程的作用...",
     "trigger": "扳机",
     "enableWorkflow": "启用工作流程",
-    "cancel": "取消"
+    "cancel": "取消",
+    "notExecuted": "工作流未运行：{{reason}}",
+    "someActionsFailed": "工作流已运行，但以下步骤失败：{{actions}}"
   },
   "enterpriseGovernance": {
     "title": "企业治理",
@@ -5710,7 +5791,9 @@
     "retrying": "正在重试...",
     "retryJob": "重试作业",
     "close": "关闭",
-    "jobNotFound": "找不到工作"
+    "jobNotFound": "找不到工作",
+    "retryQueued": "任务已重新加入队列。",
+    "retryFailed": "无法重试此任务。"
   },
   "jobProgressViewer": {
     "loadingJobStatus": "正在加载作业状态...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "建议的后续步骤",
     "nextStep": "下一步",
-    "continueSetup": "继续设置"
+    "continueSetup": "继续设置",
+    "workflowFailed": "无法运行该工作流。"
   },
   "multiClientRollupDashboard": {
     "title": "多客户端汇总仪表板",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "灵感生成器",
     "autoFoley": "自动拟音",
     "brollAgent": "幕后花絮经纪人",
-    "captionSwarm": "AI 文案"
+    "captionSwarm": "AI 文案",
+    "noTrendsYet": "目前没有实时趋势，请稍后再试。",
+    "kindSound": "声音",
+    "kindHashtag": "话题标签",
+    "kindTopic": "话题"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "今晚 10 点发布您的下一个视频 — 周四晚上的短视频病毒式传播率比平均水平高 23%。",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "全部标记为已读",
     "loading": "加载中...",
     "noNotifications": "无通知",
-    "view": "看法"
+    "view": "看法",
+    "markReadFailed": "无法标记为已读，请重试。"
   },
   "notificationPreferences": {
     "title": "通知首选项",
@@ -6309,7 +6398,9 @@
     "push": "推",
     "pushDescription": "浏览器推送通知",
     "saving": "保存...",
-    "savePreferences": "保存首选项"
+    "savePreferences": "保存首选项",
+    "loadFailed": "无法加载你的通知偏好设置。加载完成前无法保存。",
+    "saveFailed": "无法保存你的通知偏好设置，请重试。"
   },
   "offlineIndicator": {
     "backOnline": "重新上线",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ 专业提示：",
     "allSet": "你都准备好了！",
     "clickTunedFor": "CLICK 已调整为",
-    "makeFirstVideoViral": "让您的第一个视频迅速走红。"
+    "makeFirstVideoViral": "让您的第一个视频迅速走红。",
+    "syncFailed": "无法将你的回答保存到账户，但在此设备上仍然有效。"
   },
   "oneClickPublish": {
     "salvageLowCtr": "TikTok 早期点击率偏低，可以试试另一个版本。",
@@ -6477,7 +6569,9 @@
     "variantB": "变体B",
     "ignore": "忽略",
     "swapToVariantB": "交换到变体 B",
-    "swapVariantB": "交换变体 B"
+    "swapVariantB": "交换变体 B",
+    "someFailed": "未发布到：{{platforms}}",
+    "allFailed": "无法发布到：{{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "加载中 {{alt}}",
@@ -6688,7 +6782,10 @@
     "reach": "抵达",
     "virality": "病毒式传播",
     "keyInsights": "主要见解",
-    "recommendations": "建议"
+    "recommendations": "建议",
+    "ruleBasedNote": "根据长度、话题标签、表情符号和提问得出的规则评分，并非对播放量或覆盖面的预测。",
+    "predictFailed": "无法为此内容评分，请重试。",
+    "needsText": "请先添加文字再评分。"
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "分析已成功同步",
@@ -6711,7 +6808,9 @@
     "expectedViews": "预期观看次数",
     "engagementRate": "参与率",
     "positiveFactors": "积极因素",
-    "recommendations": "建议"
+    "recommendations": "建议",
+    "predictFailed": "无法预测表现，请重试。",
+    "ruleBasedNote": "AI 不可用，因此这是根据长度、话题标签、提问和行动号召得出的规则评分，不显示播放量预估。"
   },
   "phase8Dashboard": {
     "howItWorks": "工作原理：",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "AI 分析 // 来自您发布的帖子表现",
     "coldStartHint": "发布帖子，以便 Click 可以分析哪些内容有效",
     "noInsightsYet": "还没有任何见解",
-    "impact": "影响：{{impact}}"
+    "impact": "影响：{{impact}}",
+    "loadFailed": "无法加载洞察。"
   },
   "scalingHub": {
     "neuralThroughput": "吞吐量",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "示例节奏：{{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "已将画面裁剪为 {{ratio}}。导出时请选择 {{ratio}} 预设以保留完整画面。",
+    "reframeNotApplied": "视频的画面尺寸尚未确定，无法应用 {{ratio}} 裁剪。请在加载完成后重试。",
+    "resultAddedToTimeline": "{{tool}}：新版本已添加到时间轴。",
+    "resultReady": "{{tool}} 已完成，请在下方打开结果。",
+    "noOutput": "{{tool}} 已完成，但没有返回文件。请重试。",
+    "speedRampMarker": "速度 {{speed}}x",
+    "speedRampMarked": "已在时间轴上添加 {{count}} 个曲线变速标记。在每个标记处设置速度即可应用。",
+    "speedRampPlanOnly": "已规划 {{count}} 处曲线变速，尚未应用到视频。",
+    "dubAddedToTimeline": "已将西班牙语配音轨添加到时间轴。将原始音频静音即可只听配音。",
+    "openResult": "打开结果",
     "reframeStarting": "正在围绕主体重新构图…",
     "reframeDone": "自动重构图已完成。",
     "reframeFailed": "自动重构图失败，请重试。",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "关闭快捷键",
     "searchTools": "搜索工具"
   },
+  "aiTimelineChat": {
+    "title": "时间轴助手",
+    "greeting": "告诉我你想改什么。我可以应用调色、添加标题、更改播放速度，或打开“导出”来选择其他画面比例。",
+    "placeholder": "例如：做出电影感",
+    "send": "发送消息",
+    "appliedGrade": "已应用 {{grade}} 调色。",
+    "gradeNotApplied": "无法应用 {{grade}} 调色。",
+    "addedText": "已在播放头位置添加标题“{{text}}”。",
+    "textNeedsQuotes": "请把标题放在引号里，例如：添加标题 \"重大消息\"。",
+    "speedSet": "已将播放速度设为 {{speed}}x。",
+    "aspectOpenExport": "画面比例在导出时选择。我已打开“导出”，请在那里选择 {{ratio}} 预设。",
+    "aspectNoExport": "画面比例在导出时选择。请打开“导出”并选择 {{ratio}} 预设。",
+    "notUnderstood": "我没有做任何更改。我可以应用调色（例如电影感、暖色或复古）、添加用引号括起来的标题、更改速度（例如 1.5x 或慢动作），或打开“导出”选择 9:16 或 1:1 画面。",
+    "badgeGrade": "调色：{{grade}}",
+    "badgeText": "已添加标题",
+    "badgeSpeed": "速度 {{speed}}x",
+    "badgeExport": "已打开导出"
+  },
+  "repurposeView": {
+    "renderFailed": "{{format}} 版本生成失败：{{error}}",
+    "renderFailedGeneric": "渲染失败。",
+    "renderTimedOut": "渲染耗时过长，且已停止反馈进度。请重试。"
+  },
+  "musicPicker": {
+    "generationFailed": "AI 音乐生成失败，请重试。",
+    "generationFailedReason": "AI 音乐生成失败：{{error}}",
+    "generationNoTrack": "音轨已生成，但无法保存。请重新生成。"
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "无法删除此风格，它仍然保存着。"
+  },
   "editorHUD": {
+    "saveFailedRetry": "尚未保存到你的账户。点击重试。",
     "section": {
       "edit": "剪辑",
       "color": "调色",
@@ -8846,6 +8988,7 @@
     "export": "导出"
   },
   "quickActionsBar": {
+    "trendsList": "TikTok 当前热门：{{list}}",
     "variantsNeedBase": "请先添加字幕或钩子，让变体生成器有内容可用。",
     "noVariants": "未返回任何变体——试试更长的基础钩子。",
     "variantsGenerated": "已生成 {{count}} 个变体——打开 A/B 选择器预览。",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "竞品洞察"
     },
     "err": {
+      "analyzeFailed": "无法分析此视频，请稍后重试。",
       "videoNotFound": "响应中未找到视频数据",
       "loadFailed": "视频加载失败，请重试。",
       "missingSource": "此视频缺少源文件。请重新上传后再试。",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "视频分析完成后，留存、钩子强度和节奏分析将显示在这里。",
       "transcript": "转录稿"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "正在处理你的邀请…",
+    "body": "正在将你加入团队，请稍候。",
+    "noToken": "此邀请链接缺少邀请码。请重新索取邀请。",
+    "joined": "✓ 你已加入团队",
+    "failed": "无法接受邀请"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "重置请求过多。请等几分钟后重试。",
+    "sendFailed": "暂时无法发送重置链接。请检查网络连接后重试。"
+  },
+  "governanceDashboard": {
+    "loadFailed": "无法加载审计日志。"
+  },
+  "clickIsland": {
+    "chatEmpty": "暂时无法生成回复。请换个说法或重新发送。",
+    "chatRateLimited": "你已达到当前的 AI 使用上限，请稍后再试。",
+    "chatUnavailable": "AI 暂时无法回答，请稍后重试。",
+    "chatOffline": "暂时无法连接到助手。请检查网络连接后重试。"
+  },
+  "postStatus": {
+    "scheduled": "已排期",
+    "awaitingApproval": "待审批",
+    "publishing": "发布中",
+    "published": "已发布",
+    "retrying": "重试中",
+    "failed": "失败",
+    "cancelled": "已取消"
+  },
+  "creatorTools": {
+    "noResults": "这次没有结果。请重试或换个说法。",
+    "variantNotAdapted": "AI 无法改写这一条，这是你的原文。"
+  },
+  "contentRecycling": {
+    "loadFailed": "无法加载重新利用数据。",
+    "planCreated": "已创建重新利用计划。",
+    "createFailed": "无法创建重新利用计划。",
+    "toggleFailed": "无法更新重新利用计划。"
   }
 }
