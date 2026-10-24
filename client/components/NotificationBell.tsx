@@ -50,8 +50,15 @@ export default function NotificationBell() {
 
   useEffect(() => {
     if (socket) {
-      socket.on('notification', (notification: Notification) => {
-        setNotifications(prev => [notification, ...prev])
+      socket.on('notification', (raw: any) => {
+        // Socket payloads carry _id/createdAt now; older servers sent only id/timestamp.
+        const notification: Notification = {
+          ...raw,
+          _id: String(raw?._id ?? raw?.id ?? ''),
+          createdAt: raw?.createdAt ?? raw?.timestamp ?? new Date().toISOString(),
+          read: Boolean(raw?.read),
+        }
+        setNotifications(prev => [notification, ...prev.filter(n => n._id !== notification._id)])
         setUnreadCount(prev => prev + 1)
         showToast(notification.title, notification.type)
       })
@@ -77,27 +84,34 @@ export default function NotificationBell() {
     }
   }
 
+  // Optimistic: flip it now, roll back and tell the user if the server refuses.
   const markAsRead = async (notificationId: string) => {
+    const before = notifications
+    const beforeCount = unreadCount
+    const target = notifications.find(n => n._id === notificationId)
+    if (!target || target.read) return
+    setNotifications(prev => prev.map(n => n._id === notificationId ? { ...n, read: true } : n))
+    setUnreadCount(prev => Math.max(0, prev - 1))
     try {
-
       await apiPut(`/notifications/${notificationId}/read`, {})
-      setNotifications(prev =>
-        prev.map(n => n._id === notificationId ? { ...n, read: true } : n)
-      )
-      setUnreadCount(prev => Math.max(0, prev - 1))
     } catch (error) {
-      console.error('Failed to mark notification as read', error)
+      setNotifications(before)
+      setUnreadCount(beforeCount)
+      showToast(t('notificationBell.markReadFailed'), 'error')
     }
   }
 
   const markAllAsRead = async () => {
+    const before = notifications
+    const beforeCount = unreadCount
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    setUnreadCount(0)
     try {
-
       await apiPut('/notifications/read-all', {})
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })))
-      setUnreadCount(0)
     } catch (error) {
-      console.error('Failed to mark all as read', error)
+      setNotifications(before)
+      setUnreadCount(beforeCount)
+      showToast(t('notificationBell.markReadFailed'), 'error')
     }
   }
 

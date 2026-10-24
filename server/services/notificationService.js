@@ -169,8 +169,16 @@ class NotificationService {
       }
 
       const uid = normalizeUserId(userId);
+      const id = notification.id || notification._id || Date.now().toString();
+      const at = notification.timestamp || notification.createdAt || new Date();
       const notificationData = {
-        id: notification.id || Date.now().toString(),
+        // `_id`/`createdAt` mirror the REST shape (GET /notifications) the bell
+        // and the notifications page key on; `id`/`timestamp` stay for older
+        // listeners. Without them a live notification had no key, could not be
+        // marked read (PUT /notifications/undefined/read) and showed no date.
+        _id: String(id),
+        id: String(id),
+        createdAt: at,
         type: notification.type || 'info',
         title: notification.title,
         message: notification.message,
@@ -180,7 +188,7 @@ class NotificationService {
         aiSummary: notification.aiSummary || null,
         suggestion: notification.suggestion || null,
         data: notification.data || {},
-        timestamp: notification.timestamp || new Date(),
+        timestamp: at,
         read: false
       };
 

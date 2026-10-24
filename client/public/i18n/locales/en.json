@@ -1414,7 +1414,20 @@
     "accessOriginNode": "Open",
     "resonanceAck": "Mark as read",
     "confirmPurgeSignal": "Delete this notification?",
-    "purgeSignal": "Delete"
+    "purgeSignal": "Delete",
+    "category_task": "Tasks",
+    "category_project": "Projects",
+    "category_content": "Content",
+    "category_approval": "Approvals",
+    "category_mention": "Mentions",
+    "category_system": "System",
+    "category_workflow": "Workflows",
+    "category_publishing": "Publishing",
+    "category_recurring": "Recurring posts",
+    "category_brief": "Daily brief",
+    "bulkReadFailed": "{{failed}} of {{total}} couldn't be marked as read.",
+    "bulkDeleteFailed": "{{failed}} of {{total}} couldn't be deleted.",
+    "loadFailed": "Couldn't load notifications."
   },
   "onboardingPage": {
     "loading": "Loading",
@@ -6335,7 +6348,8 @@
     "markAllAsRead": "Mark all as read",
     "loading": "Loading...",
     "noNotifications": "No notifications",
-    "view": "View"
+    "view": "View",
+    "markReadFailed": "Couldn't mark that as read. Try again."
   },
   "notificationPreferences": {
     "title": "Notification Preferences",

@@ -51,15 +51,21 @@ function applyPriorityFilter(query, priorityTiers) {
  */
 router.get('/', auth, asyncHandler(async (req, res) => {
   try {
-    const { unread, limit = 50, category } = req.query;
+    const { unread, read, limit = 50, category } = req.query;
     const userId = normalizeUserId(getUserId(req));
     const query = { userId };
 
     if (unread === 'true') {
       query.read = false;
+    } else if (read === 'true') {
+      // The page's "Read" filter sends read=true; it used to be ignored and
+      // returned every notification.
+      query.read = true;
     }
-    if (category && ['task', 'project', 'content', 'approval', 'mention', 'system', 'workflow'].includes(category)) {
-      query.category = category;
+    // Same values as the Notification.category enum (publishing/recurring/brief
+    // were missing, so filtering on them returned everything).
+    if (category && Notification.schema.path('category').enumValues.includes(String(category))) {
+      query.category = String(category);
     }
 
     let priorityTiers = null;
