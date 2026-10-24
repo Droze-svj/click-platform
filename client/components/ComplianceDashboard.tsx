@@ -24,6 +24,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { extractApiData } from '../utils/apiResponse'
+import { apiGet, apiPost, apiDelete, handleApiError } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -50,6 +51,14 @@ interface BreakdownSection {
   spamScore?: number
   checkedUrls?: number
   categories?: Record<string, boolean>
+}
+
+interface WorkspaceComplianceReport {
+  totalRules: number
+  activeRules: number
+  totalTriggers: number
+  byCategory: Record<string, { rules: number; triggers: number }>
+  recentTriggers: { ruleId: string; name: string; category: string; triggerCount: number; lastTriggeredAt: string }[]
 }
 
 interface ComplianceReport {
@@ -224,8 +233,14 @@ export default function ComplianceDashboard() {
   const [isLoadingPolicies, setIsLoadingPolicies] = useState(false)
 
   // ── History State ──
-  const [history, setHistory] = useState<{ summary: any; items: any[] } | null>(null)
+  // GET /moderation/report/workspace → rule inventory + trigger counts.
+  const [history, setHistory] = useState<WorkspaceComplianceReport | null>(null)
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+
+  // Per-tab load/save errors (these used to be swallowed by empty catches).
+  const [rulesError, setRulesError] = useState<string | null>(null)
+  const [policiesError, setPoliciesError] = useState<string | null>(null)
+  const [historyError, setHistoryError] = useState<string | null>(null)
 
   // ─── Checker ─────────────────────────────────────────────────────────────
 
@@ -236,26 +251,15 @@ export default function ComplianceDashboard() {
     setReport(null)
 
     try {
-      const response = await fetch('/api/moderation/compliance-check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          text: checkerText,
-          platforms: selectedPlatforms.length > 0 ? selectedPlatforms : undefined,
-        }),
+      const data = await apiPost('/moderation/compliance-check', {
+        text: checkerText,
+        platforms: selectedPlatforms.length > 0 ? selectedPlatforms : undefined,
       })
-
-      if (!response.ok) {
-        const err = await response.json()
-        throw new Error(err.message || t('complianceDashboard.checkFailed'))
-      }
-
-      const data = await response.json()
       const result = extractApiData<ComplianceReport>(data)
       if (result) setReport(result)
+      else setCheckerError(t('complianceDashboard.checkFailed'))
     } catch (err: any) {
-      setCheckerError(err.message)
+      setCheckerError(handleApiError(err) || t('complianceDashboard.checkFailed'))
     } finally {
       setIsChecking(false)
     }
@@ -269,83 +273,82 @@ export default function ComplianceDashboard() {
 
   const loadRules = useCallback(async () => {
     setIsLoadingRules(true)
+    setRulesError(null)
     try {
-      const res = await fetch('/api/moderation/rules', { credentials: 'include' })
-      if (res.ok) {
-        const data = await res.json()
-        setRules(extractApiData<ComplianceRule[]>(data) || [])
-      }
-    } catch { /* silent */ } finally {
+      const data = await apiGet('/moderation/rules', undefined, false)
+      const list = extractApiData<ComplianceRule[]>(data)
+      setRules(Array.isArray(list) ? list : [])
+    } catch (err) {
+      setRulesError(handleApiError(err) || t('complianceDashboard.rulesLoadFailed'))
+    } finally {
       setIsLoadingRules(false)
     }
-  }, [])
+  }, [t])
 
   const handleSaveRule = async () => {
     setIsSavingRule(true)
+    setRulesError(null)
     try {
-      const res = await fetch('/api/moderation/rules', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          ...newRule,
-          keywords: newRule.keywords.split(',').map(k => k.trim()).filter(Boolean),
-        }),
+      const list = newRule.keywords.split(',').map(k => k.trim()).filter(Boolean)
+      const data = await apiPost('/moderation/rules', {
+        ...newRule,
+        keywords: list,
+        // A URL rule matches on blockedDomains and a regex rule on pattern —
+        // the form collects both in the same field.
+        ...(newRule.ruleType === 'url_block' ? { blockedDomains: list } : {}),
+        ...(newRule.ruleType === 'regex' ? { pattern: newRule.keywords.trim() } : {}),
       })
-
-      if (res.ok) {
-        const data = await res.json()
-        const rule = extractApiData<ComplianceRule>(data)
-        if (rule) setRules(prev => [rule, ...prev])
-        setIsAddingRule(false)
-        setNewRule({ name: '', category: 'brand_safety', ruleType: 'keyword_block', keywords: '', severity: 'warning' })
-      }
-    } catch { /* silent */ } finally {
+      const rule = extractApiData<ComplianceRule>(data)
+      if (rule) setRules(prev => [rule, ...prev])
+      setIsAddingRule(false)
+      setNewRule({ name: '', category: 'brand_safety', ruleType: 'keyword_block', keywords: '', severity: 'warning' })
+    } catch (err) {
+      setRulesError(handleApiError(err) || t('complianceDashboard.ruleSaveFailed'))
+    } finally {
       setIsSavingRule(false)
     }
   }
 
   const handleDeleteRule = async (ruleId: string) => {
+    setRulesError(null)
     try {
-      const res = await fetch(`/api/moderation/rules/${ruleId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      })
-      if (res.ok) {
-        setRules(prev => prev.filter(r => r._id !== ruleId))
-      }
-    } catch { /* silent */ }
+      await apiDelete(`/moderation/rules/${encodeURIComponent(ruleId)}`)
+      setRules(prev => prev.filter(r => r._id !== ruleId))
+    } catch (err) {
+      setRulesError(handleApiError(err) || t('complianceDashboard.ruleDeleteFailed'))
+    }
   }
 
   // ─── Platform Policies ────────────────────────────────────────────────────
 
   const loadPolicies = useCallback(async () => {
     setIsLoadingPolicies(true)
+    setPoliciesError(null)
     try {
-      const res = await fetch('/api/moderation/platform-policies', { credentials: 'include' })
-      if (res.ok) {
-        const data = await res.json()
-        setPolicies(extractApiData<Record<string, PlatformPolicy>>(data) || {})
-      }
-    } catch { /* silent */ } finally {
+      const data = await apiGet('/moderation/platform-policies')
+      setPolicies(extractApiData<Record<string, PlatformPolicy>>(data) || {})
+    } catch (err) {
+      setPoliciesError(handleApiError(err) || t('complianceDashboard.policiesLoadFailed'))
+    } finally {
       setIsLoadingPolicies(false)
     }
-  }, [])
+  }, [t])
 
   // ─── History ─────────────────────────────────────────────────────────────
 
   const loadHistory = useCallback(async () => {
     setIsLoadingHistory(true)
+    setHistoryError(null)
     try {
-      const res = await fetch('/api/moderation/report/workspace', { credentials: 'include' })
-      if (res.ok) {
-        const data = await res.json()
-        setHistory(extractApiData(data) as any)
-      }
-    } catch { /* silent */ } finally {
+      const data = await apiGet('/moderation/report/workspace', undefined, false)
+      const report = extractApiData<WorkspaceComplianceReport>(data)
+      setHistory(report && typeof report === 'object' ? report : null)
+    } catch (err) {
+      setHistoryError(handleApiError(err) || t('complianceDashboard.historyLoadFailed'))
+    } finally {
       setIsLoadingHistory(false)
     }
-  }, [])
+  }, [t])
 
   // Tab change side-effects
   const handleTabChange = (tab: typeof activeTab) => {
@@ -676,6 +679,13 @@ export default function ComplianceDashboard() {
                   </div>
                 )}
 
+                {rulesError && (
+                  <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm" role="alert">
+                    <XCircle className="w-4 h-4 flex-shrink-0" />
+                    {rulesError}
+                  </div>
+                )}
+
                 {/* Rules list */}
                 {isLoadingRules ? (
                   <div className="flex items-center justify-center py-12">
@@ -743,6 +753,13 @@ export default function ComplianceDashboard() {
                   <h2 className="font-semibold text-gray-900 dark:text-[var(--text-main)]">{t('complianceDashboard.platformPoliciesTitle')}</h2>
                   <p className="text-xs text-gray-500 mt-0.5">{t('complianceDashboard.platformPoliciesSubtitle')}</p>
                 </div>
+
+                {policiesError && (
+                  <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm" role="alert">
+                    <XCircle className="w-4 h-4 flex-shrink-0" />
+                    {policiesError}
+                  </div>
+                )}
 
                 {isLoadingPolicies ? (
                   <div className="flex items-center justify-center py-12">
@@ -823,15 +840,19 @@ export default function ComplianceDashboard() {
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
                   </div>
-                ) : history ? (
+                ) : historyError ? (
+                  <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm" role="alert">
+                    <XCircle className="w-4 h-4 flex-shrink-0" />
+                    {historyError}
+                  </div>
+                ) : history && history.totalRules > 0 ? (
                   <>
                     {/* Summary stats */}
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                       {[
-                        { label: t('complianceDashboard.totalChecks'), value: history.summary.total, color: 'text-indigo-600' },
-                        { label: t('complianceDashboard.passed'), value: history.summary.passed, color: 'text-emerald-600' },
-                        { label: t('complianceDashboard.warnings'), value: history.summary.warnings, color: 'text-amber-600' },
-                        { label: t('complianceDashboard.failed'), value: history.summary.failed, color: 'text-red-600' },
+                        { label: t('complianceDashboard.totalRulesStat'), value: history.totalRules ?? 0, color: 'text-indigo-600' },
+                        { label: t('complianceDashboard.activeRulesStat'), value: history.activeRules ?? 0, color: 'text-emerald-600' },
+                        { label: t('complianceDashboard.totalTriggersStat'), value: history.totalTriggers ?? 0, color: 'text-amber-600' },
                       ].map(stat => (
                         <div key={stat.label} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl text-center">
                           <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
@@ -839,55 +860,37 @@ export default function ComplianceDashboard() {
                         </div>
                       ))}
                     </div>
-                    {history.summary.avgScore != null && (
-                      <p className="text-center text-sm text-gray-500">
-                        {t('complianceDashboard.avgScoreLabel')} <span className="font-semibold text-gray-900 dark:text-white">{t('complianceDashboard.scoreOutOf100', { score: history.summary.avgScore })}</span>
-                      </p>
-                    )}
 
-                    {/* Items table */}
-                    <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
-                      <table className="w-full text-sm">
-                        <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                          <tr>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{t('complianceDashboard.colContent')}</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{t('complianceDashboard.colStatus')}</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{t('complianceDashboard.colScore')}</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{t('complianceDashboard.colChecked')}</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                          {history.items.map((item: any) => {
-                            const s = STATUS_STYLES[item.complianceCheck?.status as 'passed' | 'warning' | 'failed'] || STATUS_STYLES.passed
-                            const Icon = s.icon
-                            return (
-                              <tr key={item._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    {/* Recently triggered rules */}
+                    {Array.isArray(history.recentTriggers) && history.recentTriggers.length > 0 ? (
+                      <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                            <tr>
+                              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{t('complianceDashboard.colRule')}</th>
+                              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{t('complianceDashboard.colTriggers')}</th>
+                              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{t('complianceDashboard.colLastTriggered')}</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                            {history.recentTriggers.map((item) => (
+                              <tr key={String(item.ruleId)} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                                 <td className="px-4 py-3">
-                                  <p className="font-medium text-gray-900 dark:text-white truncate max-w-48">
-                                    {item.title || t('complianceDashboard.untitled')}
-                                  </p>
-                                  <p className="text-xs text-gray-400 capitalize">{item.type}</p>
+                                  <p className="font-medium text-gray-900 dark:text-white truncate max-w-48">{item.name}</p>
+                                  <p className="text-xs text-gray-400 capitalize">{String(item.category || '').replace(/_/g, ' ')}</p>
                                 </td>
-                                <td className="px-4 py-3">
-                                  <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${s.bg} ${s.text} border ${s.border}`}>
-                                    <Icon className="w-3.5 h-3.5" />
-                                    <span className="capitalize">{item.complianceCheck?.status}</span>
-                                  </div>
-                                </td>
-                                <td className="px-4 py-3 font-mono text-sm text-gray-700 dark:text-gray-300">
-                                  {item.complianceCheck?.score ?? '—'}/100
-                                </td>
+                                <td className="px-4 py-3 font-mono text-sm text-gray-700 dark:text-gray-300">{item.triggerCount ?? 0}</td>
                                 <td className="px-4 py-3 text-xs text-gray-400">
-                                  {item.complianceCheck?.checkedAt
-                                    ? new Date(item.complianceCheck.checkedAt).toLocaleDateString()
-                                    : '—'}
+                                  {item.lastTriggeredAt ? new Date(item.lastTriggeredAt).toLocaleDateString() : '—'}
                                 </td>
                               </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-center text-sm text-gray-500">{t('complianceDashboard.noTriggersYet')}</p>
+                    )}
                   </>
                 ) : (
                   <div className="text-center py-12 text-gray-400">

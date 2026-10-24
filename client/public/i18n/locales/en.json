@@ -4324,7 +4324,19 @@
     "colChecked": "Checked",
     "untitled": "(Untitled)",
     "noHistory": "No compliance history yet.",
-    "noHistoryHint": "Run a check on your content to start tracking."
+    "noHistoryHint": "Run a check on your content to start tracking.",
+    "rulesLoadFailed": "Couldn't load your rules.",
+    "ruleSaveFailed": "Couldn't save the rule.",
+    "ruleDeleteFailed": "Couldn't delete the rule.",
+    "policiesLoadFailed": "Couldn't load platform policies.",
+    "historyLoadFailed": "Couldn't load compliance history.",
+    "totalRulesStat": "Rules",
+    "activeRulesStat": "Active rules",
+    "totalTriggersStat": "Times triggered",
+    "colRule": "Rule",
+    "colTriggers": "Triggers",
+    "colLastTriggered": "Last triggered",
+    "noTriggersYet": "None of your rules has been triggered yet."
   },
   "confirmDialog": {
     "confirm": "Confirm",

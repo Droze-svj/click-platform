@@ -238,8 +238,22 @@ router.post('/compliance-check', auth, asyncHandler(async (req, res) => {
   // Stored rules, split into the sections the dashboard renders. Partition the
   // rules first so an issue never has to carry a marker key that is then peeled
   // back off.
-  const linkIssues = rules.filter((r) => r.ruleType === 'url_block').flatMap((r) => applyRule(r, text));
-  const brandIssues = rules.filter((r) => r.ruleType !== 'url_block').flatMap((r) => applyRule(r, text));
+  const linkIssues = [];
+  const brandIssues = [];
+  const triggeredRuleIds = [];
+  for (const r of rules) {
+    const issues = applyRule(r, text);
+    if (!issues.length) continue;
+    triggeredRuleIds.push(r._id);
+    (r.ruleType === 'url_block' ? linkIssues : brandIssues).push(...issues);
+  }
+  // Record the hits so the History tab (GET /report/workspace) has real counts.
+  if (triggeredRuleIds.length) {
+    await ComplianceRule.updateMany(
+      { _id: { $in: triggeredRuleIds }, workspaceId },
+      { $inc: { triggerCount: 1 }, $set: { lastTriggeredAt: new Date() } }
+    ).catch(() => {});
+  }
 
   const hashtagCount = (text.match(HASHTAG_RE) || []).length;
   const urls = text.match(URL_RE) || [];
