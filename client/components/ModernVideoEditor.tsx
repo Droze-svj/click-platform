@@ -2076,7 +2076,50 @@ const ModernVideoEditor: React.FC<{
 
   const getCategoryContent = () => {
     switch (activeCategory) {
-      case 'ai': return <CreativeAIView videoId={videoId || ''} showToast={showToast} setShapeOverlays={setShapeOverlays} setVideoFilters={setVideoFilters} transcript={transcript} onUpdateBroll={(brolls) => {
+      case 'ai': return <CreativeAIView videoId={videoId || ''} showToast={showToast} setShapeOverlays={setShapeOverlays} setVideoFilters={setVideoFilters} transcript={transcript}
+        videoUrl={actualVideoUrl || ''}
+        setVideoCrop={setVideoCrop}
+        onAddMarkers={(markers) => setTimelineMarkers((prev) => [
+          ...prev,
+          ...markers.map((m, i) => ({ id: `ramp-${Date.now()}-${i}`, time: m.time, name: m.name })),
+        ])}
+        onUseProcessedVideo={(url, label) => {
+          // A processed full-length version of the source (fill frame,
+          // background swap, eye contact) goes on the next free video track
+          // above everything, muted so the original audio isn't doubled.
+          const dur = videoState.duration > 0 ? videoState.duration : 60
+          setTimelineSegments((prev: TimelineSegment[]) => {
+            const used = prev.filter((s) => s.type === 'video').map((s) => s.track ?? 0)
+            const track = Math.min(5, (used.length ? Math.max(...used) : 0) + 1)
+            return [...prev, {
+              id: `processed-${Date.now()}`,
+              startTime: 0,
+              endTime: dur,
+              duration: dur,
+              type: 'video' as const,
+              name: label,
+              color: '#0ea5e9',
+              track,
+              sourceUrl: url,
+              volume: 0,
+            }]
+          })
+        }}
+        onAddAudioTrack={(url, label) => {
+          const dur = videoState.duration > 0 ? videoState.duration : 60
+          setTimelineSegments((prev: TimelineSegment[]) => [...prev, {
+            id: `dub-${Date.now()}`,
+            startTime: 0,
+            endTime: dur,
+            duration: dur,
+            type: 'audio' as const,
+            name: label,
+            color: '#f97316',
+            track: 7, // dialogue track (same as AI voiceover)
+            sourceUrl: url,
+          }])
+        }}
+        onUpdateBroll={(brolls) => {
         // Logic to dispatch overlays from Creative AI mapping.
         // For B-Roll, we map the incoming items to our state type.
         // We'll map them as timeline segments for direct editing capabilities!

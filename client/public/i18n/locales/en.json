@@ -8562,6 +8562,16 @@
     "pacingOverlayLabel": "Example pacing: {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "Cropped the frame to {{ratio}}. Export with a {{ratio}} preset to keep the full frame.",
+    "reframeNotApplied": "The {{ratio}} crop couldn't be applied because the video's frame size isn't known yet. Try again once it has loaded.",
+    "resultAddedToTimeline": "{{tool}}: the new version was added to your timeline.",
+    "resultReady": "{{tool}} is done. Open the result below.",
+    "noOutput": "{{tool}} finished but didn't return a file. Please try again.",
+    "speedRampMarker": "Speed {{speed}}x",
+    "speedRampMarked": "Added {{count}} speed-ramp markers to your timeline. Set the speed at each marker to apply them.",
+    "speedRampPlanOnly": "Planned {{count}} speed ramps. They haven't been applied to your video.",
+    "dubAddedToTimeline": "Added the Spanish voice track to your timeline. Mute the original audio to hear only the dub.",
+    "openResult": "Open result",
     "reframeStarting": "Reframing your video around the main subject…",
     "reframeDone": "Auto-reframe finished.",
     "reframeFailed": "Auto-reframe didn't work. Please try again.",
