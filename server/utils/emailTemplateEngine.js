@@ -32,9 +32,14 @@ function renderTemplate(template, variables = {}) {
   let rendered = template;
 
   // Replace variables {{variable}}
+  // Values are escaped for HTML (user text is stored as typed). Keys ending in
+  // Url/Html are trusted markup/links built by the server.
+  const { escapeHtml } = require('./escapeHtml');
   Object.keys(variables).forEach(key => {
     const regex = new RegExp(`{{${key}}}`, 'g');
-    rendered = rendered.replace(regex, variables[key] || '');
+    const raw = variables[key] || '';
+    const value = /(Url|Html)$/.test(key) ? String(raw) : escapeHtml(raw);
+    rendered = rendered.replace(regex, () => value);
   });
 
   // Default variables

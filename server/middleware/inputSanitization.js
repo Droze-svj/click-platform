@@ -4,7 +4,7 @@ const { body, query, param } = require('express-validator');
 const { validationResult } = require('express-validator');
 const logger = require('../utils/logger');
 const { sendError } = require('../utils/response');
-const { sanitizeString, sanitizeObject, sanitizeMongoQuery, validateInput } = require('../utils/inputSanitizer');
+const { sanitizeString, sanitizeObject, sanitizeMongoQuery, validateInput, sanitizeRequestValue } = require('../utils/inputSanitizer');
 
 // Use advanced sanitizer from utils
 
@@ -68,16 +68,17 @@ function sanitizeInput(req, res, next) {
     if (SANITIZER_BYPASS_PATHS.some((rx) => rx.test(reqPath))) {
       return next();
     }
-    if (req.body) {
-      req.body = sanitizeObject(req.body, {});
+    // Text is stored as typed (see sanitizeRequestValue) — no HTML-escaping.
+    if (req.body && typeof req.body === 'object' && !Buffer.isBuffer(req.body)) {
+      req.body = sanitizeRequestValue(req.body);
     }
     if (req.query) {
-      req.query = sanitizeObject(req.query, {});
+      req.query = sanitizeRequestValue(req.query);
       // Also sanitize MongoDB queries
       req.query = sanitizeMongoQuery(req.query);
     }
     if (req.params) {
-      req.params = sanitizeObject(req.params, {});
+      req.params = sanitizeRequestValue(req.params);
     }
     next();
   } catch (error) {

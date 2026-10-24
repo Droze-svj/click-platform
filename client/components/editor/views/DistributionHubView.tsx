@@ -177,7 +177,16 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
             // server file path and failed for every editor publish.
             return apiPost('/oauth/tiktok/post', { videoUrl, caption })
           }
-          return apiPost(`/oauth/${platform}/upload`, { videoFile: videoUrl, caption })
+          // Twitter, LinkedIn and Facebook have no video-upload route here
+          // (/oauth/<platform>/upload only exists for YouTube/TikTok, so this
+          // always failed). They post the caption with a link to the video.
+          const withLink = isPublicUrl ? `${caption}${caption ? '\n\n' : ''}${videoUrl}` : caption
+          if (platform === 'facebook') {
+            return apiPost('/oauth/facebook/post', { text: caption, ...(isPublicUrl ? { link: videoUrl } : {}) })
+          }
+          if (platform === 'linkedin') return apiPost('/oauth/linkedin/post', { text: withLink })
+          if (platform === 'twitter') return apiPost('/oauth/twitter/post', { text: withLink })
+          return Promise.reject(new Error(`Publishing to ${platform} isn't supported here`))
         })
       )
 

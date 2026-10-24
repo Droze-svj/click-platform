@@ -2,6 +2,7 @@
 // Automated report generation and delivery
 
 const ScheduledReport = require('../models/ScheduledReport');
+const { escapeHtml, textToHtml } = require('../utils/escapeHtml');
 const { generateReport } = require('./reportBuilderService');
 const { generateReportSummary } = require('./aiReportSummaryService');
 const GeneratedReport = require('../models/GeneratedReport');
@@ -244,18 +245,21 @@ async function buildBrandedReportEmail(report, scheduled) {
   const branding = (agency && agency.settings && agency.settings.branding) || {};
   const agencyName = (agency && agency.name) || 'Your Agency';
   const clientName = (client && client.name) || 'your account';
-  const accent = branding.primaryColor || '#4f46e5';
-  const reportUrl = `${process.env.APP_URL || ''}/reports/${report._id}`;
-  const logoTag = branding.logo
-    ? `<img src="${branding.logo}" alt="${agencyName}" style="max-height:48px;margin-bottom:16px" />`
-    : `<h3 style="color:${accent};margin:0 0 16px">${agencyName}</h3>`;
+  // Agency-entered values: colour must be a plain hex (it lands in a style
+  // attribute), the logo an http(s) URL, and all text is escaped.
+  const accent = /^#[0-9a-f]{3,8}$/i.test(String(branding.primaryColor || '')) ? branding.primaryColor : '#4f46e5';
+  const reportUrl = escapeHtml(`${process.env.APP_URL || ''}/reports/${report._id}`);
+  const safeAgency = escapeHtml(agencyName);
+  const logoTag = branding.logo && /^https?:\/\//i.test(String(branding.logo))
+    ? `<img src="${escapeHtml(branding.logo)}" alt="${safeAgency}" style="max-height:48px;margin-bottom:16px" />`
+    : `<h3 style="color:${accent};margin:0 0 16px">${safeAgency}</h3>`;
 
   return `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1f2937">
       ${logoTag}
-      <h2 style="margin:0 0 8px">Your report for ${clientName} is ready</h2>
-      <p style="color:#6b7280;margin:0 0 16px">Prepared by ${agencyName}</p>
-      ${report.aiSummary?.text ? `<div style="background:#f9fafb;border-left:4px solid ${accent};padding:12px 16px;margin:0 0 16px">${report.aiSummary.text}</div>` : ''}
+      <h2 style="margin:0 0 8px">Your report for ${escapeHtml(clientName)} is ready</h2>
+      <p style="color:#6b7280;margin:0 0 16px">Prepared by ${safeAgency}</p>
+      ${report.aiSummary?.text ? `<div style="background:#f9fafb;border-left:4px solid ${accent};padding:12px 16px;margin:0 0 16px">${textToHtml(report.aiSummary.text)}</div>` : ''}
       <p><a href="${reportUrl}" style="display:inline-block;background:${accent};color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none">View full report</a></p>
       <p style="color:#9ca3af;font-size:12px;margin-top:24px">${reportUrl}</p>
     </div>

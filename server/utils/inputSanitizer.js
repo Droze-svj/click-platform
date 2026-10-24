@@ -133,6 +133,36 @@ function sanitizeObject(obj, schema = {}) {
 }
 
 /**
+ * Clean a request body/query/params value for storage — NOT for HTML.
+ *
+ * Strings are trimmed and null bytes removed; they are no longer HTML-escaped.
+ * Escaping on the way in stored every user's text as `Tom&#x27;s &amp; co`,
+ * which then went out verbatim to social platforms, exports and the UI, and
+ * mangled URLs (`https:&#x2F;&#x2F;…`). HTML-escaping belongs at the point of
+ * HTML output (React does it; emails use utils/escapeHtml).
+ *
+ * Keys starting with `$` are dropped at every depth (MongoDB operators), and
+ * keys lose the characters the old sanitizer removed from them.
+ */
+function sanitizeRequestValue(value, depth = 0) {
+  if (depth > 32) return undefined;
+  if (typeof value === 'string') return value.trim().replace(/\0/g, '');
+  if (Array.isArray(value)) return value.map((v) => sanitizeRequestValue(v, depth + 1));
+  if (!value || typeof value !== 'object') return value;
+  // Leave non-plain objects (Buffers, Dates, uploaded file descriptors) alone.
+  const proto = Object.getPrototypeOf(value);
+  if (proto !== Object.prototype && proto !== null) return value;
+  const out = {};
+  for (const [rawKey, v] of Object.entries(value)) {
+    if (rawKey.startsWith('$')) continue;
+    const key = rawKey.replace(/[<>"'%;()&+]/g, '');
+    if (!key || key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+    out[key] = sanitizeRequestValue(v, depth + 1);
+  }
+  return out;
+}
+
+/**
  * Validate and sanitize MongoDB query
  */
 function sanitizeMongoQuery(query) {
@@ -259,6 +289,7 @@ function validateInput(input, schema) {
 }
 
 module.exports = {
+  sanitizeRequestValue,
   sanitizeString,
   sanitizeEmail,
   sanitizeURL,

@@ -4,6 +4,7 @@
  */
 
 const nodemailer = require('nodemailer')
+const { escapeHtml } = require('./escapeHtml');
 const { WebClient } = require('@slack/web-api')
 const logger = require('./logger');
 const { safeJsonParse } = require('./safeJson');
@@ -339,26 +340,26 @@ class AlertingSystem {
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: ${color}; border-bottom: 2px solid ${color}; padding-bottom: 10px;">
-          🚨 ${alert.type} (${alert.severity})
+          🚨 ${escapeHtml(alert.type)} (${escapeHtml(alert.severity)})
         </h1>
 
         <div style="background: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 5px;">
           <strong>Time:</strong> ${timestamp}<br>
-          <strong>Environment:</strong> ${alert.environment}<br>
-          <strong>Host:</strong> ${alert.hostname}<br>
-          <strong>Version:</strong> ${alert.version}
+          <strong>Environment:</strong> ${escapeHtml(alert.environment)}<br>
+          <strong>Host:</strong> ${escapeHtml(alert.hostname)}<br>
+          <strong>Version:</strong> ${escapeHtml(alert.version)}
         </div>
 
         <div style="background: #fff; padding: 15px; margin: 20px 0; border: 1px solid #ddd; border-radius: 5px;">
           <h3>Description:</h3>
-          <p>${this.formatAlertDescription(alert)}</p>
+          <p>${escapeHtml(this.formatAlertDescription(alert))}</p>
         </div>
 
         ${alert.data ? `
           <div style="background: #f9f9f9; padding: 15px; margin: 20px 0; border: 1px solid #ddd; border-radius: 5px;">
             <h3>Details:</h3>
             <pre style="background: #fff; padding: 10px; border-radius: 3px; overflow-x: auto;">
-${JSON.stringify(alert.data, null, 2)}
+${escapeHtml(JSON.stringify(alert.data, null, 2))}
             </pre>
           </div>
         ` : ''}

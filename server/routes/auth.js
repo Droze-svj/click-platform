@@ -12,6 +12,7 @@ const { validateRegister, validateLogin } = require('../validators/authValidator
 const { sendWelcomeEmail } = require('../services/emailService');
 const { validatePasswordPolicy, getPasswordSuggestions } = require('../utils/passwordPolicy');
 const logger = require('../utils/logger');
+const { escapeHtml } = require('../utils/escapeHtml');
 logger.debug('✅ Auth route dependencies loaded');
 const router = express.Router();
 
@@ -257,7 +258,7 @@ router.post('/register',
           html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #333; text-align: center;">Welcome to Click Platform!</h2>
-            <p>Hello ${user.name},</p>
+            <p>Hello ${escapeHtml(user.name)},</p>
             <p>Thank you for registering with Click Platform! To complete your registration and start using our services, please verify your email address.</p>
 
             <div style="text-align: center; margin: 30px 0;">
@@ -468,7 +469,7 @@ router.post('/resend-verification', authRateLimiter, requireSupabase, async (req
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #333; text-align: center;">Verify Your Email</h2>
-            <p>Hello ${user.first_name} ${user.last_name},</p>
+            <p>Hello ${escapeHtml(user.first_name)} ${escapeHtml(user.last_name)},</p>
             <p>Please verify your email address to complete your Click Platform registration.</p>
 
             <div style="text-align: center; margin: 30px 0;">
@@ -683,7 +684,7 @@ router.post('/login',
 
       // Verify password
       const bcrypt = require('bcryptjs');
-      const isValidPassword = await bcrypt.compare(password, user.password);
+      const isValidPassword = (await require('../utils/passwordCompat').comparePasswordCompat(password, user.password)).match;
 
       if (!isValidPassword) {
         // Increment login attempts and record timestamp
@@ -1405,7 +1406,7 @@ router.post('/change-password', authRateLimiter, require('../middleware/auth'), 
 
     // Verify current password
     const bcrypt = require('bcryptjs');
-    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+    const isValidPassword = (await require('../utils/passwordCompat').comparePasswordCompat(currentPassword, user.password)).match;
     if (!isValidPassword) {
       return res.status(400).json({ success: false, error: 'Current password is incorrect' });
     }
@@ -1976,7 +1977,7 @@ router.post('/deactivate', require('../middleware/auth'), async (req, res) => {
     }
 
     const bcrypt = require('bcryptjs');
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = (await require('../utils/passwordCompat').comparePasswordCompat(password, user.password)).match;
 
     if (!isValidPassword) {
       return res.status(400).json({ success: false, error: 'Invalid password' });
@@ -2038,7 +2039,7 @@ router.delete('/delete', require('../middleware/auth'), async (req, res) => {
     }
 
     const bcrypt = require('bcryptjs');
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = (await require('../utils/passwordCompat').comparePasswordCompat(password, user.password)).match;
 
     if (!isValidPassword) {
       return res.status(400).json({ success: false, error: 'Invalid password' });
@@ -2139,7 +2140,7 @@ router.post('/reactivate', authRateLimiter, async (req, res) => {
 
     // Verify password
     const bcrypt = require('bcryptjs');
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = (await require('../utils/passwordCompat').comparePasswordCompat(password, user.password)).match;
 
     if (!isValidPassword) {
       return res.status(400).json({ success: false, error: 'Invalid password' });

@@ -79,7 +79,16 @@ clientPortalUserSchema.pre('save', async function(next) {
 });
 
 clientPortalUserSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+  const { comparePasswordCompat } = require('../utils/passwordCompat');
+  const { match, legacy } = await comparePasswordCompat(candidatePassword, this.password);
+  if (match && legacy && this._id) {
+    // Stored from the old HTML-escaped input — re-hash the password as typed.
+    const hash = await bcrypt.hash(candidatePassword, 10);
+    // Written straight to the DB (not this.password) so a later save() of this
+    // document can't re-hash the hash.
+    await this.constructor.updateOne({ _id: this._id }, { $set: { password: hash } }).catch(() => {});
+  }
+  return match;
 };
 
 module.exports = mongoose.model('ClientPortalUser', clientPortalUserSchema);
