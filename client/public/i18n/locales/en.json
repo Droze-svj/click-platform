@@ -6769,7 +6769,10 @@
     "reach": "Reach",
     "virality": "Virality",
     "keyInsights": "Key Insights",
-    "recommendations": "Recommendations"
+    "recommendations": "Recommendations",
+    "ruleBasedNote": "Rule-based score from length, hashtags, emoji and questions. It is not a forecast of views or reach.",
+    "predictFailed": "Couldn't score this content. Try again.",
+    "needsText": "Add some text to score it."
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "Analytics synced successfully",
@@ -6792,7 +6795,9 @@
     "expectedViews": "Expected Views",
     "engagementRate": "Engagement Rate",
     "positiveFactors": "Positive Factors",
-    "recommendations": "Recommendations"
+    "recommendations": "Recommendations",
+    "predictFailed": "Couldn't predict performance. Try again.",
+    "ruleBasedNote": "AI is unavailable, so this is a rule-based score from length, hashtags, questions and calls to action. No view estimate is shown."
   },
   "phase8Dashboard": {
     "howItWorks": "How it works:",

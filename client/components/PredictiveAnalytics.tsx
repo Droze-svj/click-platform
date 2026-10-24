@@ -9,11 +9,13 @@ import { Skeleton, CardSkeleton } from './LoadingSkeleton';
 // import { ErrorBoundary } from './ErrorBoundary'; // Temporarily disabled for build
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { cn } from '../lib/utils';
-import { apiPost } from '../lib/api';
+import { apiPost, handleApiError } from '../lib/api';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface PerformancePrediction {
   expectedViews: { min: number; max: number };
+  forecastedViews?: { min: number; max: number } | null;
+  source?: 'heuristic' | 'ai-enhanced' | string;
   expectedEngagementRate: number;
   expectedLikes: number;
   expectedShares: number;
@@ -27,6 +29,7 @@ export default function PredictiveAnalytics() {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [prediction, setPrediction] = useState<PerformancePrediction | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [contentData, setContentData] = useState({
     title: '',
     body: '',
@@ -38,15 +41,23 @@ export default function PredictiveAnalytics() {
   const predictPerformance = async () => {
     if (!contentData.title || !contentData.body) return;
     setLoading(true);
+    setError(null);
     try {
-      const data = await apiPost<any>('/ai/predictive/performance', contentData);
-      if (data?.success && data?.data) {
-        setPrediction(data.data);
-      } else if (data?.data) {
-        setPrediction(data.data);
+      // The route reads req.body.contentData (it 400'd on the flat fields).
+      const data = await apiPost<any>('/ai/predictive/performance', { contentData });
+      const result = data?.data ?? null;
+      if (result && typeof result.performanceScore === 'number') {
+        setPrediction({
+          ...result,
+          positiveFactors: Array.isArray(result.positiveFactors) ? result.positiveFactors : [],
+          negativeFactors: Array.isArray(result.negativeFactors) ? result.negativeFactors : [],
+          recommendations: Array.isArray(result.recommendations) ? result.recommendations : [],
+        });
+      } else {
+        setError(t('predictiveAnalytics.predictFailed'));
       }
-    } catch (error) {
-      console.error('Predict performance error:', error);
+    } catch (err) {
+      setError(handleApiError(err) || t('predictiveAnalytics.predictFailed'));
     } finally {
       setLoading(false);
     }
@@ -122,6 +133,10 @@ export default function PredictiveAnalytics() {
             )}
           </Button>
 
+          {error && (
+            <p className="text-sm text-red-600 dark:text-red-400" role="alert">{error}</p>
+          )}
+
           {loading && !prediction && (
             <CardSkeleton />
           )}
@@ -141,18 +156,25 @@ export default function PredictiveAnalytics() {
                     {prediction.performanceScore}/100
                   </Badge>
                 </div>
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t('predictiveAnalytics.expectedViews')}</p>
-                    <p className="font-semibold">
-                      {prediction.expectedViews.min.toLocaleString()} - {prediction.expectedViews.max.toLocaleString()}
-                    </p>
+                {/* The heuristic's view range / engagement rate are fixed formulas
+                    of the score (200 + score x 120 views) — only show a range when
+                    the AI produced one, and label the rule-based fallback. */}
+                {prediction.source === 'ai-enhanced' && (prediction.forecastedViews || prediction.expectedViews) ? (
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">{t('predictiveAnalytics.expectedViews')}</p>
+                      <p className="font-semibold">
+                        {Number((prediction.forecastedViews || prediction.expectedViews).min || 0).toLocaleString()} - {Number((prediction.forecastedViews || prediction.expectedViews).max || 0).toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">{t('predictiveAnalytics.engagementRate')}</p>
+                      <p className="font-semibold">{prediction.expectedEngagementRate}%</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t('predictiveAnalytics.engagementRate')}</p>
-                    <p className="font-semibold">{prediction.expectedEngagementRate}%</p>
-                  </div>
-                </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-2">{t('predictiveAnalytics.ruleBasedNote')}</p>
+                )}
               </div>
 
               {prediction.positiveFactors.length > 0 && (

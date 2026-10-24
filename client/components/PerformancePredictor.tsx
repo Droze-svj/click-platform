@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { TrendingUp, TrendingDown, BarChart3, Zap } from 'lucide-react'
-import { apiPost } from '../lib/api'
+import { apiPost, handleApiError } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
 
 interface Prediction {
@@ -28,25 +28,34 @@ export default function PerformancePredictor({ content, onPredict }: Performance
   const { t } = useTranslation()
   const [prediction, setPrediction] = useState<Prediction | null>(null)
   const [isPredicting, setIsPredicting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handlePredict = async () => {
     setIsPredicting(true)
     try {
+      // POST /ai/predict-performance reads `text` (it 400'd on `content`).
       const data = await apiPost<any>('/ai/predict-performance', {
-        content: content.text,
+        text: content.text,
         type: content.type,
         platform: content.platform,
         tags: content.tags,
       })
       const result = data?.data ?? data
-      if (result) {
-        setPrediction(result)
+      if (result && typeof result.score === 'number') {
+        setPrediction({
+          ...result,
+          insights: Array.isArray(result.insights) ? result.insights : [],
+          recommendations: Array.isArray(result.recommendations) ? result.recommendations : [],
+        })
+        setError(null)
         if (onPredict) {
           onPredict(result)
         }
+      } else {
+        setError(t('performancePredictor.predictFailed'))
       }
-    } catch (error) {
-      console.error('Prediction failed:', error)
+    } catch (err) {
+      setError(handleApiError(err) || t('performancePredictor.predictFailed'))
     } finally {
       setIsPredicting(false)
     }
@@ -54,14 +63,21 @@ export default function PerformancePredictor({ content, onPredict }: Performance
 
   if (!prediction && !isPredicting) {
     return (
+      <div className="space-y-2">
+      {!content.text?.trim() && (
+        <p className="text-xs text-gray-500">{t('performancePredictor.needsText')}</p>
+      )}
+      {error && <p className="text-sm text-red-600 dark:text-red-400" role="alert">{error}</p>}
       <button
+        disabled={!content.text?.trim()}
         type="button"
         onClick={handlePredict}
-        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
+        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Zap className="w-4 h-4" />
         <span>{t('performancePredictor.predictPerformance')}</span>
       </button>
+      </div>
     )
   }
 
@@ -121,30 +137,10 @@ export default function PerformancePredictor({ content, onPredict }: Performance
         </div>
       </div>
 
-      {/* Metrics */}
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-          <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400 mx-auto mb-1" />
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
-            {prediction.engagement}%
-          </div>
-          <div className="text-xs text-gray-600 dark:text-gray-400">{t('performancePredictor.engagement')}</div>
-        </div>
-        <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-          <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
-            {prediction.reach}K
-          </div>
-          <div className="text-xs text-gray-600 dark:text-gray-400">{t('performancePredictor.reach')}</div>
-        </div>
-        <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-          <Zap className="w-5 h-5 text-purple-600 dark:text-purple-400 mx-auto mb-1" />
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
-            {prediction.virality}%
-          </div>
-          <div className="text-xs text-gray-600 dark:text-gray-400">{t('performancePredictor.virality')}</div>
-        </div>
-      </div>
+      {/* The engagement / reach / virality tiles were fixed multiples of the
+          score (reach = score x 7.5 "K") presented as forecasts. Say what the
+          score actually is instead. */}
+      <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">{t('performancePredictor.ruleBasedNote')}</p>
 
       {/* Insights */}
       {prediction.insights.length > 0 && (
