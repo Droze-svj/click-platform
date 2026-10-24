@@ -8808,6 +8808,24 @@
     "closeShortcuts": "Close shortcuts",
     "searchTools": "Search tools"
   },
+  "aiTimelineChat": {
+    "title": "Timeline assistant",
+    "greeting": "Tell me what to change. I can apply a color grade, add a title, change the playback speed, or open Export to pick a different frame shape.",
+    "placeholder": "e.g. Make it cinematic",
+    "send": "Send message",
+    "appliedGrade": "Applied the {{grade}} color grade.",
+    "gradeNotApplied": "I couldn't apply the {{grade}} color grade.",
+    "addedText": "Added the title \"{{text}}\" at the playhead.",
+    "textNeedsQuotes": "Put the title in quotes, for example: add title \"Big news\".",
+    "speedSet": "Set the playback speed to {{speed}}x.",
+    "aspectOpenExport": "The frame shape is chosen when you export. I opened Export: pick a {{ratio}} preset there.",
+    "aspectNoExport": "The frame shape is chosen when you export. Open Export and pick a {{ratio}} preset.",
+    "notUnderstood": "I didn't change anything. I can apply a color grade (for example cinematic, warm or vintage), add a title in quotes, change the speed (for example 1.5x or slow motion), or open Export for a 9:16 or 1:1 frame.",
+    "badgeGrade": "Color grade: {{grade}}",
+    "badgeText": "Title added",
+    "badgeSpeed": "Speed {{speed}}x",
+    "badgeExport": "Opened Export"
+  },
   "editorHUD": {
     "saveFailedRetry": "Not saved to your account yet. Click to retry.",
     "section": {

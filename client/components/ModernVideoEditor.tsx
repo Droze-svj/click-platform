@@ -2913,9 +2913,18 @@ const ModernVideoEditor: React.FC<{
                 </div>
                 {/* Prompt-Based Timeline Chat Docked to Timeline */}
                 {assistantOpen && (
-                  <AiTimelineChat 
-                    onApplyLUT={(name) => setVideoFilters(prev => ({...prev, contrast: 120, saturation: 110, temperature: 95, vignette: 20}))}
-                    onChangeAspectRatio={() => showToast(t('modernVideoEditor.aspectRatioUpdated'), 'success')}
+                  <AiTimelineChat
+                    // Real setters only: the grade goes through the shared
+                    // registry (same as the AI Director); the frame shape is
+                    // chosen in Export, so the chat opens it rather than
+                    // claiming a change it can't make.
+                    onApplyGrade={(gradeId) => handleApplyColorGrade(gradeId)}
+                    onSetSpeed={(speed) => {
+                      if (!Number.isFinite(speed) || speed <= 0) return false
+                      setPlaybackSpeed(Math.min(2, Math.max(0.25, speed)))
+                      return true
+                    }}
+                    onOpenExport={() => setActiveCategory('export')}
                     onAddText={(text) => setTextOverlays(prev => [...prev, {
                       id: `ai-text-${Date.now()}`,
                       text, x: 50, y: 50, fontSize: 64, color: '#ffffff', fontFamily: 'Inter, sans-serif', startTime: videoState.currentTime, endTime: videoState.currentTime + 3, style: 'bold-kinetic', shadowColor: 'rgba(0,0,0,0.5)', animationIn: 'pop', animationOut: 'fade', animationInDuration: 0.15, animationOutDuration: 0.2, layer: 10
