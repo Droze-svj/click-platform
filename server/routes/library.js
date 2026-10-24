@@ -583,8 +583,8 @@ router.get('/shared', auth, asyncHandler(async (req, res) => {
   const { sharedWithMe = true, sharedByMe = true } = req.query;
 
   const shares = await getSharedAssets(req.user._id, {
-    sharedWithMe: sharedWithMe === 'true',
-    sharedByMe: sharedByMe === 'true'
+    sharedWithMe: String(sharedWithMe) !== 'false',
+    sharedByMe: String(sharedByMe) !== 'false'
   });
 
   sendSuccess(res, 'Shared assets retrieved', 200, { shares });

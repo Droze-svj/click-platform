@@ -155,7 +155,7 @@ router.post('/templates', auth, asyncHandler(async (req, res) => {
 router.get('/templates', auth, asyncHandler(async (req, res) => {
   const userId = getUserIdFromReq(req) || req.user?._id || req.user?.id;
   const { includeShared = true } = req.query;
-  const templates = await getExportTemplates(userId, includeShared === 'true');
+  const templates = await getExportTemplates(userId, String(includeShared) !== 'false');
   sendSuccess(res, 'Templates retrieved', 200, { templates });
 }));
 

@@ -31,9 +31,9 @@ router.get('/metrics', auth, requireAdmin, asyncHandler(async (req, res) => {
 
   try {
     const metrics = getMetrics({
-      includeSystem: includeSystem === 'true',
-      includeDatabase: includeDatabase === 'true',
-      includeRequests: includeRequests === 'true',
+      includeSystem: String(includeSystem) !== 'false',
+      includeDatabase: String(includeDatabase) !== 'false',
+      includeRequests: String(includeRequests) !== 'false',
     });
     sendSuccess(res, 'Metrics fetched', 200, metrics);
   } catch (error) {
