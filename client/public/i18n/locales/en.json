@@ -8799,6 +8799,7 @@
     "searchTools": "Search tools"
   },
   "editorHUD": {
+    "saveFailedRetry": "Not saved to your account yet. Click to retry.",
     "section": {
       "edit": "Editing",
       "color": "Color",

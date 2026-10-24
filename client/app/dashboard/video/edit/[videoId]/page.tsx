@@ -598,7 +598,7 @@ export default function VideoEditPage({ params }: PageProps) {
     return (
       <div className="fixed inset-0 bg-surface-50 dark:bg-surface-950 overflow-hidden transition-colors duration-500">
         {/* Back lives in the editor's sidebar header (it used to float on top of it). */}
-        <DynamicModernVideoEditor videoId={videoId} videoUrl={urlForEditor} initialAiTool={aiTool} autoGenerateCaptions={autoCaptions} backAction={{ label: t('aiAutoEdit.badge'), onClick: () => setEditMode('ai-auto') }} />
+        <DynamicModernVideoEditor videoId={videoId} videoUrl={urlForEditor} initialTitle={video?.title} initialAiTool={aiTool} autoGenerateCaptions={autoCaptions} backAction={{ label: t('aiAutoEdit.badge'), onClick: () => setEditMode('ai-auto') }} />
       </div>
     )
   }

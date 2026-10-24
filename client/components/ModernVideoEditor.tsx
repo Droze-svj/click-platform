@@ -255,7 +255,9 @@ const ModernVideoEditor: React.FC<{
   autoGenerateCaptions?: boolean;
   /** Shown as a back button in the tool sidebar's header. */
   backAction?: { label: string; onClick: () => void };
-}> = ({ videoUrl, videoPath, videoId, initialState, initialAiTool, autoGenerateCaptions, backAction }) => {
+  /** The video's saved title — the project name starts from it. */
+  initialTitle?: string;
+}> = ({ videoUrl, videoPath, videoId, initialState, initialAiTool, autoGenerateCaptions, backAction, initialTitle }) => {
   const { t } = useTranslation()
   const { showToast } = useToast()
   const brandKit = useBrandKit()
@@ -292,7 +294,21 @@ const ModernVideoEditor: React.FC<{
   }, [])
   const activeCategory = activeCategoryState; // Renamed to avoid conflict with the new state variable
 
-  const [projectName, setProjectName] = useState(t('modernVideoEditor.untitledProject'))
+  // The project name starts from the video's real title. It is sent to the
+  // server (which writes Content.title) ONLY after the user renames it here —
+  // previously the "Untitled project" placeholder went out on the first
+  // autosave and renamed every video that was opened.
+  const [projectName, setProjectNameState] = useState<string>(() => initialTitle?.trim() || t('modernVideoEditor.untitledProject'))
+  const [projectRenamed, setProjectRenamed] = useState(false)
+  const setProjectName = useCallback((name: string) => {
+    setProjectNameState(name)
+    setProjectRenamed(true)
+  }, [])
+  useEffect(() => {
+    // The title arrives after the page fetches the video; adopt it unless
+    // the user has already typed a name of their own.
+    if (!projectRenamed && initialTitle?.trim()) setProjectNameState(initialTitle.trim())
+  }, [initialTitle, projectRenamed])
   const [deviceView, setDeviceView] = useState<'desktop' | 'tablet' | 'mobile'>('desktop')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(false)
@@ -995,7 +1011,8 @@ const ModernVideoEditor: React.FC<{
   const { autosaveStatus, loadSavedState, getStatusIcon, retrySave, manualSave } = useVideoEditorAutosave({
     state: editorState,
     videoId: videoId || 'temp-id',
-    name: projectName,
+    name: projectRenamed ? projectName : undefined,
+    serverSave: !!videoId,
     enabled: true,
     debounceMs: 2500
   })
@@ -1022,7 +1039,8 @@ const ModernVideoEditor: React.FC<{
       if (stateToLoad.audioMix && typeof stateToLoad.audioMix === 'object') setAudioMix(stateToLoad.audioMix)
       if (stateToLoad.captionStyle) setCaptionStyle(stateToLoad.captionStyle)
       if (stateToLoad.templateLayout) setTemplateLayout(stateToLoad.templateLayout)
-      if (stateToLoad.projectName) setProjectName(stateToLoad.projectName)
+      // A restored name is display-only; the video's own title wins.
+      if (stateToLoad.projectName && !initialTitle?.trim()) setProjectNameState(stateToLoad.projectName)
       showToast(t('modernVideoEditor.neuralStateRestored'), 'success')
       return
     }
@@ -2410,7 +2428,9 @@ const ModernVideoEditor: React.FC<{
           <EditorHUD
             projectName={projectName}
             setProjectName={setProjectName}
-            autosaveStatus={autosaveStatus as any}
+            autosaveStatus={autosaveStatus.status === 'saving' || autosaveStatus.status === 'error' ? autosaveStatus.status : 'saved'}
+            autosaveMessage={autosaveStatus.message}
+            onRetrySave={retrySave}
             historyIndex={historyIndex}
             historyLength={history.length}
             handleUndo={handleUndo}
