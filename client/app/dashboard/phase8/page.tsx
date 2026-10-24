@@ -6,8 +6,8 @@ import Phase8Dashboard from '../../../components/Phase8Dashboard';
 import { PageShell } from '../../../components/ui/page';
 
 export const metadata = {
-  title: 'Neural Nexus v8 | Click Engine',
-  description: 'Autonomous Omni-Router and Spatial Continuity Ledger',
+  title: 'Growth tools | Click',
+  description: 'AI model picker, scene continuity tracking, AEO metadata, raw UGC and zero-party data overlays.',
 };
 
 export default function Phase8Page() {

@@ -156,4 +156,19 @@ router.put('/settings', auth, asyncHandler(async (req, res) => {
   });
 }));
 
+/**
+ * GET /api/monetization/qr?url=<product link>
+ * A scannable QR code (PNG data URL) for a product/checkout link, so creators
+ * can show it on screen or in a video. Only http(s) links are encoded.
+ */
+router.get('/qr', auth, asyncHandler(async (req, res) => {
+  const url = String(req.query.url || '').trim();
+  if (!/^https?:\/\/[^\s]+$/i.test(url) || url.length > 2048) {
+    return sendError(res, 'A valid http(s) link is required', 400);
+  }
+  const qrcode = require('qrcode');
+  const dataUrl = await qrcode.toDataURL(url, { width: 512, margin: 1, errorCorrectionLevel: 'M' });
+  sendSuccess(res, 'QR code generated', 200, { dataUrl });
+}));
+
 module.exports = router;

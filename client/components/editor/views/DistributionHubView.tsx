@@ -19,10 +19,10 @@ import {
   Smartphone
 } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
-import { SwarmConsensusHUD } from '../SwarmConsensusHUD'
 import { apiGet, apiPost } from '../../../lib/api'
 import { Panel, Button, Badge, SectionHeader, FormField, Input, Textarea } from '../../ui'
 import { cn } from '../../../lib/utils'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 interface DistributionHubViewProps {
   videoId: string
@@ -43,10 +43,10 @@ type PlatformId = typeof PLATFORMS[number]['id']
 interface OptimalTime { start: number; end: number; label: string }
 
 const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, videoUrl, showToast }) => {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'matrix' | 'schedule' | 'platforms'>('matrix')
   const [isSyncing, setIsSyncing] = useState(false)
-  const [showSwarmHUD, setShowSwarmHUD] = useState(false)
-  const [swarmHUDTask, setSwarmHUDTask] = useState('')
+  const [captionError, setCaptionError] = useState(false)
 
   // Real connection state, keyed by platform id.
   const [connected, setConnected] = useState<Record<string, boolean>>({})
@@ -130,7 +130,16 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
   const handleBroadcast = async () => {
     const targets = selectedPlatforms.filter(p => connected[p])
     if (targets.length === 0) {
-      showToast('Select at least one connected platform', 'error')
+      showToast(t('distributionHub.selectPlatform'), 'error')
+      return
+    }
+    // A caption is required: an empty one used to be replaced with the made-up
+    // "Rendered with Neural Master", which then went out on the creator's real
+    // accounts.
+    const caption = title.trim()
+    if (!caption) {
+      setCaptionError(true)
+      showToast(t('distributionHub.captionRequired'), 'error')
       return
     }
     if (!isPublishable) {
@@ -143,12 +152,10 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
       return
     }
 
-    setSwarmHUDTask('Commence Global Broadcast')
-    setShowSwarmHUD(true)
     setIsSyncing(true)
 
     try {
-      showToast(`Broadcasting to ${targets.length} platform(s)...`, 'info')
+      showToast(t('distributionHub.publishing', { count: targets.length }), 'info')
 
       const results = await Promise.allSettled(
         targets.map(platform => {
@@ -157,15 +164,15 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
 
           if (platform === 'youtube') {
             payload.videoFile = videoUrl
-            payload.title = title || 'Rendered with Neural Master'
-            payload.description = description || 'Published from Click Video Editor'
+            payload.title = caption
+            payload.description = description.trim()
           } else if (platform === 'instagram') {
             endpoint = `/oauth/${platform}/post`
             payload.imageUrl = videoUrl
-            payload.caption = title || 'Rendered with Neural Master'
+            payload.caption = caption
           } else {
             payload.videoFile = videoUrl
-            payload.caption = title || 'Rendered with Neural Master'
+            payload.caption = caption
           }
 
           return apiPost(endpoint, payload)
@@ -174,16 +181,16 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
 
       const failures = results.filter(r => r.status === 'rejected').length
       if (failures === 0) {
-        showToast('Broadcast complete! Content live on selected platforms.', 'success')
+        showToast(t('distributionHub.publishedAll'), 'success')
         setSelectedPlatforms([])
       } else if (failures < targets.length) {
-        showToast(`Broadcast partial: ${targets.length - failures}/${targets.length} platforms succeeded.`, 'info')
+        showToast(t('distributionHub.publishedSome', { ok: targets.length - failures, total: targets.length }), 'info')
       } else {
-        showToast('Broadcast failed. Check connection matrices.', 'error')
+        showToast(t('distributionHub.publishFailed'), 'error')
       }
     } catch (error) {
-      console.error('Broadcasting failed', error)
-      showToast('Broadcast partial failure. Check connection matrices.', 'error')
+      console.error('Publishing failed', error)
+      showToast(t('distributionHub.publishFailed'), 'error')
     } finally {
       setIsSyncing(false)
     }
@@ -193,7 +200,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
   const handleSchedule = async () => {
     const targets = selectedPlatforms.filter(p => connected[p])
     if (targets.length === 0) {
-      showToast('Select at least one connected platform on the Push Matrix tab', 'error')
+      showToast(t('distributionHub.selectPlatformOnPost'), 'error')
       return
     }
     if (!scheduleTime) {
@@ -205,8 +212,9 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
       showToast('Choose a valid future date & time', 'error')
       return
     }
-    if (!isPublishable && !title.trim() && !description.trim()) {
-      showToast('Add a title/description or render a reachable video first', 'error')
+    if (!title.trim()) {
+      setCaptionError(true)
+      showToast(t('distributionHub.captionRequiredSchedule'), 'error')
       return
     }
 
@@ -220,7 +228,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
             scheduledTime: when.toISOString(),
             mediaUrl: isPublishable ? videoUrl : '',
             content: {
-              text: description || title || 'Published from Click Video Editor',
+              text: description.trim() || title.trim(),
             },
           })
         )
@@ -232,18 +240,18 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
       } else if (failures < targets.length) {
         showToast(`Scheduled ${targets.length - failures}/${targets.length} platforms.`, 'info')
       } else {
-        showToast('Scheduling failed. Verify connected accounts.', 'error')
+        showToast(t('distributionHub.scheduleFailed'), 'error')
       }
     } catch (error) {
       console.error('Scheduling failed', error)
-      showToast('Scheduling failed. Verify connected accounts.', 'error')
+      showToast(t('distributionHub.scheduleFailed'), 'error')
     } finally {
       setIsScheduling(false)
     }
   }
 
   const tabs = [
-    { id: 'matrix', label: 'Push Matrix', icon: Target },
+    { id: 'matrix', label: t('distributionHub.tabPost'), icon: Target },
     { id: 'schedule', label: 'Schedule', icon: Calendar },
     { id: 'platforms', label: 'Platforms', icon: Share2 },
   ] as const
@@ -266,7 +274,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
       </div>
     ) : (
       <div className="rounded-xl border border-border bg-background/40 px-4 py-6 text-center ds-text-caption">
-        No optimal-window data available.
+        {t('distributionHub.noBestTimes')}
       </div>
     )
 
@@ -278,7 +286,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
         title="Distribution Hub"
         description={
           isLoadingAccounts
-            ? 'Scanning connected accounts…'
+            ? t('distributionHub.checkingAccounts')
             : `${connectedCount}/${PLATFORMS.length} platforms connected.`
         }
         actions={
@@ -320,19 +328,23 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                   <Target className="h-5 w-5" aria-hidden />
                 </div>
                 <div>
-                  <h2 className="ds-text-h3 text-theme-primary">Social Push Matrix</h2>
-                  <p className="ds-text-caption">Compose and target your broadcast.</p>
+                  <h2 className="ds-text-h3 text-theme-primary">{t('distributionHub.postTitle')}</h2>
+                  <p className="ds-text-caption">{t('distributionHub.postSubtitle')}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
                 <div className="space-y-6 lg:col-span-7">
-                  <FormField label="Title / Caption" htmlFor="dist-title">
+                  <FormField
+                    label="Title / Caption"
+                    htmlFor="dist-title"
+                    error={captionError && !title.trim() ? t('distributionHub.captionRequired') : undefined}
+                  >
                     <Input
                       id="dist-title"
                       type="text"
                       value={title}
-                      onChange={(e) => setTitle(e.target.value)}
+                      onChange={(e) => { setTitle(e.target.value); if (e.target.value.trim()) setCaptionError(false) }}
                       placeholder="The strategy that changed everything…"
                       title="Title"
                     />
@@ -349,7 +361,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                   </FormField>
 
                   {/* Real platform target selection — only connected platforms are selectable */}
-                  <FormField label="Broadcast Targets">
+                  <FormField label={t('distributionHub.postTo')}>
                     <div className="flex flex-wrap gap-2">
                       {PLATFORMS.map(p => {
                         const isConn = !!connected[p.id]
@@ -372,7 +384,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                           >
                             <p.icon className="h-4 w-4" aria-hidden />
                             {p.label}
-                            {!isConn && <span className="text-xs opacity-70">(offline)</span>}
+                            {!isConn && <span className="text-xs opacity-70">{t('distributionHub.notConnectedShort')}</span>}
                           </button>
                         )
                       })}
@@ -382,16 +394,16 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
 
                 <div className="space-y-6 lg:col-span-5">
                   {/* Real optimal posting windows from /social/optimal-times */}
-                  <FormField label="Optimal Posting Windows">
+                  <FormField label={t('distributionHub.bestTimes')}>
                     <OptimalWindows />
                   </FormField>
 
                   <Panel variant="subtle" className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <span className="ds-text-caption">Publish Readiness</span>
+                        <span className="ds-text-caption">{t('distributionHub.readiness')}</span>
                         <p className="ds-text-h3 text-theme-primary">
-                          {isPublishable ? 'Video ready' : 'Awaiting render'}
+                          {isPublishable ? t('distributionHub.videoReady') : t('distributionHub.awaitingRender')}
                         </p>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-white">
@@ -400,8 +412,8 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                     </div>
                     <p className="ds-text-caption">
                       {isPublishable
-                        ? `${selectedPlatforms.length} target(s) selected of ${connectedCount} connected`
-                        : 'Render to a reachable URL to enable broadcast.'}
+                        ? t('distributionHub.selectedOfConnected', { selected: selectedPlatforms.length, connected: connectedCount })
+                        : t('distributionHub.renderFirst')}
                     </p>
                   </Panel>
                 </div>
@@ -412,8 +424,8 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                   <AlertCircle className="h-5 w-5 text-emerald-500" aria-hidden />
                   <span className="ds-text-caption">
                     {connectedCount === 0
-                      ? 'No platforms connected — link an account in Platforms.'
-                      : `${selectedPlatforms.length} of ${connectedCount} connected nodes targeted`}
+                      ? t('distributionHub.noneConnected')
+                      : t('distributionHub.selectedOfConnected', { selected: selectedPlatforms.length, connected: connectedCount })}
                   </span>
                 </div>
                 <Button
@@ -422,11 +434,11 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                   onClick={handleBroadcast}
                   loading={isSyncing}
                   disabled={isSyncing || isLoadingAccounts || selectedPlatforms.length === 0 || !isPublishable}
-                  title="Commence broadcast"
+                  title={t('distributionHub.publishNow')}
                   leftIcon={isSyncing ? undefined : <Radio className="h-5 w-5" aria-hidden />}
                   className="w-full bg-emerald-600 hover:bg-emerald-600/90 sm:w-auto"
                 >
-                  {isSyncing ? 'Broadcasting…' : 'Commence Broadcast'}
+                  {isSyncing ? t('distributionHub.publishingShort') : t('distributionHub.publishNow')}
                 </Button>
               </div>
             </Panel>
@@ -449,13 +461,13 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                 </div>
                 <div>
                   <h2 className="ds-text-h3 text-theme-primary">Schedule</h2>
-                  <p className="ds-text-caption">Queue a dispatch for later.</p>
+                  <p className="ds-text-caption">{t('distributionHub.scheduleSubtitle')}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                 <div className="space-y-6">
-                  <FormField label="Dispatch Time" htmlFor="dist-when">
+                  <FormField label={t('distributionHub.postTime')} htmlFor="dist-when">
                     <Input
                       id="dist-when"
                       type="datetime-local"
@@ -466,7 +478,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                     />
                   </FormField>
 
-                  <FormField label="Target Nodes">
+                  <FormField label={t('distributionHub.postTo')}>
                     <div className="flex flex-wrap gap-2">
                       {selectedPlatforms.filter(p => connected[p]).length > 0 ? (
                         selectedPlatforms.filter(p => connected[p]).map(pid => {
@@ -478,7 +490,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                           )
                         })
                       ) : (
-                        <span className="ds-text-caption">Select targets on the Push Matrix tab.</span>
+                        <span className="ds-text-caption">{t('distributionHub.selectOnPostTab')}</span>
                       )}
                     </div>
                   </FormField>
@@ -489,15 +501,15 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                     onClick={handleSchedule}
                     loading={isScheduling}
                     disabled={isScheduling || isLoadingAccounts || selectedPlatforms.filter(p => connected[p]).length === 0 || !scheduleTime}
-                    title="Schedule dispatch"
+                    title={t('distributionHub.schedulePost')}
                     leftIcon={isScheduling ? undefined : <Plus className="h-5 w-5" aria-hidden />}
                     className="w-full"
                   >
-                    {isScheduling ? 'Queuing…' : 'Schedule Dispatch'}
+                    {isScheduling ? t('distributionHub.scheduling') : t('distributionHub.schedulePost')}
                   </Button>
                 </div>
 
-                <FormField label="Optimal Posting Windows">
+                <FormField label={t('distributionHub.bestTimes')}>
                   <OptimalWindows />
                 </FormField>
               </div>
@@ -520,14 +532,14 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary">
                   <Share2 className="h-5 w-5" aria-hidden />
                 </div>
-                <h2 className="ds-text-h3 text-theme-primary">Identity Clusters</h2>
+                <h2 className="ds-text-h3 text-theme-primary">{t('distributionHub.accountsTitle')}</h2>
               </div>
 
               <div className="space-y-3">
                 {isLoadingAccounts ? (
                   <div className="flex items-center justify-center gap-3 p-10 text-theme-muted">
                     <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
-                    <span className="ds-text-label">Scanning accounts…</span>
+                    <span className="ds-text-label">{t('distributionHub.checkingAccounts')}</span>
                   </div>
                 ) : (
                   PLATFORMS.map(node => {
@@ -570,12 +582,12 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500">
                   <Zap className="h-5 w-5" aria-hidden />
                 </div>
-                <h2 className="ds-text-h3 text-theme-primary">Uplink Status</h2>
+                <h2 className="ds-text-h3 text-theme-primary">{t('distributionHub.connectionSummary')}</h2>
               </div>
 
               <Panel variant="subtle" className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <span className="ds-text-caption">Connected nodes</span>
+                  <span className="ds-text-caption">{t('distributionHub.connectedAccounts')}</span>
                   <span className="ds-text-label text-theme-primary">
                     {isLoadingAccounts ? '—' : `${connectedCount} / ${PLATFORMS.length}`}
                   </span>
@@ -599,7 +611,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
                       <p.icon className={cn('h-4 w-4', p.c)} aria-hidden />{p.label}
                     </span>
                     <Badge variant={connected[p.id] ? 'default' : 'secondary'} className={connected[p.id] ? 'bg-emerald-600' : ''}>
-                      {isLoadingAccounts ? 'Scanning' : connected[p.id] ? 'Online' : 'Offline'}
+                      {isLoadingAccounts ? t('distributionHub.checking') : connected[p.id] ? t('distributionHub.connected') : t('distributionHub.notConnected')}
                     </Badge>
                   </div>
                 ))}
@@ -608,11 +620,6 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
           </m.div>
         )}
       </AnimatePresence>
-      <SwarmConsensusHUD
-        isVisible={showSwarmHUD}
-        taskName={swarmHUDTask}
-        onComplete={() => setShowSwarmHUD(false)}
-      />
     </div>
   )
 }

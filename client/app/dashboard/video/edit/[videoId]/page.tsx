@@ -13,6 +13,7 @@ import VideoProgressTracker from '../../../../../components/VideoProgressTracker
 import { useTheme } from '../../../../../components/ThemeProvider'
 import ClickLoadingState from '@/components/click/ClickLoadingState'
 import { PageShell } from '../../../../../components/ui'
+import { useTranslation } from '../../../../../hooks/useTranslation'
 
 interface PageProps {
   params: {
@@ -54,18 +55,99 @@ const STORAGE_KEYS = {
 // presets that drive variation expansion + per-clip overrides). emoji +
 // tagline + accent gradient are display-only.
 const STYLE_PRESETS = [
-  { id: 'mrbeast-energy',     label: 'MrBeast Energy',     emoji: '⚡',  tagline: 'Big stakes · pattern break',   accent: 'from-amber-500 to-orange-700' },
-  { id: 'hormozi-bold',       label: 'Hormozi Bold',       emoji: '💎',  tagline: 'Hard stat · contrarian take',  accent: 'from-rose-500 to-rose-800' },
-  { id: 'cinematic-doc',      label: 'Cinematic Doc',      emoji: '🎬',  tagline: 'Slow burn · whisper cut',      accent: 'from-indigo-600 to-violet-800' },
-  { id: 'educational-clean',  label: 'Educational Clean',  emoji: '📚',  tagline: 'Question frame · fact drop',   accent: 'from-emerald-500 to-emerald-800' },
-  { id: 'news-authority',     label: 'News Authority',     emoji: '📰',  tagline: 'Headline · breaking · expert', accent: 'from-slate-600 to-slate-900' },
-  { id: 'casual-vlog',        label: 'Casual Vlog',        emoji: '🎙️', tagline: 'Day-in-life · conversational',  accent: 'from-sky-500 to-cyan-700' },
-  { id: 'mystery-hook',       label: 'Mystery Hook',       emoji: '🕯️', tagline: 'Curiosity loop · slow reveal',  accent: 'from-fuchsia-600 to-purple-800' },
-  { id: 'gym-grit',           label: 'Gym Grit',           emoji: '🔥',  tagline: 'High-intensity · tough love',   accent: 'from-red-600 to-orange-800' },
-  { id: 'adhd-overload',     label: 'ADHD Overload',      emoji: '⚡',  tagline: 'Chaos · pop-burst · overstim',  accent: 'from-rose-600 to-rose-800' },
-  { id: 'podcast-goldmine',  label: 'Podcast Goldmine',   emoji: '🎙️', tagline: 'Authority · chapters · warm doc', accent: 'from-amber-500 to-amber-700' },
-  { id: 'retention-machine', label: 'Retention Machine',  emoji: '🔄',  tagline: 'Open loops · B-roll · chapters', accent: 'from-violet-600 to-violet-800' },
+  { id: 'mrbeast-energy',     labelKey: 'aiAutoEdit.preset.mrbeastEnergy', taglineKey: 'aiAutoEdit.preset.mrbeastEnergyTagline', label: 'MrBeast Energy',     emoji: '⚡',  tagline: 'Big stakes · pattern break',   accent: 'from-amber-500 to-orange-700' },
+  { id: 'hormozi-bold',       labelKey: 'aiAutoEdit.preset.hormoziBold', taglineKey: 'aiAutoEdit.preset.hormoziBoldTagline', label: 'Hormozi Bold',       emoji: '💎',  tagline: 'Hard stat · contrarian take',  accent: 'from-rose-500 to-rose-800' },
+  { id: 'cinematic-doc',      labelKey: 'aiAutoEdit.preset.cinematicDoc', taglineKey: 'aiAutoEdit.preset.cinematicDocTagline', label: 'Cinematic Doc',      emoji: '🎬',  tagline: 'Slow burn · whisper cut',      accent: 'from-indigo-600 to-violet-800' },
+  { id: 'educational-clean',  labelKey: 'aiAutoEdit.preset.educationalClean', taglineKey: 'aiAutoEdit.preset.educationalCleanTagline', label: 'Educational Clean',  emoji: '📚',  tagline: 'Question frame · fact drop',   accent: 'from-emerald-500 to-emerald-800' },
+  { id: 'news-authority',     labelKey: 'aiAutoEdit.preset.newsAuthority', taglineKey: 'aiAutoEdit.preset.newsAuthorityTagline', label: 'News Authority',     emoji: '📰',  tagline: 'Headline · breaking · expert', accent: 'from-slate-600 to-slate-900' },
+  { id: 'casual-vlog',        labelKey: 'aiAutoEdit.preset.casualVlog', taglineKey: 'aiAutoEdit.preset.casualVlogTagline', label: 'Casual Vlog',        emoji: '🎙️', tagline: 'Day-in-life · conversational',  accent: 'from-sky-500 to-cyan-700' },
+  { id: 'mystery-hook',       labelKey: 'aiAutoEdit.preset.mysteryHook', taglineKey: 'aiAutoEdit.preset.mysteryHookTagline', label: 'Mystery Hook',       emoji: '🕯️', tagline: 'Curiosity loop · slow reveal',  accent: 'from-fuchsia-600 to-purple-800' },
+  { id: 'gym-grit',           labelKey: 'aiAutoEdit.preset.gymGrit', taglineKey: 'aiAutoEdit.preset.gymGritTagline', label: 'Gym Grit',           emoji: '🔥',  tagline: 'High-intensity · tough love',   accent: 'from-red-600 to-orange-800' },
+  { id: 'adhd-overload',     labelKey: 'aiAutoEdit.preset.adhdOverload', taglineKey: 'aiAutoEdit.preset.adhdOverloadTagline', label: 'ADHD Overload',      emoji: '⚡',  tagline: 'Chaos · pop-burst · overstim',  accent: 'from-rose-600 to-rose-800' },
+  { id: 'podcast-goldmine',  labelKey: 'aiAutoEdit.preset.podcastGoldmine', taglineKey: 'aiAutoEdit.preset.podcastGoldmineTagline', label: 'Podcast Goldmine',   emoji: '🎙️', tagline: 'Authority · chapters · warm doc', accent: 'from-amber-500 to-amber-700' },
+  { id: 'retention-machine', labelKey: 'aiAutoEdit.preset.retentionMachine', taglineKey: 'aiAutoEdit.preset.retentionMachineTagline', label: 'Retention Machine',  emoji: '🔄',  tagline: 'Open loops · B-roll · chapters', accent: 'from-violet-600 to-violet-800' },
 ] as const
+
+// i18n keys for the option values shown in the selects / pills below. Values
+// stay as-is (they're sent to the backend); a value without a key here (a
+// brand name such as tiktok / youtube) is shown as-is.
+const OPTION_LABEL_KEYS: Record<string, string> = {
+  'auto': 'aiAutoEdit.opt.auto',
+  'vivid': 'aiAutoEdit.opt.vivid',
+  'cinematic': 'aiAutoEdit.opt.cinematic',
+  'natural': 'aiAutoEdit.opt.natural',
+  'cool': 'aiAutoEdit.opt.cool',
+  'warm': 'aiAutoEdit.opt.warm',
+  'vintage': 'aiAutoEdit.opt.vintage',
+  'bw': 'aiAutoEdit.opt.bw',
+  'upbeat-pop': 'aiAutoEdit.opt.upbeatPop',
+  'chill': 'aiAutoEdit.opt.chill',
+  'dark-ambient': 'aiAutoEdit.opt.darkAmbient',
+  'synthwave': 'aiAutoEdit.opt.synthwave',
+  'phonk': 'aiAutoEdit.opt.phonk',
+  'lofi': 'aiAutoEdit.opt.lofi',
+  'question': 'aiAutoEdit.opt.question',
+  'stat': 'aiAutoEdit.opt.stat',
+  'mystery': 'aiAutoEdit.opt.mystery',
+  'story': 'aiAutoEdit.opt.story',
+  'bold-claim': 'aiAutoEdit.opt.boldClaim',
+  'pattern-break': 'aiAutoEdit.opt.patternBreak',
+  'fast-cut': 'aiAutoEdit.opt.fastCut',
+  'crossfade': 'aiAutoEdit.opt.crossfade',
+  'glitch': 'aiAutoEdit.opt.glitch',
+  'whip-pan': 'aiAutoEdit.opt.whipPan',
+  'hard-cut': 'aiAutoEdit.opt.hardCut',
+  'modern': 'aiAutoEdit.opt.modern',
+  'bold': 'aiAutoEdit.opt.bold',
+  'minimal': 'aiAutoEdit.opt.minimal',
+  'neon': 'aiAutoEdit.opt.neon',
+  'pill': 'aiAutoEdit.opt.pill',
+  'top': 'aiAutoEdit.opt.top',
+  'middle': 'aiAutoEdit.opt.middle',
+  'bottom': 'aiAutoEdit.opt.bottom',
+  'lower-third': 'aiAutoEdit.opt.lowerThird',
+  'energetic': 'aiAutoEdit.opt.energetic',
+  'calm': 'aiAutoEdit.opt.calm',
+  'authoritative': 'aiAutoEdit.opt.authoritative',
+  'playful': 'aiAutoEdit.opt.playful',
+  'serious': 'aiAutoEdit.opt.serious',
+  'urgency': 'aiAutoEdit.opt.urgency',
+  'value': 'aiAutoEdit.opt.value',
+  'curiosity': 'aiAutoEdit.opt.curiosity',
+  'off': 'aiAutoEdit.opt.off',
+  'sparse': 'aiAutoEdit.opt.sparse',
+  'balanced': 'aiAutoEdit.opt.balanced',
+  'heavy': 'aiAutoEdit.opt.heavy',
+  'gentle': 'aiAutoEdit.opt.gentle',
+  'medium': 'aiAutoEdit.opt.medium',
+  'aggressive': 'aiAutoEdit.opt.aggressive',
+  'educational': 'aiAutoEdit.opt.educational',
+  'entertaining': 'aiAutoEdit.opt.entertaining',
+  'motivational': 'aiAutoEdit.opt.motivational',
+  'promotional': 'aiAutoEdit.opt.promotional',
+}
+
+function optionLabel(t: (key: string) => string, value: string): string {
+  const key = OPTION_LABEL_KEYS[value]
+  return key ? t(key) : value.replace(/-/g, ' ')
+}
+
+// Wraps interpolated values in markers so renderBold() can embolden them after
+// translation — keeps the plan sentence bold where the values sit, wherever a
+// translator moves them.
+const B = (v: string | number) => `\u0001${v}\u0002`
+function renderBold(text: string) {
+  return text.split(/(\u0001[^\u0002]*\u0002)/).map((part, i) =>
+    part.startsWith('\u0001')
+      ? <span key={i} className="font-black">{part.slice(1, -1)}</span>
+      : <span key={i}>{part}</span>
+  )
+}
+
+// Display names for the target-platform pills (brand names, not translated).
+const PLATFORM_LABELS: Record<string, string> = {
+  tiktok: 'TikTok', instagram: 'Instagram', youtube: 'YouTube', linkedin: 'LinkedIn',
+}
 
 // Compact select-card used inside the Advanced collapsible. One file-local
 // component — keeps the markup of each option-row identical and avoids
@@ -83,6 +165,7 @@ function SelectCard<T extends string>({
   onChange: (v: T) => void
   options: readonly T[]
 }) {
+  const { t } = useTranslation()
   return (
     <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-2">
       <div className="flex items-center gap-2">
@@ -96,7 +179,7 @@ function SelectCard<T extends string>({
         className="w-full bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-lg px-3 py-2 text-xs font-bold text-surface-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/40 capitalize"
       >
         {options.map((o) => (
-          <option key={o} value={o}>{String(o).replace(/-/g, ' ')}</option>
+          <option key={o} value={o}>{optionLabel(t, String(o))}</option>
         ))}
       </select>
     </div>
@@ -105,6 +188,7 @@ function SelectCard<T extends string>({
 
 // ─── Marketing brief collapsible panel ───────────────────────────────────────
 function MarketingBriefPanel({ brief }: { brief: any }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   if (!brief?.strategy) return null
   const s = brief.strategy
@@ -120,7 +204,7 @@ function MarketingBriefPanel({ brief }: { brief: any }) {
             <Brain size={18} className="text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <p className="text-sm font-black text-surface-900 dark:text-white">Marketing Brief</p>
+            <p className="text-sm font-black text-surface-900 dark:text-white">{t('aiAutoEdit.brief.title')}</p>
             {s.contentArchetype && (
               <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 text-[10px] font-black uppercase tracking-widest border border-primary-200 dark:border-primary-800">
                 {s.contentArchetype.replace(/-/g, ' ')}
@@ -134,7 +218,7 @@ function MarketingBriefPanel({ brief }: { brief: any }) {
         <div className="p-8 space-y-6 border-t border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-950">
           {s.schedulingMatrix && (
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-surface-500 mb-3">Optimal Posting Times</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-surface-500 mb-3">{t('aiAutoEdit.brief.postingTimes')}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {Object.entries(s.schedulingMatrix).map(([platform, data]: [string, any]) => (
                   <div key={platform} className="p-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
@@ -148,7 +232,7 @@ function MarketingBriefPanel({ brief }: { brief: any }) {
           )}
           {Array.isArray(s.competitiveInsights) && s.competitiveInsights.length > 0 && (
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-surface-500 mb-3">Competitive Insights</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-surface-500 mb-3">{t('aiAutoEdit.brief.competitiveInsights')}</p>
               <div className="space-y-2">
                 {s.competitiveInsights.map((insight: string, i: number) => (
                   <div key={i} className="flex gap-3 p-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800">
@@ -168,6 +252,9 @@ function MarketingBriefPanel({ brief }: { brief: any }) {
 export default function VideoEditPage({ params }: PageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { t } = useTranslation()
+  const presetNames = (ids: string[]) =>
+    ids.map(id => STYLE_PRESETS.find(p => p.id === id)).filter(Boolean).map(p => t(p!.labelKey)).join(' + ')
   // ?aiTool=silence|fillers|edit-by-text — sent here from the AI Tools
   // hub. We jump straight to manual editing and forward the tool to
   // ModernVideoEditor so it can auto-open the SmartCleanup panel on the
@@ -204,7 +291,7 @@ export default function VideoEditPage({ params }: PageProps) {
         const videoData = response?.data || response
 
         if (!videoData || !videoData._id) {
-          throw new Error('Video data not found in response')
+          throw new Error(t('aiAutoEdit.err.videoNotFound'))
         }
 
         if (videoData.originalFile?.url) {
@@ -213,13 +300,16 @@ export default function VideoEditPage({ params }: PageProps) {
         setVideo(videoData)
       } catch (error: any) {
         console.error('Failed to load video:', error)
-        setError(error.message || 'Failed to load video. Please try again.')
+        setError(error.message || t('aiAutoEdit.err.loadFailed'))
         setVideo(null)
       } finally {
         setLoading(false)
       }
     }
     loadVideo()
+    // t is read at error time only; refetching the video when the language
+    // loads would be wasteful.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId])
 
   const [aiEditResult, setAiEditResult] = useState<any>(null)
@@ -384,11 +474,11 @@ export default function VideoEditPage({ params }: PageProps) {
   const handleStartAIEdit = async () => {
     const sourceUrl = video?.originalFile?.url
     if (!sourceUrl) {
-      setProcessingError('This video is missing its source file. Re-upload and try again.')
+      setProcessingError(t('aiAutoEdit.err.missingSource'))
       return
     }
     if (stylePresetIds.length > 3) {
-      setProcessingError('You can mix at most 3 style presets per edit.')
+      setProcessingError(t('aiAutoEdit.err.tooManyPresets'))
       return
     }
     setProcessingError('')
@@ -456,21 +546,21 @@ export default function VideoEditPage({ params }: PageProps) {
       if (status === 500) {
         setProcessingError(
           serverMsg
-            ? `The AI service hit an error: ${serverMsg}`
-            : 'The AI service hit an internal error. Check the backend server logs and try again.'
+            ? t('aiAutoEdit.err.serviceError', { error: serverMsg })
+            : t('aiAutoEdit.err.serviceInternal')
         )
       } else if (status === 401 || status === 403) {
-        setProcessingError('Your session expired. Sign in again and retry.')
+        setProcessingError(t('aiAutoEdit.err.sessionExpired'))
       } else if (status === 429) {
-        setProcessingError('Too many edit requests. Wait a moment and try again.')
+        setProcessingError(t('aiAutoEdit.err.rateLimited'))
       } else if (status >= 400 && status < 500) {
-        setProcessingError(serverMsg || `Request was rejected (${status}). Check your inputs and retry.`)
+        setProcessingError(serverMsg || t('aiAutoEdit.err.rejected', { status }))
       } else if (error?.code === 'ECONNABORTED' || error?.message?.includes('timeout')) {
-        setProcessingError('The edit request timed out. The video may be too large or the server is slow to respond.')
+        setProcessingError(t('aiAutoEdit.err.timeout'))
       } else if (error?.code === 'ERR_NETWORK' || error?.message?.includes('Network Error')) {
-        setProcessingError('Cannot reach the backend. Make sure the server is running on port 5001.')
+        setProcessingError(t('aiAutoEdit.err.network'))
       } else {
-        setProcessingError(serverMsg || error?.message || 'Could not start the AI edit. Try again.')
+        setProcessingError(serverMsg || error?.message || t('aiAutoEdit.err.startFailed'))
       }
     }
   }
@@ -508,7 +598,7 @@ export default function VideoEditPage({ params }: PageProps) {
     return (
       <div className="fixed inset-0 bg-surface-50 dark:bg-surface-950 overflow-hidden transition-colors duration-500">
         {/* Back lives in the editor's sidebar header (it used to float on top of it). */}
-        <DynamicModernVideoEditor videoId={videoId} videoUrl={urlForEditor} initialAiTool={aiTool} autoGenerateCaptions={autoCaptions} backAction={{ label: 'AI Auto Edit', onClick: () => setEditMode('ai-auto') }} />
+        <DynamicModernVideoEditor videoId={videoId} videoUrl={urlForEditor} initialAiTool={aiTool} autoGenerateCaptions={autoCaptions} backAction={{ label: t('aiAutoEdit.badge'), onClick: () => setEditMode('ai-auto') }} />
       </div>
     )
   }
@@ -529,26 +619,34 @@ export default function VideoEditPage({ params }: PageProps) {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 uppercase tracking-wide border border-primary-200 dark:border-primary-800">
-                    AI Auto Edit
+                    {t('aiAutoEdit.badge')}
                   </span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-none mt-1">Configure AI Rules</h1>
-                <p className="text-surface-500 text-sm mt-2 font-medium max-w-lg truncate">{video?.title || 'Untitled Project'}</p>
+                <h1 className="text-3xl sm:text-4xl font-black text-surface-900 dark:text-white tracking-tight leading-none mt-1">{t('aiAutoEdit.title')}</h1>
+                <p className="text-surface-500 text-sm mt-2 font-medium max-w-lg truncate">{video?.title || t('aiAutoEdit.untitled')}</p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <button type="button" onClick={toggle} title="Toggle Theme" aria-label="Toggle Theme" className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
+              <button type="button" onClick={toggle} title={t('aiAutoEdit.toggleTheme')} aria-label={t('aiAutoEdit.toggleTheme')} className="w-12 h-12 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex items-center justify-center text-surface-600 dark:text-surface-400 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm">
                 {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
               </button>
-              <button type="button" onClick={() => handleAnalyzeVideo()} disabled={analyzing} title="Analyze Video" aria-label="Analyze Video" className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider disabled:opacity-50">
+              <button type="button" onClick={() => handleAnalyzeVideo()} disabled={analyzing} title={t('aiAutoEdit.analyze')} aria-label={t('aiAutoEdit.analyze')} className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider disabled:opacity-50">
                 {analyzing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
-                {analyzing ? 'Analyzing...' : 'Analyze Video'}
+                {analyzing ? t('aiAutoEdit.analyzing') : t('aiAutoEdit.analyze')}
               </button>
-              <button type="button" onClick={() => router.push('/dashboard/video')} title="Back to Videos" aria-label="Back to Videos" className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider">
-                <ChevronLeft size={16} /> Back to Videos
+              <button type="button" onClick={() => router.push('/dashboard/video')} title={t('aiAutoEdit.backToVideos')} aria-label={t('aiAutoEdit.backToVideos')} className="px-5 py-3 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center gap-2 shadow-sm font-bold text-xs uppercase tracking-wider">
+                <ChevronLeft size={16} /> {t('aiAutoEdit.backToVideos')}
               </button>
             </div>
           </header>
+
+          {/* Errors were set but never shown — a failed edit looked like nothing happened. */}
+          {(processingError || error) && (
+            <div role="alert" className="mb-6 flex items-start justify-between gap-4 rounded-2xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-4 text-sm text-rose-700 dark:text-rose-300">
+              <span className="flex items-start gap-2"><AlertCircle size={18} className="mt-0.5 shrink-0" aria-hidden /> {processingError || error}</span>
+              <button type="button" onClick={() => { setProcessingError(''); setError('') }} aria-label={t('aiAutoEdit.dismissError')} className="shrink-0 font-semibold hover:underline">{t('aiAutoEdit.dismiss')}</button>
+            </div>
+          )}
 
           <AnimatePresence mode="wait">
             {processing ? (
@@ -556,8 +654,8 @@ export default function VideoEditPage({ params }: PageProps) {
                 <div className="w-20 h-20 rounded-2xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 flex items-center justify-center mx-auto mb-8 shadow-sm">
                   <Loader2 className="w-10 h-10 text-primary-500 animate-spin" />
                 </div>
-                <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tight mb-4">Processing Video</h2>
-                <p className="text-surface-500 font-medium mb-10 text-sm">Our AI is currently analyzing, cutting, and optimizing your video...</p>
+                <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tight mb-4">{t('aiAutoEdit.processingTitle')}</h2>
+                <p className="text-surface-500 font-medium mb-10 text-sm">{t('aiAutoEdit.processingBody')}</p>
                 {editJobId ? (
                   <div className="p-6 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800">
                      <VideoProgressTracker jobId={editJobId} videoId={videoId} onComplete={(res) => { setAiEditResult(res); setProcessing(false); }} onError={() => { setProcessing(false); }} />
@@ -565,7 +663,7 @@ export default function VideoEditPage({ params }: PageProps) {
                 ) : (
                   <div className="space-y-4">
                     <div className="flex justify-between items-end mb-2">
-                       <span className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider">{liveProgress?.stage || 'Initializing'}</span>
+                       <span className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider">{liveProgress?.stage || t('aiAutoEdit.initializing')}</span>
                        <span className="text-lg font-black text-surface-900 dark:text-white">{liveProgress?.percent || 0}%</span>
                     </div>
                     <div className="h-3 bg-surface-100 dark:bg-surface-800 rounded-full overflow-hidden">
@@ -584,10 +682,10 @@ export default function VideoEditPage({ params }: PageProps) {
                       <CheckCircle2 size={32} className="text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div className="min-w-0">
-                      <h2 className="text-2xl sm:text-3xl font-black text-surface-900 dark:text-white tracking-tight mb-2">Your edit is ready</h2>
-                      <p className="text-surface-500 font-medium text-sm">Open it in the editor to fine-tune, or download it as it is.</p>
+                      <h2 className="text-2xl sm:text-3xl font-black text-surface-900 dark:text-white tracking-tight mb-2">{t('aiAutoEdit.result.title')}</h2>
+                      <p className="text-surface-500 font-medium text-sm">{t('aiAutoEdit.result.body')}</p>
                       {aiEditsApplied.length > 0 && (
-                        <ul className="mt-4 flex flex-wrap justify-center sm:justify-start gap-2" aria-label="Edits applied">
+                        <ul className="mt-4 flex flex-wrap justify-center sm:justify-start gap-2" aria-label={t('aiAutoEdit.result.editsApplied')}>
                           {aiEditsApplied.map((e) => (
                             <li key={e} className="px-3 py-1 rounded-full bg-surface-100 dark:bg-surface-800 text-xs font-semibold text-surface-700 dark:text-surface-300">{e}</li>
                           ))}
@@ -597,18 +695,18 @@ export default function VideoEditPage({ params }: PageProps) {
                   </div>
                   <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3">
                     <button type="button" onClick={() => { setProcessingError(''); setEditJobId(null); setEditMode('manual'); }} className="col-span-2 sm:col-auto px-6 py-4 rounded-xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-colors shadow-sm flex items-center justify-center gap-2">
-                      Open in Editor <ArrowRight size={16} />
+                      {t('aiAutoEdit.result.openInEditor')} <ArrowRight size={16} />
                     </button>
                     {aiEditedDownloadUrl && (
-                      <a href={aiEditedDownloadUrl} download title="Download the edited video" aria-label="Download the edited video" className="px-5 py-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm flex items-center justify-center gap-2">
-                        <Download size={16} /> Download
+                      <a href={aiEditedDownloadUrl} download title={t('aiAutoEdit.result.downloadTitle')} aria-label={t('aiAutoEdit.result.downloadTitle')} className="px-5 py-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm flex items-center justify-center gap-2">
+                        <Download size={16} /> {t('aiAutoEdit.result.download')}
                       </a>
                     )}
-                    <button type="button" onClick={() => router.push(`/dashboard/clips/hub/${videoId}`)} title="View the generated clips" aria-label="View the generated clips" className="px-5 py-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm flex items-center justify-center gap-2">
-                      <Film size={16} /> View Clips
+                    <button type="button" onClick={() => router.push(`/dashboard/clips/hub/${videoId}`)} title={t('aiAutoEdit.result.viewClipsTitle')} aria-label={t('aiAutoEdit.result.viewClipsTitle')} className="px-5 py-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors shadow-sm flex items-center justify-center gap-2">
+                      <Film size={16} /> {t('aiAutoEdit.result.viewClips')}
                     </button>
-                    <button type="button" onClick={() => setAiEditResult(null)} title="Dismiss this result" aria-label="Dismiss this result" className="px-5 py-4 rounded-xl bg-transparent text-surface-500 dark:text-surface-400 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center justify-center">
-                      Dismiss
+                    <button type="button" onClick={() => setAiEditResult(null)} title={t('aiAutoEdit.result.dismissTitle')} aria-label={t('aiAutoEdit.result.dismissTitle')} className="px-5 py-4 rounded-xl bg-transparent text-surface-500 dark:text-surface-400 font-bold text-xs uppercase tracking-wider hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors flex items-center justify-center">
+                      {t('aiAutoEdit.result.dismiss')}
                     </button>
                   </div>
                 </div>
@@ -628,12 +726,12 @@ export default function VideoEditPage({ params }: PageProps) {
                             <Activity size={24} className="text-emerald-600 dark:text-emerald-400" />
                           </div>
                           <div>
-                             <h3 className="text-lg font-black text-surface-900 dark:text-white tracking-tight">Diagnostics</h3>
-                             <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mt-1">Analysis Complete</p>
+                             <h3 className="text-lg font-black text-surface-900 dark:text-white tracking-tight">{t('aiAutoEdit.diag.title')}</h3>
+                             <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mt-1">{t('aiAutoEdit.diag.complete')}</p>
                           </div>
                        </div>
                        <div className="p-5 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex justify-between items-center">
-                         <p className="text-[10px] font-bold text-surface-500 uppercase tracking-wider">Suggested Length</p>
+                         <p className="text-[10px] font-bold text-surface-500 uppercase tracking-wider">{t('aiAutoEdit.diag.suggestedLength')}</p>
                          <p className="text-2xl font-black text-surface-900 dark:text-white tabular-nums">{Math.round(aiAnalysis.suggestedLength || 0)}s</p>
                        </div>
                     </m.div>
@@ -645,20 +743,20 @@ export default function VideoEditPage({ params }: PageProps) {
                           <Brain size={24} className="text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                           <h3 className="text-lg font-black text-surface-900 dark:text-white tracking-tight">Your edit plan</h3>
-                           <p className="text-xs font-medium text-surface-500 mt-1">What the AI will do with the settings on the right</p>
+                           <h3 className="text-lg font-black text-surface-900 dark:text-white tracking-tight">{t('aiAutoEdit.plan.title')}</h3>
+                           <p className="text-xs font-medium text-surface-500 mt-1">{t('aiAutoEdit.plan.subtitle')}</p>
                         </div>
                      </div>
                      {/* Built from the user's current picks — this used to show the same
                          hardcoded "AI Recommendations" for every video. */}
                      <div className="space-y-3">
                         {[
-                          { label: 'Opening', val: prioritizeHook ? 'Lead with the strongest moment' : 'Keep the original start' },
-                          { label: 'Pacing', val: pacingIntensity === 'gentle' ? 'Gentle cuts' : pacingIntensity === 'aggressive' ? 'Fast, tight cuts' : 'Balanced cuts' },
-                          { label: 'Dead air', val: editingOptions.removeSilence ? 'Removed' : 'Kept' },
-                          { label: 'Captions', val: editingOptions.addCaptions ? 'Burned in' : 'Off' },
-                          { label: 'Clips', val: editingOptions.generateClips ? `${clipCount} × ${clipTargetLength === 'short' ? 'under 30s' : clipTargetLength === 'mid-3-5' ? '30–60s' : clipTargetLength === 'mid-5-10' ? '1–3 min' : 'full length'}` : 'One edited video' },
-                          { label: 'Format', val: exportFormats.join(' · ') || '9:16' },
+                          { label: t('aiAutoEdit.plan.opening'), val: prioritizeHook ? t('aiAutoEdit.plan.openingHook') : t('aiAutoEdit.plan.openingOriginal') },
+                          { label: t('aiAutoEdit.plan.pacing'), val: pacingIntensity === 'gentle' ? t('aiAutoEdit.plan.pacingGentle') : pacingIntensity === 'aggressive' ? t('aiAutoEdit.plan.pacingFast') : t('aiAutoEdit.plan.pacingBalanced') },
+                          { label: t('aiAutoEdit.plan.deadAir'), val: editingOptions.removeSilence ? t('aiAutoEdit.plan.removed') : t('aiAutoEdit.plan.kept') },
+                          { label: t('aiAutoEdit.plan.captions'), val: editingOptions.addCaptions ? t('aiAutoEdit.plan.burnedIn') : t('aiAutoEdit.plan.off') },
+                          { label: t('aiAutoEdit.plan.clips'), val: editingOptions.generateClips ? `${clipCount} × ${clipTargetLength === 'short' ? t('aiAutoEdit.plan.under30s') : clipTargetLength === 'mid-3-5' ? '30–60s' : clipTargetLength === 'mid-5-10' ? '1–3 min' : t('aiAutoEdit.plan.fullLength')}` : t('aiAutoEdit.plan.oneVideo') },
+                          { label: t('aiAutoEdit.plan.format'), val: exportFormats.join(' · ') || '9:16' },
                         ].map((s, i) => (
                           <div key={i} className="flex justify-between items-center p-5 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800">
                             <span className="text-xs font-bold text-surface-500">{s.label}</span>
@@ -680,12 +778,12 @@ export default function VideoEditPage({ params }: PageProps) {
                            <Wand2 size={28} className="text-primary-600 dark:text-primary-400" />
                          </div>
                          <div className="flex-1">
-                            <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">AI Director</h2>
+                            <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">{t('aiAutoEdit.director.title')}</h2>
                             <p className="text-sm font-medium text-surface-500 mt-1">
-                              Pick up to 3 styles or fine-tune every dimension.
+                              {t('aiAutoEdit.director.subtitle')}
                               {stylePresetIds.length > 0 && (
                                 <span className="text-primary-600 dark:text-primary-400 font-bold">
-                                  {' · '}{stylePresetIds.length} preset{stylePresetIds.length === 1 ? '' : 's'}: {stylePresetIds.map(id => STYLE_PRESETS.find(p => p.id === id)?.label).filter(Boolean).join(' + ')}
+                                  {' · '}{t(stylePresetIds.length === 1 ? 'aiAutoEdit.director.presetsOne' : 'aiAutoEdit.director.presetsOther', { count: stylePresetIds.length, names: presetNames(stylePresetIds) })}
                                 </span>
                               )}
                             </p>
@@ -699,7 +797,7 @@ export default function VideoEditPage({ params }: PageProps) {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-2">
-                            <Globe size={13} className="text-primary-500" /> Target platform
+                            <Globe size={13} className="text-primary-500" /> {t('aiAutoEdit.targetPlatform')}
                           </label>
                           <div className="flex flex-wrap gap-2">
                             {([
@@ -719,14 +817,14 @@ export default function VideoEditPage({ params }: PageProps) {
                                     : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:border-primary-300 dark:hover:border-primary-700'
                                 }`}
                               >
-                                <span>{p.emoji}</span>{p.label}
+                                <span>{p.emoji}</span>{p.id === 'auto' ? optionLabel(t, 'auto') : p.label}
                               </button>
                             ))}
                           </div>
                         </div>
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-2">
-                            <Sparkle size={13} className="text-primary-500" /> Content tone
+                            <Sparkle size={13} className="text-primary-500" /> {t('aiAutoEdit.contentTone')}
                           </label>
                           <div className="flex flex-wrap gap-2">
                             {([
@@ -735,18 +833,18 @@ export default function VideoEditPage({ params }: PageProps) {
                               { id: 'entertaining',  label: 'Entertaining' },
                               { id: 'motivational',  label: 'Motivational' },
                               { id: 'promotional',   label: 'Promotional' },
-                            ] as const).map(t => (
+                            ] as const).map(tone => (
                               <button
-                                key={t.id}
+                                key={tone.id}
                                 type="button"
-                                onClick={() => setContentTone(t.id)}
+                                onClick={() => setContentTone(tone.id)}
                                 className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
-                                  contentTone === t.id
+                                  contentTone === tone.id
                                     ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white shadow-sm'
                                     : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'
                                 }`}
                               >
-                                {t.label}
+                                {optionLabel(t, tone.id)}
                               </button>
                             ))}
                           </div>
@@ -761,10 +859,10 @@ export default function VideoEditPage({ params }: PageProps) {
                           is shown as a numbered badge. */}
                       <div className="space-y-4">
                          <label className="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-3">
-                           <Sparkles size={14} className="text-primary-500" /> Style preset
+                           <Sparkles size={14} className="text-primary-500" /> {t('aiAutoEdit.stylePreset')}
                            {stylePresetIds.length > 0 && (
                              <span className="ml-auto text-[10px] text-surface-400 font-medium normal-case tracking-normal">
-                               {stylePresetIds.length}/3 selected · click again to remove
+                               {t('aiAutoEdit.presetsSelected', { count: stylePresetIds.length })}
                              </span>
                            )}
                          </label>
@@ -786,8 +884,8 @@ export default function VideoEditPage({ params }: PageProps) {
                                    })
                                  }}
                                  className={`relative p-4 rounded-2xl border text-left transition-all ${active ? `bg-gradient-to-br ${p.accent} border-transparent shadow-md scale-[1.02]` : atCap ? 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 opacity-40 cursor-not-allowed' : 'bg-surface-50 dark:bg-surface-950 border-surface-200 dark:border-surface-800 hover:border-surface-300 dark:hover:border-surface-700'}`}
-                                 title={atCap ? 'Up to 3 presets — remove one to swap' : active ? `Selected #${orderIndex + 1} — click to remove` : `Select style: ${p.label}`}
-                                 aria-label={atCap ? 'Up to 3 presets — remove one to swap' : active ? `Selected style #${orderIndex + 1}: ${p.label}` : `Select style: ${p.label}`}
+                                 title={atCap ? t('aiAutoEdit.presetCap') : active ? t('aiAutoEdit.presetSelectedTitle', { n: orderIndex + 1 }) : t('aiAutoEdit.presetSelect', { name: t(p.labelKey) })}
+                                 aria-label={atCap ? t('aiAutoEdit.presetCap') : active ? t('aiAutoEdit.presetSelectedAria', { n: orderIndex + 1, name: t(p.labelKey) }) : t('aiAutoEdit.presetSelect', { name: t(p.labelKey) })}
                                >
                                  {active && (
                                    <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/95 text-surface-900 text-xs font-black flex items-center justify-center shadow-sm tabular-nums">
@@ -795,8 +893,8 @@ export default function VideoEditPage({ params }: PageProps) {
                                    </span>
                                  )}
                                  <div className="text-2xl mb-2">{p.emoji}</div>
-                                 <p className={`text-sm font-black tracking-tight ${active ? 'text-white' : 'text-surface-900 dark:text-white'}`}>{p.label}</p>
-                                 <p className={`text-[10px] font-medium mt-1 ${active ? 'text-white/80' : 'text-surface-500'}`}>{p.tagline}</p>
+                                 <p className={`text-sm font-black tracking-tight ${active ? 'text-white' : 'text-surface-900 dark:text-white'}`}>{t(p.labelKey)}</p>
+                                 <p className={`text-[10px] font-medium mt-1 ${active ? 'text-white/80' : 'text-surface-500'}`}>{t(p.taglineKey)}</p>
                                </button>
                              )
                            })}
@@ -808,16 +906,16 @@ export default function VideoEditPage({ params }: PageProps) {
                         {/* AI Tasks */}
                         <div className="space-y-4">
                            <label className="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-3">
-                             <Scissors size={14} className="text-primary-500" /> AI tasks
+                             <Scissors size={14} className="text-primary-500" /> {t('aiAutoEdit.aiTasks')}
                            </label>
                            <div className="space-y-2">
                               {[
-                                { id: 'removeSilence', label: 'Remove silence', desc: 'Auto-cut dead air & pauses' },
-                                { id: 'optimizePacing', label: 'Optimize pacing', desc: 'Tight cuts for retention' },
-                                { id: 'enhanceAudio', label: 'Enhance audio', desc: 'Noise reduction + leveling' },
-                                { id: 'generateClips', label: 'Generate short clips', desc: 'Extract viral moments' },
-                                { id: 'addCaptions', label: 'Burn-in captions', desc: 'Word-synced dynamic text' },
-                                { id: 'enhanceColor', label: 'Color correction', desc: 'Auto LUT + grade' }
+                                { id: 'removeSilence', label: t('aiAutoEdit.task.removeSilence'), desc: t('aiAutoEdit.task.removeSilenceDesc') },
+                                { id: 'optimizePacing', label: t('aiAutoEdit.task.optimizePacing'), desc: t('aiAutoEdit.task.optimizePacingDesc') },
+                                { id: 'enhanceAudio', label: t('aiAutoEdit.task.enhanceAudio'), desc: t('aiAutoEdit.task.enhanceAudioDesc') },
+                                { id: 'generateClips', label: t('aiAutoEdit.task.generateClips'), desc: t('aiAutoEdit.task.generateClipsDesc') },
+                                { id: 'addCaptions', label: t('aiAutoEdit.task.addCaptions'), desc: t('aiAutoEdit.task.addCaptionsDesc') },
+                                { id: 'enhanceColor', label: t('aiAutoEdit.task.enhanceColor'), desc: t('aiAutoEdit.task.enhanceColorDesc') }
                               ].map(node => {
                                 const on = !!editingOptions[node.id as keyof typeof editingOptions]
                                 return (
@@ -838,13 +936,13 @@ export default function VideoEditPage({ params }: PageProps) {
                         {/* Output, length, count */}
                         <div className="space-y-5">
                            <label className="text-[10px] font-bold text-surface-500 uppercase tracking-widest flex items-center gap-3">
-                             <LayoutGrid size={14} className="text-primary-500" /> Output
+                             <LayoutGrid size={14} className="text-primary-500" /> {t('aiAutoEdit.output')}
                            </label>
 
                            <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-3">
-                              <p className="text-xs font-bold text-surface-900 dark:text-white">Aspect ratio</p>
+                              <p className="text-xs font-bold text-surface-900 dark:text-white">{t('aiAutoEdit.aspectRatio')}</p>
                               <div className="flex flex-wrap gap-2">
-                                {[{ id: 'auto', label: 'Auto' }, { id: 'vertical', label: '9:16' }, { id: 'square', label: '1:1' }, { id: 'standard', label: '16:9' }].map(f => (
+                                {[{ id: 'auto', label: optionLabel(t, 'auto') }, { id: 'vertical', label: '9:16' }, { id: 'square', label: '1:1' }, { id: 'standard', label: '16:9' }].map(f => (
                                   <button type="button" key={f.id} onClick={() => setOutputFormat(f.id as 'auto' | 'vertical' | 'square' | 'standard')} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${outputFormat === f.id ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white' : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>{f.label}</button>
                                 ))}
                               </div>
@@ -852,20 +950,20 @@ export default function VideoEditPage({ params }: PageProps) {
 
                            <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-3">
                               <div className="flex items-center justify-between">
-                                <p className="text-xs font-bold text-surface-900 dark:text-white">Clips to generate</p>
+                                <p className="text-xs font-bold text-surface-900 dark:text-white">{t('aiAutoEdit.clipsToGenerate')}</p>
                                 <span className="text-sm font-black text-primary-600 dark:text-primary-400 tabular-nums">{clipCount}</span>
                               </div>
-                              <input type="range" min="1" max="20" step="1" value={clipCount} onChange={(e) => setClipCount(Number(e.target.value))} aria-label="Number of clips to generate" title="Number of clips to generate" className="w-full accent-primary-500" />
+                              <input type="range" min="1" max="20" step="1" value={clipCount} onChange={(e) => setClipCount(Number(e.target.value))} aria-label={t('aiAutoEdit.clipCountAria')} title={t('aiAutoEdit.clipCountAria')} className="w-full accent-primary-500" />
                            </div>
 
                            <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-3">
-                              <p className="text-xs font-bold text-surface-900 dark:text-white">Target length</p>
+                              <p className="text-xs font-bold text-surface-900 dark:text-white">{t('aiAutoEdit.targetLength')}</p>
                               <div className="flex flex-wrap gap-2">
                                 {[
                                   { id: 'short', label: '< 30s' },
                                   { id: 'mid-3-5', label: '30-60s' },
                                   { id: 'mid-5-10', label: '1-3m' },
-                                  { id: 'full', label: 'Full' }
+                                  { id: 'full', label: t('aiAutoEdit.full') }
                                 ].map(o => (
                                   <button type="button" key={o.id} onClick={() => setClipTargetLength(o.id as any)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border ${clipTargetLength === o.id ? 'bg-surface-900 dark:bg-white text-white dark:text-surface-900 border-surface-900 dark:border-white' : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>{o.label}</button>
                                 ))}
@@ -873,10 +971,10 @@ export default function VideoEditPage({ params }: PageProps) {
                            </div>
 
                            <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-3">
-                              <p className="text-xs font-bold text-surface-900 dark:text-white">Pacing</p>
+                              <p className="text-xs font-bold text-surface-900 dark:text-white">{t('aiAutoEdit.pacing')}</p>
                               <div className="flex gap-2">
                                 {(['gentle', 'medium', 'aggressive'] as const).map(p => (
-                                  <button type="button" key={p} onClick={() => setPacingIntensity(p)} className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-colors border ${pacingIntensity === p ? 'bg-primary-500 text-white border-primary-500' : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>{p}</button>
+                                  <button type="button" key={p} onClick={() => setPacingIntensity(p)} className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-colors border ${pacingIntensity === p ? 'bg-primary-500 text-white border-primary-500' : 'bg-white dark:bg-surface-900 text-surface-600 dark:text-surface-400 border-surface-200 dark:border-surface-800 hover:bg-surface-100 dark:hover:bg-surface-800'}`}>{optionLabel(t, p)}</button>
                                 ))}
                               </div>
                            </div>
@@ -894,8 +992,8 @@ export default function VideoEditPage({ params }: PageProps) {
                                   <Settings size={16} className="text-surface-600 dark:text-surface-400" />
                                </div>
                                <div>
-                                  <p className="text-sm font-black text-surface-900 dark:text-white tracking-tight">Advanced</p>
-                                  <p className="text-[11px] font-medium text-surface-500">Mood, captions, transitions, voice, B-roll, CTA</p>
+                                  <p className="text-sm font-black text-surface-900 dark:text-white tracking-tight">{t('aiAutoEdit.advanced')}</p>
+                                  <p className="text-[11px] font-medium text-surface-500">{t('aiAutoEdit.advancedHint')}</p>
                                </div>
                             </div>
                             {advancedOpen ? <ChevronUp size={18} className="text-surface-400" /> : <ChevronDown size={18} className="text-surface-400" />}
@@ -903,34 +1001,34 @@ export default function VideoEditPage({ params }: PageProps) {
 
                          {advancedOpen && (
                            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                             <SelectCard icon={Palette} label="Color grade" value={colorGrade} onChange={setColorGrade}
+                             <SelectCard icon={Palette} label={t('aiAutoEdit.sel.colorGrade')} value={colorGrade} onChange={setColorGrade}
                                 options={['auto', 'vivid', 'cinematic', 'natural', 'cool', 'warm', 'vintage', 'bw']} />
-                             <SelectCard icon={Music} label="Music genre" value={musicGenre} onChange={setMusicGenre}
+                             <SelectCard icon={Music} label={t('aiAutoEdit.sel.musicGenre')} value={musicGenre} onChange={setMusicGenre}
                                 options={['auto', 'phonk', 'lofi', 'cinematic', 'synthwave', 'upbeat-pop', 'chill', 'dark-ambient']} />
-                             <SelectCard icon={Flame} label="Hook style" value={hookStyle} onChange={setHookStyle}
+                             <SelectCard icon={Flame} label={t('aiAutoEdit.sel.hookStyle')} value={hookStyle} onChange={setHookStyle}
                                 options={['auto', 'question', 'stat', 'mystery', 'story', 'bold-claim', 'pattern-break']} />
-                             <SelectCard icon={Film} label="Transitions" value={transitionStyle} onChange={setTransitionStyle}
+                             <SelectCard icon={Film} label={t('aiAutoEdit.sel.transitions')} value={transitionStyle} onChange={setTransitionStyle}
                                 options={['auto', 'fast-cut', 'crossfade', 'glitch', 'whip-pan', 'hard-cut']} />
-                             <SelectCard icon={Type} label="Caption style" value={captionStyle} onChange={setCaptionStyle}
+                             <SelectCard icon={Type} label={t('aiAutoEdit.sel.captionStyle')} value={captionStyle} onChange={setCaptionStyle}
                                 options={['modern', 'bold', 'minimal', 'tiktok', 'youtube', 'neon', 'pill', 'cinematic']} />
-                             <SelectCard icon={Layout} label="Subtitle position" value={subtitlePosition} onChange={setSubtitlePosition}
+                             <SelectCard icon={Layout} label={t('aiAutoEdit.sel.subtitlePosition')} value={subtitlePosition} onChange={setSubtitlePosition}
                                 options={['auto', 'top', 'middle', 'bottom', 'lower-third']} />
-                             <SelectCard icon={Mic} label="Voice tone" value={voiceTone} onChange={setVoiceTone}
+                             <SelectCard icon={Mic} label={t('aiAutoEdit.sel.voiceTone')} value={voiceTone} onChange={setVoiceTone}
                                 options={['auto', 'energetic', 'calm', 'authoritative', 'playful', 'serious']} />
-                             <SelectCard icon={Hash} label="CTA style" value={ctaStyle} onChange={setCtaStyle}
+                             <SelectCard icon={Hash} label={t('aiAutoEdit.sel.ctaStyle')} value={ctaStyle} onChange={setCtaStyle}
                                 options={['auto', 'question', 'urgency', 'value', 'curiosity']} />
-                             <SelectCard icon={Video} label="B-roll frequency" value={brollFrequency} onChange={setBrollFrequency}
+                             <SelectCard icon={Video} label={t('aiAutoEdit.sel.brollFrequency')} value={brollFrequency} onChange={setBrollFrequency}
                                 options={['off', 'sparse', 'balanced', 'heavy']} />
 
                              <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                    <Gauge size={14} className="text-primary-500" />
                                    <div>
-                                      <p className="text-xs font-bold text-surface-900 dark:text-white">Speed ramping</p>
-                                      <p className="text-[10px] font-medium text-surface-500">Sine-modulate clip pace for energy</p>
+                                      <p className="text-xs font-bold text-surface-900 dark:text-white">{t('aiAutoEdit.speedRamping')}</p>
+                                      <p className="text-[10px] font-medium text-surface-500">{t('aiAutoEdit.speedRampingHint')}</p>
                                    </div>
                                 </div>
-                                <button type="button" aria-label={`Toggle speed ramping`} onClick={() => setSpeedRamping(s => !s)} className={`w-10 h-6 rounded-full transition-colors flex items-center ${speedRamping ? 'bg-primary-500 justify-end' : 'bg-surface-300 dark:bg-surface-700 justify-start'}`}>
+                                <button type="button" aria-label={t('aiAutoEdit.toggleSpeedRamping')} onClick={() => setSpeedRamping(s => !s)} className={`w-10 h-6 rounded-full transition-colors flex items-center ${speedRamping ? 'bg-primary-500 justify-end' : 'bg-surface-300 dark:bg-surface-700 justify-start'}`}>
                                    <span className="w-5 h-5 rounded-full bg-white shadow-sm mx-0.5" />
                                 </button>
                              </div>
@@ -939,11 +1037,11 @@ export default function VideoEditPage({ params }: PageProps) {
                                 <div className="flex items-center gap-3">
                                    <Zap size={14} className="text-primary-500" />
                                    <div>
-                                      <p className="text-xs font-bold text-surface-900 dark:text-white">Prioritize hook</p>
-                                      <p className="text-[10px] font-medium text-surface-500">Bias the first 3s for retention</p>
+                                      <p className="text-xs font-bold text-surface-900 dark:text-white">{t('aiAutoEdit.prioritizeHook')}</p>
+                                      <p className="text-[10px] font-medium text-surface-500">{t('aiAutoEdit.prioritizeHookHint')}</p>
                                    </div>
                                 </div>
-                                <button type="button" aria-label={`Toggle prioritize hook`} onClick={() => setPrioritizeHook(s => !s)} className={`w-10 h-6 rounded-full transition-colors flex items-center ${prioritizeHook ? 'bg-primary-500 justify-end' : 'bg-surface-300 dark:bg-surface-700 justify-start'}`}>
+                                <button type="button" aria-label={t('aiAutoEdit.togglePrioritizeHook')} onClick={() => setPrioritizeHook(s => !s)} className={`w-10 h-6 rounded-full transition-colors flex items-center ${prioritizeHook ? 'bg-primary-500 justify-end' : 'bg-surface-300 dark:bg-surface-700 justify-start'}`}>
                                    <span className="w-5 h-5 rounded-full bg-white shadow-sm mx-0.5" />
                                 </button>
                              </div>
@@ -952,13 +1050,13 @@ export default function VideoEditPage({ params }: PageProps) {
                              <div className="md:col-span-2 p-4 rounded-xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800 space-y-2">
                                <div className="flex items-center gap-2">
                                  <Brain size={14} className="text-primary-500" />
-                                 <p className="text-xs font-bold text-surface-900 dark:text-white">Creative Direction</p>
-                                 <span className="ml-auto text-[10px] font-medium text-surface-500">optional · overrides AI defaults</span>
+                                 <p className="text-xs font-bold text-surface-900 dark:text-white">{t('aiAutoEdit.creativeDirection')}</p>
+                                 <span className="ml-auto text-[10px] font-medium text-surface-500">{t('aiAutoEdit.creativeDirectionHint')}</span>
                                </div>
                                <textarea
                                  value={customInstructions}
                                  onChange={e => setCustomInstructions(e.target.value)}
-                                 placeholder="e.g. Make it feel cinematic and dark, no jump cuts, emphasise the emotional pause at 0:42…"
+                                 placeholder={t('aiAutoEdit.creativeDirectionPlaceholder')}
                                  maxLength={400}
                                  rows={3}
                                  className="w-full bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-lg px-3 py-2 text-xs font-medium text-surface-900 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/40 resize-none placeholder:text-surface-400"
@@ -986,57 +1084,57 @@ export default function VideoEditPage({ params }: PageProps) {
                         const estSeconds = Math.max(15, clipCount * 25 + tasksOn * 5 + ((editingOptions as any).addCaptions ? 10 : 0))
                         const estLabel = estSeconds < 60 ? `~${estSeconds}s` : `~${Math.ceil(estSeconds / 60)}m`
                         const learnedNow = styleInsight?.source === 'user' && insightApplied && stylePresetIds.length > 0
-                        const aspectLabel = outputFormat === 'auto' ? 'Auto-fit' : outputFormat === 'vertical' ? '9:16' : outputFormat === 'square' ? '1:1' : '16:9'
-                        const lengthLabel = clipTargetLength === 'short' ? '<30s' : clipTargetLength === 'mid-3-5' ? '30-60s' : clipTargetLength === 'mid-5-10' ? '1-3m' : 'Full'
+                        const aspectLabel = outputFormat === 'auto' ? t('aiAutoEdit.autoFit') : outputFormat === 'vertical' ? '9:16' : outputFormat === 'square' ? '1:1' : '16:9'
+                        const lengthLabel = clipTargetLength === 'short' ? '<30s' : clipTargetLength === 'mid-3-5' ? '30-60s' : clipTargetLength === 'mid-5-10' ? '1-3m' : t('aiAutoEdit.full')
                         return (
                           <div className="rounded-2xl bg-gradient-to-br from-primary-500/[0.06] via-transparent to-primary-500/[0.04] border border-primary-200/50 dark:border-primary-700/30 p-5 space-y-3">
                             <div className="flex items-center gap-2">
                               <div className="w-7 h-7 rounded-lg bg-primary-500/15 border border-primary-300/40 dark:border-primary-700/40 flex items-center justify-center">
                                 <Sparkle size={13} className="text-primary-600 dark:text-primary-400" />
                               </div>
-                              <p className="text-[11px] font-black uppercase tracking-[0.25em] text-primary-700 dark:text-primary-300">AI Plan</p>
+                              <p className="text-[11px] font-black uppercase tracking-[0.25em] text-primary-700 dark:text-primary-300">{t('aiAutoEdit.aiPlan')}</p>
                               {learnedNow && (
                                 <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-[9px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
-                                  <Brain size={10} /> Pre-loaded your style
+                                  <Brain size={10} /> {t('aiAutoEdit.preloadedStyle')}
                                 </span>
                               )}
                             </div>
                             <p className="text-sm text-surface-800 dark:text-surface-200 leading-relaxed">
-                              Compose <span className="font-black">{clipCount}</span> {aspectLabel} clip{clipCount === 1 ? '' : 's'}, target <span className="font-black">{lengthLabel}</span>
-                              {targetPlatform !== 'auto' && <> for <span className="font-black capitalize">{targetPlatform}</span></>}
-                              {contentTone !== 'auto' && <> · <span className="font-black capitalize">{contentTone}</span> tone</>}
+                              {renderBold(t(clipCount === 1 ? 'aiAutoEdit.planLine.composeOne' : 'aiAutoEdit.planLine.composeOther', { count: B(clipCount), aspect: aspectLabel, length: B(lengthLabel) }))}
+                              {targetPlatform !== 'auto' && <> {renderBold(t('aiAutoEdit.planLine.forPlatform', { platform: B(PLATFORM_LABELS[targetPlatform] || targetPlatform) }))}</>}
+                              {contentTone !== 'auto' && <> · {renderBold(t('aiAutoEdit.planLine.tone', { tone: B(optionLabel(t, contentTone)) }))}</>}
                               {presets.length > 0 ? (
-                                <> across <span className="font-black">{presets.map(p => p.label).join(' + ')}</span> ({variations} variation angles)</>
+                                <> {renderBold(t('aiAutoEdit.planLine.acrossPresets', { presets: B(presets.map(p => t(p.labelKey)).join(' + ')), count: variations }))}</>
                               ) : (
-                                <> with <span className="font-black">auto-detected</span> style</>
+                                <> {renderBold(t('aiAutoEdit.planLine.autoStyle', { auto: B(t('aiAutoEdit.planLine.autoDetected')) }))}</>
                               )}
-                              {colorGrade !== 'auto' && <>, <span className="font-black capitalize">{colorGrade.replace('-', ' ')}</span> color grade</>}
-                              {hookStyle !== 'auto' && <>, <span className="font-black capitalize">{hookStyle.replace('-', ' ')}</span> hook</>}
-                              {pacingIntensity !== 'medium' && <>, <span className="font-black capitalize">{pacingIntensity}</span> pacing</>}
-                              {speedRamping && <>, speed-ramping on</>}
-                              {brollFrequency !== 'off' && brollFrequency !== 'balanced' && <>, <span className="font-black capitalize">{brollFrequency}</span> B-roll</>}
+                              {colorGrade !== 'auto' && <>, {renderBold(t('aiAutoEdit.planLine.grade', { grade: B(optionLabel(t, colorGrade)) }))}</>}
+                              {hookStyle !== 'auto' && <>, {renderBold(t('aiAutoEdit.planLine.hook', { hook: B(optionLabel(t, hookStyle)) }))}</>}
+                              {pacingIntensity !== 'medium' && <>, {renderBold(t('aiAutoEdit.planLine.pacing', { pacing: B(optionLabel(t, pacingIntensity)) }))}</>}
+                              {speedRamping && <>, {t('aiAutoEdit.planLine.speedRamping')}</>}
+                              {brollFrequency !== 'off' && brollFrequency !== 'balanced' && <>, {renderBold(t('aiAutoEdit.planLine.broll', { broll: B(optionLabel(t, brollFrequency)) }))}</>}
                               .
                             </p>
                             <div className="flex flex-wrap gap-2 pt-1">
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 dark:bg-surface-900/60 border border-surface-200 dark:border-surface-800 text-[10px] font-bold text-surface-700 dark:text-surface-300">
-                                <Cpu size={10} /> {tasksOn} task{tasksOn === 1 ? '' : 's'}
+                                <Cpu size={10} /> {t(tasksOn === 1 ? 'aiAutoEdit.tasksOne' : 'aiAutoEdit.tasksOther', { count: tasksOn })}
                               </span>
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 dark:bg-surface-900/60 border border-surface-200 dark:border-surface-800 text-[10px] font-bold text-surface-700 dark:text-surface-300">
-                                <Activity size={10} /> est {estLabel}
+                                <Activity size={10} /> {t('aiAutoEdit.estimate', { time: estLabel })}
                               </span>
                               {(editingOptions as any).addCaptions && (
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 dark:bg-surface-900/60 border border-surface-200 dark:border-surface-800 text-[10px] font-bold text-surface-700 dark:text-surface-300">
-                                  <Type size={10} /> Captions
+                                  <Type size={10} /> {t('aiAutoEdit.chip.captions')}
                                 </span>
                               )}
                               {(editingOptions as any).enhanceColor && colorGrade === 'auto' && (
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 dark:bg-surface-900/60 border border-surface-200 dark:border-surface-800 text-[10px] font-bold text-surface-700 dark:text-surface-300">
-                                  <Palette size={10} /> Auto-grade
+                                  <Palette size={10} /> {t('aiAutoEdit.chip.autoGrade')}
                                 </span>
                               )}
                               {speedRamping && (
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 dark:bg-surface-900/60 border border-surface-200 dark:border-surface-800 text-[10px] font-bold text-surface-700 dark:text-surface-300">
-                                  <Gauge size={10} /> Speed ramp
+                                  <Gauge size={10} /> {t('aiAutoEdit.chip.speedRamp')}
                                 </span>
                               )}
                               {targetPlatform !== 'auto' && (
@@ -1046,7 +1144,7 @@ export default function VideoEditPage({ params }: PageProps) {
                               )}
                               {contentTone !== 'auto' && (
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/60 dark:bg-surface-900/60 border border-surface-200 dark:border-surface-800 text-[10px] font-bold text-surface-700 dark:text-surface-300 capitalize">
-                                  <Sparkle size={10} /> {contentTone}
+                                  <Sparkle size={10} /> {optionLabel(t, contentTone)}
                                 </span>
                               )}
                               {customInstructions.trim() && (
@@ -1063,14 +1161,14 @@ export default function VideoEditPage({ params }: PageProps) {
                       <div className="pt-4 border-t border-surface-200 dark:border-surface-800">
                          <button type="button" onClick={handleStartAIEdit} disabled={processing} className="w-full py-5 rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-3 bg-gradient-to-r from-primary-500 to-primary-700 hover:from-primary-600 hover:to-primary-800 text-white disabled:opacity-50 disabled:cursor-not-allowed">
                            {processing ? <RefreshCw size={20} className="animate-spin" /> : <Wand2 size={20} />}
-                           {processing ? 'Composing your edit…' : `Compose ${clipCount} clip${clipCount === 1 ? '' : 's'}`}
+                           {processing ? t('aiAutoEdit.composing') : t(clipCount === 1 ? 'aiAutoEdit.composeOne' : 'aiAutoEdit.composeOther', { count: clipCount })}
                          </button>
                          <p className="text-[10px] text-center text-surface-500 mt-3 font-medium">
                            {stylePresetIds.length > 0
-                             ? `Using ${stylePresetIds.map(id => STYLE_PRESETS.find(p => p.id === id)?.label).filter(Boolean).join(' + ')}`
-                             : 'Auto-select preset based on your content'}
+                             ? t('aiAutoEdit.using', { names: presetNames(stylePresetIds) })
+                             : t('aiAutoEdit.autoSelectPreset')}
                            {' · '}
-                           {Object.values(editingOptions).filter(Boolean).length} task{Object.values(editingOptions).filter(Boolean).length === 1 ? '' : 's'} on
+                           {t(Object.values(editingOptions).filter(Boolean).length === 1 ? 'aiAutoEdit.tasksOnOne' : 'aiAutoEdit.tasksOnOther', { count: Object.values(editingOptions).filter(Boolean).length })}
                          </p>
                       </div>
                    </div>

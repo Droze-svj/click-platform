@@ -7,6 +7,7 @@ const fs = require('fs')
 const os = require('os')
 const crypto = require('crypto')
 const { notoFontForText, getSystemFontPath } = require('../utils/scriptFont')
+const { resolveExportFont, overlayFontSpec } = require('../utils/exportFonts')
 let sharp = null
 try { sharp = require('sharp') } catch (_) { /* sharp optional; svg/gradient overlays degrade gracefully */ }
 const Content = require('../models/Content')
@@ -460,7 +461,11 @@ function buildDrawTextFilter(overlay, dims = {}) {
   // Strip emoji from the body text (rendered separately with an emoji font so the
   // body font never shows a tofu box). An overlay may also carry an explicit emoji.
   const overlayEmoji = overlay.emoji || extractEmoji(overlay.text)
-  const rawText = stripEmoji((overlay.text || '').toUpperCase())
+  // exportLook = how the editor preview dressed this text (case, box, outline),
+  // sent by the editor's export. Without it (AI-generated captions) we keep the
+  // house caption look: uppercase, boxed, outlined.
+  const look = overlay.exportLook && typeof overlay.exportLook === 'object' ? overlay.exportLook : null
+  const rawText = stripEmoji(look && !look.uppercase ? (overlay.text || '') : (overlay.text || '').toUpperCase())
   if (!rawText) {
     // Emoji-only caption: render just the emoji (if a font exists), else nothing.
     const startN = Number(overlay.startTime ?? 0).toFixed(3)
@@ -490,8 +495,16 @@ function buildDrawTextFilter(overlay, dims = {}) {
   // colors are whitelisted through cssColorToFfmpeg (→ safe 0xRRGGBB / [a-z]
   // name token) so they can't break out of the single-quoted filter option.
   const fontColor = overlay.color ? ffColor(overlay.color, sty.fontColor) : sty.fontColor
-  const rawBg = overlay.backgroundColor || overlay.background || null
-  const bgColor = rawBg ? ffColor(rawBg, sty.bgColor) : sty.bgColor
+  const rawBg = look ? look.background : (overlay.backgroundColor || overlay.background || null)
+  const bgColor = rawBg ? ffColor(rawBg, sty.bgColor) : (look ? null : sty.bgColor)
+  const outlineW = look
+    // The preview paints the stroke under the fill (paint-order: stroke fill), so
+    // only half its width shows outside the letters — drawtext's border is all outside.
+    ? (look.outline ? Math.max(1, Math.round(Number(look.outline.width) / 2 * (frameW / 1080))) : 0)
+    : (sty.borderw || 2)
+  const outlineColor = look
+    ? (look.outline ? ffColor(look.outline.color, 'black') : 'black')
+    : sty.borderColor
 
   // Positioning: explicit x/y (percentage-based from editor) or style defaults.
   // Percentages are clamped to a safe margin [2,98] so text never renders flush
@@ -521,7 +534,7 @@ function buildDrawTextFilter(overlay, dims = {}) {
   //    so up to 3 lines stay on-frame).
   const GLYPH_ADVANCE = 0.58 // uppercase bold ≈ 0.58em average advance
   let baseFont = (Number(overlay.fontSize) || sty.fontSize) * (frameW / 1080)
-  if (textLen < 10) baseFont *= 1.2
+  if (textLen < 10 && !look) baseFont *= 1.2 // house captions punch short words; editor text keeps its size
   baseFont = Math.max(14, Math.min(baseFont, frameH / 7))
 
   const maxCharsPerLine = Math.max(8, Math.floor((frameW * 0.92) / (baseFont * GLYPH_ADVANCE)))
@@ -538,17 +551,20 @@ function buildDrawTextFilter(overlay, dims = {}) {
   const start = Number(overlay.startTime ?? 0).toFixed(3)
   const end   = Number(overlay.endTime   ?? (Number(overlay.startTime ?? 0) + 3)).toFixed(3)
 
-  // Kinetic displacement for high-impact styles
-  // 2026 Kinetic Typography: All manual text now organically breathes to feel alive
-  let finalY = `(${y})-5*sin(t*3.5)`
-  if (style === 'hook' || style === 'punchline') {
-    // Snappy periodic bounce for high impact
-    finalY = `(${y})-15*sin(2*PI*t/0.4)`
-  }
+  // Text sits where the editor placed it. (It used to bob up and down on every
+  // export — and bounce for hook/punchline styles — though the preview never
+  // moved; animation comes only from the overlay's own animationIn/Out and
+  // keyframes below.)
+  const finalY = `(${y})`
 
-  // Script-aware: a Noto font when the caption is CJK/Arabic/Thai/Devanagari and
-  // one is installed, else the Latin default — so non-Latin captions aren't tofu.
-  const fontPath = notoFontForText(rawText) || getSystemFontPath()
+  // The font the editor showed (family/weight/italic → a bundled file, see
+  // utils/exportFonts). When that font lacks some of the text's characters,
+  // fall back to a script font (Noto for CJK/Arabic/Thai/Devanagari) and then
+  // the host default — so nothing renders as tofu boxes.
+  const fontSpec = overlayFontSpec(overlay)
+  const chosenFont = resolveExportFont(fontSpec, rawText)
+  const fontPath = (chosenFont && chosenFont.covers ? chosenFont.path : null)
+    || notoFontForText(rawText, fontSpec.weight) || (chosenFont && chosenFont.path) || getSystemFontPath()
   const fontfileOpt = fontPath ? `:fontfile='${fontPath.replace(/\\/g, '/').replace(/:/g, '\\:')}'` : ''
 
   // ── Editor parity: animationIn/Out + per-overlay keyframes ──
@@ -610,7 +626,7 @@ function buildDrawTextFilter(overlay, dims = {}) {
     const safeY = overlay.safeZone === false
       ? lineY
       : `max(h*0.04\\,min((${lineY})\\,h*0.92-text_h))`
-    return `drawtext=text='${safeLine}'${fontfileOpt}:${fontSizeOpt}:fontcolor='${fontColor}':x='${finalX}':y='${safeY}'${alphaOpt}:box=1:boxcolor='${bgColor}':boxborderw=18:borderw=${sty.borderw || 2}:bordercolor='${sty.borderColor}':shadowcolor=black@0.8:shadowx=${sty.shadow || 0}:shadowy=${sty.shadow || 0}:enable='between(t\\,${start}\\,${end})'`
+    return `drawtext=text='${safeLine}'${fontfileOpt}:${fontSizeOpt}:fontcolor='${fontColor}':x='${finalX}':y='${safeY}'${alphaOpt}${bgColor ? `:box=1:boxcolor='${bgColor}':boxborderw=18` : ''}:borderw=${outlineW}:bordercolor='${outlineColor}':shadowcolor=black@${look ? 0.45 : 0.8}:shadowx=${look ? 2 : (sty.shadow || 0)}:shadowy=${look ? 2 : (sty.shadow || 0)}:enable='between(t\\,${start}\\,${end})'`
   }
   const out = renderLines.map(drawForLine)
   // Append the emoji (rendered with the emoji font, below the caption) — honest

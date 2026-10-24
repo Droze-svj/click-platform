@@ -49,7 +49,6 @@ import RealTimeVideoPreview from './editor/RealTimeVideoPreview'
 import ResizableTimeline, { TrackLaneState } from './editor/ResizableTimeline'
 import AiAssistant from './editor/AiAssistant'
 import AiTimelineChat from './editor/AiTimelineChat'
-import EngagementHeatMap from './editor/EngagementHeatMap'
 import HealthDeltaOverlay from './editor/HealthDeltaOverlay'
 
 // Specialized Views
@@ -113,7 +112,6 @@ import EditorHUD from './editor/EditorHUD'
 import QuickActionsBar from './editor/QuickActionsBar'
 import SmartCleanupPanel from './editor/SmartCleanupPanel'
 import CommandK from './CommandK'
-import { calculateEngagementScore } from '../utils/rankingEngine'
 import { generateSmartMetadata } from '../utils/metadataGenerator'
 import { apiGet, apiPost } from '../lib/api'
 import { buildBeatCutPlan, planToSegments } from '../lib/beatCuts'
@@ -424,36 +422,15 @@ const ModernVideoEditor: React.FC<{
   // ── Consolidated AI & Strategy State ──
   const [contentNiche, setContentNiche] = useState<ContentNiche>('educational')
   const [targetLanguage, setTargetLanguage] = useState<string>('en')
-  const [engagementScore, setEngagementScore] = useState<EngagementScore>({
-    overall: 85, viralPotential: 78, hookStrength: 92, sentimentDensity: 70, trendAlignment: 82, retentionHeatmap: Array(20).fill(80).map((v, i) => v - i * 2)
-  })
+  // Engagement score only ever comes from a real source (a generated clip's
+  // server-side score). There is no client-side estimate — the old default
+  // (85/78/92…) and the Math.sin "ranking engine" were fabricated.
+  const [engagementScore, setEngagementScore] = useState<EngagementScore | null>(null)
   const [autoEditClips, setAutoEditClips] = useState<AutoEditClip[]>([])
   const [generatedMetadata, setGeneratedMetadata] = useState<VideoMetadata | null>(null)
   // Honest default: no fabricated suggestions. The AI Director generates
   // real, transcript-grounded directions on demand via /api/ai/director/plan.
   const [aiDirectorSuggestions, setAiDirectorSuggestions] = useState<AIDirectorSuggestion[]>([])
-
-  // Fetch Advanced Analytics Insights
-  useEffect(() => {
-    const fetchEditorInsights = async () => {
-      try {
-        const res = await apiGet('/analytics/content/editor-insights')
-        const insights = (res as any)?.data || res
-        
-        if (insights) {
-          // Update Engagement Score Based on Real Analytics
-          setEngagementScore(prev => ({
-            ...prev,
-            hookStrength: insights.editing.cutFrequencySeconds < 2 ? 95 : 85,
-            viralPotential: insights.scheduling.accuracyScore > 0.9 ? 92 : 78
-          }))
-        }
-      } catch (err) {
-        console.error('Failed to load advanced editor insights:', err)
-      }
-    }
-    fetchEditorInsights()
-  }, [])
 
   const [isMakingViral, setIsMakingViral] = useState(false)
   const [isAutoViralEditing, setIsAutoViralEditing] = useState(false)
@@ -1157,12 +1134,10 @@ const ModernVideoEditor: React.FC<{
 
   useEffect(() => {
     if (transcript) {
-      const score = calculateEngagementScore(transcript.fullText, contentNiche, videoState.duration || 60)
-      setEngagementScore(score)
       const metadata = generateSmartMetadata(transcript.fullText, transcript.scenes || [])
       setGeneratedMetadata(metadata)
     }
-  }, [transcript, contentNiche, videoState.duration])
+  }, [transcript])
 
   useEffect(() => {
     if (videoState.duration > 0) {
@@ -1224,122 +1199,66 @@ const ModernVideoEditor: React.FC<{
   }, [history, historyIndex, setTimelineSegments, setTextOverlays, setShapeOverlays, setImageOverlays, setVideoFilters, showToast, t])
 
   // ── Callbacks ──
+  // Opens the real Smart cleanup tool (silence / filler-word removal) on a
+  // specific tool. Shared by the Insights sidebar quick fixes and the quick
+  // command box.
+  const openSmartCleanup = useCallback((tool: 'silence' | 'fillers') => {
+    setSmartCleanupInitialTool(tool)
+    setSmartCleanupOpen(true)
+  }, [])
+
+  // Quick command box (Insights sidebar). It only does what it can really do:
+  //  - `add title "…"` places a text overlay at the playhead;
+  //  - mentions of silence / dead air / filler words open Smart cleanup, where
+  //    the user reviews the detected cuts before anything is removed.
+  // Anything else is handed to the AI assistant. It used to keyword-match
+  // "hook" / "pacing" / "readability" / "trend" into canned edits (shrinking
+  // every clip by 10%, truncating every caption to 20 characters…) and toast
+  // "AI edit applied" even when nothing changed.
   const handleManualOverride = useCallback((instruction: string) => {
-    if (!instruction.trim()) return
+    const text = instruction.trim()
+    if (!text) return
 
-    showToast(t('modernVideoEditor.neuralOverrideActive', { instruction }), 'info')
-
-    const textLower = instruction.toLowerCase()
-    
-    setTimeout(() => {
-      // 1. Text Overlay insertion: e.g. Add title "Hello World"
-      const titleMatch = instruction.match(/(?:add title|create text|write|insert caption)\s+["']?([^"']+)["']?/i)
-      if (titleMatch && titleMatch[1]) {
-        const textToInsert = titleMatch[1].toUpperCase()
-        const playhead = videoState.currentTime
-        const newOverlay: TextOverlay = {
-          id: `manual-overlay-${Date.now()}`,
-          text: textToInsert,
-          x: 50,
-          y: 45,
-          fontSize: 36,
-          color: '#ffffff',
-          fontFamily: 'Montserrat, sans-serif',
-          startTime: playhead,
-          endTime: Math.min(videoState.duration || 10, playhead + 3),
-          style: 'bold-kinetic',
-          shadowColor: 'rgba(0,0,0,0.8)',
-          animationIn: 'pop',
-          animationOut: 'fade',
-          animationInDuration: 0.2,
-          animationOutDuration: 0.25,
-          layer: 20
-        }
-        setTextOverlays(prev => [...prev, newOverlay])
-        showToast(t('modernVideoEditor.aiPlacedTextGraphic', { text: textToInsert, time: playhead.toFixed(1) }), 'success')
-        return
+    const titleMatch = text.match(/(?:add title|create text|write|insert caption)\s+["'“”]?([^"'“”]+)["'“”]?/i)
+    if (titleMatch && titleMatch[1] && titleMatch[1].trim()) {
+      const textToInsert = titleMatch[1].trim()
+      const playhead = videoState.currentTime
+      const newOverlay: TextOverlay = {
+        id: `manual-overlay-${Date.now()}`,
+        text: textToInsert,
+        x: 50,
+        y: 45,
+        fontSize: 36,
+        color: '#ffffff',
+        fontFamily: 'Montserrat, sans-serif',
+        startTime: playhead,
+        endTime: Math.min(videoState.duration || playhead + 3, playhead + 3),
+        style: 'bold-kinetic',
+        shadowColor: 'rgba(0,0,0,0.8)',
+        animationIn: 'pop',
+        animationOut: 'fade',
+        animationInDuration: 0.2,
+        animationOutDuration: 0.25,
+        layer: 20
       }
+      setTextOverlays(prev => [...prev, newOverlay])
+      showToast(t('modernVideoEditor.quickCommandAddedText', { text: textToInsert, time: playhead.toFixed(1) }), 'success')
+      return
+    }
 
-      // 2. Simplify/pacing instruction
-      if (textLower.includes('simplify') || textLower.includes('readability')) {
-        setTextOverlays(prev => prev.map(o => ({
-          ...o,
-          text: o.text.length > 25 ? o.text.slice(0, 20) + '...' : o.text,
-          fontSize: Math.min(o.fontSize + 4, 48),
-          style: 'minimal'
-        })))
-        showToast(t('modernVideoEditor.aiReadability'), 'success')
-        return
-      }
+    const lower = text.toLowerCase()
+    if (/\b(filler|fillers|um|uh|umm)\b/.test(lower)) {
+      openSmartCleanup('fillers')
+      return
+    }
+    if (/\b(silence|silences|silent|dead air|pauses?)\b/.test(lower)) {
+      openSmartCleanup('silence')
+      return
+    }
 
-      // 3. Hook optimization
-      if (textLower.includes('hook') || textLower.includes('kinetic')) {
-        setTimelineSegments((prev: TimelineSegment[]) => prev.map((s, idx) => 
-          idx === 0 ? { ...s, transitionOut: 'zoom', transitionDuration: 0.5, name: t('modernVideoEditor.kineticHookName') } : s
-        ))
-        const hookOverlay: TextOverlay = {
-          id: `hook-overlay-${Date.now()}`,
-          text: t('modernVideoEditor.waitForItText'),
-          x: 50,
-          y: 35,
-          fontSize: 38,
-          color: '#f59e0b',
-          fontFamily: 'Impact, sans-serif',
-          startTime: 0.2,
-          endTime: 2.2,
-          style: 'bold-kinetic',
-          animationIn: 'bounce',
-          animationOut: 'zoom-out',
-          animationInDuration: 0.3,
-          layer: 25
-        }
-        setTextOverlays(prev => {
-          const filtered = prev.filter(o => !o.id.startsWith('hook-overlay'))
-          return [...filtered, hookOverlay]
-        })
-        showToast(t('modernVideoEditor.aiHook'), 'success')
-        return
-      }
-
-      // 4. Pacing squeeze / silence removal
-      if (textLower.includes('squeeze') || textLower.includes('pacing') || textLower.includes('tighten') || textLower.includes('silence')) {
-        setTimelineSegments((prev: TimelineSegment[]) => {
-          let runningTime = 0
-          return prev.map(s => {
-            const newDur = Math.max(0.5, s.duration * 0.9)
-            const updated = {
-              ...s,
-              startTime: runningTime,
-              endTime: runningTime + newDur,
-              duration: newDur
-            }
-            runningTime += newDur
-            return updated
-          })
-        })
-        showToast(t('modernVideoEditor.aiPacing'), 'success')
-        return
-      }
-
-      // 5. Trend / music / rhythm sync
-      if (textLower.includes('trend') || textLower.includes('rhythm') || textLower.includes('sync')) {
-        setTimelineSegments((prev: TimelineSegment[]) => prev.map(s => 
-          s.type === 'video' ? { ...s, transitionOut: 'crossfade', transitionDuration: 0.3 } : s
-        ))
-        setVideoFilters(prev => ({
-          ...prev,
-          contrast: 110,
-          saturation: 115,
-          vibrance: 120,
-          clarity: 10
-        }))
-        showToast(t('modernVideoEditor.aiTrends'), 'success')
-        return
-      }
-
-      showToast(t('modernVideoEditor.neuralOverrideApplied'), 'success')
-    }, 800)
-  }, [showToast, videoState.currentTime, videoState.duration, setTimelineSegments, setTextOverlays, setVideoFilters, t])
+    setAssistantOpen(true)
+    showToast(t('modernVideoEditor.quickCommandNotUnderstood'), 'info')
+  }, [showToast, videoState.currentTime, videoState.duration, setTextOverlays, openSmartCleanup, t])
 
   const handleScheduleUpload = useCallback(() => {
     showToast(t('modernVideoEditor.directingToScheduler'), 'success')
@@ -1414,12 +1333,8 @@ const ModernVideoEditor: React.FC<{
     
     showToast(t('modernVideoEditor.aligningToDna', { theme: styleDNA.theme || 'Vlog' }), 'info')
 
-    // 1. Normalize Pacing (if CPM is high, suggest/apply split points)
-    if (styleDNA.cpm > 10 && timelineSegments.length < 5) {
-       showToast(t('modernVideoEditor.pacingOptimization'), 'success')
-    }
-
-    // 2. Normalize Typography & Brand Colors
+    // Normalize typography to the brand font. (A "Pacing optimization:
+    // incremental cuts applied" toast used to fire here without making any cut.)
     if (styleDNA.preferredFonts.length > 0 || styleDNA.preferredTransitions.length > 0) {
       const brandFont = styleDNA.preferredFonts[0] || 'Inter, sans-serif'
       setTextOverlays(prev => prev.map(o => ({ ...o, fontFamily: brandFont })))
@@ -1427,7 +1342,7 @@ const ModernVideoEditor: React.FC<{
     }
 
     captureShadowTelemetry()
-  }, [styleDNA, timelineSegments.length, setTextOverlays, captureShadowTelemetry, showToast, t])
+  }, [styleDNA, setTextOverlays, captureShadowTelemetry, showToast, t])
 
   // Real-time collaborators come from the socket presence system (future feature).
   const mockCollaborators: Array<{ id: string; name: string; role: string; avatar: string; color: string; status: string }> = []
@@ -1463,8 +1378,11 @@ const ModernVideoEditor: React.FC<{
       sharpen: profile.visuals.punchInAmount > 15 ? 20 : 0
     }))
 
-    // 4. Inject preset Brand Watermark/Logo if available (Mocked)
-    if (profile.name.includes('Trending') || profile.assets.fontHex) {
+    // 4. Add the user's OWN brand logo as a watermark — only when they have
+    // one. (This used to fall back to Click's app icon, stamping our logo onto
+    // the user's video whenever the profile had a font colour.)
+    const brandLogoUrl = brandKit.logoUrl
+    if (brandLogoUrl) {
        setImageOverlays(prev => {
          const watermarkId = `dna-watermark-${profile.id}`
          if (prev.some(img => img.id.includes('dna-watermark'))) return prev
@@ -1472,7 +1390,7 @@ const ModernVideoEditor: React.FC<{
            ...prev,
            {
              id: watermarkId,
-             url: brandKit.logoUrl || '/icons/icon-192x192.png',
+             url: brandLogoUrl,
              x: 85, y: 10, width: 10, height: 10,
              opacity: 0.8,
              startTime: 0,
@@ -1483,20 +1401,12 @@ const ModernVideoEditor: React.FC<{
        })
     }
 
-    // 3. Neural Pacing: Adjust Timeline Dynamics based on DNA Sentiment
-    // If the profile visual intensity is high, we shorten the median clip length for "Neural Pacing"
-    const basePacing = profile.pacing?.medianClipLength || 3.0
-    const intensityModifier = (profile.visuals?.punchInAmount || 0) / 100
-    const neuralPacing = Math.max(0.8, basePacing - (intensityModifier * 1.5))
-
-    if ((window as any).setMedianClipLength) {
-      (window as any).setMedianClipLength(neuralPacing)
-    }
-
-    showToast(t('modernVideoEditor.appliedProfilePacing', { name: profile.name, pacing: neuralPacing.toFixed(1) }), 'success')
-    // brandKit.logoUrl is read inside the watermark branch — listed in
-    // the dep array so the callback regenerates if the user updates
-    // their brand kit logo without leaving the editor.
+    // Only what was actually changed above is claimed. (The old toast quoted a
+    // "pacing" value handed to window.setMedianClipLength, which nothing defines.)
+    showToast(t('modernVideoEditor.appliedStyleProfile', { name: profile.name }), 'success')
+    // brandKit.logoUrl is read for the watermark — listed in the dep array so
+    // the callback regenerates if the user updates their brand kit logo
+    // without leaving the editor.
   }, [showToast, setCaptionStyle, setVideoFilters, setTextOverlays, videoState.duration, setImageOverlays, brandKit.logoUrl, t])
 
   /**
@@ -1584,14 +1494,16 @@ const ModernVideoEditor: React.FC<{
 
 
 
-  const handleGenerateClips = useCallback(async () => {
+  // Resolves to the number of clips the server returned, or null when the
+  // request could not run / failed (the user has already been told why).
+  const handleGenerateClips = useCallback(async (): Promise<number | null> => {
     if (!transcript) {
       showToast(t('modernVideoEditor.neuralTranscriptRequired'), 'error')
-      return
+      return null
     }
     if (!videoId) {
       showToast(t('modernVideoEditor.noVideoLoadedUploadFirst'), 'error')
-      return
+      return null
     }
     showToast(t('modernVideoEditor.synthesizingVariations'), 'info')
     try {
@@ -1607,7 +1519,8 @@ const ModernVideoEditor: React.FC<{
         id: c.id || `clip-${Date.now()}-${i}`,
         name: c.name || t('modernVideoEditor.variationName', { number: i + 1 }),
         segments: c.segments || [],
-        engagementScore: c.engagementScore || { overall: c.viralScore || 80, viralPotential: 80, hookStrength: 80, sentimentDensity: 80, trendAlignment: 80, retentionHeatmap: [] },
+        // Only the server's own scores — never an invented 80 across the board.
+        engagementScore: c.engagementScore || { overall: Number(c.viralScore) || 0, viralPotential: Number(c.viralScore) || 0, hookStrength: 0, sentimentDensity: 0, trendAlignment: 0, retentionHeatmap: [] },
         metadata: c.metadata || { titles: { curiosityGap: c.caption || '', seoWinner: '', minimalist: '' }, description: { summary: '', timestamps: [], hashtags: c.hashtags || [] }, abTestSuggestions: [] },
       }))
       if (serverClips.length > 0) {
@@ -1621,29 +1534,27 @@ const ModernVideoEditor: React.FC<{
       } else {
         showToast(t('modernVideoEditor.noClipsGenerated'), 'info')
       }
+      return serverClips.length
     } catch {
       showToast(t('modernVideoEditor.clipGenerationFailed'), 'error')
+      return null
     }
   }, [transcript, videoId, showToast, t])
 
+  // "Agentic Forge": apply the best-matching saved style profile, then run the
+  // REAL clip generation and wait for it. handleGenerateClips reports its own
+  // outcome (clips ready / none / failed), so no extra "complete" toast — the
+  // old version slept 1.5s + 2s and announced "Master Revision Deployed"
+  // without waiting for (or checking) the generation at all.
   const handleForgeMaster = useCallback(async (persona: string) => {
     showToast(t('modernVideoEditor.neuralForgeInitiated', { persona: persona.toUpperCase() }), 'info')
 
-    // Step 1: Sequential Extraction (Simulation)
-    await new Promise(r => setTimeout(r, 1500))
-    showToast(t('modernVideoEditor.forgeViralExtraction'), 'info')
-
-    // Step 2: Apply Style Profile from DNA Vault
     if (styleProfiles.length > 0) {
       const bestMatch = styleProfiles.find(p => (p.name || '').toLowerCase().includes(persona)) || styleProfiles[0]
       handleApplyStyleProfile(bestMatch)
     }
 
-    // Step 3: Trigger Clip Generation & B-Roll Sync
-    handleGenerateClips()
-
-    await new Promise(r => setTimeout(r, 2000))
-    showToast(t('modernVideoEditor.agenticForgeComplete'), 'success')
+    await handleGenerateClips()
   }, [showToast, styleProfiles, handleApplyStyleProfile, handleGenerateClips, t])
 
   const handleApplyClip = useCallback((clip: AutoEditClip) => {
@@ -1661,45 +1572,6 @@ const ModernVideoEditor: React.FC<{
     // Automatically switch to timeline view to see changes
     setActiveCategory('timeline')
   }, [showToast, setTimelineSegments, setGeneratedMetadata, setEngagementScore, setActiveCategory, t])
-
-  const processNeuralCommand = useCallback((instruction: string) => {
-    if (!instruction.trim()) return
-
-    showToast(t('modernVideoEditor.neuralCommandReceived'), 'info')
-    const lower = String(instruction || '').toLowerCase()
-
-    setTimeout(() => {
-      if (lower.includes('title') || lower.includes('metadata')) {
-        setGeneratedMetadata(prev => prev ? ({
-          ...prev,
-          titles: {
-            ...prev.titles,
-            seoWinner: t('modernVideoEditor.aiOptimizedPrefix', { title: prev.titles.seoWinner })
-          }
-        }) : null)
-        showToast(t('modernVideoEditor.metadataRecalibrated'), 'success')
-      } else if (lower.includes('split') || lower.includes('cut')) {
-        showToast(t('modernVideoEditor.analyzingCutPoints'), 'info')
-        // Mock split action
-      } else if (lower.includes('caption') || lower.includes('overlay')) {
-        setTextOverlays(prev => [
-          ...prev,
-          {
-            id: `ai-overlay-${Date.now()}`,
-            text: t('modernVideoEditor.neuralInsightText'),
-            x: 50, y: 50, fontSize: 40, color: '#ffffff',
-            fontFamily: 'Inter, sans-serif',
-            startTime: videoState.currentTime,
-            endTime: videoState.currentTime + 3,
-            style: 'shadow'
-          }
-        ])
-        showToast(t('modernVideoEditor.dynamicOverlayIntegrated'), 'success')
-      } else {
-        showToast(t('modernVideoEditor.neuralLogicSynthesized'), 'success')
-      }
-    }, 1000)
-  }, [showToast, videoState.currentTime, t])
 
   const handleBeatSync = useCallback(async () => {
     if (timelineSegments.length === 0) {
@@ -1833,8 +1705,8 @@ const ModernVideoEditor: React.FC<{
     )
     showToast(
       replacedVideoClips > 1
-        ? `✦ Re-cut into ${plan.count} beat clips (replaced ${replacedVideoClips} video clips)`
-        : `✦ Cut into ${plan.count} beat-synced clips`,
+        ? t('modernVideoEditor.beatRecut', { count: plan.count, replaced: replacedVideoClips })
+        : t('modernVideoEditor.beatCut', { count: plan.count }),
       'success'
     )
   }, [videoState.duration, actualVideoUrl, videoId, timelineSegments, setTimelineSegments, showToast, t])
@@ -1854,7 +1726,7 @@ const ModernVideoEditor: React.FC<{
     if (!actualVideoUrl && !videoId) { showToast(t('modernVideoEditor.beatSyncNoBeats'), 'error'); return }
 
     setIsAutoViralEditing(true)
-    showToast('✦ Auto Viral Edit — analysing beats + captions…', 'info')
+    showToast(t('modernVideoEditor.autoViralAnalysing'), 'info')
     try {
       // 1) Beats (best-effort; a missing/silent track just means captions-only).
       let beats: number[] = []
@@ -1904,8 +1776,8 @@ const ModernVideoEditor: React.FC<{
       if (!result.summary.didCut && !result.summary.didCaption) {
         showToast(
           transcriptText
-            ? 'Auto Viral Edit needs music beats or a usable transcript — neither was found.'
-            : 'Auto Viral Edit needs a transcript for captions or music for cuts. Transcribe first, then retry.',
+            ? t('modernVideoEditor.autoViralNothingFound')
+            : t('modernVideoEditor.autoViralNeedsTranscript'),
           'info'
         )
         return
@@ -1925,12 +1797,12 @@ const ModernVideoEditor: React.FC<{
 
       // Honest, specific summary of what actually happened.
       const parts: string[] = []
-      if (result.summary.didCut) parts.push(`${result.summary.clips} beat clips · ${result.summary.transitions} transitions`)
-      if (result.summary.didCaption) parts.push(`${result.summary.captions} karaoke captions`)
-      showToast(`✦ Auto Viral Edit: ${parts.join(' + ')}`, 'success')
+      if (result.summary.didCut) parts.push(t('modernVideoEditor.autoViralCuts', { clips: result.summary.clips, transitions: result.summary.transitions }))
+      if (result.summary.didCaption) parts.push(t('modernVideoEditor.autoViralCaptions', { count: result.summary.captions }))
+      showToast(t('modernVideoEditor.autoViralDone', { summary: parts.join(' + ') }), 'success')
       if (result.summary.notes.length) showToast(result.summary.notes[0], 'info')
     } catch {
-      showToast('Auto Viral Edit failed — your timeline is unchanged.', 'error')
+      showToast(t('modernVideoEditor.autoViralFailed'), 'error')
     } finally {
       setIsAutoViralEditing(false)
     }
@@ -2327,15 +2199,9 @@ const ModernVideoEditor: React.FC<{
       />
       case 'thumbnails': return <ThumbnailGeneratorView videoUrl={actualVideoUrl || undefined} videoId={videoId || undefined} showToast={showToast} />
       case 'creative-tools': return <Trends2026View
-        videoId={videoId || undefined}
-        showToast={showToast}
-        onApplyHook={(start, end) => {
-          setVideoState(prev => ({ ...prev, currentTime: start }))
-          showToast(t('modernVideoEditor.hookLocked', { start: start.toFixed(1), end: end.toFixed(1) }), 'success')
-        }}
-        onApplyBeatCuts={(bpm) => showToast(t('modernVideoEditor.beatCutsQueued', { bpm }), 'success')}
-        onApplyOverlay={() => setActiveCategory('effects')}
-        onApplyTrendingSound={() => setActiveCategory('assets')}
+        onBeatCut={handleBeatCut}
+        onOpenStockLibrary={() => setActiveCategory('stock-library')}
+        onOpenEffects={() => setActiveCategory('effects')}
       />
       case 'stock-library': return <StockLibraryView
         showToast={showToast}
@@ -2344,11 +2210,22 @@ const ModernVideoEditor: React.FC<{
         setTimelineSegments={setTimelineSegments}
       />
       case 'creative-packs': return <CreativePacksView
-        showToast={showToast}
         onApplyPack={(pack) => {
-          // Forward-compatible: when the editor pipeline supports preset bundles, this
-          // is where music + transitions + caption style + color grade get queued.
-          showToast(t('modernVideoEditor.packReady', { name: pack.name }), 'success')
+          // A pack is a colour grade + a caption style — both applied for real.
+          // (It used to wait 700ms and announce music/transitions/pacing it never set.)
+          const grade = resolveGrade(pack.look.grade)
+          if (!grade) {
+            showToast(t('modernVideoEditor.packApplyFailed', { name: pack.name }), 'error')
+            return false
+          }
+          setVideoFilters(prev => applyGrade(prev, grade))
+          if (captionStyle) {
+            setCaptionStyle(prev => prev ? { ...prev, textStyle: pack.look.captionStyle } : prev)
+            showToast(t('modernVideoEditor.packApplied', { name: pack.name, grade: grade.label }), 'success')
+          } else {
+            showToast(t('modernVideoEditor.packAppliedGradeOnly', { name: pack.name, grade: grade.label }), 'success')
+          }
+          return true
         }}
       />
       case 'text-motion': return <TextMotionStudioView
@@ -2442,9 +2319,9 @@ const ModernVideoEditor: React.FC<{
             const group = EDITOR_GROUPS.find(g => g.id === groupId)
             items.push({
               id: cat.id,
-              label: t('modernVideoEditor.openCategory', { label: cat.label }),
+              label: t('modernVideoEditor.openCategory', { label: t(cat.labelKey) }),
               icon: cat.icon as LucideIcon,
-              category: group?.label.toUpperCase() || 'EDITOR',
+              category: group ? t(group.labelKey).toUpperCase() : t('modernVideoEditor.cmdCategoryEditor'),
             })
           }
           // Selection-aware actions
@@ -2575,26 +2452,6 @@ const ModernVideoEditor: React.FC<{
             onClose={() => { setSmartCleanupOpen(false); setSmartCleanupInitialTool(null) }}
             showToast={showToast}
           />
-
-          <div className="px-4 pt-2 relative z-20">
-            <AnimatePresence>
-              {(activeCategory === 'insights' || activeCategory === 'ai-edit') && (
-                <m.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden"
-                >
-                  <EngagementHeatMap
-                    transcript={transcript}
-                    currentTime={videoState.currentTime}
-                    duration={videoState.duration}
-                  />
-                  <div className="h-4" />
-                </m.div>
-              )}
-            </AnimatePresence>
-          </div>
 
           {/* Layout bar: what's on screen (left), the one-click AI pass (middle),
               which side panels are open (right). Transport lives in the timeline. */}
@@ -2915,8 +2772,8 @@ const ModernVideoEditor: React.FC<{
           <div
             role="separator"
             aria-orientation="horizontal"
-            aria-label="Resize timeline (drag up or down)"
-            title="Drag to resize the timeline"
+            aria-label={t('modernVideoEditor.resizeTimelineAria')}
+            title={t('modernVideoEditor.resizeTimelineTitle')}
             data-testid="timeline-resize-handle"
             onPointerDown={onTimelineResizeStart}
             onDoubleClick={() => updateLayout({ timelineHeight: 0, focusMode: 'balanced' })}
@@ -2930,7 +2787,7 @@ const ModernVideoEditor: React.FC<{
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                    <span className="text-xs font-semibold text-white">Timeline</span>
+                    <span className="text-xs font-semibold text-white">{t('modernVideoEditor.timelineHeading')}</span>
                   </div>
                   <div className="h-4 w-px bg-white/10 mx-2" />
                   <span className="text-xl font-black font-mono text-indigo-400 tabular-nums tracking-tighter">
@@ -2945,7 +2802,7 @@ const ModernVideoEditor: React.FC<{
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${snapToKeyframes ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-white/5 border border-white/5 text-slate-500 hover:text-white'}`}
                   >
                     <Magnet className="w-3.5 h-3.5" />
-                    Snap to keyframes
+                    {t('modernVideoEditor.neuralSnap')}
                   </button>
                 </div>
               </div>
@@ -3137,16 +2994,15 @@ const ModernVideoEditor: React.FC<{
           {/* Insights Sidebar (New) */}
           {!insightsSidebarCollapsed && (
             <InsightsSidebar
-              score={engagementScore}
               niche={contentNiche}
               onNicheChange={setContentNiche}
               onCaptionStyleChange={(style) => setCaptionStyle(prev => prev ? { ...prev, textStyle: style } : prev)}
               onLanguageChange={setTargetLanguage}
               onManualOverride={handleManualOverride}
               onScheduleUpload={handleScheduleUpload}
+              onOpenCleanup={openSmartCleanup}
               targetLanguage={targetLanguage}
               selectedCaptionStyle={captionStyle?.textStyle || 'bold'}
-              showToast={showToast}
               onCollapse={() => setInsightsSidebarCollapsed(true)}
             />
           )}

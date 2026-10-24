@@ -1,21 +1,15 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { 
-  BarChart3, 
-  TrendingUp, 
-  TrendingDown, 
-  Activity, 
-  Target, 
-  AlertCircle, 
-  Sparkles, 
+import React, { useState, useEffect, useCallback } from 'react'
+import {
+  BarChart3,
+  Activity,
+  Target,
+  AlertCircle,
   RefreshCw,
-  Zap,
-  ChevronRight,
   DollarSign,
-  PieChart
 } from 'lucide-react'
-import { m, AnimatePresence } from 'framer-motion'
+import { m } from 'framer-motion'
 import { apiGet } from '../../../lib/api'
 
 interface ForecastDay {
@@ -23,7 +17,7 @@ interface ForecastDay {
   revenue: number
   conversions: number
   confidence: number
-  spectralIndicators: {
+  spectralIndicators?: {
     multiplier: number
     isElastic: boolean
   }
@@ -35,42 +29,64 @@ interface SpectralAnalysis {
     revenue: number
     conversions: number
   }
-  spectralAnalysis: {
+  spectralAnalysis?: {
     sentimentDrift: number
-    elasticityState: 'CRITICAL' | 'GROWTH' | 'STABLE'
-    marketAlignment: string
+    elasticityState: string
+    marketAlignment?: string
   }
 }
 
 const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
 
+// The server sends CRITICAL_MARKDOWN / GROWTH_RESONANCE / STABLE_NOISE.
+const stateKey = (state: string) => String(state || '').split('_')[0]
+const STATE_LABELS: Record<string, string> = {
+  CRITICAL: 'Falling',
+  GROWTH: 'Growing',
+  STABLE: 'Steady',
+}
+
+/**
+ * 7-day revenue forecast from GET /api/click/forecast. Every figure shown is
+ * a field of that response; when a field is missing the tile shows "—".
+ */
 export const SpectralForecastHUD: React.FC = () => {
     const [data, setData] = useState<SpectralAnalysis | null>(null)
     const [loading, setLoading] = useState(true)
+    const [failed, setFailed] = useState(false)
 
-    useEffect(() => {
-        fetchForecast()
-    }, [])
-
-    const fetchForecast = async () => {
+    const fetchForecast = useCallback(async () => {
         setLoading(true)
+        setFailed(false)
         try {
-            const result = await apiGet('/click/forecast')
-            setData(result)
+            const result = await apiGet<SpectralAnalysis>('/click/forecast', undefined, false)
+            setData(result && Array.isArray(result.daily) ? result : null)
         } catch (err) {
-            console.error('Forecast fetch failed')
+            console.error('Forecast fetch failed', err)
+            setData(null)
+            setFailed(true)
         } finally {
             setLoading(false)
         }
-    }
+    }, [])
+
+    useEffect(() => {
+        fetchForecast()
+    }, [fetchForecast])
 
     const getStatusColor = (state: string) => {
-        switch (state) {
+        switch (stateKey(state)) {
             case 'CRITICAL': return 'text-rose-400 bg-rose-500/10 border-rose-500/20'
             case 'GROWTH': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
             default: return 'text-blue-400 bg-blue-500/10 border-blue-500/20'
         }
     }
+
+    const drift = data?.spectralAnalysis && Number.isFinite(Number(data.spectralAnalysis.sentimentDrift))
+        ? Number(data.spectralAnalysis.sentimentDrift)
+        : null
+    const maxDay = data ? Math.max(0, ...data.daily.map(d => Number(d.revenue) || 0)) : 0
+    const hasRevenue = !!data && Number(data.totals?.revenue) > 0
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -78,213 +94,112 @@ export const SpectralForecastHUD: React.FC = () => {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
                 <div className="flex items-center gap-6">
                     <div className="p-4 rounded-[1.2rem] bg-blue-500 text-white shadow-xl shadow-blue-500/20">
-                        <BarChart3 className="w-6 h-6" />
+                        <BarChart3 className="w-6 h-6" aria-hidden="true" />
                     </div>
                     <div>
                         <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Revenue Forecast</h4>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-blue-500/70">Neural Value Forecasting & Yield Steering</span>
+                        <span className="text-[10px] font-bold text-slate-500 mt-1 block">Projected revenue for the next 7 days, based on your past revenue.</span>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    {data?.spectralAnalysis && (
-                        <div className={`px-6 py-3 rounded-2xl flex items-center gap-3 border font-black text-[10px] uppercase tracking-widest italic transition-all ${getStatusColor(data.spectralAnalysis.elasticityState)}`}>
-                            {data.spectralAnalysis.elasticityState === 'CRITICAL' ? <Activity className="w-3 h-3 animate-pulse" /> : <Zap className="w-3 h-3" />}
-                            State: {data.spectralAnalysis.elasticityState.replace(/_/g, ' ')}
+                    {data?.spectralAnalysis?.elasticityState && (
+                        <div className={`px-6 py-3 rounded-2xl flex items-center gap-3 border font-black text-[10px] uppercase tracking-widest transition-all ${getStatusColor(data.spectralAnalysis.elasticityState)}`}>
+                            <Activity className="w-3 h-3" aria-hidden="true" />
+                            Trend: {STATE_LABELS[stateKey(data.spectralAnalysis.elasticityState)] || data.spectralAnalysis.elasticityState.replace(/_/g, ' ').toLowerCase()}
                         </div>
                     )}
                     <button
                         type="button"
                         onClick={fetchForecast}
                         disabled={loading}
+                        aria-label="Refresh forecast"
                         className="p-4 rounded-xl bg-white/5 border border-white/5 text-white hover:bg-white/10 transition-all"
                     >
-                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
                     </button>
                 </div>
             </div>
 
+            {failed && (
+                <div role="alert" className={`${glassStyle} rounded-[2rem] p-6 flex items-center gap-3 text-rose-300 text-sm font-semibold`}>
+                    <AlertCircle className="w-5 h-5 shrink-0" aria-hidden="true" /> Couldn&apos;t load the forecast. Try refreshing.
+                </div>
+            )}
+
             {/* Metrics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-4`}>
                     <div className="flex items-center justify-between">
-                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Total Projected (7d)</span>
-                         <DollarSign className="w-4 h-4 text-emerald-400" />
+                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Projected revenue (7 days)</span>
+                         <DollarSign className="w-4 h-4 text-emerald-400" aria-hidden="true" />
                     </div>
-                    <div className="flex items-end gap-3">
-                        <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">
-                            ${data?.totals.revenue.toLocaleString() ?? '0'}
-                        </h3>
-                        <span className="text-[10px] font-black text-emerald-400 uppercase italic pb-1">Forecast</span>
-                    </div>
+                    <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter leading-none">
+                        {data ? `$${Number(data.totals?.revenue ?? 0).toLocaleString()}` : '—'}
+                    </h3>
                 </div>
 
                 <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-4`}>
                     <div className="flex items-center justify-between">
-                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Neural Conversions</span>
-                         <Target className="w-4 h-4 text-blue-400" />
+                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Projected sales</span>
+                         <Target className="w-4 h-4 text-blue-400" aria-hidden="true" />
                     </div>
-                    <div className="flex items-end gap-3">
-                        <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">
-                            {data?.totals.conversions.toLocaleString() ?? '0'}
-                        </h3>
-                        <span className="text-[10px] font-black text-blue-400 uppercase italic pb-1">Projected</span>
-                    </div>
+                    <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter leading-none">
+                        {data ? Number(data.totals?.conversions ?? 0).toLocaleString() : '—'}
+                    </h3>
                 </div>
 
                 <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-4`}>
                     <div className="flex items-center justify-between">
-                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Sentiment Drift</span>
-                         <Activity className="w-4 h-4 text-amber-400" />
+                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Audience mood change</span>
+                         <Activity className="w-4 h-4 text-amber-400" aria-hidden="true" />
                     </div>
-                    <div className="flex items-end gap-3">
-                        <h3 className={`text-4xl font-black italic tracking-tighter leading-none uppercase ${
-                            (data?.spectralAnalysis.sentimentDrift ?? 0) < 0 ? 'text-rose-400' : 'text-emerald-400'
-                        }`}>
-                            {(data?.spectralAnalysis.sentimentDrift ?? 0) * 100}%
-                        </h3>
-                        <span className="text-[10px] font-black text-slate-500 uppercase italic pb-1">Impact</span>
-                    </div>
+                    <h3 className={`text-4xl font-black italic tracking-tighter leading-none ${
+                        drift === null ? 'text-slate-500' : drift < 0 ? 'text-rose-400' : 'text-emerald-400'
+                    }`}>
+                        {drift === null ? '—' : `${drift > 0 ? '+' : ''}${(drift * 100).toFixed(1)}%`}
+                    </h3>
                 </div>
 
-                <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-4`}>
-                    <div className="flex items-center justify-between">
-                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Market Alignment</span>
-                         <Sparkles className="w-4 h-4 text-violet-400" />
-                    </div>
-                    <div className="flex items-end gap-3">
-                        <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">
-                            {data?.spectralAnalysis.marketAlignment ?? 'N/A'}
-                        </h3>
-                        <span className="text-[10px] font-black text-violet-400 uppercase italic pb-1">Trend</span>
-                    </div>
-                </div>
             </div>
 
-            {/* Main Charts Mock (Phase 21 visualization) */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                
-                {/* Projection Chart */}
-                <div className={`${glassStyle} xl:col-span-2 rounded-[2.5rem] p-10 space-y-8 h-[450px] relative overflow-hidden group`}>
-                    <div className="flex items-center justify-between relative z-10">
-                        <div>
-                            <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Projection</h5>
-                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1 block italic">7-Day Value Velocity</span>
-                        </div>
-                        <div className="flex items-center gap-6">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-blue-500" />
-                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Revenue</span>
-                            </div>
-                             <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-slate-700" />
-                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Confidence</span>
-                            </div>
-                        </div>
-                    </div>
+            {/* Daily projection */}
+            <div className={`${glassStyle} rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden`}>
+                <div>
+                    <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Day by day</h5>
+                    <span className="text-[10px] font-bold text-slate-500 mt-1 block">Hover a bar to see the projected revenue for that day.</span>
+                </div>
 
-                    <div className="flex items-end justify-between gap-4 h-64 relative z-10">
-                        {data?.daily.map((day, i) => (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-4 group/bar">
-                                <div className="w-full relative">
-                                    <m.div 
+                {!hasRevenue ? (
+                    <p className="py-12 text-center text-sm text-slate-500">
+                        {loading ? 'Loading…' : 'Not enough revenue history yet to project the next 7 days.'}
+                    </p>
+                ) : (
+                    <div className="flex items-end justify-between gap-4 h-64">
+                        {data!.daily.map((day, i) => {
+                            const pct = maxDay > 0 ? Math.max(0, Math.min(100, ((Number(day.revenue) || 0) / maxDay) * 100)) : 0
+                            return (
+                                <div key={day.date || i} className="flex-1 h-full flex flex-col items-center justify-end gap-4 group/bar">
+                                    <m.div
                                         initial={{ height: '0%' }}
-                                        animate={{ 
-                                            height: (() => {
-                                                const total = data.totals.revenue || 0;
-                                                if (total <= 0) return '0%';
-                                                const ratio = (day.revenue / (total / 4)) * 100;
-                                                return `${Number.isNaN(ratio) || !Number.isFinite(ratio) ? 0 : ratio}%`;
-                                            })()
-                                        }}
+                                        animate={{ height: `${pct}%` }}
                                         transition={{ delay: i * 0.1, type: 'spring' }}
-                                        className={`w-full rounded-t-2xl relative transition-all group-hover/bar:brightness-110 ${
-                                            day.spectralIndicators.isElastic ? 'bg-amber-500/40 border border-amber-500/30' : 'bg-blue-600'
-                                        }`}
+                                        className="w-full rounded-t-2xl relative bg-blue-600 group-hover/bar:brightness-110"
                                     >
                                         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full pb-2 opacity-0 group-hover/bar:opacity-100 transition-opacity">
-                                            <span className="text-[8px] font-black text-white bg-black/80 px-2 py-1 rounded-md border border-white/10 whitespace-nowrap">
-                                                ${day.revenue.toLocaleString()}
+                                            <span className="text-[9px] font-black text-white bg-black/80 px-2 py-1 rounded-md border border-white/10 whitespace-nowrap">
+                                                ${Number(day.revenue || 0).toLocaleString()}
                                             </span>
                                         </div>
                                     </m.div>
-                                    <div className="absolute bottom-0 w-full h-1 bg-white/5" />
+                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">
+                                        {day.date ? new Date(day.date).toLocaleDateString(undefined, { weekday: 'short' }) : `Day ${i + 1}`}
+                                    </span>
                                 </div>
-                                <span className="text-[8px] font-black text-slate-600 uppercase tracking-tighter italic">
-                                    Day {i + 1}
-                                </span>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
-
-                    <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none">
-                        <TrendingUp className="w-64 h-64" />
-                    </div>
-                </div>
-
-                {/* Indicators */}
-                <div className={`${glassStyle} rounded-[2.5rem] p-10 space-y-8 flex flex-col`}>
-                    <div className="flex items-center justify-between">
-                         <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Growth Signals</h5>
-                         <PieChart className="w-5 h-5 text-blue-400" />
-                    </div>
-
-                    <div className="space-y-6 flex-1">
-                         <div className="p-6 bg-black/40 border border-white/5 rounded-3xl space-y-4">
-                             <div className="flex items-center justify-between">
-                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Sentiment</span>
-                                <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Optimized</span>
-                             </div>
-                             <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <m.div 
-                                    initial={{ width: 0 }}
-                                    animate={{ width: '82%' }}
-                                    className="h-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
-                                />
-                             </div>
-                         </div>
-
-                         <div className="p-6 bg-black/40 border border-white/5 rounded-3xl space-y-4">
-                             <div className="flex items-center justify-between">
-                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Viral Velocity</span>
-                                <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">High</span>
-                             </div>
-                             <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <m.div 
-                                    initial={{ width: 0 }}
-                                    animate={{ width: '65%' }}
-                                    className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
-                                />
-                             </div>
-                         </div>
-
-                         <div className="p-6 bg-black/40 border border-white/5 rounded-3xl space-y-4">
-                             <div className="flex items-center justify-between">
-                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Decay Risk</span>
-                                <span className="text-[9px] font-black text-rose-400 uppercase tracking-widest">Low</span>
-                             </div>
-                             <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                <m.div 
-                                    initial={{ width: 0 }}
-                                    animate={{ width: '12%' }}
-                                    className="h-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]"
-                                />
-                             </div>
-                         </div>
-                    </div>
-
-                    <div className="p-8 bg-blue-600 rounded-[2rem] space-y-4 text-white hover:scale-[1.02] transition-all cursor-pointer group">
-                        <div className="flex items-center justify-between">
-                            <Zap className="w-8 h-8 opacity-80" />
-                            <ChevronRight className="w-5 h-5 opacity-40 group-hover:translate-x-1 transition-transform" />
-                        </div>
-                        <div>
-                            <h3 className="text-2xl font-black italic tracking-tighter leading-none uppercase">Yield Pivot</h3>
-                            <span className="text-[9px] font-black uppercase tracking-widest opacity-80">Trigger autonomous monetization drift</span>
-                        </div>
-                    </div>
-                </div>
-
+                )}
             </div>
         </div>
     )

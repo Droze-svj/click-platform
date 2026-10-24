@@ -469,6 +469,10 @@ export interface TextOverlay {
   fontSize: number
   color: string
   fontFamily: string
+  /** Explicit weight (e.g. from a Text & Motion style); wins over the style preset. */
+  fontWeight?: number
+  /** 'italic' | 'normal'; wins over the style preset. */
+  fontStyle?: 'italic' | 'normal'
   startTime: number
   endTime: number
   opacity?: number

@@ -1,44 +1,31 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { 
-  Zap, 
-  Sparkles, 
-  Video, 
-  ArrowRight, 
-  Loader2, 
-  CheckCircle2, 
+import {
+  Zap,
+  Sparkles,
+  ArrowRight,
+  Loader2,
+  CheckCircle2,
   AlertCircle,
   Brain,
-  History,
   Target,
   Globe,
-  Settings,
   Terminal,
-  Cpu,
   Fingerprint,
   Layers,
-  Hexagon,
   Orbit,
-  ArrowLeft,
   Command,
   Film,
   RefreshCw,
   Sparkle,
   Waves,
   Mic2,
-  Activity,
   Box,
   Binary,
   Shield,
-  Star,
-  ActivitySquare,
-  ShieldCheck,
-  UserCheck,
-  Monitor,
-  Database,
-  Cloud
+  Database
 } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
 import { apiPost } from '../lib/api'
@@ -49,16 +36,9 @@ import { useTranslation } from '@/hooks/useTranslation'
 const STAGES = [
   { id: 'intelligence', labelKey: 'autonomousCreator.stageResearching', icon: Brain },
   { id: 'script',       labelKey: 'autonomousCreator.stageWritingScript',     icon: Terminal },
-  { id: 'refinery',     labelKey: 'autonomousCreator.stageAiConsensus',       icon: Orbit },
+  { id: 'refinery',     labelKey: 'autonomousCreator.stagePolishing',         icon: Orbit },
   { id: 'anatomy',      labelKey: 'autonomousCreator.stagePlanningCuts',         icon: Layers },
   { id: 'blueprint',    labelKey: 'autonomousCreator.stageBuildingTimeline',    icon: Command },
-]
-
-const TONES = [
-  { id: 'educational', label: 'Authoritative', icon: Shield },
-  { id: 'motivational', label: 'Elevated', icon: Zap },
-  { id: 'storytelling', label: 'Narrative', icon: Film },
-  { id: 'controversial', label: 'Disruptive', icon: AlertCircle },
 ]
 
 export default function AutonomousCreator() {
@@ -72,26 +52,20 @@ export default function AutonomousCreator() {
   const [tone, setTone] = useState('educational')
   const [stylePivot, setStylePivot] = useState('BALANCED')
   const [loading, setLoading] = useState(false)
-  const [currentStage, setCurrentStage] = useState<string | null>(null)
-  const [completedStages, setCompletedStages] = useState<string[]>([])
   const [result, setResult] = useState<any>(null)
   const [variants, setVariants] = useState<any[]>([])
   const [activeVariantIndex, setActiveVariantIndex] = useState(0)
   const [keywords, setKeywords] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [cognitiveLoad, setCognitiveLoad] = useState(0)
+  // Ids of variants the user has actually saved to the library.
+  const [savedIds, setSavedIds] = useState<string[]>([])
 
-  // Simulation for stage transitions
-  useEffect(() => {
-    if (loading) {
-      const interval = setInterval(() => {
-        setCognitiveLoad(prev => Math.min(prev + (Math.random() * 5), 100))
-      }, 500)
-      return () => clearInterval(interval)
-    } else {
-      setCognitiveLoad(0)
-    }
-  }, [loading])
+  // A stage is "done" only when the server's response contains its output.
+  // While the single request is in flight there is no per-stage progress to
+  // report, so the steps list shows one honest busy state instead.
+  const completedStages: string[] = result?.stages
+    ? STAGES.filter(s => result.stages[s.id]).map(s => s.id)
+    : []
 
   const saveManifest = async () => {
     if (!result) return
@@ -106,6 +80,7 @@ export default function AutonomousCreator() {
       })
 
       if (res.success) {
+        if (result.id) setSavedIds(prev => (prev.includes(result.id) ? prev : [...prev, result.id]))
         showToast(t('autonomousCreator.savedToast'), 'success')
       } else {
         showToast(t('autonomousCreator.couldNotSave'), 'error')
@@ -126,12 +101,9 @@ export default function AutonomousCreator() {
     setLoading(true)
     setError(null)
     setResult(null)
-    setCompletedStages([])
-    setCurrentStage('intelligence')
 
     try {
-      // Start the real API call immediately
-      const apiPromise = executeHardened(() => apiPost('/intelligence/factory/create', {
+      const res = await executeHardened(() => apiPost('/intelligence/factory/create', {
         prompt,
         targetPlatform: platform,
         tone: tone,
@@ -139,18 +111,6 @@ export default function AutonomousCreator() {
         keywords: keywords.split(',').map(k => k.trim()).filter(Boolean),
         useCreatorDNA: true
       }))
-
-      // Stage sequence for UX narrative - synchronized with API
-      const stages = ['intelligence', 'script', 'refinery', 'anatomy', 'blueprint']
-      
-      for (const stage of stages) {
-        setCurrentStage(stage)
-        // Snappier transitions for a high-velocity feel
-        await new Promise(r => setTimeout(r, 400 + Math.random() * 200))
-        setCompletedStages(prev => [...prev, stage])
-      }
-
-      const res = await apiPromise
 
       if (res && res.success) {
         const newVariant = { ...res.data, id: `variant-${Date.now()}`, pivot: pivot || stylePivot }
@@ -168,7 +128,6 @@ export default function AutonomousCreator() {
       showToast(t('autonomousCreator.couldNotGenerate'), 'error')
     } finally {
       setLoading(false)
-      setCurrentStage(null)
     }
   }
 
@@ -186,10 +145,6 @@ export default function AutonomousCreator() {
               <div className="flex items-center gap-3">
                  <Binary size={14} className="text-primary-500 animate-pulse shrink-0" />
                  <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.5em] text-primary-600 dark:text-primary-400 italic leading-none truncate">{t('autonomousCreator.aiEngine')}</span>
-              </div>
-              <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-inner">
-                  <Activity size={12} className="text-emerald-500 animate-pulse shrink-0" />
-                  <span className="text-[8px] md:text-[9px] font-black text-emerald-500 tracking-widest uppercase italic leading-none whitespace-nowrap">{t('autonomousCreator.aiReady')}</span>
               </div>
             </div>
             <h2 className="text-[clamp(2rem,6vw,4.5rem)] font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-[0.95] mb-4 [overflow-wrap:anywhere]">{t('autonomousCreator.clickForge')}</h2>
@@ -216,16 +171,19 @@ export default function AutonomousCreator() {
                        {(rateLimitCountdown ?? 0) > 0 ? (
                          <span className="text-[9px] font-black text-rose-500 uppercase italic tracking-widest animate-pulse">{t('autonomousCreator.cooling', { seconds: rateLimitCountdown ?? 0 })}</span>
                        ) : (
-                         <span className="text-[9px] font-black text-primary-500 uppercase italic tracking-widest">{t('autonomousCreator.workingPercent', { percent: Math.round(cognitiveLoad) })}</span>
+                         <span role="status" className="text-[9px] font-black text-primary-500 uppercase italic tracking-widest">{t('autonomousCreator.working')}</span>
                        )}
-                       <div className="flex-1 sm:w-32 h-2 bg-surface-page dark:bg-surface-900 rounded-full overflow-hidden border border-surface-100 dark:border-surface-800 shadow-inner">
-                          <m.div 
-                            animate={{ 
-                              width: (rateLimitCountdown ?? 0) > 0 ? '100%' : `${cognitiveLoad}%`,
-                              backgroundColor: (rateLimitCountdown ?? 0) > 0 ? '#f43f5e' : '#6366f1'
-                            }} 
-                            className="h-full shadow-[0_0_15px_rgba(99,102,241,1)]" 
-                          />
+                       {/* Indeterminate: the request reports no progress, so none is shown. */}
+                       <div className="relative flex-1 sm:w-32 h-2 bg-surface-page dark:bg-surface-900 rounded-full overflow-hidden border border-surface-100 dark:border-surface-800 shadow-inner" aria-hidden="true">
+                          {(rateLimitCountdown ?? 0) > 0 ? (
+                            <div className="h-full w-full bg-rose-500" />
+                          ) : (
+                            <m.div
+                              animate={{ x: ['-100%', '300%'] }}
+                              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+                              className="absolute inset-y-0 left-0 w-1/3 bg-primary-500"
+                            />
+                          )}
                        </div>
                     </div>
                   )}
@@ -343,30 +301,6 @@ export default function AutonomousCreator() {
 
         {/* Sidebar Intelligence & Presets */}
         <div className="xl:col-span-4 space-y-12">
-           {/* Current Strategy Cluster */}
-           <div className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 p-8 sm:p-10 rounded-[3rem] sm:rounded-[4rem] space-y-8 sm:space-y-10 shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none group-hover:opacity-[0.08] transition-opacity duration-1000"><Brain size={250} className="text-primary-500" /></div>
-              <div className="flex items-center gap-4 sm:gap-6 relative z-10">
-                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-lg shrink-0"><Brain size={24} className="text-primary-600 dark:text-primary-400" /></div>
-                 <div className="min-w-0">
-                    <h3 className="text-xl sm:text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none whitespace-nowrap">{t('autonomousCreator.strategyCluster')}</h3>
-                    <p className="text-[8px] sm:text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none whitespace-nowrap">{t('autonomousCreator.aiRecommendedAngles')}</p>
-                 </div>
-              </div>
-              <div className="space-y-4 relative z-10">
-                  {[
-                    { labelKey: 'autonomousCreator.hookStrength', value: t('autonomousCreator.hookStrengthValue') },
-                    { labelKey: 'autonomousCreator.nicheFit', value: '98%' },
-                    { labelKey: 'autonomousCreator.retentionModel', value: t('autonomousCreator.retentionModelValue') },
-                  ].map((s, i) => (
-                     <div key={i} className="flex justify-between items-center p-4 sm:p-5 rounded-[1.2rem] sm:rounded-[1.5rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 shadow-inner group/stat hover:border-primary-500/30 transition-all duration-500 min-w-0">
-                        <span className="text-[8px] sm:text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.1em] sm:tracking-[0.2em] italic group-hover/stat:text-primary-500 transition-colors truncate pr-2">{t(s.labelKey)}</span>
-                        <span className="text-[9px] sm:text-[10px] font-black text-surface-900 dark:text-white italic uppercase tracking-tighter shrink-0">{s.value}</span>
-                     </div>
-                  ))}
-              </div>
-           </div>
-
            {/* Quick Style Pivots (Advanced) */}
            <div className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 p-8 sm:p-10 rounded-[3rem] sm:rounded-[4rem] space-y-8 sm:space-y-10 shadow-2xl relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none group-hover:opacity-[0.08] transition-opacity duration-1000"><Zap size={250} className="text-amber-500" /></div>
@@ -419,20 +353,9 @@ export default function AutonomousCreator() {
                   animate={{ opacity: 1, y: 0 }}
                   className="p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-orange-500/5 border-2 border-orange-500/10 mt-6 relative z-10 backdrop-blur-xl shadow-inner"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <p className="text-[9px] sm:text-[10px] font-black text-orange-500 uppercase tracking-widest italic">{t('autonomousCreator.authenticityBoostOn')}</p>
-                    <span className="text-[9px] sm:text-[10px] font-black text-surface-900 dark:text-white tabular-nums italic">{t('autonomousCreator.realFeel')}</span>
-                  </div>
-                  <div className="h-2.5 rounded-full bg-surface-page dark:bg-surface-950 overflow-hidden border border-surface-100 dark:border-surface-800 shadow-inner">
-                    <m.div
-                      initial={{ width: 0 }}
-                      animate={{ width: '85%' }}
-                      transition={{ duration: 1.5, ease: 'circOut' }}
-                      className="h-full bg-gradient-to-r from-orange-600 to-amber-400 shadow-[0_0_15px_rgba(234,88,12,0.5)]"
-                    />
-                  </div>
-                  <p className="text-[8px] sm:text-[9px] text-surface-400 dark:text-slate-600 font-bold uppercase tracking-widest mt-4 italic">
-                    {t('autonomousCreator.ugcAddingDescription')}
+                  <p className="text-[9px] sm:text-[10px] font-black text-orange-500 uppercase tracking-widest italic mb-3">{t('autonomousCreator.authenticityBoostOn')}</p>
+                  <p className="text-[9px] sm:text-[10px] text-surface-400 dark:text-slate-500 font-bold uppercase tracking-widest italic">
+                    {t('autonomousCreator.ugcStyleDescription')}
                   </p>
                 </m.div>
               )}
@@ -449,17 +372,21 @@ export default function AutonomousCreator() {
                        <p className="text-[8px] sm:text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none whitespace-nowrap">{t('autonomousCreator.aiGenerationSteps')}</p>
                     </div>
                  </div>
+                 {loading && (
+                   <div role="status" className="flex items-center gap-3 mb-6 text-[10px] font-black text-primary-500 uppercase tracking-widest">
+                     <Loader2 size={14} className="animate-spin shrink-0" aria-hidden="true" /> {t('autonomousCreator.workingAllSteps')}
+                   </div>
+                 )}
                  <div className="flex-1 space-y-8 sm:space-y-10 custom-scrollbar overflow-y-auto pr-4">
                     {STAGES.map((s, i) => (
                        <div key={s.id} className="flex items-center gap-6 sm:gap-8 relative group/stage min-w-0">
                           <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl border-2 flex items-center justify-center group-hover/stage:scale-110 transition-all shadow-md relative z-10 shrink-0 text-[10px] sm:text-[12px] ${
-                            completedStages.includes(s.id) ? 'bg-emerald-500 border-transparent text-white shadow-emerald-500/20' : currentStage === s.id ? 'bg-primary-500 border-transparent text-white animate-pulse shadow-primary-500/20' : 'bg-surface-page dark:bg-surface-950 border-surface-100 dark:border-surface-800 text-surface-300 dark:text-slate-800'
+                            completedStages.includes(s.id) ? 'bg-emerald-500 border-transparent text-white shadow-emerald-500/20' : 'bg-surface-page dark:bg-surface-950 border-surface-100 dark:border-surface-800 text-surface-300 dark:text-slate-600'
                           }`}>
                              {completedStages.includes(s.id) ? <CheckCircle2 size={16} /> : (i + 1)}
                           </div>
                           <div className="flex-1 min-w-0">
-                             <p className={`text-[11px] sm:text-[13px] font-black uppercase tracking-tighter italic leading-none transition-colors truncate ${completedStages.includes(s.id) ? 'text-surface-900 dark:text-white' : currentStage === s.id ? 'text-primary-500' : 'text-surface-300 dark:text-slate-800'}`}>{t(s.labelKey)}</p>
-                             {currentStage === s.id && <m.div initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="text-[8px] sm:text-[9px] font-black text-primary-500 uppercase italic mt-2 tracking-[0.2em] animate-pulse">{t('autonomousCreator.working')}</m.div>}
+                             <p className={`text-[11px] sm:text-[13px] font-black uppercase tracking-tighter italic leading-none transition-colors truncate ${completedStages.includes(s.id) ? 'text-surface-900 dark:text-white' : 'text-surface-300 dark:text-slate-600'}`}>{t(s.labelKey)}</p>
                           </div>
                           {i < STAGES.length - 1 && <div className={`absolute top-8 sm:top-10 left-4 sm:left-5 w-0.5 h-6 sm:h-8 transition-colors ${completedStages.includes(s.id) ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-surface-100 dark:bg-surface-800'}`} />}
                        </div>
@@ -493,7 +420,9 @@ export default function AutonomousCreator() {
                  <div>
                     <h3 className="text-4xl md:text-5xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-[0.85] mb-4">{t('autonomousCreator.ready')}</h3>
                   <div className="flex flex-wrap gap-4">
-                     <div className="px-5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase italic tracking-[0.2em] shadow-inner leading-none">{t('autonomousCreator.savedBadge')}</div>
+                     {savedIds.includes(result.id) && (
+                       <div className="px-5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase italic tracking-[0.2em] shadow-inner leading-none">{t('autonomousCreator.savedBadge')}</div>
+                     )}
                      <div className="px-5 py-2 rounded-xl bg-surface-page dark:bg-surface-950 border border-surface-100 dark:border-surface-800 text-[10px] font-black text-surface-400 dark:text-slate-600 uppercase italic tracking-[0.2em] shadow-inner leading-none">{t('autonomousCreator.variantNumber', { number: activeVariantIndex + 1 })}</div>
                      <div className="px-5 py-2 rounded-xl bg-primary-500/10 border border-primary-500/20 text-[10px] font-black text-primary-600 dark:text-primary-400 uppercase italic tracking-[0.2em] shadow-inner leading-none">{t('autonomousCreator.styleLabel', { style: result.pivot || t('autonomousCreator.balanced') })}</div>
                   </div>
@@ -537,9 +466,9 @@ export default function AutonomousCreator() {
                     <button
                       type="button"
                       onClick={() => {
-                        setPrompt(`Refine this manifest to make it more ${tone === 'educational' ? 'authoritative' : 'engaging'}: ${result.script?.slice(0, 500)}...`)
+                        setPrompt(`Rewrite this script to make it more ${tone === 'educational' ? 'authoritative' : 'engaging'}: ${result.script?.slice(0, 500)}...`)
                         window.scrollTo({ top: 0, behavior: 'smooth' })
-                        showToast(t('autonomousCreator.contextLoaded'), 'info')
+                        showToast(t('autonomousCreator.scriptLoadedIntoPrompt'), 'info')
                       }}
                       className="p-3 hover:bg-surface-100 dark:hover:bg-surface-900 rounded-xl transition-all text-surface-400 dark:text-slate-600 hover:text-primary-500"
                       title={t('autonomousCreator.refineWithAi')}
@@ -581,7 +510,7 @@ export default function AutonomousCreator() {
                         <Fingerprint size={16} className="text-emerald-500 animate-pulse" /> {t('autonomousCreator.title')}
                      </p>
                      <div className="text-4xl md:text-5xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-[0.9] drop-shadow-2xl">
-                       {result.stages?.script?.title || t('autonomousCreator.sequenceAlpha')}
+                       {result.stages?.script?.title || t('autonomousCreator.untitled')}
                      </div>
                   </div>
                   <div className="space-y-6">
@@ -596,7 +525,7 @@ export default function AutonomousCreator() {
                     <div className="p-8 rounded-[3rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 space-y-4 shadow-inner group/data hover:border-emerald-500/30 transition-all">
                        <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.4em] italic group-hover/data:text-emerald-500 transition-colors">{t('autonomousCreator.duration')}</p>
                        <p className="text-4xl font-black text-surface-900 dark:text-white italic tabular-nums leading-none tracking-tighter">
-                         {result.stages?.blueprint?.totalDuration || result.stages?.anatomy?.totalDuration || '0'} <span className="text-xl text-surface-200 dark:text-slate-900 border-none">{t('autonomousCreator.sec')}</span>
+                         {result.stages?.blueprint?.totalDuration || result.stages?.anatomy?.totalDuration || '—'} <span className="text-xl text-surface-200 dark:text-slate-900 border-none">{t('autonomousCreator.sec')}</span>
                        </p>
                     </div>
                     <div className="p-8 rounded-[3rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 space-y-4 shadow-inner group/data hover:border-emerald-500/30 transition-all">
@@ -614,25 +543,26 @@ export default function AutonomousCreator() {
                      </div>
                      <div className="flex items-center justify-between relative z-10">
                         <p className="text-[11px] font-black text-primary-500 uppercase tracking-[0.6em] italic flex items-center gap-5">
-                           <Sparkle size={18} className="animate-pulse" /> {t('autonomousCreator.aiRecommendation')}
+                           <Sparkle size={18} /> {t('autonomousCreator.angleLabel')}
                         </p>
-                        <div className="px-4 py-1.5 rounded-lg bg-primary-500/10 border border-primary-500/20 text-[9px] font-black text-primary-500 italic">v2026.4</div>
                      </div>
                      <div className="space-y-6 relative z-10">
                         <p className="text-xl md:text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-tight group-hover/advice:scale-[1.02] transition-transform duration-700">
-                           &quot;{result.summary?.strategicAdvice || result.summary?.advice || t('autonomousCreator.adviceFallback')}&quot;
+                           {result.stages?.intelligence?.positioning
+                             ? <>&quot;{result.stages.intelligence.positioning}&quot;</>
+                             : t('autonomousCreator.positioningUnavailable')}
                         </p>
                         <div className="flex flex-wrap gap-8 pt-4">
                            <div className="flex flex-col gap-2">
-                              <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase italic">{t('autonomousCreator.confidence')}</span>
-                              <span className="text-3xl font-black text-emerald-500 italic tabular-nums leading-none shadow-emerald-500/20 drop-shadow-[0_0_10px_rgba(16,185,129,0.4)]">{result.summary?.globalConsensus || '98.4%'}</span>
+                              <span className="text-[9px] font-black text-surface-400 dark:text-slate-500 uppercase italic">{t('autonomousCreator.scoreLabel')}</span>
+                              <span className="text-3xl font-black text-emerald-500 italic tabular-nums leading-none">{Number.isFinite(Number(result.resonanceScore)) && result.resonanceScore !== null ? `${Math.round(Number(result.resonanceScore))}/100` : '—'}</span>
                            </div>
                            <div className="flex flex-col gap-2 border-l-2 border-surface-100 dark:border-surface-800 pl-8">
-                              <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase italic">{t('autonomousCreator.trend')}</span>
-                              <span className="text-3xl font-black text-surface-900 dark:text-white italic leading-none tracking-tighter">{t('autonomousCreator.rising')}</span>
+                              <span className="text-[9px] font-black text-surface-400 dark:text-slate-500 uppercase italic">{t('autonomousCreator.postingWindow')}</span>
+                              <span className="text-xl font-black text-surface-900 dark:text-white italic leading-none tracking-tighter">{result.stages?.blueprint?.postingWindow || '—'}</span>
                            </div>
                            <div className="flex flex-col gap-2 border-l-2 border-surface-100 dark:border-surface-800 pl-8">
-                              <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase italic">{t('autonomousCreator.style')}</span>
+                              <span className="text-[9px] font-black text-surface-400 dark:text-slate-500 uppercase italic">{t('autonomousCreator.style')}</span>
                               <span className="text-2xl font-black text-primary-500 italic leading-none uppercase tracking-widest">{stylePivot}</span>
                            </div>
                         </div>
@@ -654,7 +584,7 @@ export default function AutonomousCreator() {
                         onClick={() => router.push('/dashboard/video')}
                         className="px-10 py-6 rounded-[2rem] bg-surface-900 dark:bg-white text-white dark:text-black font-black text-xs uppercase tracking-[0.5em] italic shadow-2xl hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all flex items-center justify-center gap-4 border-none active:scale-95 shrink-0"
                      >
-                        {t('autonomousCreator.deploy')} <ArrowRight size={20} />
+                        {t('autonomousCreator.openEditorShort')} <ArrowRight size={20} />
                      </button>
                   </div>
                </div>
@@ -691,9 +621,9 @@ export default function AutonomousCreator() {
       {/* Heuristic Wisdom Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 relative opacity-40 hover:opacity-100 transition-opacity duration-1000 pt-16">
         {[
-          { icon: Brain,  titleKey: 'autonomousCreator.tipConsensusTitle',   descKey: 'autonomousCreator.tipConsensusDesc' },
-          { icon: Target, titleKey: 'autonomousCreator.tipEngagementTitle',   descKey: 'autonomousCreator.tipEngagementDesc' },
-          { icon: Sparkle, titleKey: 'autonomousCreator.tipIdentityTitle',    descKey: 'autonomousCreator.tipIdentityDesc' },
+          { icon: Brain,  titleKey: 'autonomousCreator.tipPolishTitle',   descKey: 'autonomousCreator.tipPolishDesc' },
+          { icon: Target, titleKey: 'autonomousCreator.tipPlatformTitle',   descKey: 'autonomousCreator.tipPlatformDesc' },
+          { icon: Sparkle, titleKey: 'autonomousCreator.tipVoiceTitle',    descKey: 'autonomousCreator.tipVoiceDesc' },
         ].map(tip => (
           <div key={tip.titleKey} className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 p-10 rounded-[3.5rem] group hover:bg-surface-page transition-all cursor-crosshair shadow-xl">
              <div className="w-16 h-16 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center mb-8 shadow-inner group-hover:rotate-12 group-hover:scale-110 transition-all duration-1000">

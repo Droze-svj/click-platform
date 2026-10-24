@@ -1157,7 +1157,10 @@ router.post('/source-assets', auth, asyncHandler(async (req, res) => {
 
 /**
  * @route   POST /api/video/advanced/launch-test-ad
- * @desc    Launch a low-budget test ad for high-potential video
+ * @desc    Launch a low-budget test ad for high-potential video.
+ *          No paid-ads integration exists, so this answers 501 with a clear
+ *          message instead of the fabricated "ad launched" success it used to
+ *          return (see services/adsIntegrationService.js).
  * @access  Private
  */
 const { launchTestAd } = require('../../services/adsIntegrationService');
@@ -1166,8 +1169,15 @@ router.post('/launch-test-ad', auth, asyncHandler(async (req, res) => {
   if (!videoId) {
     return res.status(400).json({ success: false, message: 'Video ID is required' });
   }
-  const result = await launchTestAd(videoId, platform, budget);
-  sendSuccess(res, 'Test ad launched and monitoring active', 200, result);
+  try {
+    const result = await launchTestAd(videoId, platform, budget);
+    return sendSuccess(res, 'Test ad launched', 200, result);
+  } catch (error) {
+    if (error && error.code === 'ADS_NOT_CONFIGURED') {
+      return res.status(501).json({ success: false, code: error.code, message: error.message });
+    }
+    throw error;
+  }
 }));
 
 /**

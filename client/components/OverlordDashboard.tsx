@@ -96,25 +96,6 @@ const GovernanceLedger = ({ actions }: any) => {
   )
 };
 
-const ComplianceShield = ({ status }: any) => {
-  const { t } = useTranslation()
-  return (
-  <div className={`${glass} p-8 space-y-6`}>
-    <div className="flex items-center justify-between">
-      <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">{t('overlordDashboard.complianceShield')}</h4>
-      <span className="text-emerald-400 text-[10px] font-black">{status.status}</span>
-    </div>
-    <div className="flex items-center gap-4">
-      <Globe className="w-12 h-12 text-emerald-500/50" />
-      <div>
-        <p className="text-2xl font-black text-white italic leading-none">{t('overlordDashboard.blocksCount', { count: status.regionsBlocked })}</p>
-        <p className="text-[9px] font-bold text-slate-500 uppercase mt-2">{t('overlordDashboard.autonomousRegionalGating')}</p>
-      </div>
-    </div>
-  </div>
-  )
-};
-
 const FleetExpansionMonitor = ({ fleet }: any) => {
   const { t } = useTranslation()
   return (
@@ -146,7 +127,6 @@ export default function OverlordDashboard() {
   const [activeMetrics, setActiveMetrics] = useState<any>(null)
   const [syndicateDebate, setSyndicateDebate] = useState<any>(null)
   const [auditLog, setAuditLog] = useState<any>([])
-  const [complianceStatus, setComplianceStatus] = useState<any>(null)
   const [fleetExpansion, setFleetExpansion] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [verifying, setVerifying] = useState(false)
@@ -180,7 +160,6 @@ export default function OverlordDashboard() {
       }
 
       if (clickLedger) setAuditLog(clickLedger)
-      setComplianceStatus({ status: 'SECURE', regionsBlocked: 0 })
       setFleetExpansion({ activeNodes: fleetRes?.nodes?.length || 0, pendingNodes: 0 })
     } catch (err) {
       console.error('Telemetry fetch failed', err)
@@ -793,7 +772,6 @@ export default function OverlordDashboard() {
           </div>
         </div>
         <div className="space-y-8">
-          <ComplianceShield status={complianceStatus || { status: 'SECURE', regionsBlocked: 0 }} />
           <FleetExpansionMonitor fleet={fleetExpansion || { activeNodes: 0, pendingNodes: 0, revenueThreshold: 0, timeRemaining: '0h' }} />
           
           {/* Real-time Arbitrage Radar (Simplified Integration) */}

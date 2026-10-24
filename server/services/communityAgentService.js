@@ -129,12 +129,9 @@ class CommunityAgentService {
     draft.approvedBy = userId;
     await draft.save();
 
-    // Trigger distribution (Simulated)
-    draft.status = 'posted';
-    draft.postedAt = new Date();
-    await draft.save();
-
-    return { success: true, response: draft.suggestedText };
+    // Approval only. Nothing posts the reply to the platform yet, so it stays
+    // 'approved' (it used to be marked 'posted' with a postedAt — simulated).
+    return { success: true, status: 'approved', response: draft.suggestedText };
   }
 
   /**

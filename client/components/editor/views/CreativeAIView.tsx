@@ -4,25 +4,21 @@ import React, { useState } from 'react'
 import {
   Sparkles,
   Focus,
-  Wand2,
   Video,
   Play,
   Eye,
   Layers,
   Zap,
-  Loader2,
   CheckCircle2,
   Gauge,
-  Type,
   Globe2,
   Maximize2,
   Lock,
   type LucideIcon
 } from 'lucide-react'
 import { apiPost } from '../../../lib/api'
-import { useNeuralDepth } from '../../../hooks/useNeuralDepth'
 import { useEntitlements } from '../../../hooks/useEntitlements'
-import { SwarmConsensusHUD } from '../SwarmConsensusHUD'
+import { useTranslation } from '../../../hooks/useTranslation'
 import { Card, Button, Badge, SectionHeader, UpgradeModal, LockedBadge } from '../../ui'
 import { cn } from '../../../lib/utils'
 
@@ -52,6 +48,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
   onUpdateBroll,
   transcript
 }) => {
+  const { t } = useTranslation()
   const [localized, setLocalized] = useState(false)
   const [outpainted, setOutpainted] = useState(false)
   const [processing, setProcessing] = useState<string | null>(null)
@@ -61,10 +58,6 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
   const [isReframed, setIsReframed] = useState(false)
   const [eyeContactFixed, setEyeContactFixed] = useState(false)
   const [speedRamped, setSpeedRamped] = useState(false)
-  const [avatarGenerated, setAvatarGenerated] = useState(false)
-  const [showSwarmHUD, setShowSwarmHUD] = useState(false)
-  const [swarmHUDTask, setSwarmHUDTask] = useState('')
-  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
 
   // Entitlements — honest client-side gate for Pro/Agency-only tools.
   const { hasFeature, tier } = useEntitlements()
@@ -79,40 +72,19 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
     return true
   }
 
-  // Use a mock video ID for the depth hook if one isn't available
-  const { isProcessing: isDepthProcessing, generateDepthMatte } = useNeuralDepth(`preview-video-${videoId}`)
-  const [depthLayeringActive, setDepthLayeringActive] = useState(false)
-
-  const handleDepthLayering = async () => {
-    setProcessing('depthLayer')
-    showToast('Initializing Edge Spatial Mapping...', 'info')
-
-    // Attempt local depth matte extraction
-    const matteUrl = await generateDepthMatte(0);
-
-    if (matteUrl) {
-       // In a real editor, this URL would be sent to the WebGPU renderer
-       setDepthLayeringActive(true)
-       showToast('Subject track complete. Spatial Text enabled.', 'success')
-    } else {
-       showToast('Local Spatial mapping failed. Retrying in cloud...', 'error')
-    }
-    setProcessing(null)
-  }
-
   const handleAutoReframe = async () => {
     setProcessing('reframe')
-    showToast('Initializing Intelligant Subject Tracking...', 'info')
+    showToast(t('creativeAI.reframeStarting'), 'info')
     try {
       const res = await apiPost<any>('/video/creative/auto-reframe', { videoId })
       if (res?.success) {
         setIsReframed(true)
-        showToast('Auto-Reframe executed successfully.', 'success')
+        showToast(t('creativeAI.reframeDone'), 'success')
       } else {
-        showToast('Auto-Reframe failed.', 'error')
+        showToast(t('creativeAI.reframeFailed'), 'error')
       }
     } catch (e) {
-      showToast('Engine fault during reframe processing.', 'error')
+      showToast(t('creativeAI.reframeError'), 'error')
     } finally {
       setProcessing(null)
     }
@@ -121,18 +93,18 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
   const handleMagicBRoll = async () => {
     if (gateTool('broll')) return
     setProcessing('broll')
-    showToast('Injecting Context-Aware Semantic B-Roll...', 'info')
+    showToast(t('creativeAI.brollStarting'), 'info')
     try {
       const res = await apiPost<any>('/video/creative/magic-broll', { videoId, transcript: transcript?.words || [] })
       if (res?.success && onUpdateBroll) {
         onUpdateBroll(res.overlays || [])
         setBrollGenerated(true)
-        showToast(`Injected ${res.overlays?.length || 0} Neural B-Rolls`, 'success')
+        showToast(t('creativeAI.brollAdded', { count: res.overlays?.length || 0 }), 'success')
       } else {
-        showToast('Magic B-Roll failed to generate.', 'error')
+        showToast(t('creativeAI.brollFailed'), 'error')
       }
     } catch (e) {
-      showToast('Engine fault during B-Roll generation.', 'error')
+      showToast(t('creativeAI.brollError'), 'error')
     } finally {
       setProcessing(null)
     }
@@ -140,19 +112,19 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
 
   const handleEyeContact = async () => {
     setProcessing('eyecontact')
-    showToast('Recalibrating Neural Eye Vector...', 'info')
+    showToast(t('creativeAI.eyeContactStarting'), 'info')
     try {
       const res = await apiPost<any>('/video/creative/eye-contact', { videoId })
       if (res?.success) {
         setEyeContactFixed(true)
-        showToast('Eye contact successfully recalibrated.', 'success')
+        showToast(t('creativeAI.eyeContactDone'), 'success')
       } else if (res?.notImplemented) {
-        showToast(res.message || 'Eye Contact Fix is coming soon.', 'info')
+        showToast(res.message || t('creativeAI.eyeContactUnavailable'), 'info')
       } else {
-        showToast('Vector calibration failed.', 'error')
+        showToast(t('creativeAI.eyeContactFailed'), 'error')
       }
     } catch (e) {
-      showToast('Engine fault during Eye Vector correction.', 'error')
+      showToast(t('creativeAI.eyeContactError'), 'error')
     } finally {
       setProcessing(null)
     }
@@ -160,18 +132,18 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
 
   const handleBackgroundSwap = async () => {
     setProcessing('bgswap')
-    showToast('Initiating Global Depth Mapping & Swap...', 'info')
+    showToast(t('creativeAI.bgSwapStarting'), 'info')
     try {
       const res = await apiPost<any>('/video/creative/background-swap', { videoId })
       if (res?.success) {
-        showToast('Background swapped successfully.', 'success')
+        showToast(t('creativeAI.bgSwapDone'), 'success')
       } else if (res?.notImplemented) {
-        showToast(res.message || 'Neural Depth Swap is coming soon.', 'info')
+        showToast(res.message || t('creativeAI.bgSwapUnavailable'), 'info')
       } else {
-        showToast('Depth mapping failed to lock.', 'error')
+        showToast(t('creativeAI.bgSwapFailed'), 'error')
       }
     } catch (e) {
-      showToast('Engine fault during depth mapping.', 'error')
+      showToast(t('creativeAI.bgSwapError'), 'error')
     } finally {
       setProcessing(null)
     }
@@ -179,52 +151,17 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
 
   const handleSpeedRamp = async () => {
     setProcessing('speedramp')
-    showToast('Detecting kinetic beat-sync points…', 'info')
+    showToast(t('creativeAI.speedRampStarting'), 'info')
     try {
       const res = await apiPost<any>('/video/creative/speed-ramp', { videoId })
       if (res?.success) {
         setSpeedRamped(true)
-        showToast(`Speed ramp applied — ${(res as any).rampCount ?? 0} transitions`, 'success')
+        showToast(t('creativeAI.speedRampPlanned', { count: (res as any).rampCount ?? 0 }), 'success')
       } else {
-        showToast('Speed ramp failed — check your timeline length.', 'error')
+        showToast(t('creativeAI.speedRampFailed'), 'error')
       }
     } catch (e) {
-      showToast('Engine fault during speed ramp analysis.', 'error')
-    } finally {
-      setProcessing(null)
-    }
-  }
-
-  const handleAiAvatar = async () => {
-    setSwarmHUDTask('Digital Replica Synthesis')
-    setShowSwarmHUD(true)
-    setPendingAction(() => executeAiAvatar)
-  }
-
-  const executeAiAvatar = async () => {
-    setProcessing('avatar')
-    showToast('Synthesising AI talking-head replica…', 'info')
-    try {
-      // Use the new digital-twin endpoint
-      const res = await apiPost<any>('/digital-twin/generate', {
-        videoId,
-        voiceNoteUrl: 'https://cdn.click.ai/assets/samples/voice_note_1.mp3', // Sample or derived from video
-        options: {
-          provider: 'heygen',
-          resolution: '4K'
-        }
-      })
-
-      if (res?.success && !res?.data?.notImplemented && res?.data?.status !== 'unavailable') {
-        setAvatarGenerated(true)
-        showToast('Digital twin generation started. Check the activity log for status.', 'success')
-      } else if (res?.data?.notImplemented || res?.data?.status === 'unavailable') {
-        showToast(res?.data?.message || 'AI Avatar synthesis requires a HeyGen or Sora API key.', 'info')
-      } else {
-        showToast('Avatar generation failed.', 'error')
-      }
-    } catch (e) {
-      showToast('Engine fault during avatar synthesis.', 'error')
+      showToast(t('creativeAI.speedRampError'), 'error')
     } finally {
       setProcessing(null)
     }
@@ -233,19 +170,19 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
   const handleLocalization = async () => {
     if (gateTool('localization')) return
     setProcessing('localization')
-    showToast('Initializing Hyper-Native Lip-Sync pipeline...', 'info')
+    showToast(t('creativeAI.dubbingStarting'), 'info')
     try {
       const res = await apiPost<any>('/video/creative/localize', { videoId, targetLanguage: 'Spanish' })
       if (res?.success) {
         setLocalized(true)
-        showToast('Video Localized with Voice Cloning & Lip-Sync.', 'success')
+        showToast(t('creativeAI.dubbingDone'), 'success')
       } else if (res?.notImplemented) {
-        showToast(res.message || 'Global Native localization is coming soon.', 'info')
+        showToast(res.message || t('creativeAI.dubbingUnavailable'), 'info')
       } else {
-        showToast('Localization failed.', 'error')
+        showToast(t('creativeAI.dubbingFailed'), 'error')
       }
     } catch (e) {
-        showToast('Localization engine timeout.', 'error')
+        showToast(t('creativeAI.dubbingError'), 'error')
     } finally {
       setProcessing(null)
     }
@@ -253,19 +190,19 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
 
   const handleOutpainting = async () => {
     setProcessing('outpainting')
-    showToast('Generating pixel extensions for 9:16 layout...', 'info')
+    showToast(t('creativeAI.outpaintStarting'), 'info')
     try {
       const res = await apiPost<any>('/video/creative/outpaint', { videoId })
       if (res?.success) {
         setOutpainted(true)
-        showToast('Outpainting complete — 9:16 blur-pad fill applied.', 'success')
+        showToast(t('creativeAI.outpaintDone'), 'success')
       } else if (res?.notImplemented) {
-        showToast(res.message || 'Omni-Format outpainting is coming soon.', 'info')
+        showToast(res.message || t('creativeAI.outpaintUnavailable'), 'info')
       } else {
-        showToast(res?.error || 'Generative fill failed.', 'error')
+        showToast(res?.error || t('creativeAI.outpaintFailed'), 'error')
       }
     } catch (e) {
-        showToast('Generative fill failed.', 'error')
+        showToast(t('creativeAI.outpaintFailed'), 'error')
     } finally {
       setProcessing(null)
     }
@@ -303,7 +240,7 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
             <LockedBadge requiredTier={gate.tier} />
           ) : isActive ? (
             <Badge variant="outline" className="gap-1 border-emerald-500/30 text-emerald-500">
-              <CheckCircle2 className="h-3 w-3" aria-hidden /> Active
+              <CheckCircle2 className="h-3 w-3" aria-hidden /> {t('creativeAI.active')}
             </Badge>
           ) : null}
         </div>
@@ -318,11 +255,11 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
         onClick={action}
         disabled={isProcessing}
         loading={isProcessing}
-        title={locked ? `Upgrade to ${cap(gate.tier)} to unlock ${title}` : `Execute ${title} creative tool`}
+        title={locked ? t('creativeAI.upgradeToUnlock', { tier: cap(gate.tier), tool: title }) : t('creativeAI.runTool', { tool: title })}
         leftIcon={!isProcessing ? (locked ? <Lock className="h-4 w-4" aria-hidden /> : isActive ? <Zap className="h-4 w-4" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />) : undefined}
         className="w-full"
       >
-        {isProcessing ? 'Working…' : locked ? 'Unlock' : isActive ? 'Re-run' : 'Apply'}
+        {isProcessing ? t('creativeAI.working') : locked ? t('creativeAI.unlock') : isActive ? t('creativeAI.runAgain') : t('creativeAI.apply')}
       </Button>
     </Card>
     )
@@ -334,21 +271,21 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
       <div className="flex flex-wrap items-center gap-3">
         <Badge variant="outline" className="gap-2 border-indigo-500/30 text-indigo-500">
           <Sparkles className="h-3.5 w-3.5" aria-hidden />
-          Generative AI Engine
+          {t('creativeAI.badge')}
         </Badge>
       </div>
       <SectionHeader
         as="h1"
-        title="Creative Matrix"
-        description="AI-driven enhancements applied directly to your timeline."
+        title={t('creativeAI.title')}
+        description={t('creativeAI.description')}
       />
 
       {/* Tools Grid */}
       <div className="ds-bento-grid">
         <ToolCard
           id="reframe"
-          title="Auto-Reframe"
-          desc="Intelligent object tracking that continuously centers the primary subject in vertical or square aspect ratios."
+          title={t('creativeAI.reframeTitle')}
+          desc={t('creativeAI.reframeDesc')}
           Icon={Focus}
           action={handleAutoReframe}
           isActive={isReframed}
@@ -358,8 +295,8 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
 
         <ToolCard
           id="broll"
-          title="Magic B-Roll"
-          desc="Context-aware semantic injection of hyper-relevant stock footage driven by transcript telemetry."
+          title={t('creativeAI.brollTitle')}
+          desc={t('creativeAI.brollDesc')}
           Icon={Video}
           action={handleMagicBRoll}
           isActive={brollGenerated}
@@ -368,20 +305,9 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
         />
 
         <ToolCard
-          id="depthLayer"
-          title="3D Spatial Text"
-          desc="Zero-latency edge-computed depth mapping allows captions to weave behind people in real-time."
-          Icon={Type}
-          action={handleDepthLayering}
-          isActive={depthLayeringActive}
-          isProcessing={processing === 'depthLayer' || isDepthProcessing}
-          colorClass="text-cyan-500"
-        />
-
-        <ToolCard
           id="eyecontact"
-          title="Eye Contact Fix"
-          desc="Neural vector recalibration forcing direct lens contact regardless of original pupil orientation."
+          title={t('creativeAI.eyeContactTitle')}
+          desc={t('creativeAI.eyeContactDesc')}
           Icon={Eye}
           action={handleEyeContact}
           isActive={eyeContactFixed}
@@ -391,8 +317,8 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
 
         <ToolCard
           id="bgswap"
-          title="Neural Depth Swap"
-          desc="Zero-greenscreen AI separation of foreground meshes to inject dynamic or static backgrounds."
+          title={t('creativeAI.bgSwapTitle')}
+          desc={t('creativeAI.bgSwapDesc')}
           Icon={Layers}
           action={handleBackgroundSwap}
           isActive={false}
@@ -402,8 +328,8 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
 
         <ToolCard
           id="speedramp"
-          title="AI Speed Ramp"
-          desc="Beat-sync kinetic speed ramping — detects peak moments and auto-ramps for maximum impact."
+          title={t('creativeAI.speedRampTitle')}
+          desc={t('creativeAI.speedRampDesc')}
           Icon={Gauge}
           action={handleSpeedRamp}
           isActive={speedRamped}
@@ -412,20 +338,9 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
         />
 
         <ToolCard
-          id="avatar"
-          title="Digital Replica"
-          desc="Neural synthesis of a digital twin for your subject, allowing for script-driven talking head sequences."
-          Icon={Wand2}
-          action={handleAiAvatar}
-          isActive={avatarGenerated}
-          isProcessing={processing === 'avatar'}
-          colorClass="text-pink-500"
-        />
-
-        <ToolCard
           id="localization"
-          title="Global Native"
-          desc="Hyper-native dubbing with voice cloning and AI lip-sync synchronization for global expansion."
+          title={t('creativeAI.dubbingTitle')}
+          desc={t('creativeAI.dubbingDesc')}
           Icon={Globe2}
           action={handleLocalization}
           isActive={localized}
@@ -435,8 +350,8 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
 
         <ToolCard
           id="outpainting"
-          title="Omni-Format"
-          desc="Generative outpainting and context-aware inpainting for non-destructive aspect ratio shifting."
+          title={t('creativeAI.outpaintTitle')}
+          desc={t('creativeAI.outpaintDesc')}
           Icon={Maximize2}
           action={handleOutpainting}
           isActive={outpainted}
@@ -444,18 +359,6 @@ export const CreativeAIView: React.FC<CreativeAIViewProps> = ({
           colorClass="text-sky-500"
         />
       </div>
-
-      <SwarmConsensusHUD
-        isVisible={showSwarmHUD}
-        taskName={swarmHUDTask}
-        onComplete={() => {
-          setShowSwarmHUD(false)
-          if (pendingAction) {
-            pendingAction()
-            setPendingAction(null)
-          }
-        }}
-      />
 
       <UpgradeModal
         open={!!upgrade}

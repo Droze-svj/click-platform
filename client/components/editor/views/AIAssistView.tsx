@@ -13,8 +13,6 @@ import {
   Target as TargetIcon,
   Activity,
   ArrowUpRight,
-  Layers,
-  Radio,
   Scissors,
   Wand2,
   ArrowDownToLine,
@@ -29,10 +27,10 @@ import { useState } from 'react'
 import { apiPost } from '../../../lib/api'
 
 const CREATIVITY_TIPS = [
-  { icon: TargetIcon, title: 'Hook Velocity', desc: 'Secure retention in the first 3s. Grab attention with a bold semantic claim.', id: 'edit' as EditorCategory, color: 'text-rose-400', bg: 'bg-rose-500/10' },
-  { icon: Type, title: 'Conversion Matrix', desc: 'Add "Subscribe" or "Link in Bio" nodes as calibrated text overlays.', id: 'edit' as EditorCategory, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-  { icon: Film, title: 'B-Roll Clusters', desc: 'Saturate dead air with visual variety. Inject B-roll from Neural Repository.', id: 'assets' as EditorCategory, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-  { icon: Zap, title: 'Semantic Sync', desc: 'Use Elite AI to bridge transcription and trim dead air nodes.', id: 'ai-edit' as EditorCategory, color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10' },
+  { icon: TargetIcon, title: 'Strong hook', desc: 'Grab attention in the first 3 seconds with a bold opening line.', id: 'edit' as EditorCategory, color: 'text-rose-400', bg: 'bg-rose-500/10' },
+  { icon: Type, title: 'Call to action', desc: 'Add "Subscribe" or "Link in bio" as a text overlay.', id: 'edit' as EditorCategory, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+  { icon: Film, title: 'B-roll', desc: 'Cover slow moments with B-roll from your media library.', id: 'assets' as EditorCategory, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+  { icon: Zap, title: 'Trim dead air', desc: 'Use AI edit to transcribe your video and cut the silent parts.', id: 'ai-edit' as EditorCategory, color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10' },
 ]
 
 interface AIAssistViewProps {
@@ -92,13 +90,13 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
 
   const handleFindSmartCuts = async () => {
     if (!videoId) {
-      showToast('No video ID available for analysis', 'error')
+      showToast('Open a video first', 'error')
       return
     }
 
     try {
       setIsFindingCuts(true)
-      showToast('Initializing Semantic Analysis Engine...', 'info')
+      showToast('Looking for cuts…', 'info')
       
       const response = await apiPost<{ data: any }>('/video/manual-editing/ai-assist/smart-cuts', {
         videoId,
@@ -109,13 +107,13 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
       const suggestions = response?.data?.suggestions || []
       if (suggestions.length > 0) {
         setAiSuggestions?.(suggestions)
-        showToast(`Identified ${suggestions.length} dead-air/smart-cut nodes. Check the timeline.`, 'success')
+        showToast(`Found ${suggestions.length} suggested cuts. Check the timeline.`, 'success')
       } else {
-        showToast('No sub-optimal clips detected. Pacing is optimal.', 'info')
+        showToast('No cuts suggested for this video.', 'info')
       }
     } catch (err: any) {
       console.error('Smart cut error', err)
-      showToast(err?.message || 'Cognitive analysis failed', 'error')
+      showToast(err?.message || "Couldn't find cuts. Please try again.", 'error')
     } finally {
       setIsFindingCuts(false)
     }
@@ -257,13 +255,13 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
           <div className="space-y-4">
             <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black uppercase tracking-[0.4em] italic text-emerald-400 shadow-xl">
               <Activity className="w-4 h-4 animate-pulse" />
-              Cognitive Support
+              Editing tips
             </div>
             <h2 className="text-5xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">
-              NEURAL<br />COGNITION
+              Make it<br />better
             </h2>
             <p className="text-slate-500 text-lg font-medium tracking-tight italic">
-              Calibrated editing insights to maximize <span className="text-white font-black italic underline decoration-emerald-500/30 underline-offset-8">Engagement Alpha</span>.
+              Quick ways to keep viewers watching.
             </p>
           </div>
         </div>
@@ -307,10 +305,10 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
           <div className="flex-1 space-y-4">
             <div className="flex items-center gap-4 text-fuchsia-400">
               <CheckCircle2 className="w-6 h-6" />
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] italic shadow-inner">Elite Node Protocol</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] italic shadow-inner">AI edit</span>
             </div>
             <p className="text-lg text-slate-400 font-medium italic pr-10">
-              For complete autonomous workflows including <span className="text-white font-black italic underline decoration-fuchsia-500/30">viral quote extraction</span> and auto-segments, initialize the Elite AI core.
+              For quote extraction and automatic segments, open AI edit.
             </p>
           </div>
 
@@ -322,7 +320,7 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
             className="px-12 py-6 bg-fuchsia-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] italic shadow-3xl shadow-fuchsia-600/40 border border-white/20 flex items-center gap-4 transition-all"
           >
             <Sparkles className="w-6 h-6" />
-            OPEN ELITE AI CORE
+            Open AI edit
           </m.button>
         </div>
       </m.div>
@@ -339,14 +337,14 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
         <div className="relative z-10 max-w-xl mx-auto space-y-6">
            <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-[0.4em] italic text-indigo-400 shadow-xl mx-auto">
               <Zap className="w-4 h-4" />
-              Timeline Polish
+              Timeline polish
             </div>
             
             <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase">
-              Semantic Smart Cuts
+              Smart cuts
             </h3>
             <p className="text-slate-400 font-medium italic text-lg pb-6">
-              Autonomously scan the timeline for dead air, repetitive phrases, and awkward pauses. We will mark the timeline with AI nodes for one-click removal.
+              Scan your video for dead air, repeated phrases and awkward pauses. Suggested cuts are marked on the timeline so you can remove them in one click.
             </p>
 
             <m.button
@@ -359,29 +357,18 @@ const AIAssistView: React.FC<AIAssistViewProps> = ({
               {isFindingCuts ? (
                 <>
                   <Activity className="w-5 h-5 animate-spin" />
-                  Analyzing Pacing...
+                  Analyzing…
                 </>
               ) : (
                 <>
                   <Zap className="w-5 h-5" />
-                  Find Smart Cuts
+                  Find cuts
                 </>
               )}
             </m.button>
         </div>
       </m.div>
 
-      {/* Status HUD */}
-      <m.div variants={itemVariants} className="flex items-center justify-between px-10 opacity-20 invisible md:visible">
-        <div className="flex items-center gap-4">
-          <Radio className="w-4 h-4 text-slate-500" />
-          <span className="text-[9px] font-black text-slate-700 uppercase tracking-widest italic">Uplink Stable</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <Layers className="w-4 h-4 text-slate-500" />
-          <span className="text-[9px] font-black text-slate-700 uppercase tracking-widest italic">Cognitive Node: 0x82A</span>
-        </div>
-      </m.div>
     </m.div>
   )
 }

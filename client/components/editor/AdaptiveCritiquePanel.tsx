@@ -2,24 +2,19 @@
 
 import React, { useState } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
-import { 
-  Music, 
-  Video, 
-  Image as ImageIcon, 
-  Smile, 
-  MessageSquare, 
-  ThumbsUp, 
-  ThumbsDown, 
-  RefreshCcw,
+import {
+  Music,
+  Video,
+  Smile,
+  ThumbsUp,
+  ThumbsDown,
   Sparkles,
-  Zap,
-  Globe,
   Cpu,
-  CheckCircle2,
-  XCircle,
   Brain
 } from 'lucide-react'
 import { apiPost } from '../../lib/api'
+import { useStyleProfile, type StyleProfile } from '../../hooks/useStyleProfile'
+import { useTranslation } from '../../hooks/useTranslation'
 
 interface Suggestion {
   id: string
@@ -38,13 +33,26 @@ interface AdaptiveCritiquePanelProps {
   showToast: (m: string, t: 'success' | 'info' | 'error') => void
 }
 
+// Facets of the real style profile (GET /api/style-profile) worth showing as
+// "what Click has learned". Each is a list of { key, count } picks.
+const LEARNED_FACETS: { facet: keyof Pick<StyleProfile, 'fonts' | 'captionStyles' | 'colorGrades' | 'transitions' | 'animations'>; labelKey: string }[] = [
+  { facet: 'fonts', labelKey: 'adaptiveCritique.facetFonts' },
+  { facet: 'captionStyles', labelKey: 'adaptiveCritique.facetCaptionStyles' },
+  { facet: 'colorGrades', labelKey: 'adaptiveCritique.facetColorGrades' },
+  { facet: 'transitions', labelKey: 'adaptiveCritique.facetTransitions' },
+  { facet: 'animations', labelKey: 'adaptiveCritique.facetAnimations' },
+]
+
 export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride, showToast }: AdaptiveCritiquePanelProps) {
+  const { t } = useTranslation()
+  const { profile, loaded } = useStyleProfile()
   const [learningFeedback, setLearningFeedback] = useState<Record<string, 'positive' | 'negative' | null>>({})
   const [activeTab, setActiveTab] = useState<'current' | 'learned'>('current')
 
   const handleFeedback = async (suggestionId: string, type: string, action: 'positive' | 'negative', original: any) => {
+    const previous = learningFeedback[suggestionId] ?? null
     setLearningFeedback(prev => ({ ...prev, [suggestionId]: action }))
-    
+
     try {
       // POST /ai/adaptive/feedback does not exist. /api/ai/feedback does, and is
       // explicitly the ONE endpoint for every AI surface — it upweights the trait
@@ -59,48 +67,54 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
         value: suggestionId,
         reason: action === 'negative' ? original?.reason || original?.action : undefined,
       })
-      
+
       showToast(
-        action === 'positive' 
-          ? "DNA alignment reinforced. Strategy locked." 
-          : "System re-learning... adjusting niche manifolds.", 
+        action === 'positive'
+          ? t('adaptiveCritique.feedbackPositive')
+          : t('adaptiveCritique.feedbackNegative'),
         'success'
       )
     } catch (err) {
       console.error(err)
+      setLearningFeedback(prev => ({ ...prev, [suggestionId]: previous }))
+      showToast(t('adaptiveCritique.feedbackFailed'), 'error')
     }
   }
 
+  const learned = LEARNED_FACETS
+    .map(({ facet, labelKey }) => {
+      const top = (profile[facet] || []).slice().sort((a, b) => (b.count || 0) - (a.count || 0))[0]
+      return top && top.count > 0 ? { facet, labelKey, key: top.key, count: top.count } : null
+    })
+    .filter((x): x is { facet: typeof LEARNED_FACETS[number]['facet']; labelKey: string; key: string; count: number } => !!x)
+
   return (
     <div className="lumina-card p-8 space-y-8 relative overflow-hidden group">
-      {/* Background Pulse */}
-      <div className="absolute top-[-20%] right-[-10%] w-[300px] h-[300px] bg-emerald-500/10 blur-[80px] rounded-full animate-pulse" />
-      
-      <div className="flex items-center justify-between mb-8 relative z-10">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8 relative z-10">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-emerald-500/20 rounded-2xl text-emerald-400 border border-emerald-500/30 shadow-xl shadow-emerald-500/10">
-            <Cpu className="w-6 h-6" />
+          <div className="p-3 bg-emerald-500/20 rounded-2xl text-emerald-400 border border-emerald-500/30">
+            <Cpu className="w-6 h-6" aria-hidden />
           </div>
           <div>
-            <h3 className="text-xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Adaptive Learning Matrix</h3>
-            <span className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.3em] mt-1 block">Live Niche Evolution Loop</span>
+            <h3 className="text-xl font-bold text-[var(--text-main)] tracking-tight leading-none">{t('adaptiveCritique.title')}</h3>
+            <span className="text-xs text-slate-500 mt-1 block">{t('adaptiveCritique.subtitle')}</span>
           </div>
         </div>
-        
+
         <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
           <button
             type="button"
             onClick={() => setActiveTab('current')}
-            className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'current' ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:text-white'}`}
+            className={`px-4 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${activeTab === 'current' ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:text-white'}`}
           >
-            Current AI
+            {t('adaptiveCritique.tabSuggestions')}
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('learned')}
-            className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeTab === 'learned' ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:text-white'}`}
+            className={`px-4 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${activeTab === 'learned' ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:text-white'}`}
           >
-            User DNA
+            {t('adaptiveCritique.tabLearned')}
           </button>
         </div>
       </div>
@@ -115,93 +129,106 @@ export default function AdaptiveCritiquePanel({ videoId, suggestions, onOverride
               exit={{ opacity: 0, x: 20 }}
               className="space-y-4"
             >
+              {suggestions.length === 0 && (
+                <p className="py-6 text-center text-sm text-slate-500">{t('adaptiveCritique.noSuggestions')}</p>
+              )}
               {suggestions.map((s) => (
-                <div key={s.id} className="p-6 bg-white/[0.03] hover:bg-white/[0.07] border border-white/5 hover:border-emerald-500/30 rounded-[2rem] transition-all flex items-center justify-between group/item">
+                <div key={s.id} className="p-6 bg-white/[0.03] hover:bg-white/[0.07] border border-white/5 hover:border-emerald-500/30 rounded-[2rem] transition-all flex flex-wrap items-center justify-between gap-4 group/item">
                   <div className="flex items-center gap-6">
-                    <div className="w-14 h-14 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center text-emerald-400 shadow-2xl">
-                      {s.type === 'music' && <Music className="w-6 h-6" />}
-                      {s.type === 'hook' && <Sparkles className="w-6 h-6" />}
-                      {s.type === 'gif' && <Smile className="w-6 h-6" />}
-                      {s.type === 'broll' && <Video className="w-6 h-6" />}
+                    <div className="w-14 h-14 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center text-emerald-400">
+                      {s.type === 'music' && <Music className="w-6 h-6" aria-hidden />}
+                      {s.type === 'hook' && <Sparkles className="w-6 h-6" aria-hidden />}
+                      {s.type === 'gif' && <Smile className="w-6 h-6" aria-hidden />}
+                      {s.type === 'broll' && <Video className="w-6 h-6" aria-hidden />}
                     </div>
                     <div>
-                      <h4 className="text-sm font-black text-[var(--text-main)] uppercase italic tracking-tighter leading-none mb-2">
+                      <h4 className="text-sm font-bold text-[var(--text-main)] tracking-tight leading-none mb-2">
                         {s.title}
-                        <span className="ml-3 px-2 py-0.5 rounded-full bg-emerald-500/20 text-[8px] text-emerald-400 tracking-widest">
-                          {Math.round(s.confidence * 100)}% Match
-                        </span>
+                        {typeof s.confidence === 'number' && Number.isFinite(s.confidence) && (
+                          <span className="ml-3 px-2 py-0.5 rounded-full bg-emerald-500/20 text-[10px] font-semibold text-emerald-400">
+                            {t('adaptiveCritique.confidence', { score: Math.round(Math.min(1, Math.max(0, s.confidence)) * 100) })}
+                          </span>
+                        )}
                       </h4>
-                      <p className="text-[10px] text-slate-500 font-medium italic max-w-sm">{s.reason}</p>
+                      <p className="text-xs text-slate-500 font-medium max-w-sm">{s.reason}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
-                    <m.button 
+                    <m.button
+                      type="button"
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleFeedback(s.id, s.type, 'positive', s)}
+                      aria-label={t('adaptiveCritique.thumbsUp')}
+                      title={t('adaptiveCritique.thumbsUp')}
                       className={`p-3 rounded-xl border transition-all ${learningFeedback[s.id] === 'positive' ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-white/5 text-slate-500 border-white/5 hover:text-emerald-400 hover:border-emerald-500/30'}`}
                     >
-                      <ThumbsUp className="w-4 h-4" />
+                      <ThumbsUp className="w-4 h-4" aria-hidden />
                     </m.button>
-                    <m.button 
+                    <m.button
+                      type="button"
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleFeedback(s.id, s.type, 'negative', s)}
+                      aria-label={t('adaptiveCritique.thumbsDown')}
+                      title={t('adaptiveCritique.thumbsDown')}
                       className={`p-3 rounded-xl border transition-all ${learningFeedback[s.id] === 'negative' ? 'bg-rose-600 text-white border-rose-500' : 'bg-white/5 text-slate-500 border-white/5 hover:text-rose-400 hover:border-rose-500/30'}`}
                     >
-                      <ThumbsDown className="w-4 h-4" />
+                      <ThumbsDown className="w-4 h-4" aria-hidden />
                     </m.button>
                     <div className="w-px h-6 bg-white/10 mx-1" />
                     <button
                       type="button"
                       onClick={() => onOverride(s.type, s)}
-                      className="px-4 py-2 bg-white/10 hover:bg-white text-slate-400 hover:text-black rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+                      className="px-4 py-2 bg-white/10 hover:bg-white text-slate-400 hover:text-black rounded-xl text-[11px] font-semibold transition-all"
                     >
-                      Override
+                      {t('adaptiveCritique.override')}
                     </button>
                   </div>
                 </div>
               ))}
             </m.div>
           ) : (
+            // Real data only: the top pick per facet from the creator's saved
+            // style profile. This tab used to show a hard-coded "learned 4
+            // stylistic nuances / +12% Energy Preference / Sarcastic bias".
             <m.div
               key="learned"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="p-10 text-center space-y-6"
+              className="p-6 space-y-6"
             >
-              <div className="w-20 h-20 bg-emerald-500/10 rounded-[2.5rem] border border-emerald-500/20 flex items-center justify-center mx-auto shadow-2xl">
-                <Brain className="w-10 h-10 text-emerald-400 animate-pulse" />
-              </div>
-              <div>
-                <h4 className="text-xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Personal DNA Evolving</h4>
-                <p className="text-xs text-slate-500 font-medium italic mt-2">CLICK has learned 4 stylistic nuances from your recent revisions.</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-left">
-                  <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest block mb-2">Pacing Drift</span>
-                  <p className="text-[10px] text-white font-black italic">+12% Energy Preference</p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 flex items-center justify-center">
+                  <Brain className="w-6 h-6 text-emerald-400" aria-hidden />
                 </div>
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-left">
-                  <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest block mb-2">Vibe Cluster</span>
-                  <p className="text-[10px] text-white font-black italic">Sarcastic / Witty Bias</p>
+                <div>
+                  <h4 className="text-base font-bold text-[var(--text-main)]">{t('adaptiveCritique.learnedTitle')}</h4>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {!loaded
+                      ? t('adaptiveCritique.learnedLoading')
+                      : learned.length === 0
+                        ? t('adaptiveCritique.learnedEmpty')
+                        : t('adaptiveCritique.learnedFrom', { count: profile.totalPicks })}
+                  </p>
                 </div>
               </div>
+              {learned.length > 0 && (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {learned.map(item => (
+                    <div key={item.facet} className="p-4 bg-white/5 rounded-2xl border border-white/10 text-left">
+                      <span className="text-[11px] font-semibold text-emerald-400 block mb-2">{t(item.labelKey)}</span>
+                      <p className="text-sm text-white font-semibold truncate" title={item.key}>{item.key}</p>
+                      <p className="text-[11px] text-slate-500 mt-1">{t('adaptiveCritique.pickedTimes', { count: item.count })}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </m.div>
           )}
         </AnimatePresence>
-      </div>
-
-      <div className="pt-8 border-t border-white/5 flex items-center justify-between relative z-10">
-        <div className="flex items-center gap-3">
-          <Zap className="w-4 h-4 text-emerald-400" />
-          <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] italic">Continuous Learning Loop: ONLINE</p>
-        </div>
-        <button className="text-[9px] font-black text-white px-4 py-2 bg-emerald-600/20 border border-emerald-500/30 rounded-xl hover:bg-emerald-600 hover:text-white transition-all uppercase tracking-widest">
-          View Learning Logs
-        </button>
       </div>
     </div>
   )

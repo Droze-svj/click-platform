@@ -1,26 +1,19 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
-import { 
-  Shield, 
-  Search, 
-  Filter, 
-  FileText, 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock, 
-  BarChart2, 
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import {
+  Shield,
+  Search,
+  FileText,
+  AlertTriangle,
   Download,
-  Info,
   ChevronDown,
-  User,
   Zap,
-  Lock
+  Activity,
+  Lock,
 } from 'lucide-react'
-import axios from 'axios'
+import { apiGet } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
 
 interface AuditLog {
   _id: string
@@ -31,82 +24,71 @@ interface AuditLog {
     _id: string
     name: string
     email: string
-  }
+  } | null
   details: any
   timestamp: string
-  isVerified?: boolean
 }
 
-interface ComplianceMetrics {
-  totalChecks: number
-  passRate: number
-  topIssues: Array<{ type: string; count: number }>
-  riskTrend: Array<{ date: string; score: number }>
+// GET /api/enterprise/workspaces/:id/audit-logs/analytics (last 30 days)
+interface AuditAnalytics {
+  totalActions: number
+  complianceEvents: number
+  securityEvents: number
 }
 
 export default function EnterpriseGovernance() {
   const { t } = useTranslation()
   const [logs, setLogs] = useState<AuditLog[]>([])
-  const [metrics, setMetrics] = useState<ComplianceMetrics | null>(null)
+  const [totalLogs, setTotalLogs] = useState<number | null>(null)
+  const [metrics, setMetrics] = useState<AuditAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [workspaceId, setWorkspaceId] = useState<string>('')
   const [workspaces, setWorkspaces] = useState<any[]>([])
-  const [filter, setFilter] = useState({
-    action: '',
-    resourceType: '',
-    startDate: '',
-    endDate: ''
-  })
+  const [query, setQuery] = useState('')
+  const [downloading, setDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
 
   const loadWorkspaces = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_URL}/enterprise/workspaces`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (response.data.success) {
-        const wsList = response.data.data.workspaces
-        setWorkspaces(wsList)
-        if (wsList.length > 0) setWorkspaceId(wsList[0]._id)
-      }
+      const res: any = await apiGet('/enterprise/workspaces', undefined, false)
+      const wsList = Array.isArray(res?.data?.workspaces) ? res.data.workspaces : []
+      setWorkspaces(wsList)
+      if (wsList.length > 0) setWorkspaceId(wsList[0]._id)
+      else setLoading(false)
     } catch (error) {
       console.error('Error loading workspaces:', error)
+      setLoadError(true)
+      setLoading(false)
     }
   }, [])
 
   const loadLogs = useCallback(async () => {
     if (!workspaceId) return
     setLoading(true)
+    setLoadError(false)
     try {
-      const token = localStorage.getItem('token')
-      const params = new URLSearchParams(filter)
-      const response = await axios.get(
-        `${API_URL}/enterprise/workspaces/${workspaceId}/audit-logs?${params.toString()}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      if (response.data.success) {
-        setLogs(response.data.data.logs || [])
-      }
+      const res: any = await apiGet(`/enterprise/workspaces/${workspaceId}/audit-logs`, undefined, false)
+      setLogs(Array.isArray(res?.data?.logs) ? res.data.logs : [])
+      setTotalLogs(Number.isFinite(Number(res?.data?.total)) ? Number(res.data.total) : null)
     } catch (error) {
       console.error('Error loading logs:', error)
+      setLogs([])
+      setTotalLogs(null)
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
-  }, [workspaceId, filter])
+  }, [workspaceId])
 
   const loadAnalytics = useCallback(async () => {
     if (!workspaceId) return
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(
-        `${API_URL}/enterprise/workspaces/${workspaceId}/audit-logs/analytics`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      if (response.data.success) {
-        setMetrics(response.data.data)
-      }
+      const res: any = await apiGet(`/enterprise/workspaces/${workspaceId}/audit-logs/analytics`, undefined, false)
+      setMetrics(res?.data && typeof res.data === 'object' ? res.data : null)
     } catch (error) {
       console.error('Error loading analytics:', error)
+      setMetrics(null)
     }
   }, [workspaceId])
 
@@ -121,249 +103,218 @@ export default function EnterpriseGovernance() {
     }
   }, [workspaceId, loadLogs, loadAnalytics])
 
+  // GET /api/enterprise/workspaces/:id/compliance/report — saved as JSON.
+  const downloadReport = async () => {
+    if (!workspaceId) return
+    setDownloading(true)
+    setDownloadError(null)
+    try {
+      const res: any = await apiGet(`/enterprise/workspaces/${workspaceId}/compliance/report`, undefined, false)
+      const blob = new Blob([JSON.stringify(res?.data ?? res, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `compliance-report-${workspaceId}.json`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Compliance report download failed:', error)
+      setDownloadError(t('enterpriseGovernance.downloadFailed'))
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  const filteredLogs = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return logs
+    return logs.filter(log =>
+      [log.action, log.resourceType, log.userId?.name, log.userId?.email]
+        .some(v => typeof v === 'string' && v.toLowerCase().includes(q))
+    )
+  }, [logs, query])
+
+  const num = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v).toLocaleString() : '—')
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#0f172a] p-6 rounded-3xl border border-gray-100 dark:border-white/5 shadow-xl shadow-blue-500/5">
         <div>
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-500 flex items-center gap-3">
-            <Shield className="w-8 h-8 text-blue-600" />
+            <Shield className="w-8 h-8 text-blue-600" aria-hidden="true" />
             {t('enterpriseGovernance.title')}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            {t('enterpriseGovernance.subtitle')}
+            {t('enterpriseGovernance.subtitleReal')}
           </p>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <select
-              value={workspaceId}
-              title={t('enterpriseGovernance.selectWorkspace')}
-              onChange={(e) => setWorkspaceId(e.target.value)}
-              className="appearance-none bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-4 py-2 pr-10 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none"
-            >
-              {workspaces.map(ws => (
-                <option key={ws._id} value={ws._id}>{ws.name}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none opacity-50" />
+
+        {workspaces.length > 0 && (
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <select
+                  value={workspaceId}
+                  title={t('enterpriseGovernance.selectWorkspace')}
+                  aria-label={t('enterpriseGovernance.selectWorkspace')}
+                  onChange={(e) => setWorkspaceId(e.target.value)}
+                  className="appearance-none bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-4 py-2 pr-10 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  {workspaces.map(ws => (
+                    <option key={ws._id} value={ws._id}>{ws.name}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none opacity-50" aria-hidden="true" />
+              </div>
+              <button
+                type="button"
+                onClick={downloadReport}
+                disabled={downloading}
+                title={t('enterpriseGovernance.downloadReport')}
+                aria-label={t('enterpriseGovernance.downloadReport')}
+                className="p-2 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 disabled:opacity-60"
+              >
+                <Download className={`w-5 h-5 ${downloading ? 'animate-pulse' : ''}`} aria-hidden="true" />
+              </button>
+            </div>
+            {downloadError && <p role="alert" className="text-xs text-rose-500">{downloadError}</p>}
           </div>
-          <button title={t('enterpriseGovernance.downloadGovernanceReport')} className="p-2 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
-            <Download className="w-5 h-5" />
-          </button>
-        </div>
+        )}
       </div>
 
-      {/* Analytics Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {loadError && (
+        <div role="alert" className="flex items-center gap-3 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-sm font-medium">
+          <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" /> {t('enterpriseGovernance.loadFailed')}
+        </div>
+      )}
+
+      {!loading && !loadError && workspaces.length === 0 ? (
+        <div className="bg-white dark:bg-[#0f172a] p-10 rounded-3xl border border-gray-100 dark:border-white/5 text-center text-sm text-gray-500 dark:text-gray-400">
+          {t('enterpriseGovernance.noWorkspaces')}
+        </div>
+      ) : (
+      <>
+      {/* Counts — straight from the audit log analytics (last 30 days) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <MetricCard
-          title={t('enterpriseGovernance.complianceScore')}
-          value="98.2%"
-          trend="+1.2%"
-          icon={Zap}
+          title={t('enterpriseGovernance.metricActions')}
+          value={num(metrics?.totalActions)}
+          icon={Activity}
           color="blue"
         />
         <MetricCard
-          title={t('enterpriseGovernance.activeRiskFlags')}
-          value={metrics?.totalChecks ? "3" : "0"}
-          trend={t('enterpriseGovernance.decreasing')}
-          icon={AlertTriangle}
-          color="amber"
-        />
-        <MetricCard
-          title={t('enterpriseGovernance.humanReviews')}
-          value="12"
-          trend={t('enterpriseGovernance.avgSla')}
-          icon={User}
+          title={t('enterpriseGovernance.metricPrivacyEvents')}
+          value={num(metrics?.complianceEvents)}
+          icon={Lock}
           color="indigo"
         />
         <MetricCard
-          title={t('enterpriseGovernance.dataIntegrity')}
-          value={t('enterpriseGovernance.verified')}
-          trend={t('enterpriseGovernance.aes256Active')}
-          icon={Lock}
-          color="green"
+          title={t('enterpriseGovernance.metricSecurityEvents')}
+          value={num(metrics?.securityEvents)}
+          icon={AlertTriangle}
+          color="amber"
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Audit Log Table */}
-        <div className="lg:col-span-2 bg-white dark:bg-[#0f172a] rounded-3xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-xl shadow-blue-500/5">
-          <div className="p-6 border-b border-gray-50 dark:border-white/5 flex items-center justify-between">
-            <h2 className="font-bold text-lg flex items-center gap-2">
-              <FileText className="w-5 h-5 text-blue-500" />
-              {t('enterpriseGovernance.realTimeAuditTrail')}
-            </h2>
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-30" />
-                <input
-                  type="text"
-                  placeholder={t('enterpriseGovernance.searchLogsPlaceholder')}
-                  className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl pl-9 pr-4 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <button title={t('enterpriseGovernance.filterLogs')} className="p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl border border-gray-100 dark:border-white/5">
-                <Filter className="w-4 h-4 opacity-50" />
-              </button>
-            </div>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 dark:bg-white/[0.02] text-gray-500 dark:text-gray-400 font-medium uppercase text-[10px] tracking-wider">
-                <tr>
-                  <th className="px-6 py-4">{t('enterpriseGovernance.colAction')}</th>
-                  <th className="px-6 py-4">{t('enterpriseGovernance.colUser')}</th>
-                  <th className="px-6 py-4">{t('enterpriseGovernance.colResource')}</th>
-                  <th className="px-6 py-4">{t('enterpriseGovernance.colTimestamp')}</th>
-                  <th className="px-6 py-4">{t('enterpriseGovernance.colStatus')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-white/5">
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td colSpan={5} className="px-6 py-8 h-4 bg-gray-100/50 dark:bg-white/5 rounded-lg mb-2"></td>
-                    </tr>
-                  ))
-                ) : logs.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center opacity-40 italic">
-                      {t('enterpriseGovernance.noLogsFound')}
-                    </td>
-                  </tr>
-                ) : logs.map(log => (
-                  <tr key={log._id} className="hover:bg-gray-50/50 dark:hover:bg-white/[0.01] transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-                          <Zap className="w-4 h-4 text-blue-500" />
-                        </div>
-                        <span className="font-semibold text-gray-900 dark:text-white capitalize">
-                          {log.action.replace(/_/g, ' ')}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-medium">{log.userId?.name || t('enterpriseGovernance.systemUser')}</span>
-                        <span className="text-[10px] opacity-50">{log.userId?.email}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-1 bg-gray-100 dark:bg-white/5 rounded-lg text-[10px] font-mono">
-                        {log.resourceType.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-xs opacity-60">
-                      {new Date(log.timestamp).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className={`flex items-center gap-1 text-xs font-bold uppercase tracking-tighter ${
-                        log.isVerified !== false ? 'text-green-500' : 'text-rose-500'
-                      }`}>
-                        {log.isVerified !== false ? (
-                          <><CheckCircle className="w-3 h-3" /> {t('enterpriseGovernance.statusVerified')}</>
-                        ) : (
-                          <><AlertTriangle className="w-3 h-3" /> {t('enterpriseGovernance.statusTampered')}</>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Audit Log Table */}
+      <div className="bg-white dark:bg-[#0f172a] rounded-3xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-xl shadow-blue-500/5">
+        <div className="p-6 border-b border-gray-50 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h2 className="font-bold text-lg flex items-center gap-2">
+            <FileText className="w-5 h-5 text-blue-500" aria-hidden="true" />
+            {t('enterpriseGovernance.auditLog')}
+            {totalLogs !== null && <span className="text-xs font-medium text-gray-400">({totalLogs.toLocaleString()})</span>}
+          </h2>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-30" aria-hidden="true" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t('enterpriseGovernance.searchLogsPlaceholder')}
+              aria-label={t('enterpriseGovernance.searchLogsPlaceholder')}
+              className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl pl-9 pr-4 py-1.5 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
         </div>
 
-        {/* Right Sidebar - Compliance Pulse */}
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-[#0f172a] p-6 rounded-3xl border border-gray-100 dark:border-white/5 shadow-xl shadow-blue-500/5">
-            <h3 className="font-bold flex items-center gap-2 mb-4">
-              <BarChart2 className="w-5 h-5 text-indigo-500" />
-              {t('enterpriseGovernance.ethicsBreakdown')}
-            </h3>
-            <div className="space-y-4">
-              <ProgressItem label={t('enterpriseGovernance.aiTransparency')} value={95} color="blue" />
-              <ProgressItem label={t('enterpriseGovernance.biasMitigation')} value={88} color="indigo" />
-              <ProgressItem label={t('enterpriseGovernance.ipCompliance')} value={92} color="green" />
-              <ProgressItem label={t('enterpriseGovernance.gdprResidency')} value={100} color="emerald" />
-            </div>
-            
-            <div className="mt-6 p-4 bg-blue-500/5 rounded-2xl border border-blue-500/10">
-              <div className="flex gap-3">
-                <Info className="w-5 h-5 text-blue-500 shrink-0" />
-                <p className="text-[10px] leading-relaxed text-blue-600 dark:text-blue-400 font-medium">
-                  {t('enterpriseGovernance.complianceNotice')}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-indigo-600 to-blue-700 p-6 rounded-3xl text-white shadow-xl shadow-blue-500/20 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
-              <Shield className="w-32 h-32" />
-            </div>
-            <div className="relative z-10">
-              <h3 className="font-bold text-xl mb-2">{t('enterpriseGovernance.dmaDsaReady')}</h3>
-              <p className="text-white/70 text-xs leading-relaxed mb-4">
-                {t('enterpriseGovernance.dmaDsaDescription')}
-              </p>
-              <button className="w-full py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl text-xs font-bold transition-all">
-                {t('enterpriseGovernance.downloadCompliancePack')}
-              </button>
-            </div>
-          </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-gray-50 dark:bg-white/[0.02] text-gray-500 dark:text-gray-400 font-medium uppercase text-[10px] tracking-wider">
+              <tr>
+                <th className="px-6 py-4">{t('enterpriseGovernance.colAction')}</th>
+                <th className="px-6 py-4">{t('enterpriseGovernance.colUser')}</th>
+                <th className="px-6 py-4">{t('enterpriseGovernance.colResource')}</th>
+                <th className="px-6 py-4">{t('enterpriseGovernance.colTimestamp')}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50 dark:divide-white/5">
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td colSpan={4} className="px-6 py-8 h-4 bg-gray-100/50 dark:bg-white/5 rounded-lg mb-2"></td>
+                  </tr>
+                ))
+              ) : filteredLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-6 py-12 text-center opacity-60 italic">
+                    {t('enterpriseGovernance.noLogsFound')}
+                  </td>
+                </tr>
+              ) : filteredLogs.map(log => (
+                <tr key={log._id} className="hover:bg-gray-50/50 dark:hover:bg-white/[0.01] transition-colors group">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <Zap className="w-4 h-4 text-blue-500" aria-hidden="true" />
+                      </div>
+                      <span className="font-semibold text-gray-900 dark:text-white capitalize">
+                        {String(log.action || '').replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="font-medium">{log.userId?.name || t('enterpriseGovernance.systemUser')}</span>
+                      <span className="text-[10px] opacity-50">{log.userId?.email}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="px-2 py-1 bg-gray-100 dark:bg-white/5 rounded-lg text-[10px] font-mono">
+                      {String(log.resourceType || '—').toUpperCase()}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-xs opacity-60">
+                    {log.timestamp ? new Date(log.timestamp).toLocaleString() : '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }
 
-function MetricCard({ title, value, trend, icon: Icon, color }: any) {
-  const colors: any = {
+function MetricCard({ title, value, icon: Icon, color }: { title: string; value: string; icon: any; color: 'blue' | 'amber' | 'indigo' }) {
+  const colors: Record<string, string> = {
     blue: 'text-blue-600 bg-blue-500/10',
     amber: 'text-amber-600 bg-amber-500/10',
     indigo: 'text-indigo-600 bg-indigo-500/10',
-    green: 'text-green-600 bg-green-500/10'
   }
 
   return (
-    <div className="bg-white dark:bg-[#0f172a] p-6 rounded-3xl border border-gray-100 dark:border-white/5 shadow-xl shadow-blue-500/5 hover:scale-[1.02] transition-all cursor-default">
+    <div className="bg-white dark:bg-[#0f172a] p-6 rounded-3xl border border-gray-100 dark:border-white/5 shadow-xl shadow-blue-500/5">
       <div className={`w-12 h-12 rounded-2xl ${colors[color]} flex items-center justify-center mb-4 shadow-inner`}>
-        <Icon className="w-6 h-6" />
+        <Icon className="w-6 h-6" aria-hidden="true" />
       </div>
       <h4 className="text-gray-500 dark:text-gray-400 text-xs font-medium uppercase tracking-wider">{title}</h4>
-      <div className="flex items-end gap-2 mt-1">
-        <span className="text-2xl font-black text-gray-900 dark:text-white">{value}</span>
-        <span className="text-[10px] font-bold text-blue-500 mb-1">{trend}</span>
-      </div>
-    </div>
-  )
-}
-
-function ProgressItem({ label, value, color }: any) {
-  const barColors: any = {
-    blue: 'bg-blue-500',
-    indigo: 'bg-indigo-500',
-    green: 'bg-green-500',
-    emerald: 'bg-emerald-500'
-  }
-
-  return (
-    <div className="space-y-1.5">
-      <div className="flex justify-between text-xs font-bold">
-        <span className="opacity-60">{label}</span>
-        <span className="text-blue-500">{value}%</span>
-      </div>
-      <div className="h-1.5 w-full bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
-        <div 
-          className={`h-full ${barColors[color]} rounded-full transition-all duration-1000`} 
-          style={{ width: `${value}%` }}
-        />
-      </div>
+      <span className="text-2xl font-black text-gray-900 dark:text-white mt-1 block">{value}</span>
     </div>
   )
 }

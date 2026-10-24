@@ -19,22 +19,77 @@ router.get('/fleet/status', auth, async (req, res) => {
   }
 });
 
+// Bound a dependency probe so one hung service can't stall the whole response.
+function probeWithTimeout(promise, ms, fallback) {
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise((resolve) => { timer = setTimeout(() => resolve(fallback), ms); })
+  ]).finally(() => clearTimeout(timer));
+}
+
+// Real cache status: ping the shared Redis client the app already holds. No
+// client (Redis not configured or not connected) is reported as such — never
+// as "connected".
+async function probeCache() {
+  let redisCache;
+  try { redisCache = require('../utils/redisCache'); } catch (_) { redisCache = null; }
+  if (!redisCache || !redisCache.isConnected || !redisCache.client) {
+    return { status: process.env.REDIS_URL ? 'disconnected' : 'not configured', type: 'Redis', latency: null };
+  }
+  try {
+    const start = Date.now();
+    const TIMED_OUT = Symbol('timeout');
+    const reply = await probeWithTimeout(redisCache.client.ping(), 2000, TIMED_OUT);
+    if (reply === TIMED_OUT) return { status: 'timeout', type: 'Redis', latency: null };
+    return { status: 'connected', type: 'Redis', latency: `${Date.now() - start}ms` };
+  } catch (err) {
+    return { status: 'error', type: 'Redis', latency: null, error: err.message };
+  }
+}
+
+// Real queue status: the waiting count of the main processing queue, or
+// "not configured" when BullMQ has no Redis connection to run on.
+async function probeQueue() {
+  let jobQueue;
+  try { jobQueue = require('../services/jobQueueService'); } catch (_) { jobQueue = null; }
+  if (!jobQueue || typeof jobQueue.getRedisConnection !== 'function' || !jobQueue.getRedisConnection()) {
+    return { status: 'not configured', type: 'BullMQ', pending: null };
+  }
+  try {
+    const stats = await probeWithTimeout(
+      jobQueue.getQueueStats('video-processing'),
+      3000,
+      null
+    );
+    if (!stats) return { status: 'timeout', type: 'BullMQ', pending: null };
+    return { status: 'active', type: 'BullMQ', pending: stats.waiting };
+  } catch (err) {
+    return { status: 'error', type: 'BullMQ', pending: null, error: err.message };
+  }
+}
+
 router.get('/fleet/health', auth, async (req, res) => {
   try {
     const dbHealth = dbConfig.getDatabaseHealth();
-    
-    // Simulate other dependency checks
+    const [cache, queue] = await Promise.all([probeCache(), probeQueue()]);
+
+    let version = null;
+    try { version = require('../../package.json').version || null; } catch (_) { version = null; }
+
     const health = {
       database: dbHealth,
-      cache: { status: 'connected', type: 'Redis', latency: '4ms' },
-      queue: { status: 'active', type: 'BullMQ', pending: 0 },
-      api: { status: 'operational', version: 'v3.1.0' },
+      cache,
+      queue,
+      // The API is answering this request, so it is operational by definition.
+      api: { status: 'operational', version },
       timestamp: new Date()
     };
-    
+
     res.json(health);
   } catch (err) {
-    res.status(500).json({ error: 'Integrity check failed' });
+    logger.error('Fleet health check failed', { error: err.message });
+    res.status(500).json({ error: 'Health check failed' });
   }
 });
 

@@ -1,56 +1,62 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 /**
  * useCompetitorGhosting.ts
- * Loads pacing and retention heatmap data from top-performing benchmarks (e.g. MrBeast intros).
- * Exposes a normalized curve that can be overlaid onto the user's timeline.
+ * Example pacing templates that can be overlaid onto the user's timeline as a
+ * dashed "energy" curve for comparison.
+ *
+ * These are hand-written EXAMPLE shapes (a fast-paced edit and a steady
+ * explainer) — they are not measured from any real creator or channel, and the
+ * UI must label them as examples. (Hook/export names are kept for callers.)
  */
 
-export interface CompetitorProfile {
+export interface PacingTemplate {
   id: string;
-  name: string;
-  category: string;
-  pacingCurve: { timePct: number; energy: number }[]; // 0.0 to 1.0
-  averageCutsPerMinute: number;
+  /** i18n key for the template's display name. */
+  nameKey: string;
+  /** i18n key for a short display name (toolbar button). */
+  shortNameKey: string;
+  pacingCurve: { timePct: number; energy: number }[]; // timePct 0.0 to 1.0, energy 0 to 100
 }
 
-const MOCK_PROFILES: CompetitorProfile[] = [
+/** @deprecated use PacingTemplate — kept so existing imports keep compiling. */
+export type CompetitorProfile = PacingTemplate;
+
+const EXAMPLE_PACING_TEMPLATES: PacingTemplate[] = [
   {
-    id: 'mrbeast-hyper',
-    name: 'Jimmy (Hyper-Retention)',
-    category: 'Entertainment',
-    averageCutsPerMinute: 45,
+    id: 'example-fast-paced',
+    nameKey: 'timelineView.pacingFastPaced',
+    shortNameKey: 'timelineView.pacingFastPacedShort',
     pacingCurve: [
-      { timePct: 0.0, energy: 100 }, // Huge hook
+      { timePct: 0.0, energy: 100 }, // strong hook
       { timePct: 0.1, energy: 90 },
       { timePct: 0.2, energy: 85 },
-      { timePct: 0.3, energy: 95 }, // Re-hook
+      { timePct: 0.3, energy: 95 }, // re-hook
       { timePct: 0.5, energy: 80 },
       { timePct: 0.7, energy: 85 },
-      { timePct: 0.9, energy: 95 }, // Climax
+      { timePct: 0.9, energy: 95 }, // climax
       { timePct: 1.0, energy: 60 },
     ],
   },
   {
-    id: 'hormozi-value',
-    name: 'Value Drop (Educational)',
-    category: 'Business',
-    averageCutsPerMinute: 20,
+    id: 'example-steady-explainer',
+    nameKey: 'timelineView.pacingExplainer',
+    shortNameKey: 'timelineView.pacingExplainerShort',
     pacingCurve: [
       { timePct: 0.0, energy: 85 },
       { timePct: 0.1, energy: 70 },
-      { timePct: 0.3, energy: 60 }, // Steady explanation
-      { timePct: 0.5, energy: 85 }, // Value drop
+      { timePct: 0.3, energy: 60 }, // steady explanation
+      { timePct: 0.5, energy: 85 }, // key point
       { timePct: 0.6, energy: 60 },
-      { timePct: 0.8, energy: 90 }, // Call to action start
+      { timePct: 0.8, energy: 90 }, // call to action
       { timePct: 1.0, energy: 75 },
     ],
-  }
+  },
 ];
 
 export function useCompetitorGhosting() {
-  const [activeProfile, setActiveProfile] = useState<CompetitorProfile | null>(null);
-  const [profiles] = useState<CompetitorProfile[]>(MOCK_PROFILES);
+  const [activeProfile, setActiveProfile] = useState<PacingTemplate | null>(null);
+  const [profiles] = useState<PacingTemplate[]>(EXAMPLE_PACING_TEMPLATES);
 
   const loadGhostCurve = (profileId: string) => {
     const profile = profiles.find(p => p.id === profileId);
@@ -64,7 +70,7 @@ export function useCompetitorGhosting() {
   };
 
   /**
-   * Helper to map a normalized time (0 to 1) to the ghost's expected energy (0 to 100)
+   * Map a normalized time (0 to 1) to the template's example energy (0 to 100)
    */
   const getExpectedEnergyAtTime = (timePct: number): number => {
     if (!activeProfile) return 0;

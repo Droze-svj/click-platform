@@ -29,6 +29,7 @@ import { apiGet, apiPost } from '../../lib/api'
 import type { EditorCategory } from '../../types/editor'
 import { Badge } from '../ui'
 import { cn } from '../../lib/utils'
+import { useTranslation } from '../../hooks/useTranslation'
 
 const STYLE_INSIGHT_TIMEOUT_MS = 8000
 
@@ -92,6 +93,7 @@ export default function QuickActionsBar({
   autoViralBusy,
   showToast,
 }: Props) {
+  const { t } = useTranslation()
   const [insight, setInsight] = useState<StyleInsight | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const pendingRef = useRef(false)
@@ -125,7 +127,7 @@ export default function QuickActionsBar({
   const handleGenerateVariants = async () => {
     if (busy) return
     if (!baseContent || !baseContent.trim()) {
-      showToast?.('Add a caption or hook first so the variant generator has something to riff on.', 'info')
+      showToast?.(t('quickActionsBar.variantsNeedBase'), 'info')
       return
     }
     setBusy('variants')
@@ -133,9 +135,9 @@ export default function QuickActionsBar({
       const res: any = await apiPost('/ai/variants', { content: baseContent, count: 3 })
       const variants: string[] = res?.data?.variants || res?.variants || []
       if (variants.length === 0) {
-        showToast?.('No variants returned — try a longer base hook.', 'info')
+        showToast?.(t('quickActionsBar.noVariants'), 'info')
       } else {
-        showToast?.(`Generated ${variants.length} variants — open A/B picker to preview.`, 'success')
+        showToast?.(t('quickActionsBar.variantsGenerated', { count: variants.length }), 'success')
         // Broadcast so the editor (or A/B drawer) can pick them up without
         // tight coupling. Listeners attach in EditorMain or wherever the
         // variant picker lives.
@@ -146,7 +148,7 @@ export default function QuickActionsBar({
         }
       }
     } catch (err: any) {
-      showToast?.(`Variants failed: ${err?.message || 'unknown error'}`, 'error')
+      showToast?.(t('quickActionsBar.variantsFailed', { error: err?.message || t('quickActionsBar.unknownError') }), 'error')
     } finally {
       setBusy(null)
     }
@@ -161,7 +163,7 @@ export default function QuickActionsBar({
   const handleSuggestBRoll = async () => {
     if (busy) return
     if (!contentId) {
-      showToast?.('Load a clip first to suggest B-roll.', 'info')
+      showToast?.(t('quickActionsBar.brollNeedsClip'), 'info')
       return
     }
     setBusy('broll')
@@ -169,9 +171,9 @@ export default function QuickActionsBar({
       const res: any = await apiPost(`/video/ai-editing/broll/${contentId}`, {})
       const plan = res?.data?.plan || res?.plan || []
       if (!Array.isArray(plan) || plan.length === 0) {
-        showToast?.('No B-roll gaps detected — your clip is already visually dense.', 'info')
+        showToast?.(t('quickActionsBar.noBrollGaps'), 'info')
       } else {
-        showToast?.(`Suggested ${plan.length} B-roll insertions. Open the timeline to review.`, 'success')
+        showToast?.(t('quickActionsBar.brollSuggested', { count: plan.length }), 'success')
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('click:broll-plan', {
             detail: { contentId, plan },
@@ -179,7 +181,7 @@ export default function QuickActionsBar({
         }
       }
     } catch (err: any) {
-      showToast?.(`B-roll suggest failed: ${err?.message || 'unknown error'}`, 'error')
+      showToast?.(t('quickActionsBar.brollFailed', { error: err?.message || t('quickActionsBar.unknownError') }), 'error')
     } finally {
       setBusy(null)
     }
@@ -198,15 +200,15 @@ export default function QuickActionsBar({
       const sounds = trends?.sounds?.length || 0
       const hashtags = trends?.hashtags?.length || 0
       if (sounds === 0 && hashtags === 0) {
-        showToast?.('Trend feed is warming up — try again in a minute.', 'info')
+        showToast?.(t('quickActionsBar.trendsWarmingUp'), 'info')
       } else {
-        showToast?.(`Trending now: ${sounds} sounds · ${hashtags} hashtags. Picker opening.`, 'success')
+        showToast?.(t('quickActionsBar.trendsLoaded', { sounds, hashtags }), 'success')
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('click:trends', { detail: { trends } }))
         }
       }
     } catch (err: any) {
-      showToast?.(`Trends fetch failed: ${err?.message || 'unknown error'}`, 'error')
+      showToast?.(t('quickActionsBar.trendsFailed', { error: err?.message || t('quickActionsBar.unknownError') }), 'error')
     } finally {
       setBusy(null)
     }
@@ -231,18 +233,18 @@ export default function QuickActionsBar({
         ].filter(Boolean)
         showToast?.(
           tops.length > 0
-            ? `Applied your style: ${tops.join(' · ')}`
-            : 'Applied your learned style.',
+            ? t('quickActionsBar.styleApplied', { items: tops.join(' · ') })
+            : t('quickActionsBar.styleAppliedGeneric'),
           'success'
         )
       } else {
-        showToast?.('Publish 3 clips first so Click can learn your style.', 'info')
+        showToast?.(t('quickActionsBar.styleNeedsClips'), 'info')
       }
     } catch (e: any) {
       if (ac.signal.aborted) {
-        showToast?.('Your style request timed out. Try again.', 'error')
+        showToast?.(t('quickActionsBar.styleTimedOut'), 'error')
       } else {
-        showToast?.('Could not load your style. Try again.', 'error')
+        showToast?.(t('quickActionsBar.styleLoadFailed'), 'error')
       }
     } finally {
       clearTimeout(timer)
@@ -268,35 +270,35 @@ export default function QuickActionsBar({
             captions w/ keyword-highlight + auto-emoji. The whole creative
             engine fired at once. */}
         {onAutoViralEdit && (
-          <Action icon={Rocket} label="Viral Edit" longLabel="Auto Viral Edit — one-tap full edit"
+          <Action icon={Rocket} label={t('quickActionsBar.viralEdit')} longLabel={t('quickActionsBar.viralEditLong')}
                   onClick={onAutoViralEdit} loading={!!autoViralBusy} accent="primary" hotkey="G" />
         )}
 
-        <Action icon={Wand2} label="Apply style" loading={busy === 'apply'}
+        <Action icon={Wand2} label={t('quickActionsBar.applyStyle')} loading={busy === 'apply'}
                 onClick={handleApplyStyle} accent="primary" />
 
         {onSplitAtPlayhead && (
-          <Action icon={Scissors} label="Split" longLabel="Split at playhead"
+          <Action icon={Scissors} label={t('quickActionsBar.split')} longLabel={t('quickActionsBar.splitLong')}
                   onClick={onSplitAtPlayhead} hotkey="S" />
         )}
-        <Action icon={Type}    label="Captions"  onClick={() => setActiveCategory('text-motion')} hotkey="X" />
-        <Action icon={Palette} label="Grade"     onClick={() => setActiveCategory('color')}      hotkey="5" />
-        <Action icon={Zap}     label="Effects"   onClick={() => setActiveCategory('effects')}    hotkey="4" />
-        <Action icon={Sparkles} label="AI tools"     onClick={() => setActiveCategory('ai')}         hotkey="A" />
+        <Action icon={Type}    label={t('quickActionsBar.captions')}  onClick={() => setActiveCategory('text-motion')} hotkey="X" />
+        <Action icon={Palette} label={t('quickActionsBar.grade')}     onClick={() => setActiveCategory('color')}      hotkey="5" />
+        <Action icon={Zap}     label={t('quickActionsBar.effects')}   onClick={() => setActiveCategory('effects')}    hotkey="4" />
+        <Action icon={Sparkles} label={t('quickActionsBar.aiTools')}     onClick={() => setActiveCategory('ai')}         hotkey="A" />
         {onOpenSmartCleanup && (
-          <Action icon={Eraser} label="Clean" longLabel="Smart cleanup"
+          <Action icon={Eraser} label={t('quickActionsBar.clean')} longLabel={t('quickActionsBar.cleanLong')}
                   onClick={onOpenSmartCleanup} hotkey="C" />
         )}
         {/* Three competitive-edge actions wired to existing services. The
             backing routes already exist; these buttons surface them in
             one tap so users don't have to dig through sub-menus. */}
-        <Action icon={Shuffle} label="Variants" longLabel="A/B variants"
+        <Action icon={Shuffle} label={t('quickActionsBar.variants')} longLabel={t('quickActionsBar.variantsLong')}
                 onClick={handleGenerateVariants} loading={busy === 'variants'} hotkey="V" />
         {contentId && (
-          <Action icon={Film} label="B-roll" longLabel="Suggest B-roll"
+          <Action icon={Film} label={t('quickActionsBar.broll')} longLabel={t('quickActionsBar.brollLong')}
                   onClick={handleSuggestBRoll} loading={busy === 'broll'} hotkey="B" />
         )}
-        <Action icon={TrendingUp} label="Trends" longLabel="Trending now"
+        <Action icon={TrendingUp} label={t('quickActionsBar.trends')} longLabel={t('quickActionsBar.trendsLong')}
                 onClick={handleTrending} loading={busy === 'trending'} hotkey="T" />
       </div>
 
@@ -304,7 +306,7 @@ export default function QuickActionsBar({
         <Badge
           variant="outline"
           className="hidden lg:flex ml-auto items-center gap-2 px-3 py-1.5 border-emerald-500/30 text-emerald-500 flex-shrink-0 font-medium normal-case"
-          title={`Click learned from ${insight!.totalPicks} of your published clips`}
+          title={t('quickActionsBar.learnedFrom', { count: insight!.totalPicks })}
         >
           <Brain className="w-3.5 h-3.5 flex-shrink-0" aria-hidden />
           <span className="truncate max-w-[150px] lg:max-w-[220px]">{learnedLabel}</span>
@@ -331,6 +333,7 @@ function Action({
   loading?: boolean
   accent?: 'primary'
 }) {
+  const { t } = useTranslation()
   const base = 'inline-flex items-center justify-center w-10 h-10 rounded-xl transition-all active:scale-95 group relative flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
   const cls = accent === 'primary'
     ? cn(base, 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm')
@@ -341,7 +344,7 @@ function Action({
       type="button"
       onClick={onClick}
       disabled={loading}
-      aria-label={loading ? `${longLabel || label} — loading` : (hotkey ? `${longLabel || label} (shortcut ${hotkey})` : (longLabel || label))}
+      aria-label={loading ? t('quickActionsBar.ariaLoading', { label: longLabel || label }) : (hotkey ? t('quickActionsBar.ariaShortcut', { label: longLabel || label, key: hotkey }) : (longLabel || label))}
       className={cn(cls, loading && 'opacity-60 cursor-wait')}
     >
       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4" />}

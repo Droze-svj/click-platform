@@ -1,20 +1,15 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { 
-  Globe, 
-  Zap, 
-  BrainCircuit, 
-  Share2, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
-  Target, 
+import {
+  Zap,
+  BrainCircuit,
+  Share2,
+  CheckCircle2,
+  Clock,
   Sparkles,
-  Search,
   MessageSquare as AiIcon,
   Radio,
-  BarChart3
 } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
@@ -39,30 +34,42 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
   currentNiche = 'general',
   showToast 
 }) => {
-  const [niche, setNiche] = useState<ContentNiche>(currentNiche as ContentNiche)
+  const niche = currentNiche as ContentNiche
   const [pulse, setPulse] = useState<OmnipresencePulse | null>(null)
   const [drafts, setDrafts] = useState<AgentDraft[]>([])
   const [pipeline, setPipeline] = useState<NeuralPipeline | null>(null)
   const [isBroadcasting, setIsBroadcasting] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [pulseFailed, setPulseFailed] = useState(false)
+  const [draftsFailed, setDraftsFailed] = useState(false)
 
   const fetchPulse = useCallback(async () => {
     try {
-      const data = await apiGet(`/phase9/swarm/pulse?niche=${niche}`)
+      const data = await apiGet(`/phase9/swarm/pulse?niche=${niche}`, undefined, false)
       setPulse(data)
+      setPulseFailed(false)
     } catch (err) {
-      console.error('Pulse fetch failed')
+      console.error('Pulse fetch failed', err)
+      setPulseFailed(true)
     }
   }, [niche])
 
   const fetchDrafts = useCallback(async () => {
     try {
-      const { drafts } = await apiGet('/phase9/autonomic-cm/drafts')
-      setDrafts(drafts)
+      const res: any = await apiGet('/phase9/autonomic-cm/drafts', undefined, false)
+      setDrafts(Array.isArray(res?.drafts) ? res.drafts : [])
+      setDraftsFailed(false)
     } catch (err) {
-      console.error('Drafts fetch failed')
+      console.error('Drafts fetch failed', err)
+      setDraftsFailed(true)
     }
   }, [])
+
+  // The pulse endpoint returns { snapshot: { trendingSignals } }; older
+  // shapes put trendingSignals at the top level.
+  const signals: any[] = Array.isArray(pulse?.trendingSignals)
+    ? pulse.trendingSignals
+    : Array.isArray(pulse?.snapshot?.trendingSignals) ? pulse.snapshot.trendingSignals : []
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -74,37 +81,40 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
     fetchData()
     const interval = setInterval(fetchPulse, 30000) // Pulse updates every 30s
     return () => clearInterval(interval)
-  }, [niche, fetchData, fetchPulse])
+  }, [fetchData, fetchPulse])
 
   const handleBroadcast = async () => {
-    if (!videoId) {
-      showToast('No active video sequence detected', 'error')
-      return
-    }
+    if (!videoId) return
 
     setIsBroadcasting(true)
     try {
       const { pipeline } = await apiPost('/phase9/broadcaster/build-pipeline', {
         videoId,
         platforms: ['tiktok', 'instagram', 'youtube', 'twitter'],
-        aeoMetadata: { niche, summary: "Autonomous high-velocity asset deployment." }
+        aeoMetadata: { niche }
       })
       setPipeline(pipeline)
-      showToast('Neural Broadcast Pipeline Synchronized', 'success')
+      showToast('Publishing plan created.', 'success')
     } catch (err) {
-      showToast('Broadcast Sync Failed', 'error')
+      showToast('Couldn\'t create the publishing plan. Please try again.', 'error')
     } finally {
       setIsBroadcasting(false)
     }
   }
 
-  const broadcastS2SPulse = async (tactic: string) => {
+  // Saves the tactic to the user's knowledge ledger, scored with the
+  // signal's own measured velocity (never an invented confidence).
+  const saveTactic = async (signal: any) => {
     try {
-      await apiPost('/phase10_12/intelligence/pulse', { tactic, confidence: 0.95 })
-      showToast('Knowledge sync propagated', 'success')
+      const score = Number(signal?.viralScore)
+      await apiPost('/phase10_12/intelligence/pulse', {
+        tactic: signal.tactic,
+        ...(Number.isFinite(score) ? { confidence: Math.max(0, Math.min(1, score)) } : {}),
+      })
+      showToast('Tactic saved.', 'success')
       fetchPulse()
     } catch (err) {
-      showToast('Pulse Broadcast Failed', 'error')
+      showToast('Couldn\'t save that tactic. Please try again.', 'error')
     }
   }
 
@@ -112,42 +122,20 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
     try {
       await apiPost('/phase9/autonomic-cm/approve', { responseId })
       setDrafts(prev => prev.filter(d => d._id !== responseId))
-      showToast('Agent Response Dispatched', 'success')
+      showToast('Reply approved.', 'success')
     } catch (err) {
-      showToast('Approval Failed', 'error')
+      showToast('Couldn\'t approve that reply. Please try again.', 'error')
     }
   }
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 p-2 md:p-6">
-      {/* Header with Niche Selector */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="space-y-2">
-            <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 italic">
-                <Globe className="w-3.5 h-3.5 animate-pulse" />
-                Click Network Active
-            </div>
-            <h2 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">
-                OMNIPRESENCE<br />NETWORK
-            </h2>
-        </div>
-
-        <div className="flex flex-wrap gap-2 p-1.5 bg-white/5 border border-white/10 rounded-3xl backdrop-blur-3xl">
-            {(['general', 'b2b', 'gaming', 'lifestyle'] as ContentNiche[]).map(cat => (
-                <button
-                    type="button"
-                    key={cat}
-                    onClick={() => setNiche(cat)}
-                    className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                        niche === cat
-                        ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-500/20'
-                        : 'text-slate-500 hover:text-white hover:bg-white/5'
-                    }`}
-                >
-                    {cat}
-                </button>
-            ))}
-        </div>
+      {/* Header */}
+      <div className="space-y-2">
+        <h2 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">
+          Trends &amp; replies
+        </h2>
+        <p className="text-[12px] font-bold text-slate-500">What&apos;s trending right now, and AI-drafted replies to your comments waiting for your approval.</p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -160,23 +148,24 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                         <BrainCircuit className="w-6 h-6 text-indigo-400" />
                     </div>
                     <div>
-                        <h4 className="text-xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Network Signals</h4>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-indigo-500/70">Expert Viral Pulse</span>
+                        <h4 className="text-xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Trending now</h4>
+                        <span className="text-[10px] font-bold text-slate-500 mt-1 block">From the latest trend snapshot</span>
                     </div>
                 </div>
 
                 <div className="space-y-4">
-                    {pulse?.trendingSignals.map((signal: any, idx: number) => (
+                    {signals.map((signal: any, idx: number) => (
                         <div key={idx} className="p-5 bg-black/40 border border-white/5 rounded-2xl space-y-3 group hover:border-indigo-500/30 transition-all">
                             <div className="flex items-center justify-between">
                                 <span className="text-[10px] font-black text-white italic uppercase tracking-widest">{signal.tactic}</span>
                                 <button
                                     type="button"
-                                    onClick={() => broadcastS2SPulse(signal.tactic)}
+                                    onClick={() => saveTactic(signal)}
                                     className="p-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 transition-colors"
-                                    title="Broadcast S2S Pulse"
+                                    title="Save this tactic"
+                                    aria-label={`Save tactic ${signal.tactic}`}
                                 >
-                                    <Zap className="w-3 h-3" />
+                                    <Zap className="w-3 h-3" aria-hidden="true" />
                                 </button>
                                 <span className={`text-[8px] font-black px-3 py-1 rounded-full ${
                                     signal.status === 'DOMINANT' ? 'bg-indigo-500 text-white' : 'bg-indigo-500/10 text-indigo-400'
@@ -189,25 +178,19 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                                 <div className="h-1 flex-1 bg-white/5 rounded-full overflow-hidden">
                                     <div 
                                         className="h-full bg-indigo-500 transition-all duration-1000" 
-                                        style={{ width: `${signal.viralScore * 100}%` }} 
+                                        style={{ width: `${Math.max(0, Math.min(100, (Number(signal.viralScore) || 0) * 100))}%` }}
                                     />
                                 </div>
-                                <span className="text-[10px] font-black text-indigo-400">{(signal.viralScore * 100).toFixed(0)}%</span>
+                                <span className="text-[10px] font-black text-indigo-400">{((Number(signal.viralScore) || 0) * 100).toFixed(0)}%</span>
                             </div>
                         </div>
                     ))}
-                    {!pulse && [1,2,3].map(i => <div key={i} className="h-24 bg-white/5 animate-pulse rounded-2xl" />)}
-                </div>
-            </div>
-
-            <div className="p-8 bg-indigo-600 rounded-[2.5rem] space-y-4 text-white">
-                <div className="flex items-center justify-between">
-                    <BarChart3 className="w-8 h-8" />
-                    <span className="text-[10px] font-black uppercase tracking-widest opacity-80 italic">Network Reach</span>
-                </div>
-                <div>
-                   <h3 className="text-3xl font-black italic tracking-tighter leading-none uppercase">{(pulse?.snapshot.activeNodes ?? 0) * 14}K</h3>
-                   <span className="text-[9px] font-black uppercase tracking-widest opacity-80">Global Impression Pulse</span>
+                    {loading && !pulse && [1,2,3].map(i => <div key={i} className="h-24 bg-white/5 animate-pulse rounded-2xl" />)}
+                    {!loading && signals.length === 0 && (
+                        <p className="text-[11px] font-bold text-slate-500 py-6 text-center">
+                            {pulseFailed ? 'Couldn\'t load trends. Try again later.' : 'No trend data yet.'}
+                        </p>
+                    )}
                 </div>
             </div>
         </div>
@@ -215,7 +198,8 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
         {/* Center/Right Column: Agent & Broadcaster */}
         <div className="xl:col-span-2 space-y-8">
             
-            {/* Neural Broadcaster HUD */}
+            {/* Publishing plan — needs a video, so only shown when one is open */}
+            {videoId && (
             <div className={`${glassStyle} rounded-[3rem] p-10 relative overflow-hidden group`}>
                 <div className="absolute top-0 right-0 p-10 opacity-5">
                     <Radio className="w-40 h-40 text-indigo-500" />
@@ -227,8 +211,8 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                             <Radio className={`w-6 h-6 ${isBroadcasting ? 'animate-pulse' : ''}`} />
                         </div>
                         <div>
-                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Neural Broadcaster</h4>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-indigo-500/70">Autonomous Dispatch Protocol</span>
+                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Publishing plan</h4>
+                        <span className="text-[10px] font-bold text-slate-500 mt-1 block">Plan when this video goes out on TikTok, Instagram, YouTube and X</span>
                         </div>
                     </div>
 
@@ -238,7 +222,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                         disabled={isBroadcasting}
                         className="px-10 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] italic shadow-2xl transition-all disabled:opacity-50"
                     >
-                        {isBroadcasting ? 'Calibrating Pulse...' : 'Commence Broadcast'}
+                        {isBroadcasting ? 'Creating plan…' : 'Create publishing plan'}
                     </button>
                 </div>
 
@@ -248,7 +232,6 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                             <div key={idx} className="p-6 bg-black/40 border border-white/5 rounded-3xl space-y-4">
                                <div className="flex items-center justify-between">
                                   <span className="text-[10px] font-black text-white uppercase italic">{dep.platform}</span>
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                                </div>
                                <div className="space-y-1">
                                   <span className="text-[8px] font-black text-slate-500 uppercase">Status</span>
@@ -256,7 +239,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                                </div>
                                <div className="flex items-center gap-2">
                                   <Clock className="w-3 h-3 text-slate-700" />
-                                  <span className="text-[8px] font-bold text-slate-500">{new Date(dep.scheduledTime).toLocaleTimeString()}</span>
+                                  <span className="text-[8px] font-bold text-slate-500">{dep.scheduledTime ? new Date(dep.scheduledTime).toLocaleString() : '—'}</span>
                                </div>
                             </div>
                         ))}
@@ -264,10 +247,11 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                 ) : (
                     <div className="p-10 border-2 border-dashed border-white/5 rounded-[2.5rem] flex flex-col items-center justify-center text-center space-y-4">
                         <Share2 className="w-12 h-12 text-slate-800" />
-                        <p className="text-xs font-medium text-slate-600 italic">No autonomous pipelines active in current frequency.</p>
+                        <p className="text-xs font-medium text-slate-500 italic">No publishing plan for this video yet.</p>
                     </div>
                     )}
             </div>
+            )}
 
             {/* Oracle Sandbox Integration */}
             <OracleSandboxHUD projectId={videoId ?? undefined} showToast={showToast} />
@@ -280,12 +264,12 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                             <AiIcon className="w-6 h-6 text-indigo-400" />
                         </div>
                         <div>
-                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Agent Approvals</h4>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-indigo-500/70">Autonomous Community Manager</span>
+                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Replies to approve</h4>
+                        <span className="text-[10px] font-bold text-slate-500 mt-1 block">AI-drafted replies to your comments</span>
                         </div>
                     </div>
                     <div className="px-6 py-2.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-slate-500">
-                        {drafts.length} Pending
+                        {drafts.length} waiting
                     </div>
                 </div>
 
@@ -303,18 +287,20 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-3">
                                         <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse" />
-                                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Incoming Comment</span>
+                                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Comment</span>
                                     </div>
-                                    <p className="text-xs font-bold text-white italic">"{draft.commentId.text}"</p>
+                                    <p className="text-xs font-bold text-white italic">&quot;{draft.commentId?.text || '—'}&quot;</p>
                                 </div>
 
                                 <div className="p-6 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">Agent Suggestion</span>
-                                        <div className="flex items-center gap-2">
-                                            <Sparkles className="w-3 h-3 text-indigo-400" />
-                                            <span className="text-[9px] font-black text-white italic">{(draft.sentimentAtTime * 100).toFixed(0)}% Vibe Sync</span>
-                                        </div>
+                                        <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">Suggested reply</span>
+                                        {Number.isFinite(Number(draft.sentimentAtTime)) && (
+                                          <div className="flex items-center gap-2">
+                                              <Sparkles className="w-3 h-3 text-indigo-400" aria-hidden="true" />
+                                              <span className="text-[9px] font-black text-white italic">Comment mood {(Number(draft.sentimentAtTime) * 100).toFixed(0)}%</span>
+                                          </div>
+                                        )}
                                     </div>
                                     <p className="text-sm font-medium text-slate-300 italic leading-relaxed">
                                         {draft.suggestedText}
@@ -322,16 +308,13 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                                 </div>
 
                                 <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">
-                                    <button className="p-4 rounded-2xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/20 text-slate-500 hover:text-red-400 transition-all">
-                                        <XCircle className="w-5 h-5" />
-                                    </button>
                                     <button
                                         type="button"
                                         onClick={() => approveResponse(draft._id)}
                                         className="flex-1 max-w-[200px] flex items-center justify-center gap-4 p-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-[0.2em] italic shadow-xl transition-all"
                                     >
                                         <CheckCircle2 className="w-4 h-4" />
-                                        Approve Response
+                                        Approve reply
                                     </button>
                                 </div>
                             </m.div>
@@ -342,7 +325,7 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
                             <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mx-auto">
                                 <CheckCircle2 className="w-6 h-6 text-slate-700" />
                             </div>
-                            <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest italic">No pending agent audits detected.</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">{draftsFailed ? 'Couldn\'t load replies. Try again later.' : 'No replies waiting for approval.'}</p>
                         </div>
                     )}
                 </div>
@@ -352,29 +335,6 @@ const OmnipresenceNetworkView: React.FC<OmnipresenceNetworkViewProps> = ({
 
       </div>
 
-      {/* Marquee (Background element) */}
-      <div className="fixed bottom-0 left-0 right-0 h-10 bg-indigo-600/10 backdrop-blur-3xl border-t border-indigo-500/20 flex items-center overflow-hidden z-[100]">
-          <div className="flex gap-20 animate-marquee whitespace-nowrap px-10">
-              {[1,2,3,4].map(i => (
-                  <div key={i} className="flex items-center gap-6">
-                      <span className="text-[10px] font-black text-indigo-400 italic uppercase">Pulse Alpha: 94.2% Stability</span>
-                      <span className="text-[10px] font-black text-white italic uppercase tracking-widest">Tactic: Zero-Click Metadata [Rising]</span>
-                      <span className="text-[10px] font-black text-indigo-400 italic uppercase">Network Nodes: 162 Active</span>
-                      <span className="text-[10px] font-black text-white italic uppercase tracking-widest">Chrono Shift: +14% Hook Retention</span>
-                  </div>
-              ))}
-          </div>
-      </div>
-
-      <style jsx>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          animation: marquee 30s linear infinite;
-        }
-      `}</style>
     </div>
   )
 }

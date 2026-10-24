@@ -72,13 +72,13 @@ export function resolveCaptionTextStyle(style: string | undefined | null, input?
     case 'karaoke':
       return { color, fontWeight: 800, textShadow: strongShadow }
     case 'cinematic':
-      return { color, fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: '0.02em', textShadow: softShadow }
+      return { color, fontFamily: '"Gelasio", Georgia, "Times New Roman", serif', letterSpacing: '0.02em', textShadow: softShadow }
     case 'serif':
-      return { color, fontFamily: 'Georgia, "Times New Roman", serif', textShadow: softShadow }
+      return { color, fontFamily: '"Gelasio", Georgia, "Times New Roman", serif', textShadow: softShadow }
     case 'retro':
       return { color: '#FFE0B2', fontWeight: 700, textShadow: `0 2px 0 ${accent}, 0 3px 8px rgba(0,0,0,0.6)` }
     case 'vintage':
-      return { color: '#F3E5AB', fontFamily: 'Georgia, serif', textShadow: '0 2px 6px rgba(60,40,10,0.7)' }
+      return { color: '#F3E5AB', fontFamily: '"Gelasio", Georgia, serif', textShadow: '0 2px 6px rgba(60,40,10,0.7)' }
     case 'pop':
       return { color, fontWeight: 800, WebkitTextStroke: `2px ${outline}`, paintOrder: 'stroke fill', textShadow: `0 0 10px ${accent}` }
     case 'gradient':
