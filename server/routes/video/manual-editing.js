@@ -785,10 +785,23 @@ router.post('/render', auth, asyncHandler(async (req, res) => {
   let stitchedPath = null;
   let effectiveVideoUrl = videoUrl || null;
   let effectiveVideoId = videoId || null;
-  if (videoRenderService.needsStitch && videoRenderService.needsStitch(segsForStitch)) {
+  let inputForStitch = null;
+  let wantsStitch = false;
+  try {
+    if (videoRenderService.needsStitch(segsForStitch)) {
+      wantsStitch = true;
+    } else if (segsForStitch.length > 0) {
+      // A single end-trimmed clip only shows up against the source's length.
+      inputForStitch = await videoRenderService.resolveInputPath(videoId || null, videoUrl || null);
+      wantsStitch = await videoRenderService.needsStitchForSource(segsForStitch, inputForStitch);
+    }
+  } catch (probeErr) {
+    logger.warn('Stitch check failed; rendering the source as-is', { error: probeErr.message });
+  }
+  if (wantsStitch) {
     try {
       const ex = exportOptions || {};
-      const inputForStitch = await videoRenderService.resolveInputPath(videoId || null, videoUrl || null);
+      if (!inputForStitch) inputForStitch = await videoRenderService.resolveInputPath(videoId || null, videoUrl || null);
       stitchedPath = await videoRenderService.stitchSegments(
         inputForStitch,
         segsForStitch,
@@ -845,8 +858,9 @@ router.post('/render', auth, asyncHandler(async (req, res) => {
       ? (isAbsoluteUrl ? result.url : `${req.protocol}://${req.get('host')}${result.url}`)
       : null;
 
+    // No outputPath: it's the server's absolute disk path, which no client
+    // uses and shouldn't be disclosed.
     sendSuccess(res, 'Render completed', 200, {
-      outputPath: result.outputPath,
       url: result.url,
       downloadUrl,
     });

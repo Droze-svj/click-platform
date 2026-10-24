@@ -7,6 +7,7 @@
  */
 
 import type { TimelineSegment } from '../types/editor'
+import { splitSegmentWindow } from './timelinePlayback'
 
 /** Split every segment that intersects `time` into two clips at that point. */
 export function splitAtTime(
@@ -19,14 +20,7 @@ export function splitAtTime(
     const inSelection = !ids || ids.length === 0 || ids.includes(seg.id)
     const intersects = inSelection && seg.startTime < time - 1e-3 && seg.endTime > time + 1e-3
     if (!intersects) { out.push(seg); continue }
-    const a: TimelineSegment = { ...seg, endTime: time, duration: time - seg.startTime }
-    const b: TimelineSegment = {
-      ...seg,
-      id: `${seg.id}-split-${Date.now().toString(36)}`,
-      startTime: time,
-      duration: seg.endTime - time,
-    }
-    out.push(a, b)
+    out.push(...splitSegmentWindow(seg, time, `${seg.id}-split-${Date.now().toString(36)}`))
   }
   return out
 }

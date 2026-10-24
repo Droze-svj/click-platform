@@ -1024,7 +1024,10 @@ async function rasterizeSvgToPng(svgOverlay, W, H, tmpDir) {
   if (!sharp) throw new Error('sharp not available for svg rasterization')
   const url = String(svgOverlay.url || '')
   let svgBuf
-  if (/^https?:\/\//i.test(url)) {
+  const ownLocal = /^https?:\/\//i.test(url) ? localOwnUpload(url) : null
+  if (ownLocal) {
+    svgBuf = fs.readFileSync(ownLocal)
+  } else if (/^https?:\/\//i.test(url)) {
     await assertSafeRemote(url) // SSRF: block private/internal targets before fetch
     const res = await fetch(url)
     if (!res.ok) throw new Error(`svg fetch ${res.status}`)
@@ -1158,8 +1161,29 @@ function isRemoteUrl(p) {
 // (already resolved to absolute) pass straight through. Returns the input so it
 // can be used inline: `const s = await assertSafeRemote(url)`.
 async function assertSafeRemote(u) {
-  if (isRemoteUrl(u)) await urlGuard.assertPublicUrl(u)
+  if (isRemoteUrl(u)) {
+    const local = localOwnUpload(u)
+    if (local) return local
+    await urlGuard.assertPublicUrl(u)
+  }
   return u
+}
+
+// The editor hands us the browser's media URL — for our own uploads that's
+// "<this server>/uploads/x.mp4?exp=…&sig=…". Fetching it over HTTP from
+// ourselves was blocked locally (loopback) and in production went out through
+// the public internet and broke once the signature expired. When the path is
+// one of our uploads and the file is on disk, read it directly. toAbsolutePath
+// keeps it contained in <root>/uploads, exactly like a bare "/uploads/x" ref.
+function localOwnUpload(u) {
+  try {
+    const { pathname } = new URL(u)
+    if (!/^\/uploads\//i.test(pathname)) return null
+    const local = toAbsolutePath(decodeURIComponent(pathname))
+    return local && fs.existsSync(local) ? local : null
+  } catch {
+    return null
+  }
 }
 
 async function resolveInputPath(videoId, videoUrl) {
@@ -1399,6 +1423,10 @@ async function renderFromEditorState(options) {
     (Number(videoCrop.width) > 0 && Number(videoCrop.width) < 100) ||
     (Number(videoCrop.height) > 0 && Number(videoCrop.height) < 100)
   ))
+  // Fit the source inside the export frame without distorting it (black bars
+  // when the aspect differs). A bare scale=W:H stretched a 9:16 phone video
+  // into a 16:9 export.
+  const fitToFrame = `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1`
   const isUltraQuality = exportOptions.quality === 'ultra'
   const isBestQuality = exportOptions.quality === 'best' || isUltraQuality
   const isProres = exportOptions.codec === 'prores'
@@ -1963,7 +1991,7 @@ async function renderFromEditorState(options) {
         const masterMusicVol = audioMix.musicVolume != null ? audioMix.musicVolume : null
         const duckLevel = audioMix.duckLevel != null ? audioMix.duckLevel : (exportOptions.duckLevel ?? -12)
         const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
-        const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
+        const vidPart = `[0:v]${fitToFrame}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
         videoMappedViaFiltergraph = true
         const teleFilter = telephoneEQ ? `highpass=f=400:enable='${telephoneEQ}',lowpass=f=3000:enable='${telephoneEQ}',` : '';
 
@@ -2021,7 +2049,7 @@ async function renderFromEditorState(options) {
           // videoMappedViaFiltergraph note) so we don't also need .size(), which
           // would error on the mapped [vout] pad.
             const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
-            const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
+            const vidPart = `[0:v]${fitToFrame}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
             // Pre-normalize channels/rate BEFORE the aeval dither (mono + -ac 2
             // SIGSEGV on ffmpeg 8) — see the note in the bed-mix branch above.
             command = command.complexFilter(`${vidPart};[0:a]aresample=48000,aformat=channel_layouts=stereo,aeval=val(0)+0.0004*sin(random(1)*6.28):c=same,${_voice},${_masterFx}${teleFilter}loudnorm=I=-16:TP=-1.5:LRA=11${aSuffix}[aout]`)
@@ -2036,7 +2064,7 @@ async function renderFromEditorState(options) {
         // Source is completely silent and no background music added -> render as video only
           if (finalFilterStr || hasOverlayGraph) {
             const vidFilterPart = finalFilterStr ? `,${finalFilterStr}` : ''
-            const vidPart = `[0:v]scale=${width}:${height}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
+            const vidPart = `[0:v]${fitToFrame}${vidFilterPart}[${baseVidLabel}]${overlayGraph}`
             command = command.complexFilter(vidPart)
               .outputOptions(['-map', '[vout]'])
             videoMappedViaFiltergraph = true
@@ -2064,12 +2092,12 @@ async function renderFromEditorState(options) {
         .videoCodec(videoEncoder)
         .outputOptions(videoOutputOptions)
 
-      // Only apply -s W:H when scaling was NOT already done inside a filtergraph that
-      // maps [vout]. Applying -s on a filtergraph-mapped output can fail on modern
-      // ffmpeg ("Invalid argument", exit 234); the complexFilter branches above
-      // already prepend scale=W:H to the video chain instead.
+      // Only scale here when it was NOT already done inside a filtergraph that
+      // maps [vout] (the complexFilter branches above prepend fitToFrame to the
+      // video chain; a second scale/-s on a mapped output can fail on modern
+      // ffmpeg with "Invalid argument", exit 234).
       if (!videoMappedViaFiltergraph) {
-        commandChain.size(`${width}x${height}`)
+        commandChain.videoFilters(fitToFrame)
       }
 
       if (hasAudio || hasMusic) {
@@ -2336,7 +2364,7 @@ function segmentHasSpecial(s) {
   if (s.transitionOut && s.transitionOut !== 'none' && Number(s.transitionDuration) > 0) return true
   // An explicit source-trim window (other than "from 0") also needs the pre-pass
   // to materialize the kept range before the main render.
-  if (Number(s.sourceStartTime) > 0) return true
+  if (primarySourceStart(s) > 0.01) return true
   if (Number.isFinite(Number(s.sourceEndTime))) return true
   // A per-segment crop or volume change also needs the stitch pre-pass to apply.
   if (s.crop && typeof s.crop === 'object' &&
@@ -2359,6 +2387,46 @@ function needsStitch(timelineSegments) {
   if (segs.length >= 2) return true
   if (segs.length === 1) return segmentHasSpecial(segs[0])
   return false
+}
+
+/**
+ * Where a main-track clip's footage starts in its source. Matches the editor
+ * preview (client utils/timelinePlayback sourceStartOf): an explicit window, else
+ * the clip's own timeline position — a clip that was split off at 4s shows the
+ * source from 4s. (This used to default to 0, so the second half of a split
+ * re-rendered the opening footage.)
+ */
+function primarySourceStart(seg) {
+  const v = Number(seg && seg.sourceStartTime)
+  if (Number.isFinite(v)) return Math.max(0, v)
+  return Math.max(0, Number(seg && seg.startTime) || 0)
+}
+
+/**
+ * needsStitch, plus the one case it can't see on its own: a single clip whose
+ * end was trimmed (its source window stops before the end of the file). Without
+ * the stitch pass the whole source was exported and the trim ignored.
+ */
+async function needsStitchForSource(timelineSegments, inputPath) {
+  if (needsStitch(timelineSegments)) return true
+  const segs = selectPrimarySegments(timelineSegments)
+  if (segs.length !== 1 || !inputPath) return false
+  const seg = segs[0]
+  const start = Number(seg.startTime) || 0
+  const end = Number(seg.endTime)
+  if (!Number.isFinite(end) || end <= start) return false
+  const srcEnd = primarySourceStart(seg) + (end - start) * normSegSpeed(seg.playbackSpeed)
+  const sourceDuration = await probeDurationSec(inputPath)
+  return sourceDuration > 0 && srcEnd < sourceDuration - 0.1
+}
+
+function probeDurationSec(src) {
+  return new Promise((resolve) => {
+    ffmpeg.ffprobe(src, (err, data) => {
+      const d = Number(data && data.format && data.format.duration)
+      resolve(!err && Number.isFinite(d) ? d : 0)
+    })
+  })
 }
 
 /**
@@ -2386,7 +2454,7 @@ function probeHasAudio(src) {
 function resolveSegmentSource(seg, fallbackInputPath) {
   const raw = seg.sourceUrl || seg.url || seg.src || null
   if (!raw) return fallbackInputPath
-  return isRemoteUrl(raw) ? raw : toAbsolutePath(raw)
+  return isRemoteUrl(raw) ? (localOwnUpload(raw) || raw) : toAbsolutePath(raw)
 }
 
 /**
@@ -2456,11 +2524,13 @@ async function stitchSegments(inputPath, segments, opts = {}) {
   const segDurations = []
 
   segs.forEach((seg, idx) => {
-    const ss = Math.max(0, Number(seg.sourceStartTime) || 0)
+    const ss = primarySourceStart(seg)
     let se = Number(seg.sourceEndTime)
     if (!Number.isFinite(se)) {
-      const dur = Number(seg.duration)
-      se = Number.isFinite(dur) && dur > 0 ? ss + dur : null
+      // Source consumed = timeline length × speed (what the preview plays).
+      const tl = Number(seg.endTime) - Number(seg.startTime)
+      const dur = Number.isFinite(tl) && tl > 0 ? tl : Number(seg.duration)
+      se = Number.isFinite(dur) && dur > 0 ? ss + dur * normSegSpeed(seg.playbackSpeed) : null
     }
     // trimmed source length (pre-speed). Null → whole remaining stream.
     const trimLen = se != null && se > ss ? (se - ss) : null
@@ -2640,6 +2710,8 @@ module.exports = {
   renderFromEditorState,
   stitchSegments,
   needsStitch,
+  needsStitchForSource,
+  primarySourceStart,
   selectPrimarySegments,
   resolveInputPath,
   buildVideoFilterChain,
