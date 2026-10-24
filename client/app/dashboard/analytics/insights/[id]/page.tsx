@@ -18,7 +18,6 @@ import {
 
 interface InsightMatrix {
   potencyScore: number;
-  predictiveROI: number;
   specificAdvice: string;
   signalGaps: string[];
   kineticResonance: string;
@@ -125,18 +124,12 @@ export default function StrategicSynthesisHub() {
                 </span>
                 <SectionHeader
                   as="h2"
-                  title={t('analyticsInsightPage.roiTitle')}
-                  description={t('analyticsInsightPage.roiSubtitle')}
+                  title={t('analyticsInsightPage.strategicDirective')}
                 />
               </div>
 
-              <div className="flex flex-col items-center justify-center py-6">
-                <div className="ds-text-display text-theme-primary tabular-nums">
-                  +{matrix?.predictiveROI || 0}%
-                </div>
-                <div className="ds-text-caption mt-2">{t('analyticsInsightPage.growthResonance')}</div>
-              </div>
-
+              {/* No "expected growth %" here: nothing measures it, so any number
+                  would be invented. Real metrics live on the post page. */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 {matrix?.specificAdvice && (
                   <Panel variant="subtle" className="p-5 flex items-start gap-4">

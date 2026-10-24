@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ErrorBoundary } from '../../../../components/ErrorBoundary'
 import PerformancePredictor from '../../../../components/PerformancePredictor'
 import { useRouter } from 'next/navigation'
-import { apiPost } from '../../../../lib/api'
+import { apiGet, apiPost, apiPut } from '../../../../lib/api'
 import { useAuth } from '../../../../hooks/useAuth'
 import ErrorAlert from '../../../../components/ErrorAlert'
 import {
@@ -55,6 +55,43 @@ export default function CreatePostPage() {
     platforms: [] as string[]
   })
 
+  // ?id=<postId> opens an existing post for editing (the Posts list links here).
+  const [editId, setEditId] = useState<string | null>(null)
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('id')
+    if (!id) return
+    setEditId(id)
+    let cancelled = false
+    apiGet<{ post?: any }>(`/posts/${id}`)
+      .then((res) => {
+        const p = (res as any)?.post
+        if (cancelled || !p) return
+        // datetime-local wants local "YYYY-MM-DDTHH:mm".
+        const local = (iso?: string | null) => {
+          if (!iso) return ''
+          const d = new Date(iso)
+          return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+        }
+        setFormData((prev) => ({
+          ...prev,
+          title: p.title || '',
+          content: p.content || '',
+          excerpt: p.excerpt || '',
+          status: p.status || 'draft',
+          featured_image: p.featured_image || '',
+          thumbnail: p.thumbnail || '',
+          tags: p.tags || [],
+          categories: p.categories || [],
+          scheduled_at: local(p.scheduled_at),
+          platforms: p.platforms || [],
+        }))
+      })
+      .catch((err: any) => {
+        if (!cancelled) setError(err.response?.data?.error || err.message || t('postsCreatePage.errorCreateFailed'))
+      })
+    return () => { cancelled = true }
+  }, [t])
+
   const [tagInput, setTagInput] = useState('')
   const [categoryInput, setCategoryInput] = useState('')
 
@@ -83,12 +120,15 @@ export default function CreatePostPage() {
         title: formData.title.trim(),
         content: formData.content.trim(),
         excerpt: formData.excerpt.trim(),
-        scheduled_at: formData.scheduled_at || null
+        // The input is local wall-clock time; send an absolute instant so the
+        // (UTC) server doesn't read it as UTC and publish hours early or late.
+        scheduled_at: formData.scheduled_at ? new Date(formData.scheduled_at).toISOString() : null
       }
 
-      await apiPost('/posts', postData)
+      if (editId) await apiPut(`/posts/${editId}`, postData)
+      else await apiPost('/posts', postData)
 
-      router.push('/dashboard/posts?success=created')
+      router.push(`/dashboard/posts?success=${editId ? 'updated' : 'created'}`)
     } catch (err: any) {
       console.error('Failed to create post:', err)
       setError(err.response?.data?.error || err.message || t('postsCreatePage.errorCreateFailed'))
@@ -145,7 +185,7 @@ export default function CreatePostPage() {
       {/* Header (global DashboardHeader provides the breadcrumb) */}
       <SectionHeader
         as="h1"
-        title={t('postsCreatePage.title')}
+        title={editId ? t('postsPage.editPost') : t('postsCreatePage.title')}
         description={t('postsCreatePage.subtitle')}
         className="mb-6"
         actions={

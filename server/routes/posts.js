@@ -1,8 +1,142 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const logger = require('../utils/logger');
 const router = express.Router();
+
+// ── MongoDB store (production has no Supabase) ──────────────────────────────
+// Every handler below this block is Supabase-only; on a MongoDB deployment
+// they answered "empty" / 503 "Blog post store is not configured", so the
+// Posts page could never save a post. These handlers serve the same paths and
+// response shapes from models/BlogPost when Supabase isn't configured.
+const supabaseConfigured = () => !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+const mongoPosts = express.Router();
+const { objectIdOrSkip, getPagination } = require('../middleware/validateObjectId');
+const POST_STATUSES = ['draft', 'scheduled', 'published', 'archived'];
+const slugify = (title) => String(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const strList = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === 'string' && x.trim()).map((x) => x.trim().slice(0, 60)).slice(0, 30) : []);
+
+/** Validated BlogPost fields from a create/update body (only keys present). */
+function postFields(body, { creating }) {
+  const out = {};
+  const { title, content, excerpt, status, featured_image, thumbnail, tags, categories, platforms, scheduled_at } = body || {};
+  if (title !== undefined || creating) {
+    if (typeof title !== 'string' || !title.trim()) return { error: 'title is required' };
+    out.title = title.trim();
+    out.slug = slugify(out.title);
+  }
+  if (content !== undefined) out.content = typeof content === 'string' ? content : '';
+  if (excerpt !== undefined) out.excerpt = typeof excerpt === 'string' ? excerpt.trim() : '';
+  if (status !== undefined) {
+    if (!POST_STATUSES.includes(status)) return { error: `status must be one of: ${POST_STATUSES.join(', ')}` };
+    out.status = status;
+    if (status === 'published') out.publishedAt = new Date();
+  }
+  if (featured_image !== undefined) out.featuredImage = typeof featured_image === 'string' ? featured_image : undefined;
+  if (thumbnail !== undefined) out.thumbnail = typeof thumbnail === 'string' ? thumbnail : undefined;
+  if (tags !== undefined) out.tags = strList(tags);
+  if (categories !== undefined) out.categories = strList(categories);
+  if (platforms !== undefined) out.platforms = strList(platforms);
+  if (scheduled_at !== undefined) {
+    const d = scheduled_at ? new Date(scheduled_at) : null;
+    if (d && Number.isNaN(d.getTime())) return { error: 'scheduled_at is not a valid date' };
+    out.scheduledAt = d;
+  }
+  return { fields: out };
+}
+
+// Scheduled posts go live once their time passes (checked on each listing,
+// as the Supabase path does — there is no queue worker for these).
+async function publishDue(userId) {
+  const BlogPost = require('../models/BlogPost');
+  const now = new Date();
+  await BlogPost.updateMany(
+    { userId, status: 'scheduled', scheduledAt: { $lte: now } },
+    [{ $set: { status: 'published', publishedAt: '$scheduledAt' } }],
+  );
+}
+
+mongoPosts.get('/', auth, asyncHandler(async (req, res) => {
+  const BlogPost = require('../models/BlogPost');
+  const { page, limit, skip } = getPagination(req.query);
+  await publishDue(req.user._id).catch((e) => logger.warn('[posts] publishDue failed', { error: e.message }));
+  const q = { userId: req.user._id };
+  if (POST_STATUSES.includes(req.query.status)) q.status = req.query.status;
+  const range = {};
+  if (req.query.scheduled_after && !Number.isNaN(new Date(req.query.scheduled_after).getTime())) range.$gte = new Date(req.query.scheduled_after);
+  if (req.query.scheduled_before && !Number.isNaN(new Date(req.query.scheduled_before).getTime())) range.$lte = new Date(req.query.scheduled_before);
+  if (Object.keys(range).length) q.scheduledAt = range;
+  const [docs, total] = await Promise.all([
+    BlogPost.find(q).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    BlogPost.countDocuments(q),
+  ]);
+  res.json({ success: true, posts: docs.map((d) => d.toApi()), pagination: { page, limit, total, pages: Math.ceil(total / limit) } });
+}));
+
+mongoPosts.post('/', auth, asyncHandler(async (req, res) => {
+  const BlogPost = require('../models/BlogPost');
+  const { fields, error } = postFields(req.body, { creating: true });
+  if (error) return res.status(400).json({ success: false, error });
+  if (fields.status === 'scheduled' && !(fields.scheduledAt && fields.scheduledAt > new Date())) {
+    return res.status(400).json({ success: false, error: 'Scheduled date must be in the future' });
+  }
+  const post = await BlogPost.create({ ...fields, userId: req.user._id });
+  res.status(201).json({ success: true, message: 'Post created successfully', post: post.toApi() });
+}));
+
+async function ownedPost(req) {
+  const BlogPost = require('../models/BlogPost');
+  if (!mongoose.Types.ObjectId.isValid(String(req.params.id))) return null;
+  return BlogPost.findOne({ _id: req.params.id, userId: req.user._id });
+}
+
+mongoPosts.get('/:id', objectIdOrSkip('id'), auth, asyncHandler(async (req, res) => {
+  const post = await ownedPost(req);
+  if (!post) return res.status(404).json({ success: false, error: 'Post not found' });
+  res.json({ success: true, post: post.toApi() });
+}));
+
+mongoPosts.put('/:id', objectIdOrSkip('id'), auth, asyncHandler(async (req, res) => {
+  const post = await ownedPost(req);
+  if (!post) return res.status(404).json({ success: false, error: 'Post not found' });
+  const { fields, error } = postFields(req.body, { creating: false });
+  if (error) return res.status(400).json({ success: false, error });
+  if (fields.status === 'published' && post.publishedAt) delete fields.publishedAt; // keep the first publish date
+  post.set(fields);
+  await post.save();
+  res.json({ success: true, message: 'Post updated successfully', post: post.toApi() });
+}));
+
+mongoPosts.delete('/:id', objectIdOrSkip('id'), auth, asyncHandler(async (req, res) => {
+  const post = await ownedPost(req);
+  if (!post) return res.status(404).json({ success: false, error: 'Post not found' });
+  await post.deleteOne();
+  res.json({ success: true, message: 'Post deleted successfully' });
+}));
+
+mongoPosts.post('/:id/publish', objectIdOrSkip('id'), auth, asyncHandler(async (req, res) => {
+  const post = await ownedPost(req);
+  if (!post) return res.status(404).json({ success: false, error: 'Post not found' });
+  post.set({ status: 'published', publishedAt: new Date() });
+  await post.save();
+  res.json({ success: true, message: 'Post published successfully', post: post.toApi() });
+}));
+
+mongoPosts.post('/:id/schedule', objectIdOrSkip('id'), auth, asyncHandler(async (req, res) => {
+  const when = new Date(req.body && req.body.scheduled_at);
+  if (!req.body || !req.body.scheduled_at || Number.isNaN(when.getTime())) {
+    return res.status(400).json({ success: false, error: 'Scheduled date is required' });
+  }
+  if (when <= new Date()) return res.status(400).json({ success: false, error: 'Scheduled date must be in the future' });
+  const post = await ownedPost(req);
+  if (!post) return res.status(404).json({ success: false, error: 'Post not found' });
+  post.set({ status: 'scheduled', scheduledAt: when });
+  await post.save();
+  res.json({ success: true, message: 'Post scheduled successfully', post: post.toApi() });
+}));
+
+router.use((req, res, next) => (supabaseConfigured() ? next() : mongoPosts(req, res, next)));
 
 // Supabase client will be created in route handlers to avoid loading issues
 const createSupabaseClient = () => {

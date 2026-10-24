@@ -46,7 +46,7 @@ export default function FluxForecastingMatrixPage() {
       if (isRefresh) setRefreshing(true); else setLoading(true)
       setError(null)
       const syncFlag = triggerSync ? '&sync=true' : ''
-      const response = await apiGet<PerformanceResponse>(`/analytics/performance?period=${period}${syncFlag}`)
+      const response = await apiGet<PerformanceResponse>(`/analytics/daily-performance?period=${period}${syncFlag}`)
       setData(response.performance_data || [])
     } catch (err: any) {
       setError(err.message || "Couldn't load performance data. Please try again.")

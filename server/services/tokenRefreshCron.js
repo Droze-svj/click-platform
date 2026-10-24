@@ -87,6 +87,14 @@ function isExpiringSoon(expiresAt) {
 }
 
 async function runOnce() {
+  // This scan reads tokens from Supabase `users.social_links`. MongoDB
+  // deployments (production) keep them on User.oauth, rotated by
+  // tokenRefreshService.refreshExpiringTokens (6h cron in index.js) plus
+  // refresh-on-read. Without this guard every tick threw "supabaseUrl is
+  // required" and logged an error while refreshing nothing.
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return;
+  }
   if (!autonomousModeEnabled()) {
     logger.info('Token refresh cron skipped — autonomous mode disabled');
     return;

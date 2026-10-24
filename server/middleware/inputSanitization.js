@@ -55,6 +55,10 @@ const SANITIZER_BYPASS_PATHS = [
   // apostrophes in bios as `&#x27;`. The handler type-checks each field and
   // React escapes on render — there is no HTML sink.
   /^\/api\/auth\/profile($|\?)/,
+  // Posts editor (create / update one post): long-form text stored as typed
+  // and rendered by React. Escaping saved "Tom's" as `Tom&#x27;s`, which then
+  // showed on screen. Handlers type-check every field.
+  /^\/api\/posts(\/[0-9a-f]{24})?($|\?)/,
 ];
 
 function sanitizeInput(req, res, next) {
