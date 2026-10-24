@@ -10221,5 +10221,11 @@
   "creatorTools": {
     "noResults": "No results this time. Try again or rephrase.",
     "variantNotAdapted": "AI could not adapt this one. This is your original text."
+  },
+  "contentRecycling": {
+    "loadFailed": "Couldn't load recycling data.",
+    "planCreated": "Recycling plan created.",
+    "createFailed": "Couldn't create the recycling plan.",
+    "toggleFailed": "Couldn't update the recycling plan."
   }
 }

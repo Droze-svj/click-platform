@@ -1,5 +1,6 @@
 'use client'
 
+import { isPlatformConnected } from '../../../lib/connections'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -144,7 +145,12 @@ export default function CognitiveForecasterPage() {
     }
   }
 
-  const connectedCount = accounts ? Object.values(accounts).filter(Boolean).length : 0
+  // /oauth/accounts lists every platform with an array of its accounts —
+  // an empty [] is truthy, so .filter(Boolean) counted every platform as
+  // connected ("7 connected" for everyone). Count platforms with accounts.
+  const connectedCount = accounts
+    ? Object.values(accounts).filter(isPlatformConnected).length
+    : 0
 
   if (loading) return (
     <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1900px] mx-auto space-y-6" aria-busy="true" aria-label={t('insightsPage.loadingAria')}>

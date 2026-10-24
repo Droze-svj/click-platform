@@ -9,11 +9,12 @@ import {
   Layers, Boxes, ArrowUpRight
 } from 'lucide-react'
 import AdvancedRecyclingAnalytics from './AdvancedRecyclingAnalytics'
-import axios from 'axios'
+import { apiGet, apiPost, handleApiError } from '../lib/api'
+import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useDialogBehavior } from './ui/modal'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://click-platform.onrender.com/api'
+
 const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-1000'
 
 interface RecyclableContent {
@@ -76,6 +77,7 @@ interface RecyclingStats {
 
 export default function EntropyReversalNode() {
   const { t } = useTranslation()
+  const { showToast } = useToast()
   const [suggestions, setSuggestions] = useState<RecyclableContent[]>([])
   const [plans, setPlans] = useState<RecyclingPlan[]>([])
   const [stats, setStats] = useState<RecyclingStats | null>(null)
@@ -87,25 +89,22 @@ export default function EntropyReversalNode() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
-      const headers = { Authorization: `Bearer ${token}` }
-
       if (activeTab === 'suggestions') {
-        const res = await axios.get(`${API_URL}/recycling/suggestions?limit=10`, { headers })
-        if (res.data.success) setSuggestions(res.data.data.suggestions || [])
+        const res: any = await apiGet('/recycling/suggestions?limit=10', undefined, false)
+        setSuggestions(Array.isArray(res?.data?.suggestions) ? res.data.suggestions : [])
       } else if (activeTab === 'plans') {
-        const res = await axios.get(`${API_URL}/recycling/plans`, { headers })
-        if (res.data.success) setPlans(res.data.data.plans || [])
+        const res: any = await apiGet('/recycling/plans', undefined, false)
+        setPlans(Array.isArray(res?.data?.plans) ? res.data.plans : [])
       } else if (activeTab === 'stats') {
-        const res = await axios.get(`${API_URL}/recycling/stats`, { headers })
-        if (res.data.success) setStats(res.data.data)
+        const res: any = await apiGet('/recycling/stats', undefined, false)
+        setStats(res?.data ?? null)
       }
     } catch (error) {
-      console.error('Lattice Sync Error:', error)
+      showToast(handleApiError(error) || t('contentRecycling.loadFailed'), 'error')
     } finally {
       setLoading(false)
     }
-  }, [activeTab])
+  }, [activeTab, showToast, t])
 
   useEffect(() => {
     loadData()
@@ -113,22 +112,21 @@ export default function EntropyReversalNode() {
 
   const createRecyclingPlan = async (postId: string, options: any = {}) => {
     try {
-      const token = localStorage.getItem('token')
-      await axios.post(`${API_URL}/recycling/create`, { postId, ...options }, { headers: { Authorization: `Bearer ${token}` } })
+      await apiPost('/recycling/create', { postId, ...options })
+      showToast(t('contentRecycling.planCreated'), 'success')
       loadData()
       setSelectedContent(null)
     } catch (error: any) {
-      console.error('Multiplex Failed:', error)
+      showToast(handleApiError(error) || t('contentRecycling.createFailed'), 'error')
     }
   }
 
   const toggleRecycling = async (recycleId: string, isActive: boolean) => {
     try {
-      const token = localStorage.getItem('token')
-      await axios.post(`${API_URL}/recycling/plans/${recycleId}/toggle`, { isActive }, { headers: { Authorization: `Bearer ${token}` } })
+      await apiPost(`/recycling/plans/${encodeURIComponent(recycleId)}/toggle`, { isActive })
       loadData()
     } catch (error: any) {
-      console.error('Flux Control Error:', error)
+      showToast(handleApiError(error) || t('contentRecycling.toggleFailed'), 'error')
     }
   }
 

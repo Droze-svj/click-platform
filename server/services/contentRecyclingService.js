@@ -36,23 +36,23 @@ async function identifyRecyclableContent(userId, options = {}) {
     }
 
     const posts = await ScheduledPost.find(query)
-      .populate('content.contentId')
       .sort({ 'analytics.engagement': -1 })
       .limit(limit)
       .lean();
+    const contentById = await contentTitlesFor(posts);
 
     // Calculate engagement rates and filter
     const recyclable = posts
       .map(post => {
         const engagement = post.analytics?.engagement || 0;
-        const impressions = post.analytics?.impressions || post.analytics?.views || 1;
+        const impressions = post.analytics?.impressions || postViews(post) || 1;
         const engagementRate = (engagement / impressions) * 100;
 
         return {
           postId: post._id,
-          contentId: post.content?.contentId?._id || post.contentId,
+          contentId: post.contentId || null,
           platform: post.platform,
-          title: post.content?.contentId?.title || post.content?.text || 'Untitled',
+          title: contentById.get(String(post.contentId))?.title || post.content?.text || 'Untitled',
           engagement,
           impressions,
           engagementRate,
@@ -81,13 +81,33 @@ async function identifyRecyclableContent(userId, options = {}) {
 }
 
 /**
+ * ScheduledPost.contentId is a plain String (no ref), so populate() cannot
+ * resolve it — and the old populate('content.contentId') named a path that
+ * does not exist, which strictPopulate rejects (every caller 500'd). Look the
+ * titles up directly instead. Returns Map<contentId, { _id, title }>.
+ */
+function postViews(post) {
+  const a = (post && post.analytics) || {};
+  return Number(a.views || (a.engagementBreakdown && a.engagementBreakdown.views) || a.videoViews || 0) || 0;
+}
+
+async function contentTitlesFor(posts) {
+  const mongoose = require('mongoose');
+  const Content = require('../models/Content');
+  const ids = [...new Set((posts || []).map((p) => p && p.contentId).filter((id) => id && mongoose.Types.ObjectId.isValid(String(id))).map(String))];
+  if (!ids.length) return new Map();
+  const docs = await Content.find({ _id: { $in: ids } }).select('title').lean().catch(() => []);
+  return new Map((docs || []).map((d) => [String(d._id), d]));
+}
+
+/**
  * Detect evergreen content
  */
 async function detectEvergreenContent(userId, contentId) {
   try {
     const posts = await ScheduledPost.find({
       userId,
-      'content.contentId': contentId,
+      contentId: contentId == null ? null : String(contentId),
       status: 'posted'
     })
       .sort({ postedAt: -1 })
@@ -141,7 +161,6 @@ async function detectEvergreenContent(userId, contentId) {
 async function createRecyclingPlan(userId, postId, options = {}) {
   try {
     const post = await ScheduledPost.findById(postId)
-      .populate('content.contentId')
       .lean();
 
     if (!post || post.userId.toString() !== userId.toString()) {
@@ -160,7 +179,7 @@ async function createRecyclingPlan(userId, postId, options = {}) {
     }
 
     // Detect if evergreen
-    const evergreen = await detectEvergreenContent(userId, post.content?.contentId?._id || post.contentId);
+    const evergreen = await detectEvergreenContent(userId, post.contentId);
 
     // Get optimal posting time
     const optimalTimes = await getOptimalPostingTimes(userId, [post.platform]);
@@ -177,16 +196,16 @@ async function createRecyclingPlan(userId, postId, options = {}) {
 
     // Create recycling plan
     const recycle = new ContentRecycle({
-      originalContentId: post.content?.contentId?._id || post.contentId,
+      originalContentId: post.contentId || undefined,
       originalPostId: postId,
       userId,
       platform: post.platform,
       recycleType: options.recycleType || 'exact',
       originalPerformance: {
         engagement: post.analytics?.engagement || 0,
-        views: post.analytics?.views || post.analytics?.impressions || 0,
+        views: postViews(post) || post.analytics?.impressions || 0,
         clicks: post.analytics?.clicks || 0,
-        impressions: post.analytics?.impressions || post.analytics?.views || 0,
+        impressions: post.analytics?.impressions || postViews(post) || 0,
         engagementRate: post.analytics?.engagementRate || 0,
         postedAt: post.postedAt
       },
@@ -1981,21 +2000,24 @@ async function scoutForResurrectionCandidates(userId) {
       status: 'posted',
       postedAt: { $lte: cutoffDate },
       $or: [
-        { 'analytics.views': { $gte: 10000 } },
+        // ScheduledPost has no analytics.views — views live in
+        // engagementBreakdown.views (or videoViews for video platforms).
+        { 'analytics.engagementBreakdown.views': { $gte: 10000 } },
+        { 'analytics.videoViews': { $gte: 10000 } },
         { 'analytics.engagement': { $gte: 500 } }
       ]
     })
-      .populate('content.contentId')
-      .sort({ 'analytics.views': -1 })
+      .sort({ 'analytics.engagementBreakdown.views': -1, 'analytics.engagement': -1 })
       .limit(20)
       .lean();
+    const contentById = await contentTitlesFor(candidates);
 
     // Map to resurrection schema
     return candidates.map(c => ({
       originalPostId: c._id,
-      contentId: c.content?.contentId?._id || c.contentId,
-      title: c.content?.contentId?.title || 'Legacy Asset',
-      historicalViews: c.analytics?.views || 0,
+      contentId: c.contentId || null,
+      title: contentById.get(String(c.contentId))?.title || c.content?.text?.slice(0, 80) || 'Legacy Asset',
+      historicalViews: postViews(c),
       historicalEngagement: c.analytics?.engagement || 0,
       ageInDays: Math.floor((new Date() - new Date(c.postedAt)) / (1000 * 60 * 60 * 24)),
       signalStrength: calculateResurrectionSignal(c)
@@ -2007,7 +2029,7 @@ async function scoutForResurrectionCandidates(userId) {
 }
 
 function calculateResurrectionSignal(post) {
-  const views = post.analytics?.views || 0;
+  const views = postViews(post);
   const engagement = post.analytics?.engagement || 0;
   const signal = Math.min(100, (views / 200) + (engagement / 10));
   return Math.round(signal);
