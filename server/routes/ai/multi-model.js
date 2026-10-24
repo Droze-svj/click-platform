@@ -43,6 +43,11 @@ router.post('/generate', auth, asyncHandler(async (req, res) => {
   }
   
   const result = await generateWithModel(prompt, taskType, options || {});
+  // The model can answer nothing (quota spent, safety block, empty output).
+  // That is not a successful generation — say so instead of a 200 with null.
+  if (!result || typeof result.content !== 'string' || !result.content.trim()) {
+    return sendError(res, 'The AI could not answer right now. Try again in a moment.', 503);
+  }
   sendSuccess(res, 'Content generated', 200, result);
 }));
 

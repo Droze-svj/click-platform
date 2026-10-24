@@ -9,6 +9,7 @@ import {
   Volume2, Check, ArrowRight
 } from 'lucide-react'
 import { apiPost } from '../../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 import { clickVoice, type ClickIntent } from '../../lib/clickVoice'
 import {
   ACCENT_PALETTES, SWARM_THEMES, SWARM_MODES, isSwarmMode, type SwarmMode,
@@ -48,6 +49,7 @@ function NeuralSoundWave({ color }: { color: string }) {
 }
 
 export default function ClickDynamicIsland() {
+  const { t } = useTranslation()
   const [isExpanded, setIsExpanded] = useState(false)
   const [swarmMode, setSwarmMode] = useState<SwarmMode>('coach')
   const [chatInput, setChatInput] = useState('')
@@ -152,22 +154,32 @@ export default function ClickDynamicIsland() {
     setLoadingChat(true)
 
     try {
-      const response = await apiPost<{ success: boolean; data?: { text?: string } }>('/ai/generate', {
-        prompt: `You are Click, a brilliant, highly professional but slightly sassy AI video editor and marketing swarm assistant. Reply in one short, impactful, witty sentence (creator coach style) to: "${text}"`,
+      // /ai/generate only renders voiceover|sfx|image assets (it 400'd every
+      // chat message). /ai/multi-model/generate is the text endpoint and answers
+      // { data: { content } }, or 503 when the model gives nothing back.
+      const response = await apiPost<{ success: boolean; data?: { content?: string } }>('/ai/multi-model/generate', {
+        prompt: `Reply in one or two short, practical sentences (creator coach style) to: "${text}"`,
         taskType: 'chat',
         options: {
           temperature: 0.8,
-          maxTokens: 60
+          // Gemini 2.5 spends part of maxTokens on thinking; 60 left no room for the answer.
+          maxTokens: 512
         }
       })
 
-      const reply = response?.data?.text?.trim()
+      const reply = typeof response?.data?.content === 'string' ? response.data.content.trim() : ''
       // Be honest when the model returns nothing — don't fabricate an "AI" reply.
-      const message = reply || "I couldn't generate a response just now. Try rephrasing or send that again."
+      const message = reply || t('clickIsland.chatEmpty')
       setChatLog(prev => [...prev, { sender: 'click', text: message }])
-    } catch (err) {
-      // Surface a clear connection error instead of a canned fake reply.
-      setChatLog(prev => [...prev, { sender: 'click', text: "I can't reach the assistant right now — check your connection and try again." }])
+    } catch (err: any) {
+      // Surface the real reason (quota / AI unavailable / offline) instead of a canned fake reply.
+      const status = err?.response?.status
+      const message = status === 429
+        ? t('clickIsland.chatRateLimited')
+        : status === 503
+          ? t('clickIsland.chatUnavailable')
+          : t('clickIsland.chatOffline')
+      setChatLog(prev => [...prev, { sender: 'click', text: message }])
     } finally {
       setLoadingChat(false)
     }

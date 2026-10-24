@@ -10169,5 +10169,11 @@
   },
   "governanceDashboard": {
     "loadFailed": "Couldn't load the audit log."
+  },
+  "clickIsland": {
+    "chatEmpty": "I couldn't generate a response just now. Try rephrasing or send that again.",
+    "chatRateLimited": "You've hit the AI limit for now. Try again in a little while.",
+    "chatUnavailable": "The AI couldn't answer right now. Try again in a moment.",
+    "chatOffline": "I can't reach the assistant right now. Check your connection and try again."
   }
 }
