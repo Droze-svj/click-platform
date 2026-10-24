@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react'
-import { Sparkles, X, Send, GitBranch, GitMerge, Wand2, ChevronRight } from 'lucide-react'
+import { Sparkles, X, Send, Wand2, ChevronRight } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
 import { apiGet } from '../../lib/api'
 import { IconButton, Input, Button, Badge } from '../ui'
@@ -51,7 +51,7 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
     onSeek,
 }) => {
     const [messages, setMessages] = useState([
-        { role: 'assistant', text: 'Ready to optimize your production. How should we proceed?' }
+        { role: 'assistant', text: 'What would you like to change? Type help to see what I can do.' }
     ])
     const [inputValue, setInputValue] = useState('')
     const [suggestions, setSuggestions] = useState<SuggestionItem[]>([])
@@ -105,38 +105,30 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
             return
         }
     }, [onSplitAtPlayhead, onSeek, setTextOverlays, showToast])
-    const [branches, setBranches] = useState([
-        { id: 'b1', name: 'v1-original', active: true },
-        { id: 'b2', name: 'client-revision-1', active: false, diff: true }
-    ])
 
     const handleCommand = (cmd: string) => {
         const lowerCmd = cmd.toLowerCase().trim()
 
         if (lowerCmd.startsWith('/zoom')) {
             setVideoFilters?.((prev: any) => ({ ...prev, zoom: 1.2 }))
-            showToast?.('Neural Zoom Applied', 'success')
-            return 'Calibrating optics... Zoom-in node established at 1.2x scale.'
+            showToast?.('Zoomed in to 1.2x', 'success')
+            return 'Zoomed in to 1.2x.'
         }
 
         if (lowerCmd.includes('subtitle') || lowerCmd.startsWith('/subtitle')) {
             setTextOverlays?.((prev: any) => [...prev, {
                 id: `sub-${Date.now()}`,
-                text: 'NEURAL SUBTITLE',
+                text: 'Your subtitle',
                 startTime: 0,
                 endTime: 5,
                 style: { fontSize: 48, color: '#ffffff', fontWeight: 'bold' }
             }])
-            showToast?.('Subtitles Injected', 'success')
-            return 'Injecting semantic text overlays across temporal nodes.'
+            showToast?.('Subtitle text added', 'success')
+            return 'Added a text overlay for the first 5 seconds. Edit it to add your words.'
         }
 
         if (lowerCmd.includes('clean') || lowerCmd.startsWith('/clean')) {
-            showToast?.('Scanning for dead air...', 'info')
-            setTimeout(() => {
-                showToast?.('Silence nodes eliminated', 'success')
-            }, 1000)
-            return 'Background worker engaged. Identifying and removing high-latency silence zones.'
+            return "I can't remove silences from chat. Use Smart cleanup in the editor instead."
         }
 
         if (lowerCmd.startsWith('/style')) {
@@ -149,15 +141,15 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                 saturation: isHighOctane ? 1.3 : 1.15,
                 hue: 0.02
             }))
-            showToast?.(`Cinematic Grade Applied (${styleDNA?.theme || 'vlog'} mode)`, 'success')
-            return `Optimizing visual aesthetics. Applied Neural LUT: "${styleDNA?.theme === 'high-octane' ? 'Elite High-Octane' : 'Elite Cinematic v2'}".`
+            showToast?.(`Color grade applied (${styleDNA?.theme || 'vlog'})`, 'success')
+            return `Applied a ${styleDNA?.theme === 'high-octane' ? 'bold, high-contrast' : 'soft cinematic'} color grade.`
         }
 
         if (lowerCmd.includes('help')) {
-            return 'I can execute: /zoom (optics), /subtitle (temporal text), /style (color grading), or /clean (silence removal).'
+            return 'Try /zoom (zoom in), /subtitle (add text) or /style (color grade).'
         }
 
-        return `Command "/${lowerCmd}" interpreted. Executing neural optimization protocol for your timeline segments.`
+        return `I don't know "${lowerCmd}" yet. Type help to see what I can do.`
     }
 
     return (
@@ -180,48 +172,6 @@ const AiAssistant: React.FC<AiAssistantProps> = ({
                         <IconButton aria-label="Close AI Assistant" variant="ghost" size="sm" onClick={onClose}>
                             <X className="w-4 h-4" />
                         </IconButton>
-                    </div>
-
-                    <div className="p-4 border-b border-border space-y-4">
-                        <div className="flex items-center justify-between">
-                            <p className="ds-text-label text-theme-muted">Timeline branches</p>
-                            <Badge variant="secondary">Workflows</Badge>
-                        </div>
-                        <div className="space-y-2">
-                             {branches.map(branch => (
-                                <div
-                                    key={branch.id}
-                                    className={cn(
-                                        'p-3 rounded-xl border flex items-center justify-between group transition-all',
-                                        branch.active ? 'bg-primary/10 border-primary/30' : 'ds-surface-card ds-hover-lift'
-                                    )}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <GitBranch className={cn('w-3.5 h-3.5', branch.active ? 'text-primary' : 'text-theme-muted')} />
-                                        <div className="flex flex-col">
-                                            <span className={cn('ds-text-body font-medium', branch.active ? 'text-theme-primary' : 'text-theme-secondary')}>{branch.name}</span>
-                                            {branch.diff && <span className="text-[10px] text-emerald-500 font-medium">Modified</span>}
-                                        </div>
-                                    </div>
-
-                                    {!branch.active && (
-                                        <IconButton
-                                            aria-label={`Merge ${branch.name} into master`}
-                                            variant="primary"
-                                            size="sm"
-                                            onClick={() => {
-                                                showToast?.(`Merging [${branch.name}] into master...`, 'info')
-                                                setBranches(prev => prev.map(b => ({ ...b, active: b.id === branch.id })))
-                                                setTimeout(() => showToast?.('Success: Timeline Merged non-destructively', 'success'), 1500)
-                                            }}
-                                            className="opacity-0 group-hover:opacity-100"
-                                        >
-                                            <GitMerge className="w-3 h-3" />
-                                        </IconButton>
-                                    )}
-                                </div>
-                             ))}
-                        </div>
                     </div>
 
                     {/* Niche-aware suggestions — pulled from /video/ai-editing/suggestions

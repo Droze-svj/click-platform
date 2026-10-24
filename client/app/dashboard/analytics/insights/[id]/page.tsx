@@ -43,11 +43,11 @@ export default function StrategicSynthesisHub() {
         const data = res.matrix.metadata || res.matrix;
         setMatrix(data)
       } else {
-        throw new Error(res.error || 'SCAN_INTERRUPTED')
+        throw new Error(res.error || 'The insight scan did not finish. Please try again.')
       }
     } catch (err: any) {
       console.error('Insight scan failed:', err)
-      setError(err.message || 'NEURAL_LINK_ERROR')
+      setError(err.message || "Couldn't load insights. Please try again.")
     } finally {
       setLoading(false)
     }

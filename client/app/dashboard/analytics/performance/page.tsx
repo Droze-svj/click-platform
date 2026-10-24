@@ -49,7 +49,7 @@ export default function FluxForecastingMatrixPage() {
       const response = await apiGet<PerformanceResponse>(`/analytics/performance?period=${period}${syncFlag}`)
       setData(response.performance_data || [])
     } catch (err: any) {
-      setError(err.message || 'FLUX_SYNC_INTERFACE_FAILURE')
+      setError(err.message || "Couldn't load performance data. Please try again.")
     } finally {
       setLoading(false)
       setRefreshing(false)

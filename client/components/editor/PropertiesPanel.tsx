@@ -28,13 +28,24 @@ import {
 import { formatTime } from '../../utils/editorUtils'
 import { IconButton } from '../ui'
 import { cn } from '../../lib/utils'
+import { useTranslation } from '../../hooks/useTranslation'
 
-const CAPTION_LAYOUTS: { id: CaptionLayout; label: string }[] = [
-  { id: 'bottom-center', label: 'Adaptive Bottom' },
-  { id: 'lower-third', label: 'Lower Third' },
-  { id: 'top-center', label: 'Zenith Center' },
-  { id: 'full-width-bottom', label: 'Immersive Bar' }
+// Short button labels (i18n keys, translated at render) + full names for the tooltip.
+const CAPTION_LAYOUTS: { id: CaptionLayout; labelKey: string; titleKey: string }[] = [
+  { id: 'bottom-center', labelKey: 'propertiesPanel.layout.bottom', titleKey: 'propertiesPanel.layout.bottomTitle' },
+  { id: 'lower-third', labelKey: 'propertiesPanel.layout.lowerThird', titleKey: 'propertiesPanel.layout.lowerThirdTitle' },
+  { id: 'top-center', labelKey: 'propertiesPanel.layout.top', titleKey: 'propertiesPanel.layout.topTitle' },
+  { id: 'full-width-bottom', labelKey: 'propertiesPanel.layout.fullWidth', titleKey: 'propertiesPanel.layout.fullWidthTitle' }
 ]
+
+// Tab ids are internal; these are the labels people see.
+const TAB_LABEL_KEYS: Record<'synthesis' | 'projection' | 'entities' | 'transform' | 'clip', string> = {
+  transform: 'propertiesPanel.tab.transform',
+  synthesis: 'propertiesPanel.tab.color',
+  projection: 'propertiesPanel.tab.captions',
+  entities: 'propertiesPanel.tab.text',
+  clip: 'propertiesPanel.tab.clip'
+}
 
 interface PropertiesPanelProps {
   isOpen: boolean
@@ -91,6 +102,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   transcript,
   zenMode = false
 }) => {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = React.useState<'synthesis' | 'projection' | 'entities' | 'transform' | 'clip'>('synthesis')
 
   React.useEffect(() => {
@@ -136,7 +148,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             onClick={() => setVideoFilters((prev: any) => ({ ...prev, [field]: resetValue }))}
             className="text-[10px] font-medium text-theme-muted hover:text-theme-primary"
           >
-            Reset
+            {t('propertiesPanel.reset')}
           </button>
         </div>
       </div>
@@ -197,11 +209,11 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 <Settings className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <span className="ds-text-label text-theme-muted">Properties</span>
-                <span className="ds-text-body font-medium text-theme-primary capitalize">{activeTab} active</span>
+                <span className="ds-text-label text-theme-muted">{t('propertiesPanel.title')}</span>
+                <span className="ds-text-body font-medium text-theme-primary">{t('propertiesPanel.activeTab', { tab: t(TAB_LABEL_KEYS[activeTab]) })}</span>
               </div>
             </div>
-            <IconButton aria-label="Close properties" variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
+            <IconButton aria-label={t('propertiesPanel.close')} variant="ghost" size="sm" onClick={() => setIsOpen(false)}>
               <X className="w-4 h-4" />
             </IconButton>
           </div>
@@ -224,7 +236,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     className="absolute inset-0 ds-surface-card rounded-lg"
                   />
                 )}
-                <span className="relative z-10">{tab}</span>
+                <span className="relative z-10">{t(TAB_LABEL_KEYS[tab as keyof typeof TAB_LABEL_KEYS])}</span>
               </button>
             ))}
           </div>
@@ -243,7 +255,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               >
                 <div className="flex items-center gap-3">
                   <Scissors className="w-4 h-4 text-emerald-500" />
-                  <span className="ds-text-label text-theme-primary">Clip properties</span>
+                  <span className="ds-text-label text-theme-primary">{t('propertiesPanel.clipProperties')}</span>
                   <div className="flex-1 h-px bg-border ml-2" />
                 </div>
                 
@@ -253,7 +265,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   return (
                      <div className="space-y-8">
                         <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-                          <span className="ds-text-label text-emerald-500 block mb-1">Target segment</span>
+                          <span className="ds-text-label text-emerald-500 block mb-1">{t('propertiesPanel.selectedClip')}</span>
                           <span className="ds-text-body font-medium text-theme-primary truncate flex items-center gap-2">
                              <Fingerprint className="w-3 h-3 text-theme-muted" />
                              {seg.name}
@@ -262,31 +274,31 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
                         <div className="space-y-4">
                            <div className="flex items-center justify-between">
-                              <span className="ds-text-label text-theme-secondary">Playback speed</span>
+                              <span className="ds-text-label text-theme-secondary">{t('propertiesPanel.playbackSpeed')}</span>
                               <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded">{(seg.playbackSpeed ?? 1).toFixed(2)}x</span>
                            </div>
                            <input
                               type="range" min={0.1} max={4.0} step={0.1} value={seg.playbackSpeed ?? 1}
-                              title={`Playback Speed: ${(seg.playbackSpeed ?? 1).toFixed(2)}x`}
+                              title={t('propertiesPanel.playbackSpeedTitle', { speed: (seg.playbackSpeed ?? 1).toFixed(2) })}
                               onChange={(e) => {
                                  const val = parseFloat(e.target.value)
                                  setTimelineSegments?.((prev: any) => prev.map((s: any) => s.id === selectedSegmentId ? { ...s, playbackSpeed: val } : s))
                               }}
                               className="w-full h-2 bg-white/5 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-emerald-400 [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:scale-125 transition-all outline-none"
                            />
-                           <p className="ds-text-caption text-theme-muted max-w-xs leading-relaxed">Adjusts internal media playback engine time-scale logic.</p>
+                           <p className="ds-text-caption text-theme-muted max-w-xs leading-relaxed">{t('propertiesPanel.playbackSpeedHint')}</p>
                         </div>
 
                         <div className="space-y-4 pt-6 border-t border-border">
                            <div className="flex items-center justify-between">
-                              <span className="ds-text-label text-theme-secondary">Stabilization</span>
+                              <span className="ds-text-label text-theme-secondary">{t('propertiesPanel.stabilization')}</span>
                               <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded">{seg.stabilization ?? 0}%</span>
                            </div>
                            <div className="flex items-center gap-4">
                               <Lock className={`w-5 h-5 ${(seg.stabilization ?? 0) > 0 ? 'text-indigo-400' : 'text-slate-600'}`} />
                               <input
                                  type="range" min={0} max={100} step={1} value={seg.stabilization ?? 0}
-                                 title={`Stabilization: ${seg.stabilization ?? 0}%`}
+                                 title={t('propertiesPanel.stabilizationTitle', { value: seg.stabilization ?? 0 })}
                                  onChange={(e) => {
                                     const val = parseInt(e.target.value)
                                     setTimelineSegments?.((prev: any) => prev.map((s: any) => s.id === selectedSegmentId ? { ...s, stabilization: val } : s))
@@ -294,7 +306,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                  className="flex-1 h-2 bg-white/5 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-indigo-400 [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:scale-125 transition-all outline-none"
                               />
                            </div>
-                           <p className="ds-text-caption text-theme-muted max-w-xs leading-relaxed">Applies Gyro-Smooth padding to edge-bounds of frame data to reduce jitters.</p>
+                           <p className="ds-text-caption text-theme-muted max-w-xs leading-relaxed">{t('propertiesPanel.stabilizationHint')}</p>
                         </div>
 
                         {(seg.type === 'video' || seg.type === 'audio') && (
@@ -303,13 +315,13 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
                                      <Volume2 className="w-4 h-4 text-rose-500" />
-                                     <span className="ds-text-label text-theme-secondary">Master volume</span>
+                                     <span className="ds-text-label text-theme-secondary">{t('propertiesPanel.volume')}</span>
                                   </div>
                                   <span className="text-[10px] font-mono font-bold text-rose-400 bg-rose-500/10 px-2 py-1 rounded">{Math.round((seg.volume ?? 1) * 100)}%</span>
                                 </div>
                                 <input
                                    type="range" min={0} max={2.0} step={0.05} value={seg.volume ?? 1}
-                                   title={`Volume: ${Math.round((seg.volume ?? 1) * 100)}%`}
+                                   title={t('propertiesPanel.volumeTitle', { value: Math.round((seg.volume ?? 1) * 100) })}
                                    onChange={(e) => {
                                       const val = parseFloat(e.target.value)
                                       setTimelineSegments?.((prev: any) => prev.map((s: any) => s.id === selectedSegmentId ? { ...s, volume: val } : s))
@@ -325,13 +337,13 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                         <Headphones className="w-4 h-4" />
                                      </div>
                                      <div className="flex flex-col">
-                                        <span className="ds-text-label text-theme-primary">Auto-ducking</span>
-                                        <span className="ds-text-caption text-theme-muted">Lower dB against dialogue</span>
+                                        <span className="ds-text-label text-theme-primary">{t('propertiesPanel.autoDucking')}</span>
+                                        <span className="ds-text-caption text-theme-muted">{t('propertiesPanel.autoDuckingHint')}</span>
                                      </div>
                                   </div>
                                   <button
                                      type="button"
-                                     title="Toggle Auto-Ducking"
+                                     title={t('propertiesPanel.autoDuckingToggle')}
                                      onClick={() => {
                                         setTimelineSegments?.((prev: any) => prev.map((s: any) => {
                                            if (s.id !== selectedSegmentId) return s
@@ -394,21 +406,21 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               >
                 <div className="flex items-center gap-3">
                   <Activity className="w-4 h-4 text-rose-500" />
-                  <span className="ds-text-label text-theme-primary">Spatial transform</span>
+                  <span className="ds-text-label text-theme-primary">{t('propertiesPanel.positionAndSize')}</span>
                   <div className="flex-1 h-px bg-border ml-2" />
                 </div>
                 {setVideoTransform && (
                   <div className="space-y-6">
-                    <ControllerSlider label="Scale (%)" value={(videoTransform?.scale || 1) * 100} min={10} max={400} field="scale" resetValue={100} />
-                    <ControllerSlider label="X Position" value={videoTransform?.positionX || 0} min={-100} max={100} field="positionX" resetValue={0} />
-                    <ControllerSlider label="Y Position" value={videoTransform?.positionY || 0} min={-100} max={100} field="positionY" resetValue={0} />
-                    <ControllerSlider label="Rotation (deg)" value={videoTransform?.rotation || 0} min={-180} max={180} field="rotation" resetValue={0} />
+                    <ControllerSlider label={t('propertiesPanel.scale')} value={(videoTransform?.scale || 1) * 100} min={10} max={400} field="scale" resetValue={100} />
+                    <ControllerSlider label={t('propertiesPanel.positionX')} value={videoTransform?.positionX || 0} min={-100} max={100} field="positionX" resetValue={0} />
+                    <ControllerSlider label={t('propertiesPanel.positionY')} value={videoTransform?.positionY || 0} min={-100} max={100} field="positionY" resetValue={0} />
+                    <ControllerSlider label={t('propertiesPanel.rotation')} value={videoTransform?.rotation || 0} min={-180} max={180} field="rotation" resetValue={0} />
 
                     {setVideoTransformKeyframes && (
                       <div className="pt-4 border-t border-border">
                         <div className="flex items-center justify-between mb-4">
-                          <span className="ds-text-label text-theme-secondary">Animation</span>
-                          <span className="ds-text-caption text-primary">{videoTransformKeyframes?.length || 0} keyframes</span>
+                          <span className="ds-text-label text-theme-secondary">{t('propertiesPanel.animation')}</span>
+                          <span className="ds-text-caption text-primary">{(videoTransformKeyframes?.length || 0) === 1 ? t('propertiesPanel.keyframesCountOne') : t('propertiesPanel.keyframesCount', { count: videoTransformKeyframes?.length || 0 })}</span>
                         </div>
                         <m.button
                           whileHover={{ scale: 1.02 }}
@@ -427,7 +439,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                           }}
                           className="w-full py-3 rounded-lg bg-primary/15 hover:bg-primary/25 border border-primary/30 text-primary ds-text-label transition-all"
                         >
-                          + Add keyframe at playhead
+                          {t('propertiesPanel.addKeyframe')}
                         </m.button>
 
                         {onTimeUpdate && videoTransformKeyframes && videoTransformKeyframes.length > 0 && (
@@ -440,7 +452,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                }}
                                className="flex-1 py-1.5 rounded bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-[9px] font-bold uppercase tracking-widest transition-colors border border-white/5"
                              >
-                               ◁ Prev
+                               {t('propertiesPanel.prevKeyframe')}
                              </button>
                              <button
                                type="button"
@@ -450,7 +462,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                }}
                                className="flex-1 py-1.5 rounded bg-white/5 hover:bg-white/10 text-white/50 hover:text-white text-[9px] font-bold uppercase tracking-widest transition-colors border border-white/5"
                              >
-                               Next ▷
+                               {t('propertiesPanel.nextKeyframe')}
                              </button>
                            </div>
                         )}
@@ -471,14 +483,14 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                     }}
                                     className="text-[9px] text-slate-500 hover:text-rose-400 uppercase font-black"
                                   >
-                                    Remove
+                                    {t('propertiesPanel.remove')}
                                   </button>
                                 </div>
 
                                 <div className="flex items-center justify-between mt-1">
-                                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">Curve</span>
+                                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">{t('propertiesPanel.curve')}</span>
                                   <select
-                                    title="Curve"
+                                    title={t('propertiesPanel.curve')}
                                     value={kf.easing || 'ease-in-out'}
                                     onChange={(e) => {
                                       setVideoTransformKeyframes(
@@ -487,13 +499,13 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                                     }}
                                     className="bg-white/5 border border-white/10 text-[9px] text-slate-300 font-bold p-1 rounded outline-none"
                                   >
-                                    <option value="linear">Linear</option>
-                                    <option value="ease-in">Ease In</option>
-                                    <option value="ease-out">Ease Out</option>
-                                    <option value="ease-in-out">Ease In-Out</option>
-                                    <option value="bounce-out">Bounce Out</option>
-                                    <option value="elastic-out">Elastic Out</option>
-                                    <option value="ease-in-out-cubic">Cubic IO</option>
+                                    <option value="linear">{t('propertiesPanel.easing.linear')}</option>
+                                    <option value="ease-in">{t('propertiesPanel.easing.easeIn')}</option>
+                                    <option value="ease-out">{t('propertiesPanel.easing.easeOut')}</option>
+                                    <option value="ease-in-out">{t('propertiesPanel.easing.easeInOut')}</option>
+                                    <option value="bounce-out">{t('propertiesPanel.easing.bounceOut')}</option>
+                                    <option value="elastic-out">{t('propertiesPanel.easing.elasticOut')}</option>
+                                    <option value="ease-in-out-cubic">{t('propertiesPanel.easing.cubic')}</option>
                                   </select>
                                 </div>
                               </div>
@@ -517,16 +529,16 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               >
                 <div className="flex items-center gap-3">
                   <Palette className="w-4 h-4 text-primary" />
-                  <span className="ds-text-label text-theme-primary">Global synthesis</span>
+                  <span className="ds-text-label text-theme-primary">{t('propertiesPanel.tab.color')}</span>
                   <div className="flex-1 h-px bg-border ml-2" />
                 </div>
                 <div className="space-y-6">
-                  <ControllerSlider label="Luminosity" value={videoFilters.brightness} min={0} max={200} field="brightness" />
-                  <ControllerSlider label="Dynamic Contrast" value={videoFilters.contrast} min={0} max={200} field="contrast" />
-                  <ControllerSlider label="Neural Chroma" value={videoFilters.saturation} min={0} max={200} field="saturation" />
-                  <ControllerSlider label="Tone Bias" value={videoFilters.temperature} min={0} max={200} field="temperature" />
-                  <ControllerSlider label="Edge Clarity" value={videoFilters.clarity} min={-100} max={100} field="clarity" resetValue={0} />
-                  <ControllerSlider label="Atmospheric Dehaze" value={videoFilters.dehaze} min={-100} max={100} field="dehaze" resetValue={0} />
+                  <ControllerSlider label={t('propertiesPanel.brightness')} value={videoFilters.brightness} min={0} max={200} field="brightness" />
+                  <ControllerSlider label={t('propertiesPanel.contrast')} value={videoFilters.contrast} min={0} max={200} field="contrast" />
+                  <ControllerSlider label={t('propertiesPanel.saturation')} value={videoFilters.saturation} min={0} max={200} field="saturation" />
+                  <ControllerSlider label={t('propertiesPanel.temperature')} value={videoFilters.temperature} min={0} max={200} field="temperature" />
+                  <ControllerSlider label={t('propertiesPanel.clarity')} value={videoFilters.clarity} min={-100} max={100} field="clarity" resetValue={0} />
+                  <ControllerSlider label={t('propertiesPanel.dehaze')} value={videoFilters.dehaze} min={-100} max={100} field="dehaze" resetValue={0} />
                 </div>
               </m.div>
             )}
@@ -541,7 +553,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               >
                 <div className="flex items-center gap-3">
                   <Subtitles className="w-4 h-4 text-emerald-500" />
-                  <span className="ds-text-label text-theme-primary">Captions</span>
+                  <span className="ds-text-label text-theme-primary">{t('propertiesPanel.tab.captions')}</span>
                   <div className="flex-1 h-px bg-border ml-2" />
                 </div>
 
@@ -549,8 +561,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   <div className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.03] border border-white/5 group hover:border-emerald-500/20 transition-all cursor-pointer"
                     onClick={() => setCaptionStyle({ ...cap, enabled: !cap.enabled })}>
                     <div className="flex flex-col">
-                      <span className="ds-text-label text-theme-primary">Captions active</span>
-                      <span className="ds-text-caption text-theme-muted">Render real-time transcript</span>
+                      <span className="ds-text-label text-theme-primary">{t('propertiesPanel.captionsOn')}</span>
+                      <span className="ds-text-caption text-theme-muted">{t('propertiesPanel.captionsOnHint')}</span>
                     </div>
                     <div className={`w-10 h-5 rounded-full border border-white/10 relative transition-all ${cap.enabled ? 'bg-emerald-600' : 'bg-white/5'}`}>
                       <m.div animate={{ x: cap.enabled ? 20 : 2 }} className="absolute top-1 w-3 h-3 rounded-full bg-white shadow-sm" />
@@ -568,24 +580,25 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                           onClick={() => setCaptionStyle({ ...cap, enabled: true, textStyle: pre.textStyle, layout: pre.layout, size: pre.size, font: pre.font })}
                           className={cn('relative p-4 rounded-xl border text-left overflow-hidden group/preset transition-all', isActive ? 'bg-primary border-primary text-primary-foreground' : 'ds-surface-card hover:border-primary/30')}
                         >
-                          <span className={cn('block ds-text-label', isActive ? 'text-primary-foreground' : 'text-theme-secondary group-hover/preset:text-theme-primary')}>{pre.label}</span>
-                          <span className={cn('block ds-text-caption mt-1', isActive ? 'text-primary-foreground/70' : 'text-theme-muted')}>{pre.description}</span>
+                          <span className={cn('block ds-text-label', isActive ? 'text-primary-foreground' : 'text-theme-secondary group-hover/preset:text-theme-primary')}>{t(`propertiesPanel.preset.${pre.id}.label`)}</span>
+                          <span className={cn('block ds-text-caption mt-1', isActive ? 'text-primary-foreground/70' : 'text-theme-muted')}>{t(`propertiesPanel.preset.${pre.id}.description`)}</span>
                         </m.button>
                       )
                     })}
                   </div>
 
                   <div className="space-y-4 pt-4 border-t border-border">
-                    <span className="ds-text-label text-theme-muted">Caption layout</span>
+                    <span className="ds-text-label text-theme-muted">{t('propertiesPanel.captionLayout')}</span>
                     <div className="flex gap-2">
                       {CAPTION_LAYOUTS.map((l) => (
                         <button
                           type="button"
                           key={l.id}
                           onClick={() => setCaptionStyle({ ...cap, layout: l.id })}
+                          title={t(l.titleKey)}
                           className={cn('flex-1 py-3 rounded-lg ds-text-label border transition-all', cap.layout === l.id ? 'bg-primary text-primary-foreground border-primary' : 'ds-surface-card text-theme-muted hover:text-theme-primary')}
                         >
-                          {l.label.split(' ')[0]}
+                          {t(l.labelKey)}
                         </button>
                       ))}
                     </div>
@@ -604,14 +617,14 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               >
                 <div className="flex items-center gap-3">
                   <Layers className="w-4 h-4 text-amber-500" />
-                  <span className="ds-text-label text-theme-primary">Text entities</span>
+                  <span className="ds-text-label text-theme-primary">{t('propertiesPanel.textOverlays')}</span>
                   <div className="flex-1 h-px bg-border ml-2" />
                 </div>
 
                 <div className="space-y-3">
                   {textOverlays.length === 0 ? (
                     <div className="p-12 text-center rounded-2xl ds-surface-card">
-                      <span className="ds-text-body text-theme-muted">No text entities yet</span>
+                      <span className="ds-text-body text-theme-muted">{t('propertiesPanel.noTextOverlays')}</span>
                     </div>
                   ) : (
                     textOverlays.map(overlay => (
@@ -628,8 +641,8 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         <button
                           type="button"
                           onClick={() => setTextOverlays((prev: any[]) => prev.filter(o => o.id !== overlay.id))}
-                          aria-label="Delete text overlay"
-                          title="Delete text overlay"
+                          aria-label={t('propertiesPanel.deleteTextOverlay')}
+                          title={t('propertiesPanel.deleteTextOverlay')}
                           className="w-8 h-8 flex items-center justify-center text-slate-600 hover:text-rose-500 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -647,7 +660,7 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         <div className="px-4 py-5 border-t border-border ds-surface-subtle flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Fingerprint className="w-3.5 h-3.5 text-theme-muted" />
-            <span className="ds-text-caption text-theme-muted">Synchronized</span>
+            <span className="ds-text-caption text-theme-muted">{t('propertiesPanel.synced')}</span>
           </div>
           <Zap className="w-3 h-3 text-amber-500" />
         </div>

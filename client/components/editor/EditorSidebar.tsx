@@ -29,6 +29,7 @@ import { EDITOR_GROUPS, groupForCategory, type EditorGroupId } from '../../utils
 import { formatTime, loadEditorContentPreferences } from '../../utils/editorUtils'
 import { IconButton, Input, Badge } from '../ui'
 import { cn } from '../../lib/utils'
+import { useTranslation } from '../../hooks/useTranslation'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -79,6 +80,8 @@ const NEW_2026_CATEGORIES = [
   // sidebar stays the size the 2026 calm-down left it.
   {
     id: 'ai-assist' as EditorCategory,
+    labelKey: 'editorSidebar.cat.aiAssist.label',
+    descKey: 'editorSidebar.cat.aiAssist.desc',
     label: 'AI Assist',
     icon: Sparkles,
     color: 'from-violet-500 to-indigo-600',
@@ -89,6 +92,8 @@ const NEW_2026_CATEGORIES = [
   },
   {
     id: 'monetize' as EditorCategory,
+    labelKey: 'editorSidebar.cat.monetize.label',
+    descKey: 'editorSidebar.cat.monetize.desc',
     label: 'Monetize',
     icon: DollarSign,
     color: 'from-emerald-500 to-teal-600',
@@ -99,6 +104,8 @@ const NEW_2026_CATEGORIES = [
   },
   {
     id: 'stock-library' as EditorCategory,
+    labelKey: 'editorSidebar.cat.stockLibrary.label',
+    descKey: 'editorSidebar.cat.stockLibrary.desc',
     label: 'Stock Library',
     icon: Library,
     color: 'from-rose-500 to-fuchsia-600',
@@ -109,6 +116,8 @@ const NEW_2026_CATEGORIES = [
   },
   {
     id: 'text-motion' as EditorCategory,
+    labelKey: 'editorSidebar.cat.textMotion.label',
+    descKey: 'editorSidebar.cat.textMotion.desc',
     label: 'Text & Motion',
     icon: Type,
     color: 'from-fuchsia-500 to-purple-700',
@@ -123,6 +132,15 @@ const ALL_CATEGORIES = [
   ...CATEGORIES,
   ...NEW_2026_CATEGORIES.filter(n => !CATEGORIES.find(c => c.id === n.id)),
 ]
+
+// Display keys for category badges. The raw badge value stays as-is because
+// it also drives the badge colour below.
+const BADGE_KEYS: Record<string, string> = {
+  NEW: 'editorSidebar.badge.new',
+  Agency: 'editorSidebar.badge.agency',
+  PRO: 'editorSidebar.badge.pro',
+  BETA: 'editorSidebar.badge.beta',
+}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -151,6 +169,9 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
     return (saved as EditorGroupId | 'all') || 'all'
   })
   const searchRef = useRef<HTMLInputElement>(null)
+  const { t } = useTranslation()
+  const catLabel = (c: { label: string; labelKey?: string }) => (c.labelKey ? t(c.labelKey) : c.label)
+  const catDesc = (c: { description: string; descKey?: string }) => (c.descKey ? t(c.descKey) : c.description)
 
   // Persist group selection so the user's filter choice survives reloads.
   useEffect(() => {
@@ -209,9 +230,12 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
   // Group filter is bypassed during a search so users always find what they
   // typed regardless of which group it lives in.
   const filteredCategories = ALL_CATEGORIES.filter(c => {
+    const q = searchQuery.toLowerCase()
     const matchesText =
-      c.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.description.toLowerCase().includes(searchQuery.toLowerCase())
+      catLabel(c).toLowerCase().includes(q) ||
+      catDesc(c).toLowerCase().includes(q) ||
+      c.label.toLowerCase().includes(q) ||
+      c.description.toLowerCase().includes(q)
     if (!matchesText) return false
     if (searchQuery) return true
     if (activeGroup === 'all') return true
@@ -260,17 +284,17 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                 <Sparkles className="w-4 h-4 text-white" aria-hidden />
               </div>
               <div className="min-w-0">
-                <h2 className="ds-text-label text-theme-primary leading-none">Editor tools</h2>
+                <h2 className="ds-text-label text-theme-primary leading-none">{t('editorSidebar.title')}</h2>
                 <div className="flex items-center gap-1.5 mt-1">
                   <Activity className="w-3 h-3 text-emerald-500" aria-hidden />
-                  <span className="text-[10px] text-theme-muted leading-none">Ready</span>
+                  <span className="text-[10px] text-theme-muted leading-none">{t('editorSidebar.ready')}</span>
                 </div>
               </div>
             </div>
           )}
           {deviceView !== 'mobile' && (
             <IconButton
-              aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={isCollapsed ? t('editorSidebar.expand') : t('editorSidebar.collapse')}
               variant="secondary"
               size="sm"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -288,13 +312,13 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
             <Input
               ref={searchRef}
               type="text"
-              placeholder="Search tools (⌘F)"
+              placeholder={t('editorSidebar.searchPlaceholder')}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="h-10 pl-9 pr-8 text-xs"
             />
             {searchQuery && (
-              <button type="button" onClick={() => setSearchQuery('')} title="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary">
+              <button type="button" onClick={() => setSearchQuery('')} title={t('editorSidebar.clearSearch')} className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary">
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
@@ -316,14 +340,14 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                   : 'ds-surface-subtle text-theme-secondary border-subtle hover:text-theme-primary'
               )}
             >
-              All
+              {t('editorSidebar.all')}
             </button>
             {EDITOR_GROUPS.map(g => {
               const isOn = activeGroup === g.id
               return (
                 <button type="button"
                   key={g.id}
-                  title={g.description}
+                  title={t(g.descKey)}
                   onClick={() => setActiveGroup(g.id)}
                   className={cn('px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors',
                     isOn
@@ -331,7 +355,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                       : 'ds-surface-subtle text-theme-secondary border-subtle hover:text-theme-primary'
                   )}
                 >
-                  {g.label}
+                  {t(g.labelKey)}
                 </button>
               )
             })}
@@ -343,7 +367,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
       {!isCollapsed && !searchQuery && recentCategories.length > 0 && (
         <div className="px-4 pb-4 flex-shrink-0 relative z-10">
           <p className="ds-text-label text-theme-muted mb-3 flex items-center gap-2">
-            <History className="w-3 h-3" aria-hidden /> Recent
+            <History className="w-3 h-3" aria-hidden /> {t('editorSidebar.recent')}
           </p>
           <div className="flex flex-col gap-1.5">
             {recentCategories.map((category) => {
@@ -360,7 +384,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                 >
                   <div className="flex items-center gap-3">
                     <Icon className="w-3.5 h-3.5 group-hover:text-primary transition-colors" aria-hidden />
-                    <span className="truncate">{category.label}</span>
+                    <span className="truncate">{catLabel(category)}</span>
                   </div>
                   <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden />
                 </button>
@@ -377,7 +401,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
         {searchQuery && sortedCategories.length === 0 && (
           <div className="text-center py-10 text-theme-muted">
             <Search className="w-6 h-6 mx-auto mb-2 opacity-40" aria-hidden />
-            <p className="text-xs">No tools found</p>
+            <p className="text-xs">{t('editorSidebar.noTools')}</p>
           </div>
         )}
 
@@ -385,7 +409,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
         {!searchQuery && pinnedCategories.length > 0 && !isCollapsed && (
           <div className="px-3 pt-1 pb-2">
             <p className="ds-text-label text-theme-muted flex items-center gap-2">
-              <Pin className="w-2.5 h-2.5" aria-hidden /> Pinned
+              <Pin className="w-2.5 h-2.5" aria-hidden /> {t('editorSidebar.pinned')}
             </p>
           </div>
         )}
@@ -406,7 +430,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
               {showDivider && (
                 <div className="px-3 pt-3 pb-2">
                   <p className="ds-text-label text-theme-muted flex items-center gap-2">
-                    <Layers className="w-2.5 h-2.5" aria-hidden /> All tools
+                    <Layers className="w-2.5 h-2.5" aria-hidden /> {t('editorSidebar.allTools')}
                   </p>
                 </div>
               )}
@@ -446,7 +470,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-[13px] leading-none truncate">
-                            {category.label}
+                            {catLabel(category)}
                           </span>
                           {/* Badges */}
                           {(category as any).badge && (
@@ -459,7 +483,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                                 : 'bg-emerald-500/15 text-emerald-500'
                               )}
                             >
-                              {(category as any).badge}
+                              {BADGE_KEYS[(category as any).badge] ? t(BADGE_KEYS[(category as any).badge]) : (category as any).badge}
                             </Badge>
                           )}
                           {isLocked && requiredTier && (
@@ -469,7 +493,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                           )}
                         </div>
                         <div className={cn('text-[11px] mt-0.5 leading-tight truncate', isActive ? 'text-primary-foreground/80' : 'text-theme-muted')}>
-                          {category.description}
+                          {catDesc(category)}
                         </div>
                       </div>
                     )}
@@ -492,7 +516,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                     animate={{ opacity: 1, scale: 1 }}
                     onClick={(e) => togglePin(category.id as EditorCategory, e)}
                     className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg ds-surface-elevated flex items-center justify-center text-theme-muted hover:text-theme-primary transition-colors z-10"
-                    title={isPinned ? 'Unpin' : 'Pin to top'}
+                    title={isPinned ? t('editorSidebar.unpin') : t('editorSidebar.pinToTop')}
                   >
                     <Pin className={cn('w-3 h-3', isPinned && 'text-primary fill-primary')} aria-hidden />
                   </m.button>
@@ -514,7 +538,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                 {deviceView === 'tablet' && <Tablet className="w-3.5 h-3.5" aria-hidden />}
                 {deviceView === 'mobile' && <Smartphone className="w-3.5 h-3.5" aria-hidden />}
               </div>
-              <span className="text-[11px] font-medium capitalize text-theme-muted">{deviceView}</span>
+              <span className="text-[11px] font-medium capitalize text-theme-muted">{t(`editorSidebar.device.${deviceView}`)}</span>
             </div>
             <div className="text-xs font-medium text-primary font-mono tabular-nums">{formatTime(videoDuration)}</div>
           </div>
@@ -525,11 +549,11 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
           <Activity className="w-3.5 h-3.5 text-emerald-500" aria-hidden />
           {!isCollapsed && (
             <>
-              <span className="text-[11px] font-medium text-theme-muted flex-1 leading-none">Ready</span>
+              <span className="text-[11px] font-medium text-theme-muted flex-1 leading-none">{t('editorSidebar.ready')}</span>
               <button
                 type="button"
                 onClick={() => setShowShortcuts(v => !v)}
-                title="Keyboard shortcuts"
+                title={t('editorSidebar.shortcuts')}
                 className="flex items-center gap-1 px-2 py-0.5 rounded-lg ds-surface-elevated text-theme-muted hover:text-theme-primary transition-colors"
               >
                 <Keyboard className="w-3 h-3" aria-hidden />
@@ -550,9 +574,9 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
             >
               <div className="flex items-center justify-between mb-3">
                 <p className="ds-text-label text-theme-primary flex items-center gap-2">
-                  <Command className="w-3 h-3 text-primary" aria-hidden /> Keyboard shortcuts
+                  <Command className="w-3 h-3 text-primary" aria-hidden /> {t('editorSidebar.shortcuts')}
                 </p>
-                <button type="button" onClick={() => setShowShortcuts(false)} title="Close shortcuts" className="text-theme-muted hover:text-theme-primary">
+                <button type="button" onClick={() => setShowShortcuts(false)} title={t('editorSidebar.closeShortcuts')} className="text-theme-muted hover:text-theme-primary">
                   <X className="w-3.5 h-3.5" aria-hidden />
                 </button>
               </div>
@@ -562,13 +586,13 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                   if (!cat) return null
                   return (
                     <div key={catId} className="flex items-center justify-between px-2 py-1 rounded-lg ds-surface-subtle">
-                      <span className="text-[11px] text-theme-secondary truncate">{cat.label}</span>
+                      <span className="text-[11px] text-theme-secondary truncate">{catLabel(cat)}</span>
                       <kbd className="px-1.5 py-0.5 rounded bg-accent text-[10px] font-mono text-theme-primary">{key}</kbd>
                     </div>
                   )
                 })}
                 <div className="flex items-center justify-between px-2 py-1 rounded-lg ds-surface-subtle col-span-2">
-                  <span className="text-[11px] text-theme-secondary">Search tools</span>
+                  <span className="text-[11px] text-theme-secondary">{t('editorSidebar.searchTools')}</span>
                   <kbd className="px-1.5 py-0.5 rounded bg-accent text-[10px] font-mono text-theme-primary">⌘F</kbd>
                 </div>
               </div>

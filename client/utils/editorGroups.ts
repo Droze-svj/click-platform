@@ -20,12 +20,16 @@ export type EditorGroupId = 'edit' | 'media' | 'text' | 'ai' | 'collab' | 'expor
 export interface EditorGroup {
   id: EditorGroupId
   label: string
+  /** i18n key for `label` — translate at render with t(labelKey). */
+  labelKey: string
   /** Tailwind gradient (e.g. 'from-fuchsia-500 to-violet-600') */
   gradient: string
   /** Solid accent class for the active state */
   accent: string
   /** Tight description shown on hover */
   description: string
+  /** i18n key for `description` — translate at render with t(descKey). */
+  descKey: string
   /** Categories that belong to this group, in display order. */
   categoryIds: EditorCategory[]
 }
@@ -37,6 +41,8 @@ export interface EditorGroup {
 export const EDITOR_GROUPS: EditorGroup[] = [
   {
     id: 'edit',
+    labelKey: 'editorSidebar.group.edit.label',
+    descKey: 'editorSidebar.group.edit.desc',
     label: 'Edit',
     gradient: 'from-slate-700 to-slate-800',
     accent: 'text-indigo-300',
@@ -45,6 +51,8 @@ export const EDITOR_GROUPS: EditorGroup[] = [
   },
   {
     id: 'media',
+    labelKey: 'editorSidebar.group.media.label',
+    descKey: 'editorSidebar.group.media.desc',
     label: 'Media',
     gradient: 'from-slate-700 to-slate-800',
     accent: 'text-indigo-300',
@@ -53,6 +61,8 @@ export const EDITOR_GROUPS: EditorGroup[] = [
   },
   {
     id: 'ai',
+    labelKey: 'editorSidebar.group.ai.label',
+    descKey: 'editorSidebar.group.ai.desc',
     label: 'AI',
     gradient: 'from-slate-700 to-slate-800',
     accent: 'text-indigo-300',
@@ -61,6 +71,8 @@ export const EDITOR_GROUPS: EditorGroup[] = [
   },
   {
     id: 'export',
+    labelKey: 'editorSidebar.group.export.label',
+    descKey: 'editorSidebar.group.export.desc',
     label: 'Export',
     gradient: 'from-slate-700 to-slate-800',
     accent: 'text-indigo-300',

@@ -199,7 +199,7 @@ export default function SwarmCollectiveNodePage() {
           {filteredTeams.map((team) => {
             const roleCounts: Record<string, number> = {}
             team.members.forEach(m => {
-              const r = (m.role || 'operative').toLowerCase()
+              const r = (m.role || 'member').toLowerCase()
               roleCounts[r] = (roleCounts[r] || 0) + 1
             })
             const entries = Object.entries(roleCounts).sort((a, b) => b[1] - a[1]).slice(0, 4)

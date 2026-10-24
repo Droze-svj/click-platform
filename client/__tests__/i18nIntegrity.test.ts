@@ -74,3 +74,39 @@ describe('i18n integrity', () => {
     expect(hits.map(([k, v]) => `${k}: ${v}`)).toEqual([])
   })
 })
+
+describe('hardcoded UI text', () => {
+  // Visible JSX text / common text props must not carry fake sci-fi jargon or
+  // CODE_STYLE tokens ("NEURAL_SYNC_EN_ROUTE", "ABORT_TO_REPOSITORY").
+  const jargon = /\b(neural|swarm|lattice|resonance|quantum|sovereign|synaptic|telemetry|uplink|ledger|spectral|ascension|singularity|cortex|nexus|omnipresence)\b/i
+  const codeStyle = /\b[A-Z]{3,}(?:_[A-Z0-9]{2,})+\b/
+  // Legitimate: legal text, env-var names on developer test pages.
+  const ALLOWED = [
+    /app\/privacy\/page\.tsx: .*Telemetry Data/,
+    /app\/test-(connection|registration)\/page\.tsx: NEXT_PUBLIC_API_URL/,
+  ]
+
+  it('no jargon in visible component text', () => {
+    const hits: string[] = []
+    for (const dir of ['app', 'components']) {
+      for (const f of sourceFiles(path.join(ROOT, dir))) {
+        if (!f.endsWith('.tsx')) continue
+        const rel = path.relative(ROOT, f)
+        fs.readFileSync(f, 'utf8').split('\n').forEach((line) => {
+          const t = line.trim()
+          if (t.startsWith('//') || t.startsWith('*') || t.startsWith('/*') || t.startsWith('import ')) return
+          const texts = [
+            ...Array.from(line.matchAll(/>([^<>{}]*[A-Za-z][^<>{}]*)</g), (m) => m[1]),
+            ...Array.from(line.matchAll(/(?:title|label|placeholder|aria-label|description)\s*[=:]\s*['"]([^'"]{3,})['"]/g), (m) => m[1]),
+          ]
+          for (const txt of texts) {
+            if (!(jargon.test(txt) || codeStyle.test(txt))) continue
+            const entry = `${rel}: ${txt.trim()}`
+            if (!ALLOWED.some((a) => a.test(entry))) hits.push(entry)
+          }
+        })
+      }
+    }
+    expect(hits).toEqual([])
+  })
+})

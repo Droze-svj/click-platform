@@ -1705,8 +1705,8 @@ const ModernVideoEditor: React.FC<{
     )
     showToast(
       replacedVideoClips > 1
-        ? `✦ Re-cut into ${plan.count} beat clips (replaced ${replacedVideoClips} video clips)`
-        : `✦ Cut into ${plan.count} beat-synced clips`,
+        ? t('modernVideoEditor.beatRecut', { count: plan.count, replaced: replacedVideoClips })
+        : t('modernVideoEditor.beatCut', { count: plan.count }),
       'success'
     )
   }, [videoState.duration, actualVideoUrl, videoId, timelineSegments, setTimelineSegments, showToast, t])
@@ -1726,7 +1726,7 @@ const ModernVideoEditor: React.FC<{
     if (!actualVideoUrl && !videoId) { showToast(t('modernVideoEditor.beatSyncNoBeats'), 'error'); return }
 
     setIsAutoViralEditing(true)
-    showToast('✦ Auto Viral Edit — analysing beats + captions…', 'info')
+    showToast(t('modernVideoEditor.autoViralAnalysing'), 'info')
     try {
       // 1) Beats (best-effort; a missing/silent track just means captions-only).
       let beats: number[] = []
@@ -1776,8 +1776,8 @@ const ModernVideoEditor: React.FC<{
       if (!result.summary.didCut && !result.summary.didCaption) {
         showToast(
           transcriptText
-            ? 'Auto Viral Edit needs music beats or a usable transcript — neither was found.'
-            : 'Auto Viral Edit needs a transcript for captions or music for cuts. Transcribe first, then retry.',
+            ? t('modernVideoEditor.autoViralNothingFound')
+            : t('modernVideoEditor.autoViralNeedsTranscript'),
           'info'
         )
         return
@@ -1797,12 +1797,12 @@ const ModernVideoEditor: React.FC<{
 
       // Honest, specific summary of what actually happened.
       const parts: string[] = []
-      if (result.summary.didCut) parts.push(`${result.summary.clips} beat clips · ${result.summary.transitions} transitions`)
-      if (result.summary.didCaption) parts.push(`${result.summary.captions} karaoke captions`)
-      showToast(`✦ Auto Viral Edit: ${parts.join(' + ')}`, 'success')
+      if (result.summary.didCut) parts.push(t('modernVideoEditor.autoViralCuts', { clips: result.summary.clips, transitions: result.summary.transitions }))
+      if (result.summary.didCaption) parts.push(t('modernVideoEditor.autoViralCaptions', { count: result.summary.captions }))
+      showToast(t('modernVideoEditor.autoViralDone', { summary: parts.join(' + ') }), 'success')
       if (result.summary.notes.length) showToast(result.summary.notes[0], 'info')
     } catch {
-      showToast('Auto Viral Edit failed — your timeline is unchanged.', 'error')
+      showToast(t('modernVideoEditor.autoViralFailed'), 'error')
     } finally {
       setIsAutoViralEditing(false)
     }
@@ -2319,9 +2319,9 @@ const ModernVideoEditor: React.FC<{
             const group = EDITOR_GROUPS.find(g => g.id === groupId)
             items.push({
               id: cat.id,
-              label: t('modernVideoEditor.openCategory', { label: cat.label }),
+              label: t('modernVideoEditor.openCategory', { label: t(cat.labelKey) }),
               icon: cat.icon as LucideIcon,
-              category: group?.label.toUpperCase() || 'EDITOR',
+              category: group ? t(group.labelKey).toUpperCase() : t('modernVideoEditor.cmdCategoryEditor'),
             })
           }
           // Selection-aware actions
@@ -2772,8 +2772,8 @@ const ModernVideoEditor: React.FC<{
           <div
             role="separator"
             aria-orientation="horizontal"
-            aria-label="Resize timeline (drag up or down)"
-            title="Drag to resize the timeline"
+            aria-label={t('modernVideoEditor.resizeTimelineAria')}
+            title={t('modernVideoEditor.resizeTimelineTitle')}
             data-testid="timeline-resize-handle"
             onPointerDown={onTimelineResizeStart}
             onDoubleClick={() => updateLayout({ timelineHeight: 0, focusMode: 'balanced' })}
@@ -2787,7 +2787,7 @@ const ModernVideoEditor: React.FC<{
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                    <span className="text-xs font-semibold text-white">Timeline</span>
+                    <span className="text-xs font-semibold text-white">{t('modernVideoEditor.timelineHeading')}</span>
                   </div>
                   <div className="h-4 w-px bg-white/10 mx-2" />
                   <span className="text-xl font-black font-mono text-indigo-400 tabular-nums tracking-tighter">
@@ -2802,7 +2802,7 @@ const ModernVideoEditor: React.FC<{
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${snapToKeyframes ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-white/5 border border-white/5 text-slate-500 hover:text-white'}`}
                   >
                     <Magnet className="w-3.5 h-3.5" />
-                    Snap to keyframes
+                    {t('modernVideoEditor.neuralSnap')}
                   </button>
                 </div>
               </div>

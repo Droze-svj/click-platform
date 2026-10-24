@@ -66,8 +66,8 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                         <RefreshCw className="w-6 h-6" />
                     </div>
                     <div>
-                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Autonomous Remediation</h4>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-amber-500/70">Self-Correction Loop</span>
+                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Auto-fix from comments</h4>
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-amber-500/70">Fixes issues viewers mention in comments</span>
                     </div>
                 </div>
 
@@ -78,7 +78,7 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                 }`}>
                     <Clock className="w-4 h-4" />
                     <span className="text-[9px] font-black uppercase tracking-widest italic leading-none">
-                        Window: {isEvolutionWindow ? 'OPEN (Maintenance)' : 'CLOSED (Scheduled 2AM-6AM)'}
+                        Fix window: {isEvolutionWindow ? 'open now' : '2–6 AM'}
                     </span>
                 </div>
             </div>
@@ -89,7 +89,7 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                 {/* Proposed Actions */}
                 <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-8`}>
                     <div className="flex items-center justify-between">
-                        <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Action Matrix</h5>
+                        <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Planned fixes</h5>
                         <Sparkles className="w-5 h-5 text-amber-400" />
                     </div>
 
@@ -114,7 +114,7 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                                                 {action.type.replace(/_/g, ' ')}
                                             </span>
                                             <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                                                VALUE: {action.value ?? 'N/A'}
+                                                Value: {action.value ?? '—'}
                                             </span>
                                         </div>
                                     </div>
@@ -124,7 +124,7 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                         ) : (
                             <div className="h-48 flex flex-col items-center justify-center space-y-4 opacity-30 italic">
                                 <AlertCircle className="w-8 h-8" />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Idle: Awaiting Analysis</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest">Not checked yet</span>
                             </div>
                         )}
                     </div>
@@ -140,9 +140,9 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                             )}
                         </div>
                         <div className="space-y-4">
-                            <h3 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Trigger Evolution</h3>
+                            <h3 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Check comments</h3>
                             <p className="text-xs font-bold text-slate-500 max-w-xs mx-auto leading-relaxed">
-                                Analyzes community feedback consensus and executes fully autonomous timeline modifications.
+                                Reads the comments on this video and plans fixes, like lowering loud music, enlarging small text or steadying shaky footage.
                             </p>
                         </div>
                         <button
@@ -153,7 +153,7 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                                 loading ? 'bg-slate-800 text-slate-600' : 'bg-amber-500 hover:bg-amber-400 text-white shadow-xl shadow-amber-500/20'
                             }`}
                         >
-                            {loading ? 'RE-RENDERING...' : 'EXECUTE RECURSIVE LOOP'}
+                            {loading ? 'Checking…' : 'Run auto-fix'}
                         </button>
                     </div>
 
@@ -161,8 +161,8 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                         <div className="flex items-center gap-4">
                             <History className="w-6 h-6 opacity-60" />
                             <div>
-                                <span className="text-[9px] font-black uppercase tracking-widest opacity-80 block mb-1 leading-none">Last Evolution</span>
-                                <h6 className="text-sm font-black italic tracking-tighter uppercase leading-none">None Detected</h6>
+                                <span className="text-[9px] font-black uppercase tracking-widest opacity-80 block mb-1 leading-none">Last run</span>
+                                <h6 className="text-sm font-black italic tracking-tighter uppercase leading-none">{status?.status === 'EVOLVED' ? 'Just now' : status?.status === 'SCHEDULED' ? 'Scheduled' : 'Not run yet'}</h6>
                             </div>
                         </div>
                         <ChevronRight className="w-5 h-5 opacity-40" />

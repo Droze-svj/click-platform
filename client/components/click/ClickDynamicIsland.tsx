@@ -279,7 +279,7 @@ export default function ClickDynamicIsland() {
                   <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" />
                   <div>
                     <h3 className="text-sm font-black uppercase tracking-widest italic text-white leading-none">Click HUD</h3>
-                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1">Autonomous Swarm Integration</p>
+                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1">Your AI assistant</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mt-2">
@@ -314,7 +314,7 @@ export default function ClickDynamicIsland() {
 
               {/* Swarm presets selection */}
               <div className="space-y-2">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1">Swarm Strategy</label>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1">Assistant style</label>
                 <div className="grid grid-cols-4 gap-2 bg-slate-900/60 p-1 rounded-2xl border border-white/5">
                   {SWARM_MODES.map((mode) => {
                     const isActive = swarmMode === mode

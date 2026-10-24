@@ -904,8 +904,8 @@ function AutomationSection({ settings, setField, saving, onSave }: {
     <Card>
       <SubHeader>Autonomous agents</SubHeader>
       <div className="mt-2 divide-y divide-[var(--border-subtle)]">
-        <ToggleRow label="Autonomous creator swarm"
-          description="Let the agent swarm plan, draft and assemble content end-to-end without manual steps"
+        <ToggleRow label="Run automated workflows"
+          description="Let your workflows run on their own. Turn this off to stop them from running."
           checked={!!g.autonomousSwarm} onChange={v => setField('agentic.autonomousSwarm', v)} />
         <ToggleRow label="SLA auto-fulfill"
           description="Automatically pick up and complete queued jobs to meet delivery SLAs"

@@ -60,6 +60,7 @@ import { splitSegmentWindow, trimSegmentStart, trimSegmentEnd } from '../../util
 import { buildSnapIndex, snapWithIndex, speechStopsFromWords, SPEECH_KINDS, type SnapIndex, type SnapKind, type SnapResult } from '../../utils/snapIndex'
 import { realignOverlaysToSpeech } from '../../utils/captionAlign'
 import { apiGet } from '../../lib/api'
+import { useTranslation } from '../../hooks/useTranslation'
 
 /** Per-lane track state: locked rejects edits, muted hides from preview, solo isolates. */
 export interface TrackLaneState {
@@ -130,12 +131,14 @@ const SNAP_KIND_COLOR: Record<SnapKind, string> = {
   word: '#34d399', silence: '#22d3ee', beat: '#f472b6', marker: '#fbbf24',
   edge: '#818cf8', playhead: '#a78bfa', boundary: '#94a3b8',
 }
-const SNAP_KIND_LABEL: Record<SnapKind, string> = {
-  word: 'Word', silence: 'Pause', beat: 'Beat', marker: 'Marker',
-  edge: 'Edge', playhead: 'Playhead', boundary: 'Bound',
+/** i18n keys (translated at render) for the active-snap badge. */
+const SNAP_KIND_LABEL_KEY: Record<SnapKind, string> = {
+  word: 'resizableTimeline.snapKind.word', silence: 'resizableTimeline.snapKind.silence', beat: 'resizableTimeline.snapKind.beat', marker: 'resizableTimeline.snapKind.marker',
+  edge: 'resizableTimeline.snapKind.edge', playhead: 'resizableTimeline.snapKind.playhead', boundary: 'resizableTimeline.snapKind.boundary',
 }
 
 const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, currentTime, segments, onTimeUpdate, onSegmentsChange, selectedSegmentId: selectedSegmentIdProp, selectedSegmentIds: selectedSegmentIdsProp, onSegmentSelect, onBatchSegmentSelect, onSegmentDeleted, effects = [], onEffectsChange, selectedEffectId, onEffectSelect, onEffectDeleted, textOverlays = [], onTextOverlaysChange, imageOverlays = [], onDuplicateSegmentAtPlayhead, isPlaying, onPlayPause, density = 'comfortable', trackVisibility = {}, onTrackVisibilityChange, trackState: trackStateProp, onTrackStateChange, markers: controlledMarkers, onMarkersChange, onAssetDrop, transcript, beatTimes = [], aiDirectorSuggestions = [], engagementScore = null, showInsights: showInsightsInitial = false, videoSrc = null, contentId = null }) => {
+  const { t } = useTranslation()
   // 'visual' by default: the script strip is empty until captions exist and it
   // pushed the main video track below the fold.
   const [timelineMode, setTimelineMode] = useState<'hybrid' | 'visual' | 'text'>('visual')
@@ -708,10 +711,12 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     if (!onTextOverlaysChange || !words?.length || textOverlays.length === 0) return
     const { overlays, changed } = realignOverlaysToSpeech(textOverlays, words)
     onTextOverlaysChange(() => overlays)
-    setCaptionRealignNote(changed > 0 ? `Snapped ${changed} caption${changed === 1 ? '' : 's'} to speech` : 'Captions already aligned')
+    setCaptionRealignNote(changed > 0
+      ? (changed === 1 ? t('resizableTimeline.realignedCountOne') : t('resizableTimeline.realignedCount', { count: changed }))
+      : t('resizableTimeline.alreadyAligned'))
     if (captionRealignNoteTimeout.current) clearTimeout(captionRealignNoteTimeout.current)
     captionRealignNoteTimeout.current = setTimeout(() => setCaptionRealignNote(null), 2600)
-  }, [transcript?.words, onTextOverlaysChange, textOverlays])
+  }, [transcript?.words, onTextOverlaysChange, textOverlays, t])
 
   const segmentAtPlayhead = useMemo(() =>
     segments.find((s) => currentTime >= s.startTime && currentTime < s.endTime),
@@ -1530,11 +1535,11 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
   }, [currentTime, maxDur])
 
   const addMarkerAtPlayhead = useCallback(() => {
-    const nameRaw = typeof window !== 'undefined' ? window.prompt('Marker name (optional):', '') : null
+    const nameRaw = typeof window !== 'undefined' ? window.prompt(t('resizableTimeline.markerNamePrompt'), '') : null
     const name = (nameRaw != null && nameRaw.trim() !== '') ? nameRaw.trim() : undefined
     const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `m-${Date.now()}`
     setMarkersList((m) => [...m, { id, time: currentTime, name }])
-  }, [currentTime, setMarkersList])
+  }, [currentTime, setMarkersList, t])
 
   // Spacebar Hand Panning & Keyboard Navigation
   useEffect(() => {
@@ -2128,7 +2133,8 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
   const laneScale = density === 'compact' ? 0.62 : density === 'expanded' ? 1.25 : 1
   const laneStyle = (base: number): React.CSSProperties => ({ height: Math.round(base * laneScale) })
   const laneCount = (track: number) => segments.filter((sg) => (sg.track ?? 0) === track).length
-  const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`
+  // Pick the singular or plural key per count (translators own both forms).
+  const countLabel = (n: number, oneKey: string, manyKey: string) => (n === 1 ? t(oneKey) : t(manyKey, { count: n }))
 
   // Bug 6: reusable lock/mute/solo controls wired to per-track state.
   // Mute is mapped onto trackVisibility (already consumed by the preview to hide a
@@ -2143,13 +2149,13 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
     const toggleSolo = () => setTrackStatePatch(idx, { solo: !st.solo })
     return (
       <div className={`flex items-center gap-1 transition-opacity ${dimmed ? 'opacity-30' : 'opacity-40 group-hover/track:opacity-100'}`}>
-        <button type="button" onClick={toggleSolo} title={st.solo ? 'Unsolo Track' : 'Solo Track'} aria-pressed={st.solo ? 'true' : 'false'}
-          className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider transition-colors ${st.solo ? 'bg-amber-500 text-black' : 'hover:bg-white/10 hover:text-white text-slate-400'}`}>S</button>
-        <button type="button" onClick={toggleMute} title={muted ? 'Unmute Track' : 'Mute Track'} aria-pressed={muted ? 'true' : 'false'}
+        <button type="button" onClick={toggleSolo} title={st.solo ? t('resizableTimeline.unsoloTrack') : t('resizableTimeline.soloTrack')} aria-pressed={st.solo ? 'true' : 'false'}
+          className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider transition-colors ${st.solo ? 'bg-amber-500 text-black' : 'hover:bg-white/10 hover:text-white text-slate-400'}`}>{t('resizableTimeline.soloShort')}</button>
+        <button type="button" onClick={toggleMute} title={muted ? t('resizableTimeline.unmuteTrack') : t('resizableTimeline.muteTrack')} aria-pressed={muted ? 'true' : 'false'}
           className={`p-1 rounded transition-colors ${muted ? 'bg-rose-500/30 text-rose-300' : 'hover:bg-white/10 hover:text-white text-slate-400'}`}>
           {muted ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
         </button>
-        <button type="button" onClick={toggleLock} title={st.locked ? 'Unlock Track' : 'Lock Track'} aria-pressed={st.locked ? 'true' : 'false'}
+        <button type="button" onClick={toggleLock} title={st.locked ? t('resizableTimeline.unlockTrack') : t('resizableTimeline.lockTrack')} aria-pressed={st.locked ? 'true' : 'false'}
           className={`p-1 rounded transition-colors ${st.locked ? 'bg-indigo-500/30 text-indigo-300' : 'hover:bg-white/10 hover:text-white text-slate-400'}`}>
           <Lock className="w-3 h-3" />
         </button>
@@ -2174,11 +2180,11 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
             whole timeline, plus two buttons with no handler and fake data. */}
         <div className="shrink-0 h-12 flex items-center gap-2 px-3 border-b border-white/5 z-30 overflow-x-auto scrollbar-hide" data-testid="timeline-toolbar">
           <div className="flex items-center gap-0.5 shrink-0">
-            <button type="button" onClick={() => stepTime(-1)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10" title="Previous frame (←)" aria-label="Previous frame"><ChevronLeft className="w-4 h-4" /></button>
-            <button type="button" onClick={onPlayPause} data-testid="timeline-play" className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-500" title={isPlaying ? 'Pause (Space)' : 'Play (Space)'} aria-label={isPlaying ? 'Pause' : 'Play'}>
+            <button type="button" onClick={() => stepTime(-1)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10" title={t('resizableTimeline.prevFrameTitle')} aria-label={t('resizableTimeline.prevFrame')}><ChevronLeft className="w-4 h-4" /></button>
+            <button type="button" onClick={onPlayPause} data-testid="timeline-play" className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-500" title={isPlaying ? t('resizableTimeline.pauseTitle') : t('resizableTimeline.playTitle')} aria-label={isPlaying ? t('resizableTimeline.pause') : t('resizableTimeline.play')}>
               {isPlaying ? <span className="text-xs">⏸</span> : <span className="text-xs ml-0.5">▶</span>}
             </button>
-            <button type="button" onClick={() => stepTime(1)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10" title="Next frame (→)" aria-label="Next frame"><ChevronRight className="w-4 h-4" /></button>
+            <button type="button" onClick={() => stepTime(1)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10" title={t('resizableTimeline.nextFrameTitle')} aria-label={t('resizableTimeline.nextFrame')}><ChevronRight className="w-4 h-4" /></button>
           </div>
           <input
             type="text"
@@ -2188,100 +2194,100 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
             onBlur={() => { if (timestampInput.trim()) handleGoToTimestamp() }}
             className="w-24 shrink-0 px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs font-mono text-white outline-none focus:ring-2 focus:ring-indigo-500/30 placeholder:text-slate-500"
             placeholder={formatTimeDetailed(currentTime)}
-            aria-label="Go to time (type a time, press Enter)"
-            title="Type a time (e.g. 1:05.5) and press Enter to jump there"
+            aria-label={t('resizableTimeline.goToTimeLabel')}
+            title={t('resizableTimeline.goToTimeTitle')}
           />
           <div className="h-6 w-px bg-white/10 shrink-0" />
-          <button type="button" onClick={splitAtPlayhead} disabled={!segmentAtPlayheadForSplit} data-testid="timeline-split" title="Split the clip under the playhead (S)"
+          <button type="button" onClick={splitAtPlayhead} disabled={!segmentAtPlayheadForSplit} data-testid="timeline-split" title={t('resizableTimeline.splitTitle')}
             className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-white/5 border-white/10 text-slate-200 enabled:hover:bg-indigo-600 enabled:hover:text-white">
-            <Scissors className="w-3.5 h-3.5" /> Split
+            <Scissors className="w-3.5 h-3.5" /> {t('resizableTimeline.split')}
           </button>
-          <button type="button" onClick={handleDeleteSelected} disabled={selectedIds.length === 0 && !selectedEffectId} data-testid="timeline-delete" title="Delete the selection (Delete)"
+          <button type="button" onClick={handleDeleteSelected} disabled={selectedIds.length === 0 && !selectedEffectId} data-testid="timeline-delete" title={t('resizableTimeline.deleteTitle')}
             className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-white/5 border-white/10 text-slate-200 enabled:hover:bg-rose-600 enabled:hover:text-white">
-            <Trash2 className="w-3.5 h-3.5" /> Delete
+            <Trash2 className="w-3.5 h-3.5" /> {t('resizableTimeline.delete')}
           </button>
           <button type="button" onClick={() => setRippleOnDelete((prev) => !prev)} aria-pressed={rippleOnDelete} data-testid="timeline-ripple"
-            title={rippleOnDelete ? 'Ripple on: deleting closes the gap on every track' : 'Ripple off: deleting leaves a gap'}
+            title={rippleOnDelete ? t('resizableTimeline.rippleOnTitle') : t('resizableTimeline.rippleOffTitle')}
             className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${rippleOnDelete ? 'bg-amber-500 text-black border-amber-400' : 'bg-white/5 border-white/10 text-slate-300 hover:text-white'}`}>
-            <Link className="w-3.5 h-3.5" /> Ripple
+            <Link className="w-3.5 h-3.5" /> {t('resizableTimeline.ripple')}
           </button>
           {selectionHasGroup ? (
-            <button type="button" onClick={ungroupSelectedSegments} disabled={selectedIds.length === 0} title="Ungroup the selected clips"
+            <button type="button" onClick={ungroupSelectedSegments} disabled={selectedIds.length === 0} title={t('resizableTimeline.ungroupTitle')}
               className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border bg-white/5 border-white/10 text-slate-200 hover:text-white disabled:opacity-40">
-              <ArrowLeftRight className="w-3.5 h-3.5" /> Ungroup
+              <ArrowLeftRight className="w-3.5 h-3.5" /> {t('resizableTimeline.ungroup')}
             </button>
           ) : (
-            <button type="button" onClick={groupSelectedSegments} disabled={selectedIds.length < 2} title="Group the selected clips so they move and delete together"
+            <button type="button" onClick={groupSelectedSegments} disabled={selectedIds.length < 2} title={t('resizableTimeline.groupTitle')}
               className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border bg-white/5 border-white/10 text-slate-200 hover:text-white disabled:opacity-40">
-              <Link className="w-3.5 h-3.5" /> Group
+              <Link className="w-3.5 h-3.5" /> {t('resizableTimeline.group')}
             </button>
           )}
           <div className="shrink-0 flex items-center gap-0.5 bg-white/5 p-0.5 rounded-lg border border-white/10">
-            <button type="button" onClick={() => setInPoint(currentTime)} title="Set in point at the playhead (I)"
-              className={`px-2 py-1 rounded-md text-xs font-semibold ${inPoint !== null ? 'bg-indigo-600/40 text-indigo-200' : 'text-slate-300 hover:text-white'}`}>In</button>
-            <button type="button" onClick={() => setOutPoint(currentTime)} title="Set out point at the playhead (O)"
-              className={`px-2 py-1 rounded-md text-xs font-semibold ${outPoint !== null ? 'bg-indigo-600/40 text-indigo-200' : 'text-slate-300 hover:text-white'}`}>Out</button>
+            <button type="button" onClick={() => setInPoint(currentTime)} title={t('resizableTimeline.setInTitle')}
+              className={`px-2 py-1 rounded-md text-xs font-semibold ${inPoint !== null ? 'bg-indigo-600/40 text-indigo-200' : 'text-slate-300 hover:text-white'}`}>{t('resizableTimeline.in')}</button>
+            <button type="button" onClick={() => setOutPoint(currentTime)} title={t('resizableTimeline.setOutTitle')}
+              className={`px-2 py-1 rounded-md text-xs font-semibold ${outPoint !== null ? 'bg-indigo-600/40 text-indigo-200' : 'text-slate-300 hover:text-white'}`}>{t('resizableTimeline.out')}</button>
             {(inPoint !== null || outPoint !== null) && (
-              <button type="button" onClick={() => { setInPoint(null); setOutPoint(null) }} title="Clear in/out (Alt+X)" aria-label="Clear in and out points"
+              <button type="button" onClick={() => { setInPoint(null); setOutPoint(null) }} title={t('resizableTimeline.clearInOutTitle')} aria-label={t('resizableTimeline.clearInOutLabel')}
                 className="px-1.5 py-1 rounded-md text-xs text-slate-400 hover:text-rose-300">✕</button>
             )}
           </div>
           <div className="h-6 w-px bg-white/10 shrink-0" />
-          <button type="button" onClick={() => setSnapEnabled(!snapEnabled)} aria-pressed={snapEnabled} data-testid="timeline-snap" title="Snap clips to edges, the playhead and markers"
+          <button type="button" onClick={() => setSnapEnabled(!snapEnabled)} aria-pressed={snapEnabled} data-testid="timeline-snap" title={t('resizableTimeline.snapTitle')}
             className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${snapEnabled ? 'bg-indigo-600/30 border-indigo-500/40 text-indigo-200' : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'}`}>
-            <Magnet className="w-3.5 h-3.5" /> Snap
+            <Magnet className="w-3.5 h-3.5" /> {t('resizableTimeline.snap')}
           </button>
           <button type="button" onClick={() => setSnapToSpeech(!snapToSpeech)} disabled={!transcript?.words?.length} aria-pressed={snapToSpeech}
-            title={transcript?.words?.length ? 'Snap clips and captions to spoken words' : 'Generate captions to enable speech snapping'}
+            title={transcript?.words?.length ? t('resizableTimeline.speechTitle') : t('resizableTimeline.speechDisabledTitle')}
             className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${snapToSpeech && transcript?.words?.length ? 'bg-emerald-600/30 border-emerald-500/40 text-emerald-200' : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'}`}>
-            <MessageSquare className="w-3.5 h-3.5" /> Speech
+            <MessageSquare className="w-3.5 h-3.5" /> {t('resizableTimeline.speech')}
           </button>
           {!!transcript?.words?.length && textOverlays.length > 0 && onTextOverlaysChange && (
-            <button type="button" onClick={handleRealignCaptions} title="Re-time every caption to the spoken words"
+            <button type="button" onClick={handleRealignCaptions} title={t('resizableTimeline.realignTitle')}
               className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600/90 hover:bg-emerald-500 text-white">
-              <Wand2 className="w-3.5 h-3.5" /> {captionRealignNote || 'Realign captions'}
+              <Wand2 className="w-3.5 h-3.5" /> {captionRealignNote || t('resizableTimeline.realign')}
             </button>
           )}
           <div className="ml-auto" />
           {isSpacePressed && (
-            <span className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-full bg-indigo-500/20 text-[11px] text-indigo-200"><Hand className="w-3 h-3" /> Drag to pan</span>
+            <span className="shrink-0 flex items-center gap-1 px-2 py-1 rounded-full bg-indigo-500/20 text-[11px] text-indigo-200"><Hand className="w-3 h-3" /> {t('resizableTimeline.dragToPan')}</span>
           )}
           {selectedSegment && (
             <span className="shrink-0 max-w-[160px] truncate px-2 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[11px] text-indigo-200" title={selectedSegment.name}>{selectedSegment.name}</span>
           )}
           <select
-            title="Show tracks"
-            aria-label="Show tracks"
+            title={t('resizableTimeline.showTracks')}
+            aria-label={t('resizableTimeline.showTracks')}
             value={focusLane || 'all'}
             onChange={(e) => setFocusLane(e.target.value === 'all' ? null : e.target.value)}
             className="shrink-0 bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-200 outline-none cursor-pointer"
           >
-            <option value="all">All tracks</option>
-            <option value="captions">Captions</option>
-            <option value="a-roll">Main video</option>
-            <option value="b-roll">B-roll</option>
-            <option value="audio">Audio</option>
-            <option value="fx">Effects</option>
+            <option value="all">{t('resizableTimeline.allTracks')}</option>
+            <option value="captions">{t('resizableTimeline.track.captions')}</option>
+            <option value="a-roll">{t('resizableTimeline.track.mainVideo')}</option>
+            <option value="b-roll">{t('resizableTimeline.track.broll')}</option>
+            <option value="audio">{t('resizableTimeline.track.audio')}</option>
+            <option value="fx">{t('resizableTimeline.track.effects')}</option>
           </select>
-          <div className="shrink-0 flex bg-white/5 p-0.5 rounded-lg border border-white/10" role="group" aria-label="Timeline view">
+          <div className="shrink-0 flex bg-white/5 p-0.5 rounded-lg border border-white/10" role="group" aria-label={t('resizableTimeline.viewGroup')}>
             {([
-              { id: 'visual', label: 'Clips', title: 'Clips only' },
-              { id: 'hybrid', label: 'Clips + script', title: 'Clips with the script above them' },
-              { id: 'text', label: 'Script', title: 'Edit by text' },
+              { id: 'visual', label: t('resizableTimeline.view.clips'), title: t('resizableTimeline.view.clipsTitle') },
+              { id: 'hybrid', label: t('resizableTimeline.view.hybrid'), title: t('resizableTimeline.view.hybridTitle') },
+              { id: 'text', label: t('resizableTimeline.view.script'), title: t('resizableTimeline.view.scriptTitle') },
             ] as const).map((v) => (
               <button key={v.id} type="button" onClick={() => setTimelineMode(v.id)} aria-pressed={timelineMode === v.id} title={v.title}
                 className={`px-2 py-1 rounded-md text-xs font-semibold whitespace-nowrap ${timelineMode === v.id ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>{v.label}</button>
             ))}
           </div>
           <div className="shrink-0 flex items-center bg-white/5 p-0.5 rounded-lg border border-white/10">
-            <button type="button" onClick={() => applyZoomCentered((z) => z - 0.25)} className="p-1.5 rounded-md text-slate-400 hover:text-white" title="Zoom out" aria-label="Zoom out"><ZoomOut className="w-3.5 h-3.5" /></button>
+            <button type="button" onClick={() => applyZoomCentered((z) => z - 0.25)} className="p-1.5 rounded-md text-slate-400 hover:text-white" title={t('resizableTimeline.zoomOut')} aria-label={t('resizableTimeline.zoomOut')}><ZoomOut className="w-3.5 h-3.5" /></button>
             <span className="w-10 text-center text-[11px] text-slate-300 tabular-nums">{Math.round(zoom * 100)}%</span>
-            <button type="button" onClick={() => applyZoomCentered((z) => z + 0.25)} className="p-1.5 rounded-md text-slate-400 hover:text-white" title="Zoom in" aria-label="Zoom in"><ZoomIn className="w-3.5 h-3.5" /></button>
+            <button type="button" onClick={() => applyZoomCentered((z) => z + 0.25)} className="p-1.5 rounded-md text-slate-400 hover:text-white" title={t('resizableTimeline.zoomIn')} aria-label={t('resizableTimeline.zoomIn')}><ZoomIn className="w-3.5 h-3.5" /></button>
           </div>
           <button type="button" onClick={() => setShowInsights((v) => !v)} aria-pressed={showInsights}
-            title={showInsights ? 'Hide AI insights lanes' : 'Show AI insights lanes'}
+            title={showInsights ? t('resizableTimeline.hideInsights') : t('resizableTimeline.showInsights')}
             className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${showInsights ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-300' : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'}`}>
-            <Activity className="w-3.5 h-3.5" /> Insights
+            <Activity className="w-3.5 h-3.5" /> {t('resizableTimeline.insights')}
           </button>
         </div>
 
@@ -2314,7 +2320,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                        }}
                      >
                        <div className="absolute top-1 left-2 px-1.5 py-0.5 rounded bg-sky-950/80 border border-sky-400/40 text-[8px] font-black text-sky-200 uppercase tracking-widest pointer-events-none">
-                         In/Out: {displayTime(outPoint - inPoint)}
+                         {t('resizableTimeline.inOutSpan', { time: displayTime(outPoint - inPoint) })}
                        </div>
                      </div>
                    )}
@@ -2325,7 +2331,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                        className="absolute top-0 bottom-0 z-30 group/in-bracket cursor-ew-resize pointer-events-auto"
                        style={{ left: `${timeToX(inPoint)}%` }}
                        onMouseDown={(e) => handleInOutHandleMouseDown(e, 'in')}
-                       title={`In Point: ${displayTime(inPoint)} (Drag to adjust)`}
+                       title={t('resizableTimeline.inPointTitle', { time: displayTime(inPoint) })}
                      >
                        <div className="absolute top-0 -left-2.5 px-1 py-0.5 bg-sky-500 text-black text-[9px] font-black rounded-l border border-sky-300 shadow-lg group-hover/in-bracket:scale-110 transition-transform select-none">
                          [
@@ -2340,7 +2346,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                        className="absolute top-0 bottom-0 z-30 group/out-bracket cursor-ew-resize pointer-events-auto"
                        style={{ left: `${timeToX(outPoint)}%` }}
                        onMouseDown={(e) => handleInOutHandleMouseDown(e, 'out')}
-                       title={`Out Point: ${displayTime(outPoint)} (Drag to adjust)`}
+                       title={t('resizableTimeline.outPointTitle', { time: displayTime(outPoint) })}
                      >
                        <div className="absolute top-0 -right-2.5 px-1 py-0.5 bg-sky-500 text-black text-[9px] font-black rounded-r border border-sky-300 shadow-lg group-hover/out-bracket:scale-110 transition-transform select-none">
                          ]
@@ -2367,16 +2373,16 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                    </div>
 
                    {/* Detected beats (real — from beat detection; none shown until detected) */}
-                   {beatTimes.filter((bt) => bt >= 0 && bt <= maxDur).slice(0, 400).map((t, idx) => (
+                   {beatTimes.filter((bt) => bt >= 0 && bt <= maxDur).slice(0, 400).map((beatTime, idx) => (
                       <div
                         key={`beat-${idx}`}
                         className="absolute top-1/2 -translate-y-1/2 z-20 group/beat cursor-pointer"
-                        style={{ left: `${timeToX(t)}%` }}
-                        onClick={(e) => { e.stopPropagation(); onTimeUpdate(t) }}
+                        style={{ left: `${timeToX(beatTime)}%` }}
+                        onClick={(e) => { e.stopPropagation(); onTimeUpdate(beatTime) }}
                       >
                         <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 shadow-[0_0_4px_rgba(240,79,216,0.6)] border border-white/20" />
                         <div className="absolute top-3 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-fuchsia-950/90 text-[10px] font-black text-fuchsia-300 uppercase tracking-widest rounded border border-fuchsia-500/30 opacity-0 group-hover/beat:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                          Beat ({t.toFixed(1)}s)
+                          {t('resizableTimeline.beatLabel', { time: beatTime.toFixed(1) })}
                         </div>
                       </div>
                     ))}
@@ -2388,11 +2394,11 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                        className={`absolute top-0 h-full w-[2px] bg-amber-500/70 cursor-ew-resize group/marker z-20 pointer-events-auto ${draggingMarkerId === m.id ? 'scale-125' : ''}`}
                        style={{ '--marker-left': `${timeToX(m.time)}%`, left: 'var(--marker-left)' } as any}
                        onMouseDown={(e) => handleMarkerMouseDown(e, m)}
-                       title={`${m.name || 'Marker'}: ${displayTime(m.time)} (Drag to move, click to seek, right-click to edit)`}
+                       title={t('resizableTimeline.markerTitle', { name: m.name || t('resizableTimeline.marker'), time: displayTime(m.time) })}
                      >
                         <div className="absolute top-0 -left-[5px] w-3 h-3 bg-amber-500 rotate-45 border border-black/70 shadow-lg group-hover/marker:scale-150 transition-transform" />
                         <span className="absolute top-4 left-3 px-2 py-0.5 bg-amber-500 text-black text-[10px] font-black uppercase rounded opacity-0 group-hover/marker:opacity-100 transition-opacity whitespace-nowrap shadow-md">
-                          {m.name || 'Marker'} ({displayTime(m.time)})
+                          {t('resizableTimeline.markerTag', { name: m.name || t('resizableTimeline.marker'), time: displayTime(m.time) })}
                         </span>
                      </div>
                    ))}
@@ -2425,8 +2431,8 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                </div>
                                <p className="text-xs text-slate-200 leading-snug">{c.text}</p>
                                <div className="mt-3 flex items-center gap-2">
-                                  <button type="button" onClick={() => setMockComments(prev => prev.filter(mc => mc.id !== c.id))} className="flex-1 py-1.5 rounded-md bg-white/5 hover:bg-white/10 text-[9px] font-black uppercase text-slate-300 transition-colors">Resolve</button>
-                                  <button type="button" onClick={() => setActiveCommentId(null)} className="flex-1 py-1.5 rounded-md bg-white/5 hover:bg-white/10 text-[9px] font-black uppercase text-slate-300 transition-colors">Close</button>
+                                  <button type="button" onClick={() => setMockComments(prev => prev.filter(mc => mc.id !== c.id))} className="flex-1 py-1.5 rounded-md bg-white/5 hover:bg-white/10 text-[9px] font-black uppercase text-slate-300 transition-colors">{t('resizableTimeline.resolve')}</button>
+                                  <button type="button" onClick={() => setActiveCommentId(null)} className="flex-1 py-1.5 rounded-md bg-white/5 hover:bg-white/10 text-[9px] font-black uppercase text-slate-300 transition-colors">{t('resizableTimeline.close')}</button>
                                </div>
                             </div>
                          )}
@@ -2452,7 +2458,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                        </>)}
                        {timelineMode === 'hybrid' && (
                          <div className="h-24 mb-6 px-3 rounded-2xl border border-white/5 bg-black/40 flex items-center">
-                           <span className="text-[11px] font-semibold text-slate-300">Script</span>
+                           <span className="text-[11px] font-semibold text-slate-300">{t('resizableTimeline.view.script')}</span>
                          </div>
                        )}
                        {/* LANE: SPEECH NODES */}
@@ -2465,15 +2471,15 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                      T
                                   </div>
                                   <div className="flex flex-col min-w-0">
-                                     <span className="text-xs font-semibold text-white truncate">Captions</span>
-                                     <span className="text-[11px] text-slate-400 truncate">Text on screen</span>
+                                     <span className="text-xs font-semibold text-white truncate">{t('resizableTimeline.track.captions')}</span>
+                                     <span className="text-[11px] text-slate-400 truncate">{t('resizableTimeline.track.captionsSub')}</span>
                                   </div>
                                </div>
                             </div>
                             <div className="flex items-center justify-between pl-2 mt-1">
                                <div className="flex items-center gap-1.5 opacity-60">
                                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_rgba(52,211,153,0.8)]" />
-                                  <span className="text-[11px] font-medium text-emerald-100/70 whitespace-nowrap">{plural(textOverlays.length, 'caption')}</span>
+                                  <span className="text-[11px] font-medium text-emerald-100/70 whitespace-nowrap">{countLabel(textOverlays.length, 'resizableTimeline.captionsCountOne', 'resizableTimeline.captionsCount')}</span>
                                </div>
                                {renderLaneControls('captions')}
                             </div>
@@ -2490,15 +2496,15 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                      V1
                                   </div>
                                   <div className="flex flex-col min-w-0">
-                                     <span className="text-xs font-semibold text-white truncate">Main video</span>
-                                     <span className="text-[11px] text-slate-400 truncate">Your footage</span>
+                                     <span className="text-xs font-semibold text-white truncate">{t('resizableTimeline.track.mainVideo')}</span>
+                                     <span className="text-[11px] text-slate-400 truncate">{t('resizableTimeline.track.mainVideoSub')}</span>
                                   </div>
                                </div>
                             </div>
                             <div className="flex items-center justify-between pl-2">
                                <div className="flex items-center gap-1.5 opacity-60">
                                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_5px_rgba(96,165,250,0.8)]" />
-                                  <span className="text-[11px] font-medium text-blue-100/70 whitespace-nowrap">{plural(laneCount(laneTrackIndex('a-roll')), 'clip')}</span>
+                                  <span className="text-[11px] font-medium text-blue-100/70 whitespace-nowrap">{countLabel(laneCount(laneTrackIndex('a-roll')), 'resizableTimeline.clipsCountOne', 'resizableTimeline.clipsCount')}</span>
                                </div>
                                <div className="bg-black/40 rounded-lg p-0.5 border border-white/5">
                                   {renderLaneControls('a-roll')}
@@ -2517,15 +2523,15 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                      V2
                                   </div>
                                   <div className="flex flex-col min-w-0">
-                                     <span className="text-xs font-semibold text-white truncate">B-roll</span>
-                                     <span className="text-[11px] text-slate-400 truncate">Cutaways & images</span>
+                                     <span className="text-xs font-semibold text-white truncate">{t('resizableTimeline.track.broll')}</span>
+                                     <span className="text-[11px] text-slate-400 truncate">{t('resizableTimeline.track.brollSub')}</span>
                                   </div>
                                </div>
                             </div>
                             <div className="flex items-center justify-between pl-2 mt-1">
                                <div className="flex items-center gap-1.5 opacity-60">
                                   <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_5px_rgba(251,191,36,0.8)]" />
-                                  <span className="text-[11px] font-medium text-amber-100/70 whitespace-nowrap">{plural(laneCount(laneTrackIndex('b-roll')) + imageOverlays.length, 'item')}</span>
+                                  <span className="text-[11px] font-medium text-amber-100/70 whitespace-nowrap">{countLabel(laneCount(laneTrackIndex('b-roll')) + imageOverlays.length, 'resizableTimeline.itemsCountOne', 'resizableTimeline.itemsCount')}</span>
                                </div>
                                {renderLaneControls('b-roll')}
                             </div>
@@ -2542,15 +2548,15 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                      A1
                                   </div>
                                   <div className="flex flex-col min-w-0">
-                                     <span className="text-xs font-semibold text-white truncate">Audio</span>
-                                     <span className="text-[11px] text-slate-400 truncate">Music, voice & SFX</span>
+                                     <span className="text-xs font-semibold text-white truncate">{t('resizableTimeline.track.audio')}</span>
+                                     <span className="text-[11px] text-slate-400 truncate">{t('resizableTimeline.track.audioSub')}</span>
                                   </div>
                                </div>
                             </div>
                             <div className="flex items-center justify-between pl-2 mt-1">
                                <div className="flex items-center gap-1.5 opacity-60">
                                   <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-400 shadow-[0_0_5px_rgba(192,38,211,0.8)]" />
-                                  <span className="text-[11px] font-medium text-fuchsia-100/70 whitespace-nowrap">{plural(laneCount(laneTrackIndex('audio')), 'clip')}</span>
+                                  <span className="text-[11px] font-medium text-fuchsia-100/70 whitespace-nowrap">{countLabel(laneCount(laneTrackIndex('audio')), 'resizableTimeline.clipsCountOne', 'resizableTimeline.clipsCount')}</span>
                                </div>
                                <div className="bg-black/40 rounded-lg p-0.5 border border-white/5">
                                   {renderLaneControls('audio')}
@@ -2612,7 +2618,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                     <div className="relative h-6 w-full bg-black/40 rounded-xl border border-white/5 mb-6 group/heatmap overflow-hidden">
                        <div className="absolute inset-y-0 left-0 flex items-center px-4 z-10 pointer-events-none">
                           <Activity className="w-3 h-3 text-indigo-400 opacity-50" />
-                          <span className="text-[10px] font-black text-indigo-400/50 uppercase tracking-[0.2em] ml-2">Audience retention</span>
+                          <span className="text-[10px] font-black text-indigo-400/50 uppercase tracking-[0.2em] ml-2">{t('resizableTimeline.audienceRetention')}</span>
                        </div>
                       {engagementScore?.retentionHeatmap?.map((val, i) => (
                         <div
@@ -2625,7 +2631,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                             backgroundColor: val > 85 ? '#F43F5E' : val > 70 ? '#6366F1' : val > 50 ? '#4F46E5' : '#1E1B4B',
                           }}
                           className="transition-all opacity-40 hover:opacity-100"
-                          title={`Retention: ${val}%`}
+                          title={t('resizableTimeline.retentionTitle', { value: val })}
                         />
                       ))}
                     </div>
@@ -2635,7 +2641,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                     <div className="relative h-14 w-full bg-white/[0.02] border border-white/5 rounded-2xl mb-8 overflow-hidden group/waveform shadow-inner">
                        <div className="absolute inset-y-0 left-6 flex items-center z-10 pointer-events-none">
                           <div className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse mr-3 shadow-[0_0_10px_rgba(232,121,249,0.8)]" />
-                          <span className="text-[10px] font-black text-fuchsia-400 uppercase tracking-wide italic opacity-60">{waveformHasAudio ? 'Audio Waveform' : (waveformKey ? 'Audio Waveform // No Audio' : 'Audio Waveform')}</span>
+                          <span className="text-[10px] font-black text-fuchsia-400 uppercase tracking-wide italic opacity-60">{waveformHasAudio ? t('resizableTimeline.audioWaveform') : (waveformKey ? t('resizableTimeline.audioWaveformNoAudio') : t('resizableTimeline.audioWaveform'))}</span>
                        </div>
 
                        {/* Playhead Reflection on Waveform */}
@@ -2689,12 +2695,9 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                zIndex: 100
                             }}
                             className="w-4 h-4 rounded-full bg-fuchsia-600 border border-white/40 shadow-[0_0_15px_rgba(217,70,239,0.8)] cursor-pointer flex items-center justify-center group/portal"
-                            title="AI Transition Suggestion"
+                            title={t('resizableTimeline.sceneChange')}
                           >
                              <Zap className="w-2 h-2 text-white" />
-                             <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md border border-white/10 p-2 rounded-lg opacity-0 group-hover/portal:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                                <p className="text-[10px] font-black uppercase text-fuchsia-400">Suggest: Glitch Dissolve</p>
-                             </div>
                           </m.div>
                        )
                     })}
@@ -2733,7 +2736,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                          <div className="relative h-24 w-full bg-white/[0.02] rounded-2xl border border-white/5 mb-6 overflow-hidden custom-scrollbar-thin">
                             <div className="absolute inset-y-0 left-4 flex items-center z-10 pointer-events-none opacity-20">
                                <MessageSquare className="w-4 h-4 text-indigo-400" />
-                               <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest ml-3">Neural Script Lane</span>
+                               <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest ml-3">{t('resizableTimeline.view.script')}</span>
                             </div>
                             <div className="h-full flex items-center px-12 gap-1 relative">
                                {visibleWords.map((word, idx) => {
@@ -2820,7 +2823,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                    data-resize-handle="start"
                                    onMouseDown={(e) => handleOverlayEdgeMouseDown(e, o, 'start')}
                                    className="absolute left-0 top-0 bottom-0 w-2.5 hover:bg-white/30 cursor-ew-resize opacity-0 group-hover/node:opacity-100 transition-opacity flex items-center justify-center z-20"
-                                   title="Trim In Point"
+                                   title={t('resizableTimeline.trimStart')}
                                  >
                                     <div className="w-0.5 h-3.5 bg-white/70 rounded-full" />
                                  </div>
@@ -2828,7 +2831,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                    data-resize-handle="end"
                                    onMouseDown={(e) => handleOverlayEdgeMouseDown(e, o, 'end')}
                                    className="absolute right-0 top-0 bottom-0 w-2.5 hover:bg-white/30 cursor-ew-resize opacity-0 group-hover/node:opacity-100 transition-opacity flex items-center justify-center z-20"
-                                   title="Trim Out Point"
+                                   title={t('resizableTimeline.trimEnd')}
                                  >
                                     <div className="w-0.5 h-3.5 bg-white/70 rounded-full" />
                                  </div>
@@ -2866,7 +2869,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                      <div className="w-[1px] h-3 bg-rose-400" />
                                      <div className="w-[1px] h-1 bg-rose-400" />
                                    </div>
-                                   <span className="text-[10px] font-black text-rose-300 uppercase tracking-widest ml-1 select-none whitespace-nowrap">J-Cut</span>
+                                   <span className="text-[10px] font-black text-rose-300 uppercase tracking-widest ml-1 select-none whitespace-nowrap">{t('resizableTimeline.jCut')}</span>
                                  </div>
                                )}
 
@@ -2883,7 +2886,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                    }}
                                    className="bg-gradient-to-r from-pink-500/30 to-pink-500/0 border-y border-r border-pink-500/40 rounded-r-lg pointer-events-none flex items-center pl-1 overflow-hidden"
                                  >
-                                   <span className="text-[10px] font-black text-pink-300 uppercase tracking-widest mr-1 select-none whitespace-nowrap">L-Cut</span>
+                                   <span className="text-[10px] font-black text-pink-300 uppercase tracking-widest mr-1 select-none whitespace-nowrap">{t('resizableTimeline.lCut')}</span>
                                    <div className="flex gap-0.5 items-center opacity-60">
                                      <div className="w-[1px] h-1 bg-pink-400" />
                                      <div className="w-[1px] h-3 bg-pink-400" />
@@ -2914,8 +2917,8 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                 })()}
 
                                 {/* Cut indicators */}
-                                {s.startTime > 0 && <div className="absolute left-0 top-0 w-0 h-0 border-t-[8px] border-r-[8px] border-t-white/30 border-r-transparent pointer-events-none" title="Trimmed Start" />}
-                                {s.endTime < maxDur && <div className="absolute right-0 bottom-0 w-0 h-0 border-b-[8px] border-l-[8px] border-b-white/30 border-l-transparent pointer-events-none" title="Trimmed End" />}
+                                {s.startTime > 0 && <div className="absolute left-0 top-0 w-0 h-0 border-t-[8px] border-r-[8px] border-t-white/30 border-r-transparent pointer-events-none" title={t('resizableTimeline.trimmedStart')} />}
+                                {s.endTime < maxDur && <div className="absolute right-0 bottom-0 w-0 h-0 border-b-[8px] border-l-[8px] border-b-white/30 border-l-transparent pointer-events-none" title={t('resizableTimeline.trimmedEnd')} />}
 
                                 <div className="flex items-center justify-between relative z-10 w-full pr-2">
                                    <div className="flex items-center gap-3">
@@ -2933,7 +2936,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                    {(() => {
                                      const sp = s.playbackSpeed ?? 1
                                      if (Math.abs(sp - 1) < 0.001 && !s.reversed && !s.freezeFrame) return null
-                                     const label = s.freezeFrame ? 'Freeze' : `${s.reversed ? 'Reverse ' : ''}${Number(sp.toFixed(2))}×`
+                                     const label = s.freezeFrame ? t('resizableTimeline.freeze') : (s.reversed ? t('resizableTimeline.reverseSpeed', { speed: Number(sp.toFixed(2)) }) : `${Number(sp.toFixed(2))}×`)
                                      return (
                                        <div className="flex items-center gap-1.5 bg-blue-950/50 backdrop-blur-sm border border-blue-400/20 px-2 py-1 rounded shadow-lg">
                                          <Activity className="w-2.5 h-2.5 text-blue-300" />
@@ -2953,7 +2956,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                    data-resize-handle="start"
                                    onMouseDown={(e) => handleSegmentEdgeMouseDown(e, s, 'start')}
                                    className="absolute left-0 top-0 bottom-0 w-3.5 hover:bg-blue-400/20 cursor-ew-resize opacity-0 group-hover/node:opacity-100 z-20 flex items-center justify-center border-r border-transparent hover:border-blue-400 transition-all hover:shadow-[0_0_8px_rgba(96,165,250,0.5)]"
-                                   title="Trim start"
+                                   title={t('resizableTimeline.trimStart')}
                                  >
                                     <div className="w-1 h-5 bg-blue-300/80 rounded-full shadow" />
                                  </div>
@@ -2961,7 +2964,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                    data-resize-handle="end"
                                    onMouseDown={(e) => handleSegmentEdgeMouseDown(e, s, 'end')}
                                    className="absolute right-0 top-0 bottom-0 w-3.5 hover:bg-blue-400/20 cursor-ew-resize opacity-0 group-hover/node:opacity-100 z-20 flex items-center justify-center border-l border-transparent hover:border-blue-400 transition-all hover:shadow-[0_0_8px_rgba(96,165,250,0.5)]"
-                                   title="Trim end"
+                                   title={t('resizableTimeline.trimEnd')}
                                  >
                                     <div className="w-1 h-5 bg-blue-300/80 rounded-full shadow" />
                                  </div>
@@ -3082,7 +3085,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                   data-resize-handle="start"
                                   onMouseDown={(e) => handleSegmentEdgeMouseDown(e, s, 'start')}
                                   className="absolute left-0 top-0 bottom-0 w-3.5 hover:bg-amber-400/20 cursor-ew-resize opacity-0 group-hover/node:opacity-100 z-20 flex items-center justify-center border-r border-transparent hover:border-amber-400 transition-all hover:shadow-[0_0_8px_rgba(251,191,36,0.5)]"
-                                  title="Trim start"
+                                  title={t('resizableTimeline.trimStart')}
                                 >
                                    <div className="w-1 h-5 bg-amber-300/80 rounded-full shadow" />
                                 </div>
@@ -3090,7 +3093,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                   data-resize-handle="end"
                                   onMouseDown={(e) => handleSegmentEdgeMouseDown(e, s, 'end')}
                                   className="absolute right-0 top-0 bottom-0 w-3.5 hover:bg-amber-400/20 cursor-ew-resize opacity-0 group-hover/node:opacity-100 z-20 flex items-center justify-center border-l border-transparent hover:border-amber-400 transition-all hover:shadow-[0_0_8px_rgba(251,191,36,0.5)]"
-                                  title="Trim end"
+                                  title={t('resizableTimeline.trimEnd')}
                                 >
                                     <div className="w-1 h-5 bg-amber-300/80 rounded-full shadow" />
                                 </div>
@@ -3214,7 +3217,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                   data-resize-handle="start"
                                   onMouseDown={(e) => handleSegmentEdgeMouseDown(e, s, 'start')}
                                   className="absolute left-0 top-0 bottom-0 w-3.5 hover:bg-orange-400/20 cursor-ew-resize opacity-0 group-hover/node:opacity-100 z-20 flex items-center justify-center border-r border-transparent hover:border-orange-400 transition-all hover:shadow-[0_0_8px_rgba(249,115,22,0.5)]"
-                                  title="Trim start"
+                                  title={t('resizableTimeline.trimStart')}
                                 >
                                    <div className="w-1 h-5 bg-orange-300/80 rounded-full shadow" />
                                 </div>
@@ -3222,7 +3225,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                                   data-resize-handle="end"
                                   onMouseDown={(e) => handleSegmentEdgeMouseDown(e, s, 'end')}
                                   className="absolute right-0 top-0 bottom-0 w-3.5 hover:bg-orange-400/20 cursor-ew-resize opacity-0 group-hover/node:opacity-100 z-20 flex items-center justify-center border-l border-transparent hover:border-orange-400 transition-all hover:shadow-[0_0_8px_rgba(249,115,22,0.5)]"
-                                  title="Trim end"
+                                  title={t('resizableTimeline.trimEnd')}
                                 >
                                    <div className="w-1 h-5 bg-orange-300/80 rounded-full shadow" />
                                 </div>
@@ -3240,7 +3243,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                            {/* Lane label */}
                            <div className="absolute inset-y-0 left-4 flex items-center z-10 pointer-events-none opacity-30">
                               <Wand2 className="w-3.5 h-3.5 text-violet-400" />
-                              <span className="text-[9px] font-black text-violet-400 uppercase tracking-widest ml-3">Neural Layers // Effects</span>
+                              <span className="text-[9px] font-black text-violet-400 uppercase tracking-widest ml-3">{t('resizableTimeline.track.effects')}</span>
                            </div>
 
                            {visibleEffects.map((eff) => {
@@ -3314,7 +3317,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                             {/* Lane label */}
                             <div className="absolute inset-y-0 left-4 flex items-center z-20 pointer-events-none opacity-40">
                               <Orbit className="w-3.5 h-3.5 text-cyan-400" />
-                              <span className="text-[9px] font-black text-cyan-400 uppercase tracking-widest ml-3">Keyframes</span>
+                              <span className="text-[9px] font-black text-cyan-400 uppercase tracking-widest ml-3">{t('resizableTimeline.keyframes')}</span>
                             </div>
                             {/* Selected clip range track + dbl-click-to-add zone */}
                             <div
@@ -3390,7 +3393,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                      {/* Playhead Diamond Head (Direct Grab Target) */}
                      <div
                        className="absolute top-[-5px] left-[-8px] w-4 h-4 bg-fuchsia-500 rotate-45 border-2 border-white shadow-[0_0_10px_rgba(217,70,239,0.8)] pointer-events-auto cursor-ew-resize hover:scale-125 transition-transform"
-                       title={`Playhead: ${displayTime(currentTime)} (Drag to scrub)`}
+                       title={t('resizableTimeline.playheadTitle', { time: displayTime(currentTime) })}
                        onMouseDown={(e) => {
                          e.stopPropagation()
                          setIsScrubbing(true)
@@ -3404,7 +3407,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                      {/* Full-height Grab strip */}
                      <div
                        className="absolute top-0 bottom-0 -left-2 w-4 pointer-events-auto cursor-ew-resize hover:bg-fuchsia-500/10 transition-colors"
-                       title={`Scrub: ${displayTime(currentTime)}`}
+                       title={t('resizableTimeline.scrubTitle', { time: displayTime(currentTime) })}
                        onMouseDown={(e) => {
                          e.stopPropagation()
                          setIsScrubbing(true)
@@ -3414,7 +3417,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                      {/* Playhead Timecode Floating Tag */}
                      <div
                        className="absolute top-[-32px] left-1/2 -translate-x-1/2 px-2.5 py-1 bg-fuchsia-950/95 backdrop-blur-md border border-fuchsia-400/50 rounded-md text-[10px] font-black text-fuchsia-100 uppercase shadow-2xl tracking-widest whitespace-nowrap pointer-events-auto cursor-ew-resize hover:scale-105 transition-transform"
-                       title="Drag playhead"
+                       title={t('resizableTimeline.dragPlayhead')}
                        onMouseDown={(e) => {
                          e.stopPropagation()
                          setIsScrubbing(true)
@@ -3442,7 +3445,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                           >
                             <div className="absolute inset-0 bg-indigo-500/15 backdrop-blur-[2px] border border-indigo-400/30 rounded" />
                             <div className="absolute -top-6 left-0 text-[10px] font-black text-indigo-300 uppercase tracking-tighter shadow-sm whitespace-nowrap bg-black/70 px-1.5 py-0.5 rounded border border-indigo-500/40">
-                              Origin: {formatTime(seg.startTime)}
+                              {t('resizableTimeline.origin', { time: formatTime(seg.startTime) })}
                             </div>
                           </div>
                         ))}
@@ -3488,7 +3491,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                           className="absolute top-1 -translate-x-1/2 px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider text-black whitespace-nowrap"
                           style={{ background: SNAP_KIND_COLOR[activeSnap.kind] }}
                         >
-                          {SNAP_KIND_LABEL[activeSnap.kind]}
+                          {t(SNAP_KIND_LABEL_KEY[activeSnap.kind])}
                         </div>
                       </div>
                     )}
@@ -3497,16 +3500,16 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 bg-indigo-950/95 border border-indigo-500/50 rounded-full shadow-[0_0_25px_rgba(99,102,241,0.6)] backdrop-blur-md flex items-center gap-3 pointer-events-none animate-in fade-in zoom-in-95 duration-150">
                         <span className="w-2 h-2 rounded-full bg-indigo-400 animate-ping" />
                         <span className="text-[11px] font-black text-white uppercase tracking-wider">
-                          Move Delta: {dragLiveDelta.deltaTime >= 0 ? `+${dragLiveDelta.deltaTime.toFixed(2)}s` : `${dragLiveDelta.deltaTime.toFixed(2)}s`}
+                          {t('resizableTimeline.moveDelta', { delta: dragLiveDelta.deltaTime >= 0 ? `+${dragLiveDelta.deltaTime.toFixed(2)}s` : `${dragLiveDelta.deltaTime.toFixed(2)}s` })}
                         </span>
                         {hoveredDropTrack !== null && (
                           <span className="text-[10px] font-bold text-indigo-200 bg-white/10 px-2 py-0.5 rounded-full">
-                            Track {hoveredDropTrack}
+                            {t('resizableTimeline.trackNumber', { number: hoveredDropTrack })}
                           </span>
                         )}
                         {dragSegmentStartRef.current?.selectedClips && dragSegmentStartRef.current.selectedClips.length > 1 && (
                           <span className="text-[10px] font-bold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-full">
-                            {dragSegmentStartRef.current.selectedClips.length} Clips Moving
+                            {t('resizableTimeline.clipsMoving', { count: dragSegmentStartRef.current.selectedClips.length })}
                           </span>
                         )}
                       </div>
@@ -3517,7 +3520,9 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 bg-cyan-950/95 border border-cyan-500/50 rounded-full shadow-[0_0_25px_rgba(6,182,212,0.6)] backdrop-blur-md flex items-center gap-3 pointer-events-none animate-in fade-in zoom-in-95 duration-150">
                         <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
                         <span className="text-[11px] font-black text-white uppercase tracking-wider">
-                          Trim {dragEdgeFeedback.edge.toUpperCase()}: {formatTime(dragEdgeFeedback.currentVal)}
+                          {dragEdgeFeedback.edge === 'start'
+                            ? t('resizableTimeline.trimStartAt', { time: formatTime(dragEdgeFeedback.currentVal) })
+                            : t('resizableTimeline.trimEndAt', { time: formatTime(dragEdgeFeedback.currentVal) })}
                         </span>
                         <span className="text-[10px] font-bold text-cyan-200 bg-white/10 px-2 py-0.5 rounded-full">
                           Δ {dragEdgeFeedback.delta >= 0 ? `+${dragEdgeFeedback.delta.toFixed(2)}s` : `${dragEdgeFeedback.delta.toFixed(2)}s`}
@@ -3529,11 +3534,13 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                       <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 bg-sky-950/95 border border-sky-400/50 rounded-full shadow-[0_0_25px_rgba(56,189,248,0.6)] backdrop-blur-md flex items-center gap-3 pointer-events-none animate-in fade-in zoom-in-95 duration-150">
                         <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
                         <span className="text-[11px] font-black text-white uppercase tracking-wider">
-                          Work Area {draggingInOutPoint.toUpperCase()}: {formatTime(draggingInOutPoint === 'in' ? (inPoint ?? 0) : (outPoint ?? maxDur))}
+                          {draggingInOutPoint === 'in'
+                            ? t('resizableTimeline.workAreaIn', { time: formatTime(inPoint ?? 0) })
+                            : t('resizableTimeline.workAreaOut', { time: formatTime(outPoint ?? maxDur) })}
                         </span>
                         {inPoint !== null && outPoint !== null && inPoint < outPoint && (
                           <span className="text-[10px] font-bold text-sky-200 bg-white/10 px-2 py-0.5 rounded-full">
-                            Span: {formatTime(outPoint - inPoint)}
+                            {t('resizableTimeline.span', { time: formatTime(outPoint - inPoint) })}
                           </span>
                         )}
                       </div>
@@ -3595,7 +3602,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                         setContextMenu(null)
                      }}
                    >
-                     <span>Split at Playhead</span>
+                     <span>{t('resizableTimeline.menu.splitAtPlayhead')}</span>
                      <Scissors className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" />
                    </button>
                    <button
@@ -3606,7 +3613,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                         setContextMenu(null)
                      }}
                    >
-                     <span>Duplicate Segment</span>
+                     <span>{t('resizableTimeline.menu.duplicate')}</span>
                      <Copy className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" />
                    </button>
                    {selectionHasGroup ? (
@@ -3615,7 +3622,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                        className="w-full text-left px-4 py-2 hover:bg-white/10 hover:text-white transition-colors flex items-center justify-between group"
                        onClick={() => { ungroupSelectedSegments(); setContextMenu(null) }}
                      >
-                       <span>Ungroup Segments</span>
+                       <span>{t('resizableTimeline.menu.ungroup')}</span>
                        <ArrowLeftRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" />
                      </button>
                    ) : (
@@ -3625,7 +3632,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                        className={`w-full text-left px-4 py-2 transition-colors flex items-center justify-between group ${selectedIds.length >= 2 ? 'hover:bg-white/10 hover:text-white' : 'opacity-40 cursor-not-allowed'}`}
                        onClick={() => { if (selectedIds.length >= 2) { groupSelectedSegments(); setContextMenu(null) } }}
                      >
-                       <span>Group Segments</span>
+                       <span>{t('resizableTimeline.menu.group')}</span>
                        <Link className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" />
                      </button>
                    )}
@@ -3638,16 +3645,8 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                         setContextMenu(null)
                      }}
                    >
-                     <span>Ripple Delete</span>
+                     <span>{t('resizableTimeline.menu.rippleDelete')}</span>
                      <Trash2 className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100" />
-                   </button>
-                   <div className="h-px bg-white/10 my-1 mx-2" />
-                   <button
-                     type="button"
-                     className="w-full text-left px-4 py-2 hover:bg-indigo-500/20 text-indigo-300 transition-colors flex items-center justify-between group"
-                     onClick={() => setContextMenu(null)}
-                   >
-                     <span className="flex items-center gap-2"><Sparkles className="w-3 h-3 text-indigo-400" /> AI Enhance Selection</span>
                    </button>
                 </>
               )}

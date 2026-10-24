@@ -104,26 +104,29 @@ export interface SwarmDescriptor {
   voice: string
 }
 
+// These modes only change Click's colour theme — no AI call reads them — so the
+// copy describes the look, not behaviour (it used to claim speed ramps,
+// competitor benchmarking, etc.).
 export const SWARM_THEMES: Record<SwarmMode, SwarmDescriptor> = {
   viral: {
-    label: 'Viral Swarm',
-    desc: 'High-energy pacing, dynamic speed ramps, emoji injections.',
-    voice: 'Hyper-Growth mode active. Click is targeting raw retention.',
+    label: 'Bold',
+    desc: 'Bright, high-energy colours.',
+    voice: 'Switched to the bold theme.',
   },
   trust: {
-    label: 'Trust Swarm',
-    desc: 'Cinematic grades, slower authoritative pacing, clean serif captions.',
-    voice: 'Authority locked. Suggesting logical layout structures.',
+    label: 'Calm',
+    desc: 'Muted, cinematic colours.',
+    voice: 'Switched to the calm theme.',
   },
   coach: {
-    label: 'Witty Coach',
-    desc: 'Clever hooks, snappy cuts, responsive caption micro-bursts.',
-    voice: "Sassy coach mode active. Let's make this one pop!",
+    label: 'Playful',
+    desc: 'Friendly, colourful accents.',
+    voice: 'Switched to the playful theme.',
   },
   authority: {
-    label: 'ExpertSwarm',
-    desc: 'Deep industry context, competitor positioning metrics, AIDA hooks.',
-    voice: 'Enterprise swarm online. Benchmarking opponent channels.',
+    label: 'Professional',
+    desc: 'Clean, business-like colours.',
+    voice: 'Switched to the professional theme.',
   },
 }
 

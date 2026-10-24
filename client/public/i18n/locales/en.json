@@ -846,11 +846,11 @@
     "title": "Achievements",
     "subtitle": "Track your milestones and progress.",
     "refreshRegistry": "Refresh",
-    "statTierLabel": "Evolutionary Tier",
+    "statTierLabel": "Level",
     "statTierSub": "{{pct}}% to next level",
-    "statMilestonesLabel": "Decrypted Milestones",
+    "statMilestonesLabel": "Milestones unlocked",
     "statMilestonesSub": "Unlocked so far",
-    "statStreakLabel": "Coherence Streak",
+    "statStreakLabel": "Active streak",
     "statStreakSub": "Best: {{peak}}",
     "statVolumeLabel": "Content created",
     "statVolumeSub": "Total pieces created",
@@ -861,14 +861,14 @@
     "detailPayloads": "Content",
     "detailScripts": "Scripts",
     "recentBreakthroughs": "Recent Breakthroughs",
-    "decryptedOn": "DECRYPTED {{date}}",
+    "decryptedOn": "Unlocked {{date}}",
     "ascensionVerified": "Unlocked",
     "nodeMatrix": "All milestones",
-    "decrypted": "DECRYPTED",
+    "decrypted": "Unlocked",
     "logicGated": "Locked",
     "milestones": {
       "first_video": {
-        "name": "Genesis Rendition",
+        "name": "First video",
         "description": "Make your first video."
       },
       "first_content": {
@@ -900,11 +900,11 @@
         "description": "Finish 50 videos."
       },
       "streak_7": {
-        "name": "Coherence 7",
+        "name": "7-day streak",
         "description": "Stay active 7 days in a row."
       },
       "streak_30": {
-        "name": "Coherence 30",
+        "name": "30-day streak",
         "description": "Stay active 30 days in a row."
       },
       "streak_100": {
@@ -925,7 +925,7 @@
       },
       "early_adopter": {
         "name": "Early Adopter",
-        "description": "Integrated during genesis phase."
+        "description": "Joined Click early."
       },
       "power_user": {
         "name": "Power user",
@@ -993,7 +993,7 @@
     "authorize": "AUTHORIZE",
     "dissent": "DISSENT",
     "historyTitle": "Approval history",
-    "historySubtitle": "Immutable records of consensus decisions and nodal authorizations.",
+    "historySubtitle": "A record of past approvals and rejections.",
     "protocolLogsAnalyzed": "{{count}} requests",
     "emptyTitle": "Nothing here yet",
     "emptyState": "No approval requests yet.",
@@ -1126,7 +1126,7 @@
     "purgeForgeBuffer": "Purge Forge Buffer",
     "neuralHeuristics": "Suggestions",
     "neuralHeuristicsDesc": "Ways to improve your content.",
-    "decryptingHeuristics": "Decrypting Heuristics...",
+    "decryptingHeuristics": "Analyzing…",
     "predictiveTelemetry": "Performance forecast",
     "predictiveTelemetryDesc": "Forecasts of how your content may perform.",
     "scanningTrajectories": "Scanning Trajectories..."
@@ -1288,7 +1288,7 @@
     "refreshData": "Refresh membership data",
     "activeNodeUplink": "Current plan",
     "protocolId": "Plan ID:",
-    "rootGenesis": "Root genesis",
+    "rootGenesis": "Starter",
     "genericAccess": "Generic access",
     "lifecycleStatus": "Lifecycle Status:",
     "uninitialized": "Uninitialized",
@@ -1307,7 +1307,7 @@
     "coreMatrixUplink": "Core features",
     "primeCommandUplink": "Full feature access",
     "activeProtocol": "Current plan",
-    "ascending": "Ascending...",
+    "ascending": "Upgrading…",
     "genesisUplink": "Get started",
     "escalateProtocol": "Upgrade"
   },
@@ -1825,7 +1825,7 @@
     "heroIntro": "Connect your social accounts to Click. Each connection enables",
     "heroFeature1": "automatic posting",
     "heroFeature2": "engagement tracking",
-    "heroFeature3": "synthetic audience analysis",
+    "heroFeature3": "audience insights",
     "heroAnd": "and",
     "statNeuralEncryption": "Token encryption",
     "statUplinkLatency": "Connection speed",
@@ -2375,7 +2375,7 @@
     "collaborationIntro1": "Each team gets",
     "collaborationHighlight1": "shared assets",
     "collaborationIntro2": ",",
-    "collaborationHighlight2": "asynchronous feedback loops",
+    "collaborationHighlight2": "comments and feedback",
     "collaborationIntro3": ", and a unified",
     "collaborationHighlight3": "production queue",
     "collaborationIntro4": ". Keep everyone's work in one place.",
@@ -3113,7 +3113,7 @@
     "neuralLine1": "Content",
     "neuralLine2": "CENTER",
     "autonomousPrefix": "Auto mode is",
-    "dominating": "dominating",
+    "dominating": "running",
     "autonomousMid": "the",
     "autonomousSuffix": "queue.",
     "neuralActive": "Auto mode on",
@@ -3998,7 +3998,7 @@
     "latticeHealth": "Network health",
     "aggregatedRevenue": "Aggregated Revenue",
     "victoryVectors": "Wins today",
-    "encirclementTitle": "Global Encirclement",
+    "encirclementTitle": "Growth overview",
     "encirclementSubtitle": "Insights shared across Click",
     "godModeSaturationActive": "Live",
     "decentralizedIntelligenceLedger": "Activity log",
@@ -4018,7 +4018,7 @@
     "tabStability": "System Health",
     "versionLabel": "Click",
     "overlordTerminalSynced": "Connected",
-    "mainTitle": "Click Overlord Terminal",
+    "mainTitle": "Click control center",
     "mainSubtitle": "Monetization and automation controls."
   },
   "clickDebugPanel": {
@@ -5408,7 +5408,7 @@
     "presetVibrantPopName": "Vibrant Pop",
     "presetVibrantPopDesc": "Bold, saturated colors",
     "presetSoftDreamyName": "Soft Dreamy",
-    "presetSoftDreamyDesc": "Ethereal, gentle look",
+    "presetSoftDreamyDesc": "Soft, gentle look",
     "presetElectricVibeName": "Electric",
     "presetElectricVibeDesc": "High-energy vibrant look",
     "presetRetroVintageName": "Retro Vintage",
@@ -6232,7 +6232,20 @@
     "appliedStyleProfile": "Applied the {{name}} style",
     "packApplied": "Applied {{name}}: {{grade}} colour grade and its caption style",
     "packAppliedGradeOnly": "Applied {{name}}: {{grade}} colour grade. Turn on captions to use its caption style.",
-    "packApplyFailed": "Couldn't apply {{name}}: its colour grade wasn't found"
+    "packApplyFailed": "Couldn't apply {{name}}: its colour grade wasn't found",
+    "beatRecut": "✦ Re-cut into {{count}} beat clips (replaced {{replaced}} video clips)",
+    "beatCut": "✦ Cut into {{count}} beat-synced clips",
+    "autoViralAnalysing": "✦ Auto Viral Edit — analysing beats and captions…",
+    "autoViralNothingFound": "Auto Viral Edit needs music beats or a usable transcript — neither was found.",
+    "autoViralNeedsTranscript": "Auto Viral Edit needs a transcript for captions or music for cuts. Transcribe first, then retry.",
+    "autoViralCuts": "{{clips}} beat clips · {{transitions}} transitions",
+    "autoViralCaptions": "{{count}} karaoke captions",
+    "autoViralDone": "✦ Auto Viral Edit: {{summary}}",
+    "autoViralFailed": "Auto Viral Edit failed — your timeline is unchanged.",
+    "resizeTimelineAria": "Resize timeline (drag up or down)",
+    "resizeTimelineTitle": "Drag to resize the timeline",
+    "timelineHeading": "Timeline",
+    "cmdCategoryEditor": "EDITOR"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Hooks",
@@ -6310,13 +6323,13 @@
     "featuresTitle": "Elite Features",
     "featuresDescription": "Unlock multi-platform intelligence and predictive growth.",
     "completeTitle": "You're all set",
-    "completeDescription": "You are now ready to dominate the social landscape.",
+    "completeDescription": "You're ready to start creating.",
     "eliteAccessGranted": "Elite Access Granted",
     "closeOnboarding": "Close onboarding",
     "back": "Back",
-    "startDominating": "Start Dominating",
+    "startDominating": "Get started",
     "nextIntelligence": "Next Intelligence",
-    "clickGenesis": "Click Genesis",
+    "clickGenesis": "Welcome to Click",
     "welcomeBodyBefore": "The only platform that doesn't just write—it ",
     "welcomeBodyOperates": "operates",
     "welcomeBodyAfter": ". Let's set up your brand.",
@@ -6489,7 +6502,7 @@
     "syncing": "Updating...",
     "restart": "Restart",
     "dismissInstallPrompt": "Dismiss install prompt",
-    "installDescription": "Ascend to a faster, offline-capable workspace. Built for elite content operations.",
+    "installDescription": "Install Click for a faster app that also works offline.",
     "initializeInstallation": "Initialize Installation",
     "tagInstant": "Instant",
     "tagEdge": "Edge",
@@ -6779,7 +6792,7 @@
     "navAeoMetadata": "AEO Metadata",
     "navUgcRaw": "UGC Raw",
     "navZeroPartyData": "Zero-Party Data",
-    "headerPill": "Phase 8 — Market Domination",
+    "headerPill": "Phase 8 — Growth tools",
     "headerTitle": "Growth tools",
     "headerSubtitle": "5 Systems That Make CLICK Undisputable"
   },
@@ -6850,14 +6863,14 @@
     "pcv": "PCV",
     "steerSwarmToThisOffer": "Focus on this offer",
     "s2sNetworkDown": "S2S Network down",
-    "globalEncirclementTitle": "Global Encirclement",
+    "globalEncirclementTitle": "Growth overview",
     "globalEncirclementSubtitle": "Cross-account insights",
     "godModeActiveBadge": "Active",
     "networkHealth": "Network Health",
     "aggregatedRevenue": "Aggregated Revenue",
     "victoryVectors": "Top performers",
     "logInitializingTunnel": "[SYSTEM] Initializing S2S encrypted tunnel...",
-    "logEncirclementActive": "[SYSTEM] Encirclement active. {{count}} sibling instances connected.",
+    "logEncirclementActive": "{{count}} connected workspaces.",
     "logVectorReceived": "Hook \"{{hook}}\" is leading in {{cluster}}.",
     "logLocalSynthesis": "Local results updated: momentum weighting +{{percent}}%.",
     "productionStabilityTitle": "Production Stability",
@@ -6878,7 +6891,7 @@
     "navGlobalS2s": "Global S2S",
     "navSystemHealth": "System Health",
     "headerPill": "Advanced tools",
-    "headerTitle": "The Overlord Terminal",
+    "headerTitle": "Control center",
     "headerSubtitle": "Market expansion"
   },
   "quickActions": {
@@ -7098,7 +7111,31 @@
   "realTimeVideoPreview": {
     "overlayAlt": "Overlay",
     "metadataError": "Failed to load video metadata. Check CORS or URL validity.",
-    "bootingRenderEngine": "Loading preview..."
+    "bootingRenderEngine": "Loading preview...",
+    "videoFailed": "Video failed to load",
+    "retry": "Retry",
+    "dragToCompare": "Drag to compare Before / After",
+    "before": "Before",
+    "after": "After",
+    "rawUnfiltered": "Raw / Unfiltered",
+    "graded": "Graded",
+    "editCaptionInline": "Edit caption text inline",
+    "captionPlaceholder": "Type caption text...",
+    "opsReverse": "{{count}}× reverse",
+    "opsJCut": "{{count}}× J-cut",
+    "opsLCut": "{{count}}× L-cut",
+    "exportOnlyTitle": "These changes are applied at export only — the preview plays clips in their original direction with normal audio sync.",
+    "exportOnly": "Export-only",
+    "imageLayer": "Image Layer",
+    "imageFailed": "Image failed to load",
+    "svgLayer": "SVG Layer",
+    "preview": "Preview",
+    "latency": "Latency",
+    "pause": "Pause",
+    "play": "Play",
+    "toggleBeforeAfter": "Toggle before/after",
+    "beforeAfter": "Before / after",
+    "aiStylingActive": "AI styling active"
   },
   "realtimeCollaboration": {
     "failedToJoin": "Failed to join collaboration session",
@@ -7172,7 +7209,137 @@
   },
   "resizableTimeline": {
     "restore": "Restore timeline size",
-    "maximize": "Maximize timeline"
+    "maximize": "Maximize timeline",
+    "snapKind": {
+      "word": "Word",
+      "silence": "Pause",
+      "beat": "Beat",
+      "marker": "Marker",
+      "edge": "Edge",
+      "playhead": "Playhead",
+      "boundary": "Boundary"
+    },
+    "realignedCountOne": "Snapped 1 caption to speech",
+    "realignedCount": "Snapped {{count}} captions to speech",
+    "alreadyAligned": "Captions already aligned",
+    "markerNamePrompt": "Marker name (optional):",
+    "unsoloTrack": "Unsolo track",
+    "soloTrack": "Solo track",
+    "soloShort": "S",
+    "unmuteTrack": "Unmute track",
+    "muteTrack": "Mute track",
+    "unlockTrack": "Unlock track",
+    "lockTrack": "Lock track",
+    "prevFrameTitle": "Previous frame (←)",
+    "prevFrame": "Previous frame",
+    "pauseTitle": "Pause (Space)",
+    "playTitle": "Play (Space)",
+    "pause": "Pause",
+    "play": "Play",
+    "nextFrameTitle": "Next frame (→)",
+    "nextFrame": "Next frame",
+    "goToTimeLabel": "Go to time (type a time, press Enter)",
+    "goToTimeTitle": "Type a time (e.g. 1:05.5) and press Enter to jump there",
+    "splitTitle": "Split the clip under the playhead (S)",
+    "split": "Split",
+    "deleteTitle": "Delete the selection (Delete)",
+    "delete": "Delete",
+    "rippleOnTitle": "Ripple on: deleting closes the gap on every track",
+    "rippleOffTitle": "Ripple off: deleting leaves a gap",
+    "ripple": "Ripple",
+    "ungroupTitle": "Ungroup the selected clips",
+    "ungroup": "Ungroup",
+    "groupTitle": "Group the selected clips so they move and delete together",
+    "group": "Group",
+    "setInTitle": "Set in point at the playhead (I)",
+    "in": "In",
+    "setOutTitle": "Set out point at the playhead (O)",
+    "out": "Out",
+    "clearInOutTitle": "Clear in/out (Alt+X)",
+    "clearInOutLabel": "Clear in and out points",
+    "snapTitle": "Snap clips to edges, the playhead and markers",
+    "snap": "Snap",
+    "speechTitle": "Snap clips and captions to spoken words",
+    "speechDisabledTitle": "Generate captions to enable speech snapping",
+    "speech": "Speech",
+    "realignTitle": "Re-time every caption to the spoken words",
+    "realign": "Realign captions",
+    "dragToPan": "Drag to pan",
+    "showTracks": "Show tracks",
+    "allTracks": "All tracks",
+    "track": {
+      "captions": "Captions",
+      "mainVideo": "Main video",
+      "broll": "B-roll",
+      "audio": "Audio",
+      "effects": "Effects",
+      "captionsSub": "Text on screen",
+      "mainVideoSub": "Your footage",
+      "brollSub": "Cutaways & images",
+      "audioSub": "Music, voice & SFX"
+    },
+    "viewGroup": "Timeline view",
+    "view": {
+      "clips": "Clips",
+      "clipsTitle": "Clips only",
+      "hybrid": "Clips + script",
+      "hybridTitle": "Clips with the script above them",
+      "script": "Script",
+      "scriptTitle": "Edit by text"
+    },
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "hideInsights": "Hide AI insights lanes",
+    "showInsights": "Show AI insights lanes",
+    "insights": "Insights",
+    "inOutSpan": "In/Out: {{time}}",
+    "inPointTitle": "In point: {{time}} (drag to adjust)",
+    "outPointTitle": "Out point: {{time}} (drag to adjust)",
+    "beatLabel": "Beat ({{time}}s)",
+    "markerTitle": "{{name}}: {{time}} (drag to move, click to seek, right-click to edit)",
+    "marker": "Marker",
+    "markerTag": "{{name}} ({{time}})",
+    "resolve": "Resolve",
+    "close": "Close",
+    "captionsCountOne": "1 caption",
+    "captionsCount": "{{count}} captions",
+    "clipsCountOne": "1 clip",
+    "clipsCount": "{{count}} clips",
+    "itemsCountOne": "1 item",
+    "itemsCount": "{{count}} items",
+    "audienceRetention": "Audience retention",
+    "retentionTitle": "Retention: {{value}}%",
+    "audioWaveform": "Audio waveform",
+    "audioWaveformNoAudio": "Audio waveform (no audio)",
+    "trimStart": "Trim start",
+    "trimEnd": "Trim end",
+    "jCut": "J-Cut",
+    "lCut": "L-Cut",
+    "trimmedStart": "Trimmed start",
+    "trimmedEnd": "Trimmed end",
+    "freeze": "Freeze",
+    "reverseSpeed": "Reverse {{speed}}×",
+    "keyframes": "Keyframes",
+    "playheadTitle": "Playhead: {{time}} (drag to scrub)",
+    "scrubTitle": "Scrub: {{time}}",
+    "dragPlayhead": "Drag playhead",
+    "origin": "Origin: {{time}}",
+    "moveDelta": "Move delta: {{delta}}",
+    "trackNumber": "Track {{number}}",
+    "clipsMoving": "{{count}} clips moving",
+    "trimStartAt": "Trim start: {{time}}",
+    "trimEndAt": "Trim end: {{time}}",
+    "workAreaIn": "Work area in: {{time}}",
+    "workAreaOut": "Work area out: {{time}}",
+    "span": "Span: {{time}}",
+    "menu": {
+      "splitAtPlayhead": "Split at playhead",
+      "duplicate": "Duplicate clip",
+      "ungroup": "Ungroup clips",
+      "group": "Group clips",
+      "rippleDelete": "Ripple delete"
+    },
+    "sceneChange": "Scene change"
   },
   "revenueOracle": {
     "synchronizing": "Loading revenue data...",
@@ -7682,7 +7849,7 @@
     "neuralScheduling": "Smart scheduling",
     "neuralSchedulingDesc": "Schedule posts for when your audience is most active.",
     "evergreenSynthesis": "Evergreen recycling",
-    "evergreenSynthesisDesc": "Activate self-healing content recycling for infinite repository ROI.",
+    "evergreenSynthesisDesc": "Automatically reuse your best-performing content.",
     "initiateSequence": "Initiate Sequence",
     "neuralProcessing": "Processing",
     "ecosystemCalibration": "Setting up...",
@@ -7691,7 +7858,7 @@
     "synchronization": "Pipeline",
     "verified": "VERIFIED",
     "nodesPrimedPrefix": "Your posts are",
-    "primed": "primed",
+    "primed": "ready",
     "nodesPrimedSuffix": "to publish.",
     "estimatedYield": "Estimated Yield",
     "neuralIntegrity": "Quality check",
@@ -8517,5 +8684,1369 @@
     "shift1d": "+1 day",
     "shift1w": "+1 week",
     "moveWarning": "Moving posts can put two posts on the same platform at the same time. Posts that are already publishing or published won't be moved."
+  },
+  "editorSidebar": {
+    "cat": {
+      "aiEdit": {
+        "label": "AI Auto-Edit",
+        "desc": "One-click AI editing"
+      },
+      "dub": {
+        "label": "Dubbing",
+        "desc": "Translate your voice into 10 languages"
+      },
+      "edit": {
+        "label": "Edit",
+        "desc": "Basic editing tools"
+      },
+      "assets": {
+        "label": "My Assets",
+        "desc": "Add music, images & B-roll clips"
+      },
+      "effects": {
+        "label": "Effects",
+        "desc": "Filters & enhancements"
+      },
+      "color": {
+        "label": "Color",
+        "desc": "Professional color grading"
+      },
+      "chromakey": {
+        "label": "Chroma Key",
+        "desc": "Green screen & compositing"
+      },
+      "timeline": {
+        "label": "Timeline",
+        "desc": "Advanced editing"
+      },
+      "export": {
+        "label": "Export",
+        "desc": "Share & export"
+      },
+      "aiAssist": {
+        "label": "AI Assist",
+        "desc": "Smart cuts · suggestion review · apply & undo"
+      },
+      "monetize": {
+        "label": "Monetize",
+        "desc": "Product links · QR · AI monetisation plan"
+      },
+      "stockLibrary": {
+        "label": "Stock Library",
+        "desc": "B-roll · music · GIFs · stickers · transitions · SFX"
+      },
+      "textMotion": {
+        "label": "Text & Motion",
+        "desc": "Captions · animations · motion · fonts"
+      }
+    },
+    "group": {
+      "edit": {
+        "label": "Edit",
+        "desc": "Cut, grade, composite — the core editing surface."
+      },
+      "media": {
+        "label": "Media",
+        "desc": "Assets, stock, captions & text."
+      },
+      "ai": {
+        "label": "AI",
+        "desc": "One-click AI auto-edit + multilingual dubbing."
+      },
+      "export": {
+        "label": "Export",
+        "desc": "Render & share."
+      }
+    },
+    "badge": {
+      "new": "NEW",
+      "agency": "Agency",
+      "pro": "PRO",
+      "beta": "BETA"
+    },
+    "title": "Editor tools",
+    "ready": "Ready",
+    "expand": "Expand sidebar",
+    "collapse": "Collapse sidebar",
+    "searchPlaceholder": "Search tools (⌘F)",
+    "clearSearch": "Clear search",
+    "all": "All",
+    "recent": "Recent",
+    "noTools": "No tools found",
+    "pinned": "Pinned",
+    "allTools": "All tools",
+    "unpin": "Unpin",
+    "pinToTop": "Pin to top",
+    "device": {
+      "desktop": "Desktop",
+      "tablet": "Tablet",
+      "mobile": "Mobile"
+    },
+    "shortcuts": "Keyboard shortcuts",
+    "closeShortcuts": "Close shortcuts",
+    "searchTools": "Search tools"
+  },
+  "editorHUD": {
+    "section": {
+      "edit": "Editing",
+      "color": "Color",
+      "ai": "AI Tools",
+      "effects": "Effects",
+      "timeline": "Timeline",
+      "export": "Export",
+      "styleVault": "Style Vault",
+      "aiEdit": "AI Editing",
+      "assets": "Assets",
+      "growth": "Analytics",
+      "chromakey": "Chroma Key",
+      "visualFx": "Visual FX",
+      "aiAnalysis": "AI Analysis",
+      "collaborate": "Collaborate",
+      "scripts": "Scripts",
+      "scheduling": "Scheduling",
+      "shortClips": "Short Clips",
+      "predict": "Predictions",
+      "distribution": "Distribution",
+      "spatial": "Spatial",
+      "agent": "AI Agent",
+      "dub": "Dubbing"
+    },
+    "layout": {
+      "balanced": "Balanced",
+      "balancedDesc": "Even split of preview and timeline",
+      "cinematic": "Cinematic",
+      "cinematicDesc": "Larger preview, focus on playback",
+      "timelineFocus": "Timeline focus",
+      "timelineFocusDesc": "More room for fine timeline edits"
+    },
+    "projectName": "Project name",
+    "savingEllipsis": "Saving…",
+    "saveFailed": "Save failed",
+    "allChangesSaved": "All changes saved",
+    "saving": "Saving",
+    "saved": "Saved",
+    "undoTitle": "Undo (⌘Z)",
+    "redoTitle": "Redo (⌘Y)",
+    "undo": "Undo",
+    "redo": "Redo",
+    "command": "Search or run a command",
+    "commandTitle": "Search or run a command (⌘K)",
+    "workspaceLayoutTitle": "Workspace layout (L)",
+    "workspaceLayout": "Workspace layout",
+    "gpu": "GPU: {{backend}}",
+    "agentRunning": "AI agent running",
+    "makeViralTitle": "Run the one-click viral recipe — hook, cuts, B-roll, beat sync, CTA",
+    "working": "Working…",
+    "makeViral": "Make Viral",
+    "focusMode": "Focus mode",
+    "moreActions": "More actions",
+    "more": "More",
+    "keyboardShortcuts": "Keyboard shortcuts",
+    "exportTitle": "Export and publish",
+    "export": "Export"
+  },
+  "quickActionsBar": {
+    "variantsNeedBase": "Add a caption or hook first so the variant generator has something to work with.",
+    "noVariants": "No variants returned — try a longer base hook.",
+    "variantsGenerated": "Generated {{count}} variants — open the A/B picker to preview.",
+    "variantsFailed": "Variants failed: {{error}}",
+    "unknownError": "unknown error",
+    "brollNeedsClip": "Load a clip first to suggest B-roll.",
+    "noBrollGaps": "No B-roll gaps detected — your clip is already visually dense.",
+    "brollSuggested": "Suggested {{count}} B-roll insertions. Open the timeline to review.",
+    "brollFailed": "B-roll suggestions failed: {{error}}",
+    "trendsWarmingUp": "Trend feed is warming up — try again in a minute.",
+    "trendsLoaded": "Trending now: {{sounds}} sounds · {{hashtags}} hashtags. Picker opening.",
+    "trendsFailed": "Could not load trends: {{error}}",
+    "styleApplied": "Applied your style: {{items}}",
+    "styleAppliedGeneric": "Applied your learned style.",
+    "styleNeedsClips": "Publish 3 clips first so Click can learn your style.",
+    "styleTimedOut": "Your style request timed out. Try again.",
+    "styleLoadFailed": "Could not load your style. Try again.",
+    "viralEdit": "Viral Edit",
+    "viralEditLong": "Auto Viral Edit — one-tap full edit",
+    "applyStyle": "Apply style",
+    "split": "Split",
+    "splitLong": "Split at playhead",
+    "captions": "Captions",
+    "grade": "Grade",
+    "effects": "Effects",
+    "aiTools": "AI tools",
+    "clean": "Clean",
+    "cleanLong": "Smart cleanup",
+    "variants": "Variants",
+    "variantsLong": "A/B variants",
+    "broll": "B-roll",
+    "brollLong": "Suggest B-roll",
+    "trends": "Trends",
+    "trendsLong": "Trending now",
+    "learnedFrom": "Click learned from {{count}} of your published clips",
+    "ariaLoading": "{{label}} — loading",
+    "ariaShortcut": "{{label}} (shortcut {{key}})"
+  },
+  "aiAutoEdit": {
+    "preset": {
+      "mrbeastEnergy": "MrBeast Energy",
+      "mrbeastEnergyTagline": "Big stakes · pattern break",
+      "hormoziBold": "Hormozi Bold",
+      "hormoziBoldTagline": "Hard stat · contrarian take",
+      "cinematicDoc": "Cinematic Doc",
+      "cinematicDocTagline": "Slow burn · whisper cut",
+      "educationalClean": "Educational Clean",
+      "educationalCleanTagline": "Question frame · fact drop",
+      "newsAuthority": "News Authority",
+      "newsAuthorityTagline": "Headline · breaking · expert",
+      "casualVlog": "Casual Vlog",
+      "casualVlogTagline": "Day-in-life · conversational",
+      "mysteryHook": "Mystery Hook",
+      "mysteryHookTagline": "Curiosity loop · slow reveal",
+      "gymGrit": "Gym Grit",
+      "gymGritTagline": "High-intensity · tough love",
+      "adhdOverload": "ADHD Overload",
+      "adhdOverloadTagline": "Chaos · pop-burst · overstim",
+      "podcastGoldmine": "Podcast Goldmine",
+      "podcastGoldmineTagline": "Authority · chapters · warm doc",
+      "retentionMachine": "Retention Machine",
+      "retentionMachineTagline": "Open loops · B-roll · chapters"
+    },
+    "opt": {
+      "auto": "Auto",
+      "vivid": "Vivid",
+      "cinematic": "Cinematic",
+      "natural": "Natural",
+      "cool": "Cool",
+      "warm": "Warm",
+      "vintage": "Vintage",
+      "bw": "Black & white",
+      "upbeatPop": "Upbeat pop",
+      "chill": "Chill",
+      "darkAmbient": "Dark ambient",
+      "synthwave": "Synthwave",
+      "phonk": "Phonk",
+      "lofi": "Lo-fi",
+      "question": "Question",
+      "stat": "Stat",
+      "mystery": "Mystery",
+      "story": "Story",
+      "boldClaim": "Bold claim",
+      "patternBreak": "Pattern break",
+      "fastCut": "Fast cut",
+      "crossfade": "Crossfade",
+      "glitch": "Glitch",
+      "whipPan": "Whip pan",
+      "hardCut": "Hard cut",
+      "modern": "Modern",
+      "bold": "Bold",
+      "minimal": "Minimal",
+      "neon": "Neon",
+      "pill": "Pill",
+      "top": "Top",
+      "middle": "Middle",
+      "bottom": "Bottom",
+      "lowerThird": "Lower third",
+      "energetic": "Energetic",
+      "calm": "Calm",
+      "authoritative": "Authoritative",
+      "playful": "Playful",
+      "serious": "Serious",
+      "urgency": "Urgency",
+      "value": "Value",
+      "curiosity": "Curiosity",
+      "off": "Off",
+      "sparse": "Sparse",
+      "balanced": "Balanced",
+      "heavy": "Heavy",
+      "gentle": "Gentle",
+      "medium": "Medium",
+      "aggressive": "Aggressive",
+      "educational": "Educational",
+      "entertaining": "Entertaining",
+      "motivational": "Motivational",
+      "promotional": "Promotional"
+    },
+    "brief": {
+      "title": "Marketing Brief",
+      "postingTimes": "Best Posting Times",
+      "competitiveInsights": "Competitive Insights"
+    },
+    "err": {
+      "videoNotFound": "Video data not found in response",
+      "loadFailed": "Failed to load video. Please try again.",
+      "missingSource": "This video is missing its source file. Re-upload and try again.",
+      "tooManyPresets": "You can mix at most 3 style presets per edit.",
+      "serviceError": "The AI service hit an error: {{error}}",
+      "serviceInternal": "The AI service hit an internal error. Try again in a moment.",
+      "sessionExpired": "Your session expired. Sign in again and retry.",
+      "rateLimited": "Too many edit requests. Wait a moment and try again.",
+      "rejected": "Request was rejected ({{status}}). Check your inputs and retry.",
+      "timeout": "The edit request timed out. The video may be too large or the server is slow to respond.",
+      "network": "Can't reach the server. Check your connection and try again.",
+      "startFailed": "Could not start the AI edit. Try again."
+    },
+    "badge": "AI Auto Edit",
+    "title": "Configure AI Rules",
+    "untitled": "Untitled Project",
+    "toggleTheme": "Toggle theme",
+    "analyze": "Analyze Video",
+    "analyzing": "Analyzing...",
+    "backToVideos": "Back to Videos",
+    "processingTitle": "Processing Video",
+    "processingBody": "The AI is analyzing, cutting, and optimizing your video...",
+    "initializing": "Initializing",
+    "result": {
+      "title": "Your edit is ready",
+      "body": "Open it in the editor to fine-tune, or download it as it is.",
+      "editsApplied": "Edits applied",
+      "openInEditor": "Open in Editor",
+      "downloadTitle": "Download the edited video",
+      "download": "Download",
+      "viewClipsTitle": "View the generated clips",
+      "viewClips": "View Clips",
+      "dismissTitle": "Dismiss this result",
+      "dismiss": "Dismiss"
+    },
+    "diag": {
+      "title": "Diagnostics",
+      "complete": "Analysis Complete",
+      "suggestedLength": "Suggested Length"
+    },
+    "plan": {
+      "title": "Your edit plan",
+      "subtitle": "What the AI will do with the settings on the right",
+      "opening": "Opening",
+      "openingHook": "Lead with the strongest moment",
+      "openingOriginal": "Keep the original start",
+      "pacing": "Pacing",
+      "pacingGentle": "Gentle cuts",
+      "pacingFast": "Fast, tight cuts",
+      "pacingBalanced": "Balanced cuts",
+      "deadAir": "Dead air",
+      "removed": "Removed",
+      "kept": "Kept",
+      "captions": "Captions",
+      "burnedIn": "Burned in",
+      "off": "Off",
+      "clips": "Clips",
+      "under30s": "under 30s",
+      "fullLength": "full length",
+      "oneVideo": "One edited video",
+      "format": "Format"
+    },
+    "director": {
+      "title": "AI Director",
+      "subtitle": "Pick up to 3 styles or fine-tune every setting.",
+      "presetsOne": "{{count}} preset: {{names}}",
+      "presetsOther": "{{count}} presets: {{names}}"
+    },
+    "targetPlatform": "Target platform",
+    "contentTone": "Content tone",
+    "stylePreset": "Style preset",
+    "presetsSelected": "{{count}}/3 selected · click again to remove",
+    "presetCap": "Up to 3 presets — remove one to swap",
+    "presetSelectedTitle": "Selected #{{n}} — click to remove",
+    "presetSelect": "Select style: {{name}}",
+    "presetSelectedAria": "Selected style #{{n}}: {{name}}",
+    "aiTasks": "AI tasks",
+    "task": {
+      "removeSilence": "Remove silence",
+      "removeSilenceDesc": "Auto-cut dead air & pauses",
+      "optimizePacing": "Optimize pacing",
+      "optimizePacingDesc": "Tight cuts for retention",
+      "enhanceAudio": "Enhance audio",
+      "enhanceAudioDesc": "Noise reduction + leveling",
+      "generateClips": "Generate short clips",
+      "generateClipsDesc": "Extract viral moments",
+      "addCaptions": "Burn-in captions",
+      "addCaptionsDesc": "Word-synced dynamic text",
+      "enhanceColor": "Color correction",
+      "enhanceColorDesc": "Auto LUT + grade"
+    },
+    "output": "Output",
+    "aspectRatio": "Aspect ratio",
+    "clipsToGenerate": "Clips to generate",
+    "clipCountAria": "Number of clips to generate",
+    "targetLength": "Target length",
+    "full": "Full",
+    "pacing": "Pacing",
+    "advanced": "Advanced",
+    "advancedHint": "Mood, captions, transitions, voice, B-roll, CTA",
+    "sel": {
+      "colorGrade": "Color grade",
+      "musicGenre": "Music genre",
+      "hookStyle": "Hook style",
+      "transitions": "Transitions",
+      "captionStyle": "Caption style",
+      "subtitlePosition": "Subtitle position",
+      "voiceTone": "Voice tone",
+      "ctaStyle": "CTA style",
+      "brollFrequency": "B-roll frequency"
+    },
+    "speedRamping": "Speed ramping",
+    "speedRampingHint": "Speeds clips up and down for energy",
+    "toggleSpeedRamping": "Toggle speed ramping",
+    "prioritizeHook": "Prioritize hook",
+    "prioritizeHookHint": "Make the first 3s count for retention",
+    "togglePrioritizeHook": "Toggle prioritize hook",
+    "creativeDirection": "Creative Direction",
+    "creativeDirectionHint": "optional · overrides AI defaults",
+    "creativeDirectionPlaceholder": "e.g. Make it feel cinematic and dark, no jump cuts, emphasise the emotional pause at 0:42…",
+    "autoFit": "Auto-fit",
+    "aiPlan": "AI Plan",
+    "preloadedStyle": "Pre-loaded your style",
+    "planLine": {
+      "composeOne": "Compose {{count}} {{aspect}} clip, target {{length}}",
+      "composeOther": "Compose {{count}} {{aspect}} clips, target {{length}}",
+      "forPlatform": "for {{platform}}",
+      "tone": "{{tone}} tone",
+      "acrossPresets": "across {{presets}} ({{count}} variation angles)",
+      "autoStyle": "with {{auto}} style",
+      "autoDetected": "auto-detected",
+      "grade": "{{grade}} color grade",
+      "hook": "{{hook}} hook",
+      "pacing": "{{pacing}} pacing",
+      "speedRamping": "speed-ramping on",
+      "broll": "{{broll}} B-roll"
+    },
+    "tasksOne": "{{count}} task",
+    "tasksOther": "{{count}} tasks",
+    "estimate": "est {{time}}",
+    "chip": {
+      "captions": "Captions",
+      "autoGrade": "Auto-grade",
+      "speedRamp": "Speed ramp"
+    },
+    "composing": "Composing your edit…",
+    "composeOne": "Compose {{count}} clip",
+    "composeOther": "Compose {{count}} clips",
+    "using": "Using {{names}}",
+    "autoSelectPreset": "Auto-select preset based on your content",
+    "tasksOnOne": "{{count}} task on",
+    "tasksOnOther": "{{count}} tasks on",
+    "dismissError": "Dismiss this error",
+    "dismiss": "Dismiss"
+  },
+  "propertiesPanel": {
+    "layout": {
+      "bottom": "Bottom",
+      "bottomTitle": "Bottom",
+      "lowerThird": "Lower",
+      "lowerThirdTitle": "Lower third",
+      "top": "Top",
+      "topTitle": "Top",
+      "fullWidth": "Full-width",
+      "fullWidthTitle": "Full-width bar"
+    },
+    "tab": {
+      "transform": "Position",
+      "color": "Color",
+      "captions": "Captions",
+      "text": "Text",
+      "clip": "Clip"
+    },
+    "reset": "Reset",
+    "title": "Properties",
+    "activeTab": "{{tab}} settings",
+    "close": "Close properties",
+    "clipProperties": "Clip properties",
+    "selectedClip": "Selected clip",
+    "playbackSpeed": "Playback speed",
+    "playbackSpeedTitle": "Playback speed: {{speed}}x",
+    "playbackSpeedHint": "Speed this clip up or slow it down.",
+    "stabilization": "Stabilization",
+    "stabilizationTitle": "Stabilization: {{value}}%",
+    "stabilizationHint": "How much to smooth out camera shake.",
+    "volume": "Volume",
+    "volumeTitle": "Volume: {{value}}%",
+    "autoDucking": "Auto-ducking",
+    "autoDuckingHint": "Turn music down while someone speaks",
+    "autoDuckingToggle": "Turn auto-ducking on or off",
+    "positionAndSize": "Position and size",
+    "scale": "Scale (%)",
+    "positionX": "X position",
+    "positionY": "Y position",
+    "rotation": "Rotation (°)",
+    "animation": "Animation",
+    "keyframesCountOne": "1 keyframe",
+    "keyframesCount": "{{count}} keyframes",
+    "addKeyframe": "+ Add keyframe at playhead",
+    "prevKeyframe": "◁ Prev",
+    "nextKeyframe": "Next ▷",
+    "remove": "Remove",
+    "curve": "Curve",
+    "easing": {
+      "linear": "Linear",
+      "easeIn": "Ease in",
+      "easeOut": "Ease out",
+      "easeInOut": "Ease in and out",
+      "bounceOut": "Bounce",
+      "elasticOut": "Elastic",
+      "cubic": "Smooth (strong)"
+    },
+    "brightness": "Brightness",
+    "contrast": "Contrast",
+    "saturation": "Saturation",
+    "temperature": "Temperature",
+    "clarity": "Clarity",
+    "dehaze": "Dehaze",
+    "captionsOn": "Show captions",
+    "captionsOnHint": "Show the transcript as captions",
+    "captionLayout": "Caption position",
+    "textOverlays": "Text overlays",
+    "noTextOverlays": "No text overlays yet",
+    "deleteTextOverlay": "Delete text overlay",
+    "synced": "Synced",
+    "preset": {
+      "tiktok": {
+        "label": "TikTok",
+        "description": "Bold, center, high impact"
+      },
+      "reels": {
+        "label": "Reels",
+        "description": "Clean uppercase, trendy"
+      },
+      "podcast": {
+        "label": "Podcast",
+        "description": "Minimal, lower third"
+      },
+      "cinematic": {
+        "label": "Cinematic",
+        "description": "Film-style serif"
+      },
+      "documentary": {
+        "label": "Documentary",
+        "description": "Classic subtitle bar"
+      },
+      "neon": {
+        "label": "Neon",
+        "description": "Glowing, night vibe"
+      },
+      "karaoke": {
+        "label": "Karaoke",
+        "description": "Bold karaoke style"
+      },
+      "pill": {
+        "label": "Pill",
+        "description": "Rounded pill words"
+      },
+      "bubble": {
+        "label": "Bubble",
+        "description": "Speech bubble style"
+      },
+      "gradient": {
+        "label": "Gradient",
+        "description": "Colorful gradient text"
+      },
+      "retro": {
+        "label": "Retro",
+        "description": "Warm vintage look"
+      },
+      "vintage": {
+        "label": "Vintage",
+        "description": "Sepia typewriter"
+      },
+      "pop": {
+        "label": "Pop",
+        "description": "Bright and punchy"
+      },
+      "high-contrast": {
+        "label": "Accessible",
+        "description": "High contrast, readable"
+      },
+      "kinetic": {
+        "label": "Kinetic",
+        "description": "Words pop on beat"
+      },
+      "slow-zoom": {
+        "label": "Slow zoom",
+        "description": "Scale 100% → 110%"
+      },
+      "fly-in-left": {
+        "label": "Fly in from left",
+        "description": "Position from off-screen left"
+      },
+      "fly-in-right": {
+        "label": "Fly in from right",
+        "description": "Position from off-screen right"
+      },
+      "fly-in-top": {
+        "label": "Fly in from top",
+        "description": "Position from off-screen top"
+      },
+      "fly-in-bottom": {
+        "label": "Fly in from bottom",
+        "description": "Position from off-screen bottom"
+      },
+      "fade-in-out": {
+        "label": "Fade in & out",
+        "description": "Opacity 0 → 1 → 0"
+      }
+    }
+  },
+  "basicEditor": {
+    "preset": {
+      "title": {
+        "label": "Title"
+      },
+      "text": {
+        "yourTitleHere": "Your Title Here",
+        "subscribeForMore": "Subscribe for more",
+        "likeSubscribe": "Like & Subscribe",
+        "watchMore": "Watch more →",
+        "commentBelow": "Comment below",
+        "linkInBio": "Link in bio",
+        "addYourCaption": "Add your caption",
+        "followForMore": "Follow for more",
+        "newText": "NEW TEXT",
+        "youNeedToSeeThis": "YOU NEED TO SEE THIS",
+        "nameTitle": "Name · Title",
+        "proTip": "PRO TIP",
+        "tapToLearnMore": "TAP TO LEARN MORE",
+        "waitForIt": "WAIT FOR IT...",
+        "storyTime": "STORY TIME",
+        "youWontBelieveWhatHappened": "You won't believe what happened",
+        "dayInMyLife": "Day in my life",
+        "day1Of": "Day 1 of...",
+        "getReadyForThis": "Get ready for this",
+        "watchTillTheEnd": "Watch till the end",
+        "noOneTalksAboutThis": "No one talks about this",
+        "theSecretTheyDontWantYouToKnow": "The secret they don't want you to know",
+        "theSecretIs": "THE SECRET IS",
+        "insane": "INSANE!",
+        "actually": "actually...",
+        "now": "now",
+        "zeroCost": "ZERO COST",
+        "watch": "WATCH",
+        "here": "HERE",
+        "swipeUp": "Swipe up",
+        "seeYouNextTime": "See you next time",
+        "unpopularOpinion": "Unpopular opinion:",
+        "thisChangedEverything": "This changed everything",
+        "hotTake": "Hot take:",
+        "nobodyTalksAboutThis": "Nobody talks about this",
+        "povYouJustFoundTheBestTip": "POV: You just found the best tip",
+        "saveThisForLater": "Save this for later",
+        "commentYourAnswerBelow": "Comment your answer below",
+        "dropAIfYouAgree": "Drop a 👍 if you agree",
+        "part1": "Part 1",
+        "chapter1": "Chapter 1",
+        "intro": "INTRO",
+        "outro": "OUTRO",
+        "comingUpNext": "Coming up next...",
+        "quickRecap": "Quick recap"
+      },
+      "subscribe": {
+        "label": "Subscribe"
+      },
+      "likeSubscribe": {
+        "label": "Like & Subscribe"
+      },
+      "watchMore": {
+        "label": "Watch more"
+      },
+      "comment": {
+        "label": "Comment"
+      },
+      "linkInBio": {
+        "label": "Link in bio"
+      },
+      "caption": {
+        "label": "Caption"
+      },
+      "follow": {
+        "label": "Follow"
+      },
+      "custom": {
+        "label": "Custom"
+      },
+      "hook": {
+        "label": "Hook"
+      },
+      "lowerThird": {
+        "label": "Lower third"
+      },
+      "callout": {
+        "label": "Callout"
+      },
+      "timestamp": {
+        "label": "Timestamp"
+      },
+      "waitForIt": {
+        "label": "Wait for it"
+      },
+      "storyTime": {
+        "label": "Story time"
+      },
+      "youWontBelieve": {
+        "label": "You won't believe"
+      },
+      "dayInMyLife": {
+        "label": "Day in my life"
+      },
+      "dayXOf": {
+        "label": "Day X of"
+      },
+      "getReady": {
+        "label": "Get ready"
+      },
+      "watchTillEnd": {
+        "label": "Watch till end"
+      },
+      "noOneTalksAbout": {
+        "label": "No one talks about"
+      },
+      "theSecret": {
+        "label": "The secret"
+      },
+      "hormoziBold": {
+        "label": "Hormozi Bold"
+      },
+      "beastImpact": {
+        "label": "Beast Impact"
+      },
+      "minimalNarrative": {
+        "label": "Minimal Narrative"
+      },
+      "subliminalQuick": {
+        "label": "Subliminal Quick"
+      },
+      "punchyHighlight": {
+        "label": "Punchy Highlight"
+      },
+      "arrowRight": {
+        "label": "Arrow →"
+      },
+      "arrowLeft": {
+        "label": "Arrow ←"
+      },
+      "proTip": {
+        "label": "PRO TIP"
+      },
+      "watch": {
+        "label": "WATCH"
+      },
+      "here": {
+        "label": "HERE"
+      },
+      "swipeUp": {
+        "label": "Swipe up"
+      },
+      "commentBelow": {
+        "label": "Comment below"
+      },
+      "tapToLearnMore": {
+        "label": "Tap to learn more"
+      },
+      "seeYouNextTime": {
+        "label": "See you next time"
+      },
+      "unpopularOpinion": {
+        "label": "Unpopular opinion"
+      },
+      "thisChangedEverything": {
+        "label": "This changed everything"
+      },
+      "hotTake": {
+        "label": "Hot take"
+      },
+      "nobodyTalksAbout": {
+        "label": "Nobody talks about"
+      },
+      "saveThis": {
+        "label": "Save this"
+      },
+      "commentYour": {
+        "label": "Comment your"
+      },
+      "dropA": {
+        "label": "Drop a"
+      },
+      "part1": {
+        "label": "Part 1"
+      },
+      "chapter": {
+        "label": "Chapter"
+      },
+      "intro": {
+        "label": "Intro"
+      },
+      "outro": {
+        "label": "Outro"
+      },
+      "next": {
+        "label": "Next"
+      },
+      "recap": {
+        "label": "Recap"
+      }
+    },
+    "filter": {
+      "vibrant": {
+        "name": "Vibrant",
+        "desc": "Punchy colors"
+      },
+      "mono": {
+        "name": "Mono",
+        "desc": "B&W"
+      },
+      "cinematic": {
+        "name": "Cinematic",
+        "desc": "Film look"
+      },
+      "warm": {
+        "name": "Warm",
+        "desc": "Golden hour"
+      },
+      "cool": {
+        "name": "Cool",
+        "desc": "Blue tones"
+      },
+      "vintage": {
+        "name": "Vintage",
+        "desc": "Retro"
+      },
+      "moody": {
+        "name": "Moody",
+        "desc": "Dark & rich"
+      },
+      "vivid": {
+        "name": "Vivid",
+        "desc": "High pop"
+      },
+      "noir": {
+        "name": "Noir",
+        "desc": "High contrast B&W"
+      },
+      "sunset": {
+        "name": "Sunset",
+        "desc": "Golden hour"
+      },
+      "breeze": {
+        "name": "Breeze",
+        "desc": "Cool & crisp"
+      },
+      "matte": {
+        "name": "Matte",
+        "desc": "Flat & soft"
+      },
+      "neon": {
+        "name": "Neon",
+        "desc": "Pop colors"
+      },
+      "autumn": {
+        "name": "Autumn",
+        "desc": "Warm earth"
+      },
+      "winter": {
+        "name": "Winter",
+        "desc": "Cool & clean"
+      },
+      "dreamy": {
+        "name": "Dreamy",
+        "desc": "Soft pastel"
+      },
+      "reset": {
+        "name": "Reset",
+        "desc": "Default"
+      }
+    },
+    "style": {
+      "creatorBold": {
+        "label": "Creator Bold",
+        "desc": "High-energy viral"
+      },
+      "softAesthetic": {
+        "label": "Soft Aesthetic",
+        "desc": "Gentle & dreamy"
+      },
+      "corporateMinimal": {
+        "label": "Corporate Minimal",
+        "desc": "Clean & pro"
+      },
+      "darkMoody": {
+        "label": "Dark Moody",
+        "desc": "Dramatic shadows"
+      },
+      "vibrantPop": {
+        "label": "Vibrant Pop",
+        "desc": "Colorful & punchy"
+      },
+      "cinematicFilm": {
+        "label": "Cinematic Film",
+        "desc": "Movie trailer"
+      },
+      "noirDramatic": {
+        "label": "Noir Dramatic",
+        "desc": "B&W dramatic"
+      },
+      "lifestyleWarm": {
+        "label": "Lifestyle Warm",
+        "desc": "Vlog & travel"
+      },
+      "podcastPro": {
+        "label": "Podcast Pro",
+        "desc": "Clean & professional"
+      },
+      "documentary": {
+        "label": "Documentary",
+        "desc": "Natural & immersive"
+      },
+      "fashionEditorial": {
+        "label": "Fashion Editorial",
+        "desc": "High-fashion look"
+      },
+      "retroWarm": {
+        "label": "Retro Warm",
+        "desc": "Vintage warmth"
+      },
+      "cinematicDrama": {
+        "label": "Cinematic Drama",
+        "desc": "Deep & dramatic"
+      },
+      "comedyBright": {
+        "label": "Comedy Bright",
+        "desc": "Punchy & fun"
+      },
+      "sportsDynamic": {
+        "label": "Sports Dynamic",
+        "desc": "Action-ready"
+      },
+      "savedDesc": "Saved"
+    },
+    "platform": {
+      "tiktok": {
+        "desc": "9:16, punchy"
+      },
+      "youtube": {
+        "desc": "9:16, balanced"
+      },
+      "feed": {
+        "label": "Instagram Feed",
+        "desc": "1:1, vibrant"
+      },
+      "portrait": {
+        "label": "Instagram Portrait",
+        "desc": "4:5, warm"
+      },
+      "landscape": {
+        "label": "YouTube / Landscape",
+        "desc": "16:9, clean"
+      },
+      "linkedin": {
+        "desc": "16:9, pro"
+      }
+    },
+    "filterCategory": {
+      "all": "All",
+      "mood": "Mood",
+      "creative": "Creative",
+      "dramatic": "Dramatic",
+      "neutral": "Reset"
+    },
+    "shapePreset": {
+      "logoCorner": "Logo corner",
+      "subscribeBadge": "Subscribe badge",
+      "fullWidthBar": "Full-width bar",
+      "dividerLine": "Divider line",
+      "highlightBox": "Highlight box",
+      "cornerAccent": "Corner accent"
+    },
+    "undo": "Undo",
+    "redo": "Redo",
+    "searchTools": "Search tools...",
+    "clearSearch": "Clear search",
+    "layersCount": "{{count}} layers",
+    "reset": "Reset",
+    "add": "Add",
+    "save": "Save",
+    "color": "Color",
+    "toast": {
+      "undoApplied": "Undo applied",
+      "redoApplied": "Redo applied",
+      "fontUploading": "Uploading font…",
+      "fontAdded": "Font added.",
+      "fontInvalid": "That font file isn't supported.",
+      "fontFailed": "Couldn't upload the font.",
+      "rectangleAdded": "Rectangle added",
+      "circleAdded": "Circle added",
+      "lineAdded": "Line added",
+      "addedName": "Added {{name}}",
+      "addedQuoted": "Added \"{{name}}\"",
+      "addedAt": "Added \"{{name}}\" at {{time}}s",
+      "enterImageUrl": "Enter an image URL",
+      "imageAdded": "Image overlay added",
+      "svgAddedFromFile": "SVG overlay added from file — animate it with keyframes in Effects",
+      "enterSvgUrl": "Enter an SVG URL (e.g. https://… .svg or data:image/svg+xml,…)",
+      "svgAdded": "SVG overlay added — animate it with keyframes in Effects",
+      "compoundSaved": "Saved \"{{name}}\" — add it to the timeline anytime",
+      "compoundRemoved": "Compound removed",
+      "renamed": "Renamed to \"{{name}}\"",
+      "addTextHint": "Add text — type and press Add or Ctrl+Enter",
+      "textAdded": "Text overlay added",
+      "packApplied": "{{name}} pack applied",
+      "saved": "Saved \"{{name}}\"",
+      "filtersReset": "Filters reset to default",
+      "nameYourStyle": "Name your style and click Save",
+      "applied": "{{name}} applied",
+      "speed": "Speed: {{value}}×"
+    },
+    "compound": {
+      "untitled": "Untitled compound",
+      "title": "Save as compound",
+      "namePlaceholder": "Compound name…",
+      "name": "Compound name",
+      "durationAria": "Compound duration in seconds",
+      "delete": "Delete compound \"{{name}}\""
+    },
+    "search": {
+      "filterHit": "Filter: {{name}}",
+      "styleHit": "Style: {{name}}",
+      "motionHit": "Motion: {{name}}",
+      "textHit": "Text: {{name}}"
+    },
+    "caption": {
+      "noTranscript": "No transcript found. Paste your script in the field below, then try again.",
+      "noneGenerated": "No captions generated — the transcript may be too short.",
+      "addedToast": "{{count}} captions added — {{style}} style",
+      "generationFailed": "Caption generation failed",
+      "failedToast": "Auto-caption failed",
+      "title": "AI auto-captions",
+      "clearTitle": "Clear auto-generated captions",
+      "cleared": "Auto-captions cleared",
+      "count": "{{count}} captions",
+      "ready": "Ready",
+      "noScript": "No script",
+      "pasteScript": "Paste your script",
+      "pasteScriptTitle": "Paste your video script here",
+      "pastePlaceholder": "Paste or type the spoken words from your video…",
+      "wordCount": "{{count}} words",
+      "wordsPerLine": "Words/line",
+      "position": "Position",
+      "positionAt": {
+        "top": "Put captions at the top",
+        "mid": "Put captions in the middle",
+        "bottom": "Put captions at the bottom"
+      },
+      "colorTitle": "Caption text color",
+      "setColor": "Set caption color to {{color}}",
+      "addedInStyle": "{{count}} captions added in {{style}} style",
+      "generateAria": "Generate auto-captions from the transcript",
+      "generating": "Generating {{count}}-word captions…",
+      "generate": "Generate captions"
+    },
+    "captionStyle": {
+      "minimal": "Minimal",
+      "neon": "Neon",
+      "kinetic": "Kinetic",
+      "cyber": "Cyber",
+      "meme": "Meme",
+      "retro": "Retro",
+      "quote": "Quote"
+    },
+    "translate": {
+      "noCaptions": "No captions on the timeline to translate.",
+      "inProgress": "Translating captions (timings stay the same)…",
+      "done": "Captions translated to {{language}}",
+      "empty": "Translation finished but returned no captions.",
+      "failed": "Couldn't translate the captions.",
+      "title": "Translate captions",
+      "languageTitle": "Choose the language to translate into",
+      "translating": "Translating…",
+      "translate": "Translate"
+    },
+    "emoji": {
+      "noTranscript": "No transcript words to match emojis to. Generate a transcript first.",
+      "inProgress": "Matching emojis to your transcript…",
+      "noneFound": "No emoji matches found in the transcript.",
+      "added": "Added {{count}} emojis to the timeline",
+      "failed": "Emoji generation failed",
+      "title": "Auto emojis",
+      "clearTitle": "Clear generated emojis",
+      "cleared": "Emojis cleared",
+      "count": "{{count}} emojis",
+      "enter": "Enter transition",
+      "enterTitle": "Choose how emojis appear",
+      "exit": "Exit transition",
+      "exitTitle": "Choose how emojis disappear",
+      "style": "Style",
+      "styleTitle": "Choose the emoji style",
+      "size": "Emoji size",
+      "sizeTitle": "Choose the emoji size",
+      "density": "How often",
+      "densityTitle": "Choose how often emojis appear",
+      "placement": "Placement",
+      "placementTitle": "Choose where emojis sit",
+      "inDuration": "In duration: {{value}}s",
+      "inDurationTitle": "Enter animation duration",
+      "outDuration": "Out duration: {{value}}s",
+      "outDurationTitle": "Exit animation duration",
+      "generating": "Generating emojis…",
+      "generate": "Generate emojis"
+    },
+    "emojiOpt": {
+      "enter": {
+        "pop": "💥 Pop in",
+        "bounce": "🦘 Bounce up",
+        "slide": "➡️ Slide in",
+        "pulse": "💓 Zoom pulse",
+        "shake": "⚡ Camera shake",
+        "blur": "🌫️ Blur in"
+      },
+      "exit": {
+        "fade": "🌫️ Smooth fade",
+        "pop": "💥 Pop out",
+        "slideBottom": "⬇️ Slide down",
+        "bounceOut": "🦘 Bounce out",
+        "scaleOut": "🔍 Scale out",
+        "zoomOut": "🔎 Zoom out",
+        "flipOut": "🔄 Flip out"
+      },
+      "style": {
+        "pop3d": "✨ 3D pop",
+        "neonGlow": "🏮 Neon glow",
+        "flat": "📄 Minimal flat"
+      },
+      "size": {
+        "n32": "🤏 Small (32px)",
+        "n48": "👌 Medium (48px)",
+        "n64": "💪 Large (64px)",
+        "n80": "👑 Giant (80px)"
+      },
+      "density": {
+        "n3": "🔥 High (every 3 words)",
+        "n6": "⚡ Medium (every 6 words)",
+        "n10": "🎯 Low (every 10 words)"
+      },
+      "place": {
+        "above": "⬆️ Above captions",
+        "below": "⬇️ Below captions",
+        "head": "👱 Head level",
+        "customTop": "👑 Top of frame"
+      }
+    },
+    "lang": {
+      "en": "English",
+      "es": "Spanish (Español)",
+      "fr": "French (Français)",
+      "de": "German (Deutsch)",
+      "it": "Italian (Italiano)",
+      "pt": "Portuguese (Português)",
+      "ru": "Russian (Русский)",
+      "ja": "Japanese (日本語)",
+      "ko": "Korean (한국어)",
+      "zh": "Chinese (中文)",
+      "ar": "Arabic (العربية)",
+      "hi": "Hindi (हिन्दी)",
+      "nl": "Dutch (Nederlands)",
+      "pl": "Polish (Polski)",
+      "tr": "Turkish (Türkçe)"
+    },
+    "trim": {
+      "waveform": "Waveform",
+      "clickToSeek": "Click to move the playhead",
+      "speed": "Speed",
+      "playbackSpeedAria": "Playback speed: {{value}} times",
+      "reverse": "Reverse",
+      "reverseSub": "Flip selected clip",
+      "selectClipFirst": "Select a clip first",
+      "split": "Split at playhead",
+      "beatCut": "Beat cut",
+      "beatCutSub": "Cut the clip on every beat",
+      "freeze": "Freeze frame",
+      "freezeSub": "Hold 1s @ {{time}}s",
+      "trimToInOut": "Trim to In/Out",
+      "trimToInOutSub": "Set In + Out below",
+      "setBothFirst": "Set both In and Out points first",
+      "jCut": "J-cut",
+      "jCutSub": "Audio starts 0.5s early",
+      "lCut": "L-cut",
+      "lCutSub": "Audio runs 0.5s past the cut",
+      "comingSoonTitle": "{{label}} — coming soon",
+      "selectClipTitle": "{{label}} — select a clip first",
+      "soon": "Soon",
+      "markers": "In / Out markers",
+      "inAt": "In {{time}}s",
+      "noIn": "No In",
+      "outAt": "Out {{time}}s",
+      "noOut": "No Out",
+      "inSet": "In set @ {{time}}s",
+      "setIn": "Set In",
+      "outAfterIn": "Out must come after In",
+      "outSet": "Out set @ {{time}}s",
+      "setOut": "Set Out",
+      "clear": "Clear"
+    },
+    "layout": {
+      "auto": "Auto",
+      "standard": "Standard",
+      "square": "Square",
+      "vertical": "Vertical",
+      "portrait": "Portrait",
+      "cinematic": "Cinematic",
+      "classic": "Classic"
+    },
+    "text": {
+      "editingOnCanvas": "Editing on canvas",
+      "doubleClickHint": "Double-click text in the player to type inline",
+      "deselect": "Deselect",
+      "newText": "New Text",
+      "typePlaceholder": "Type text… (⌘↵ to add)",
+      "duration": "Duration:",
+      "searchPresets": "Search presets…",
+      "activeText": "Text on video ({{count}})",
+      "deleteOverlayAria": "Delete text overlay \"{{text}}\"",
+      "deleteOverlay": "Delete text overlay",
+      "preview": "Preview",
+      "livePreview": "Live preview",
+      "editing": "Editing: {{text}}",
+      "contentAria": "Overlay text",
+      "contentPlaceholder": "Overlay text",
+      "fontSize": "Font size",
+      "textColor": "Text color",
+      "style": "Style",
+      "animateIn": "Animate in",
+      "animateOut": "Animate out",
+      "font": "Font",
+      "start": "Start",
+      "startAria": "Start time in seconds",
+      "end": "End",
+      "endAria": "End time in seconds",
+      "uploadFont": "Upload font",
+      "uploadFontAria": "Upload a custom font file"
+    },
+    "textStyle": {
+      "none": "None",
+      "neon": "Neon",
+      "minimal": "Minimal",
+      "bold-kinetic": "Bold kinetic",
+      "outline": "Outline",
+      "shadow": "Shadow"
+    },
+    "anim": {
+      "none": "None",
+      "fade": "Fade",
+      "slide-up": "Slide up",
+      "slide-down": "Slide down",
+      "slide-left": "Slide left",
+      "slide-right": "Slide right",
+      "scale": "Scale",
+      "bounce": "Bounce"
+    },
+    "presetGroup": {
+      "viralHooks": "Viral hooks",
+      "textPresets": "Text presets",
+      "premiumCaptions": "Premium captions",
+      "reactionCallouts": "Reactions / callouts",
+      "trending": "Trending",
+      "endScreens": "End screens",
+      "chapters": "Chapters"
+    },
+    "filters": {
+      "strengthAria": "Filter strength: {{value}} percent",
+      "before": "⏪ Before",
+      "after": "⏩ After",
+      "split": "🌓 Split",
+      "pinned": "Pinned",
+      "pin": "Pin {{name}} filter",
+      "unpin": "Unpin {{name}} filter"
+    },
+    "motion": {
+      "searchTemplates": "Search templates…",
+      "durationAria": "Motion graphic duration in seconds",
+      "recent": "Recent"
+    },
+    "layers": {
+      "addShape": "Add shape",
+      "addImage": "Add image / logo",
+      "imageUrlPlaceholder": "Paste image URL…",
+      "imageUrl": "Image URL",
+      "addSvg": "Add SVG",
+      "svgUrlPlaceholder": "SVG URL or data URI…",
+      "svgUrl": "SVG URL",
+      "uploadSvg": "Upload SVG file",
+      "gradients": "Gradient overlays",
+      "allLayers": "All layers ({{count}})",
+      "hoverHint": "Hover to show controls",
+      "deleteTextAria": "Delete text layer \"{{text}}\"",
+      "deleteText": "Delete text layer",
+      "opacity": "Opacity",
+      "opacityAria": "Layer opacity",
+      "deleteShape": "Delete {{shape}} shape",
+      "deleteImage": "Delete image layer",
+      "customSvg": "Custom SVG",
+      "deleteSvg": "Delete SVG layer",
+      "gradientName": "{{region}} gradient",
+      "deleteGradient": "Delete gradient layer",
+      "empty": "No layers yet",
+      "emptyHint": "Add shapes, images, or SVGs above. Text overlays appear here too.",
+      "addTextLayer": "+ Add text layer"
+    },
+    "shape": {
+      "rect": "Rect",
+      "circle": "Circle",
+      "line": "Line"
+    },
+    "region": {
+      "full": "Full",
+      "lower-third": "Lower third",
+      "top-bar": "Top bar",
+      "top-half": "Top half",
+      "bottom-half": "Bottom half"
+    },
+    "gradient": {
+      "lowerThird": "Lower third fade",
+      "fullDark": "Full darken",
+      "topBar": "Top bar",
+      "warmTint": "Warm tint",
+      "coolTint": "Cool tint",
+      "bottomHalf": "Bottom half fade",
+      "topHalf": "Top half fade",
+      "vignetteSoft": "Soft vignette"
+    },
+    "pack": {
+      "hookCta": {
+        "name": "Hook + CTA",
+        "desc": "Viral hook at the playhead, end-screen CTA"
+      },
+      "lowerThirdSubscribe": {
+        "name": "Lower third + Subscribe",
+        "desc": "Name bar + subscribe badge"
+      },
+      "fullCtaBar": {
+        "name": "CTA + Lower third fade",
+        "desc": "Like & Subscribe + gradient bar"
+      },
+      "introOutro": {
+        "name": "Intro + Outro",
+        "desc": "INTRO at the playhead, \"See you next time\" at the end"
+      },
+      "trendingSave": {
+        "name": "Trending + Save this",
+        "desc": "Unpopular opinion + Save for later"
+      }
+    },
+    "packs": {
+      "oneClick": "One-click packs",
+      "styleBundles": "Style bundles",
+      "platform": "Made for each platform",
+      "saveMyStyle": "Save my style",
+      "styleNamePlaceholder": "Style name…",
+      "styleName": "Custom style name",
+      "saveStyle": "Save custom style",
+      "goTo": "Go to"
+    },
+    "nav": {
+      "shortClips": "Short Clips",
+      "assets": "Music & B-Roll",
+      "timeline": "Timeline",
+      "effects": "Effects",
+      "color": "Color",
+      "aiEdit": "Transcribe & AI",
+      "export": "Export"
+    },
+    "insights": {
+      "comingSoon": "Insights coming soon",
+      "comingSoonHint": "Retention, hook strength and pacing analytics will appear here once your video has been analyzed.",
+      "transcript": "Transcript"
+    }
   }
 }

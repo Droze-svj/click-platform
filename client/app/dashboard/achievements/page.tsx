@@ -42,22 +42,22 @@ const EMPTY_STATS: EngagementStats = {
 }
 
 const allMilestones = [
-  { type: 'first_video', name: 'Genesis Rendition', emoji: '🎥', description: 'Deploy your first autonomous video rendition.' },
-  { type: 'first_content', name: 'Logic Architect', emoji: '✨', description: 'Initialize your first logic synthesis payload.' },
-  { type: 'first_script', name: 'Neural Scripter', emoji: '📝', description: 'Craft your first neural execution script.' },
-  { type: 'content_milestone_10', name: 'Logic Cluster 10', emoji: '🎉', description: 'Synthesize 10 logic payloads.' },
-  { type: 'content_milestone_50', name: 'Logic Cluster 50', emoji: '🚀', description: 'Synthesize 50 logic payloads.' },
-  { type: 'content_milestone_100', name: 'Logic Matrix 100', emoji: '💯', description: 'Synthesize 100 logic payloads.' },
-  { type: 'video_milestone_10', name: 'Spectral Decad 10', emoji: '🎬', description: 'Render 10 spectral video streams.' },
-  { type: 'video_milestone_50', name: 'Spectral Centurion 50', emoji: '🎥', description: 'Render 50 spectral video streams.' },
-  { type: 'streak_7', name: 'Coherence 7', emoji: '🔥', description: 'Maintain neural coherence for 7 cycles.' },
-  { type: 'streak_30', name: 'Coherence 30', emoji: '⭐', description: 'Maintain neural coherence for 30 cycles.' },
-  { type: 'streak_100', name: 'Resonance Prime 100', emoji: '👑', description: 'Maintain neural coherence for 100 cycles.' },
-  { type: 'workflow_master', name: 'Orchestration Prime', emoji: '🤖', description: 'Initialize 5+ autonomous orchestration matrices.' },
-  { type: 'social_media_pro', name: 'Presence Flux Pro', emoji: '📱', description: 'Distribute to 5+ resonance nodes.' },
-  { type: 'content_creator', name: 'Logic Synthesis Master', emoji: '🎨', description: 'Achieve peak logic synthesis fidelity.' },
-  { type: 'early_adopter', name: 'Protocol Pioneer', emoji: '🌟', description: 'Integrated during genesis phase.' },
-  { type: 'power_user', name: 'High-Fidelity Operative', emoji: '⚡', description: 'Operate at peak neural capacity.' }
+  { type: 'first_video', name: 'First video', emoji: '🎥', description: 'Make your first video.' },
+  { type: 'first_content', name: 'First creation', emoji: '✨', description: 'Create your first piece of content.' },
+  { type: 'first_script', name: 'First script', emoji: '📝', description: 'Write your first script.' },
+  { type: 'content_milestone_10', name: '10 creations', emoji: '🎉', description: 'Create 10 pieces of content.' },
+  { type: 'content_milestone_50', name: '50 creations', emoji: '🚀', description: 'Create 50 pieces of content.' },
+  { type: 'content_milestone_100', name: '100 creations', emoji: '💯', description: 'Create 100 pieces of content.' },
+  { type: 'video_milestone_10', name: '10 videos', emoji: '🎬', description: 'Finish 10 videos.' },
+  { type: 'video_milestone_50', name: '50 videos', emoji: '🎥', description: 'Finish 50 videos.' },
+  { type: 'streak_7', name: '7-day streak', emoji: '🔥', description: 'Stay active 7 days in a row.' },
+  { type: 'streak_30', name: '30-day streak', emoji: '⭐', description: 'Stay active 30 days in a row.' },
+  { type: 'streak_100', name: '100-day streak', emoji: '👑', description: 'Stay active 100 days in a row.' },
+  { type: 'workflow_master', name: 'Workflow master', emoji: '🤖', description: 'Create 5 or more workflows.' },
+  { type: 'social_media_pro', name: 'Social media pro', emoji: '📱', description: 'Post to 5 or more platforms.' },
+  { type: 'content_creator', name: 'Content creator', emoji: '🎨', description: 'Become a true content creator.' },
+  { type: 'early_adopter', name: 'Early adopter', emoji: '🌟', description: 'Joined Click early.' },
+  { type: 'power_user', name: 'Power user', emoji: '⚡', description: 'Become a Click power user.' }
 ]
 
 export default function AscensionLedgerPage() {
@@ -128,7 +128,7 @@ export default function AscensionLedgerPage() {
         {/* Stats */}
         {stats && (
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon={Layers} label={t('achievementsPage.statTierLabel')} value={`TIER_${stats.level}`} />
+            <StatCard icon={Layers} label={t('achievementsPage.statTierLabel')} value={`Level ${stats.level}`} />
             <StatCard icon={Award} label={t('achievementsPage.statMilestonesLabel')} value={stats.achievements.total} />
             <StatCard icon={Zap} label={t('achievementsPage.statStreakLabel')} value={stats.streak.currentStreak} />
             <StatCard icon={TrendingUp} label={t('achievementsPage.statVolumeLabel')} value={stats.stats.totalContent} />

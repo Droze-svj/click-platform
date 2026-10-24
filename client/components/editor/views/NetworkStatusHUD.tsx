@@ -4,14 +4,11 @@ import React, { useState, useEffect } from 'react'
 import { 
   Network, 
   Activity, 
-  Zap, 
   AlertTriangle, 
   CheckCircle, 
   ShieldCheck, 
   RefreshCcw, 
   Key, 
-  Cpu, 
-  Cloud,
   ChevronRight,
   Database,
   Search,
@@ -91,8 +88,8 @@ export const NetworkStatusHUD: React.FC = () => {
                         <Globe className="w-6 h-6" />
                     </div>
                     <div>
-                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Network Health HUD</h4>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-emerald-500/70">Omnipresence Bridge Verification</span>
+                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Connection health</h4>
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-emerald-500/70">Your connected platforms and API limits</span>
                     </div>
                 </div>
 
@@ -100,12 +97,12 @@ export const NetworkStatusHUD: React.FC = () => {
                     <div className="px-5 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center gap-3">
                         <Activity className={`w-3 h-3 ${health?.status === 'operational' ? 'text-emerald-400' : 'text-rose-400'}`} />
                         <span className="text-[10px] font-black text-white uppercase italic tracking-widest leading-none">
-                            {health?.status === 'operational' ? 'Global Nodes Operational' : 'Network Stability Degraded'}
+                            {health?.status === 'operational' ? 'All connections working' : 'Some connections need attention'}
                         </span>
                     </div>
                     <button
                         type="button"
-                        aria-label="Audit network"
+                        aria-label="Check connections"
                         onClick={auditNetwork}
                         disabled={auditing}
                         className={`p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all ${auditing ? 'animate-spin' : ''}`}
@@ -123,8 +120,8 @@ export const NetworkStatusHUD: React.FC = () => {
                     <div className={`${glassStyle} rounded-[2.5rem] p-10 relative overflow-hidden h-full`}>
                         <div className="flex items-center justify-between mb-10">
                             <div>
-                                <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Distribution Nodes</h5>
-                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2">Verified OAuth Connectivity</p>
+                                <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Connected platforms</h5>
+                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2">Account connection status</p>
                             </div>
                             <ShieldCheck className="w-5 h-5 text-emerald-400" />
                         </div>
@@ -175,8 +172,8 @@ export const NetworkStatusHUD: React.FC = () => {
                     <div className={`${glassStyle} rounded-[2.5rem] p-10 relative overflow-hidden h-full`}>
                         <div className="flex items-center justify-between mb-10">
                             <div>
-                                <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Platform Fuel</h5>
-                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2">API Rate-Limit Quotas</p>
+                                <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">API limits</h5>
+                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2">Usage against each platform&apos;s limit</p>
                             </div>
                             <Database className="w-5 h-5 text-emerald-400" />
                         </div>
@@ -207,9 +204,9 @@ export const NetworkStatusHUD: React.FC = () => {
                                 <div className="flex items-start gap-4">
                                     <AlertTriangle className="w-4 h-4 text-amber-500 mt-1" />
                                     <div>
-                                        <p className="text-[10px] font-black text-amber-500 uppercase italic tracking-widest">Syndicate Advisory</p>
+                                        <p className="text-[10px] font-black text-amber-500 uppercase italic tracking-widest">Tip</p>
                                         <p className="text-[9px] font-bold text-slate-400 mt-1 leading-relaxed">
-                                            TikTok API Bridge is fully active. Secure real authentication via OAuth Hub to enable Live-Wire distribution.
+                                            Reconnect any expired account to keep publishing to it.
                                         </p>
                                     </div>
                                 </div>
@@ -219,36 +216,6 @@ export const NetworkStatusHUD: React.FC = () => {
                 </div>
             </div>
 
-            {/* Bottom Footer Info */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className={`${glassStyle} p-8 rounded-3xl flex items-center gap-6`}>
-                    <div className="p-3 rounded-2xl bg-emerald-600 shadow-lg shadow-emerald-600/30">
-                        <Cpu className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Core State</span>
-                        <h6 className="text-[10px] font-black text-emerald-400 italic uppercase tracking-widest mt-1">Click Node High-Integrity</h6>
-                    </div>
-                </div>
-                <div className={`${glassStyle} p-8 rounded-3xl flex items-center gap-6`}>
-                    <div className="p-3 rounded-2xl bg-violet-600 shadow-lg shadow-violet-600/30">
-                        <Zap className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Dispatch Readiness</span>
-                        <h6 className="text-[10px] font-black text-white italic uppercase tracking-widest mt-1">Locked for Golden Minute</h6>
-                    </div>
-                </div>
-                <div className={`${glassStyle} p-8 rounded-3xl flex items-center gap-6`}>
-                    <div className="p-3 rounded-2xl bg-blue-500 shadow-lg shadow-blue-500/30">
-                        <Cloud className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Ledger Sync</span>
-                        <h6 className="text-[10px] font-black text-white italic uppercase tracking-widest mt-1">Live Auditing Active</h6>
-                    </div>
-                </div>
-            </div>
         </div>
     )
 }

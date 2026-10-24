@@ -310,7 +310,7 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
                   <p className="text-sm font-black text-surface-900 dark:text-white uppercase tracking-[0.4em] italic">
                     {progress != null ? tr('ingest.uploading', 'Uploading {percent}%', { percent: progress }) : tr('ingest.processing', 'Processing…')}
                   </p>
-                  <p className="text-[10px] font-black text-surface-400 uppercase tracking-widest italic">NEURAL_SYNC_EN_ROUTE</p>
+                  <p className="text-[10px] font-black text-surface-400 uppercase tracking-widest italic">Keep this tab open</p>
                </div>
                {progress != null && (
                  <div className="w-64 h-2 bg-surface-card dark:bg-surface-900 rounded-full overflow-hidden shadow-inner border border-surface-100 dark:border-surface-800">
@@ -490,7 +490,7 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
              <div className="absolute inset-0 bg-rose-500/5 animate-pulse pointer-events-none" />
              <AlertCircle size={22} className="text-rose-500 flex-shrink-0 mt-1 relative z-10" />
              <div className="flex-1 relative z-10">
-                <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest italic mb-1">SYSTEM_FAULT_DETECTED</p>
+                <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest italic mb-1">Something went wrong</p>
                 <p className="text-sm font-black text-rose-200 leading-relaxed italic uppercase tracking-tighter">{error}</p>
              </div>
              <button type="button" onClick={() => setError(null)} aria-label="Dismiss error" title="Dismiss error" className="text-rose-400 hover:text-white transition-all relative z-10 hover:rotate-90">
@@ -505,17 +505,17 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
            <div className="flex items-center gap-4">
               <div className="w-2.5 h-2.5 rounded-full bg-primary-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
               <p className="text-[10px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4em] italic leading-none">
-                <span className="text-primary-500">TUTORIAL_CORE:</span> {tr('ingest.tipPaste', '⌘V on this page to paste a clipboard URL.')}
+                <span className="text-primary-500">Tip:</span> {tr('ingest.tipPaste', '⌘V on this page to paste a clipboard URL.')}
               </p>
            </div>
            <div className="flex items-center gap-6">
               <div className="flex items-center gap-3">
                  <ShieldCheck size={14} className="text-emerald-500" />
-                 <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.3em] italic">SECURE_TUNNEL</span>
+                 <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.3em] italic">Secure upload</span>
               </div>
               <div className="flex items-center gap-3">
                  <Zap size={14} className="text-amber-500" />
-                 <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.3em] italic">HIGH_VELOCITY</span>
+                 <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.3em] italic">MP4, MOV or WebM</span>
               </div>
            </div>
         </div>

@@ -137,7 +137,7 @@ export default function WorkflowRail() {
         >
           <Sparkles size={12} className="text-indigo-400 group-hover:scale-110 transition-transform animate-pulse" />
           <span className="text-[10px] font-bold uppercase tracking-wider text-surface-900 dark:text-white">
-            {state.niche || 'SET_NICHE'}
+            {state.niche || 'Set niche'}
           </span>
         </Link>
 
@@ -155,7 +155,7 @@ export default function WorkflowRail() {
         >
           <Send size={12} className="text-indigo-400 group-hover:scale-110 transition-transform" />
           <span className="text-[10px] font-bold uppercase tracking-wider text-surface-900 dark:text-white">
-            {PLATFORM_OPTIONS.find(p => p.id === state.platform)?.label || 'PICK_PLATFORM'}
+            {PLATFORM_OPTIONS.find(p => p.id === state.platform)?.label || 'Pick platform'}
           </span>
         </button>
 
