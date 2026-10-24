@@ -49,7 +49,10 @@ export interface FirstCommentResult {
 
 export interface RepurposeVariant {
   platform: string; content: string; hashtags: string[]
-  score: number; suggestions: string[]; aspectRatio: string; format: string
+  // score is null and degraded true when the AI could not adapt this platform
+  // (the content is then the original text, not a variant).
+  score: number | null; suggestions: string[]; aspectRatio: string; format: string
+  degraded?: boolean
 }
 
 export interface SeriesPart { part: number; title: string; hook: string; description: string }

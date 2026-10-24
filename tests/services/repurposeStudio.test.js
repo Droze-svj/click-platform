@@ -51,7 +51,8 @@ describe('repurposeStudio.buildVariantPreviews (injected adaptFn)', () => {
     const boom = async () => { throw new Error('AI down'); };
     const variants = await buildVariantPreviews({ text: 'src', title: 'T', userId: 'u', platforms: ['tiktok'] }, boom);
     expect(variants[0].content).toBe('src');
-    expect(variants[0].score).toBe(70); // catch fallback score
+    expect(variants[0].score).toBeNull(); // no invented score for the original text
+    expect(variants[0].degraded).toBe(true);
   });
 });
 

@@ -1,12 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import { handleApiError } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 import { planSeries, type Platform, type SeriesResult } from '@/lib/featuresApi'
 
 const PLATFORMS: Platform[] = ['tiktok', 'instagram', 'youtube', 'twitter', 'linkedin']
 
 /** Plan a coherent multi-part content series from one theme. */
 export default function SeriesPlannerPanel() {
+  const { t } = useTranslation()
   const [theme, setTheme] = useState('')
   const [parts, setParts] = useState(5)
   const [platform, setPlatform] = useState<Platform>('tiktok')
@@ -20,7 +23,7 @@ export default function SeriesPlannerPanel() {
     try {
       setResult(await planSeries({ theme, parts, platform }))
     } catch (e) {
-      setError((e as Error)?.message || 'Failed to plan series')
+      setError(handleApiError(e) || 'Failed to plan series')
     } finally {
       setLoading(false)
     }
@@ -59,7 +62,10 @@ export default function SeriesPlannerPanel() {
 
       {error && <p data-testid="series-error" className="text-sm text-red-400">{error}</p>}
 
-      {result && (
+      {result && (result.parts ?? []).length === 0 && (
+        <p data-testid="series-empty" className="text-sm text-zinc-400">{t('creatorTools.noResults')}</p>
+      )}
+      {result && (result.parts ?? []).length > 0 && (
         <ol className="space-y-1" data-testid="series-parts-list">
           {result.parts.map((p) => (
             <li key={p.part} data-testid="series-part" className="rounded-lg bg-zinc-950 border border-zinc-800 p-2">

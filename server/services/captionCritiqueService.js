@@ -105,7 +105,27 @@ async function critiquePost(input, deps) {
       taskType: 'caption-critique',
     });
   }
+  // shapeCritique turns unusable output (null, prose, no scores) into an
+  // all-1 scorecard — fine as a pure normaliser, but shown to the user it was
+  // a fabricated "1/10". Refuse instead when the model scored nothing.
+  if (!hasUsableScores(rawOut)) throw require('../utils/aiUnavailable').aiUnavailable('a critique');
   return { platform, ...shapeCritique(rawOut) };
+}
+
+/** True when the raw model output contains at least one numeric score. */
+function hasUsableScores(raw) {
+  const text = String(raw == null ? '' : raw).trim();
+  if (!text) return false;
+  const tryParse = (s) => { try { return JSON.parse(s); } catch (_) { return null; } };
+  let parsed = tryParse(text);
+  if (!parsed) {
+    const m = text.match(/\{[\s\S]*\}/);
+    if (m) parsed = tryParse(m[0]);
+  }
+  if (!parsed || typeof parsed !== 'object') return false;
+  const scores = parsed.scores && typeof parsed.scores === 'object' ? parsed.scores : {};
+  return DIMENSION_KEYS.some((k) => Number.isFinite(Number(scores[k])) && scores[k] !== null && scores[k] !== '')
+    || (parsed.overall !== null && parsed.overall !== '' && Number.isFinite(Number(parsed.overall)));
 }
 
 module.exports = {

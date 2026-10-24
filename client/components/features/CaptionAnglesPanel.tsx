@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { handleApiError } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 import { generateCaptions, type Platform, type CaptionResult } from '@/lib/featuresApi'
 
 const PLATFORMS: Platform[] = ['instagram', 'tiktok', 'youtube', 'twitter', 'linkedin']
@@ -12,6 +14,7 @@ const ANGLE_LABEL: Record<string, string> = {
 
 /** Draft a few distinct-angle caption options for a topic. */
 export default function CaptionAnglesPanel() {
+  const { t } = useTranslation()
   const [topic, setTopic] = useState('')
   const [platform, setPlatform] = useState<Platform>('instagram')
   const [result, setResult] = useState<CaptionResult | null>(null)
@@ -25,7 +28,7 @@ export default function CaptionAnglesPanel() {
     try {
       setResult(await generateCaptions({ topic, platform }))
     } catch (e) {
-      setError((e as Error)?.message || 'Failed to generate captions')
+      setError(handleApiError(e) || 'Failed to generate captions')
     } finally {
       setLoading(false)
     }
@@ -67,7 +70,10 @@ export default function CaptionAnglesPanel() {
 
       {error && <p data-testid="captions-error" className="text-sm text-red-400">{error}</p>}
 
-      {result && (
+      {result && (result.captions ?? []).length === 0 && (
+        <p data-testid="captions-empty" className="text-sm text-zinc-400">{t('creatorTools.noResults')}</p>
+      )}
+      {result && (result.captions ?? []).length > 0 && (
         <ul className="space-y-2" data-testid="captions-results">
           {result.captions.map((c, i) => (
             <li key={i} data-testid="captions-item" className="rounded-lg bg-zinc-950 border border-zinc-800 p-2 space-y-1">

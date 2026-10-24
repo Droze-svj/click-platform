@@ -10211,5 +10211,9 @@
     "retrying": "Retrying",
     "failed": "Failed",
     "cancelled": "Cancelled"
+  },
+  "creatorTools": {
+    "noResults": "No results this time. Try again or rephrase.",
+    "variantNotAdapted": "AI could not adapt this one. This is your original text."
   }
 }

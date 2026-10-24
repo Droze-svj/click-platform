@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { handleApiError } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 import { generateHashtags, type Platform, type HashtagResult } from '@/lib/featuresApi'
 
 const PLATFORMS: Platform[] = ['instagram', 'tiktok', 'youtube', 'twitter', 'linkedin']
@@ -14,6 +16,7 @@ const TIERS: { key: string; label: string; tone: string }[] = [
 
 /** Build a balanced, tiered hashtag set for a topic. */
 export default function HashtagStrategistPanel() {
+  const { t } = useTranslation()
   const [topic, setTopic] = useState('')
   const [platform, setPlatform] = useState<Platform>('instagram')
   const [result, setResult] = useState<HashtagResult | null>(null)
@@ -27,7 +30,7 @@ export default function HashtagStrategistPanel() {
     try {
       setResult(await generateHashtags({ topic, platform }))
     } catch (e) {
-      setError((e as Error)?.message || 'Failed to generate hashtags')
+      setError(handleApiError(e) || 'Failed to generate hashtags')
     } finally {
       setLoading(false)
     }
@@ -71,7 +74,10 @@ export default function HashtagStrategistPanel() {
 
       {error && <p data-testid="hashtags-error" className="text-sm text-red-400">{error}</p>}
 
-      {result && (
+      {result && (result.tags ?? []).length === 0 && (
+        <p data-testid="hashtags-empty" className="text-sm text-zinc-400">{t('creatorTools.noResults')}</p>
+      )}
+      {result && (result.tags ?? []).length > 0 && (
         <div className="space-y-2" data-testid="hashtags-results">
           <div className="flex items-center justify-between">
             <span className="text-xs text-zinc-500">{result.count} tags</span>

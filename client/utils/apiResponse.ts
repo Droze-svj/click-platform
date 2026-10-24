@@ -152,11 +152,19 @@ export function extractApiError(error: any, context?: {
           severity = 'low'
           break
         case 500:
+          category = 'server'
+          message = 'Server error occurred. Please try again later.'
+          retryable = true
+          severity = 'high'
+          break
         case 502:
         case 503:
         case 504:
+          // These are deliberate answers ("the AI could not answer right now",
+          // "the platform rejected the post: token expired") — keep the
+          // server's explanation; only fall back to the generic text.
           category = 'server'
-          message = 'Server error occurred. Please try again later.'
+          if (!message || message === 'An error occurred') message = 'Server error occurred. Please try again later.'
           retryable = true
           severity = 'high'
           break

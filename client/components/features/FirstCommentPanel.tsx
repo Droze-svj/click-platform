@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { handleApiError } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 import { generateFirstComments, type Platform, type FirstCommentResult } from '@/lib/featuresApi'
 
 const GOALS: FirstCommentResult['goal'][] = ['engagement', 'cta', 'link']
@@ -8,6 +10,7 @@ const PLATFORMS: Platform[] = ['instagram', 'tiktok', 'youtube', 'twitter', 'lin
 
 /** Draft pinned first-comment options for a post. */
 export default function FirstCommentPanel() {
+  const { t } = useTranslation()
   const [text, setText] = useState('')
   const [platform, setPlatform] = useState<Platform>('instagram')
   const [goal, setGoal] = useState<FirstCommentResult['goal']>('engagement')
@@ -21,7 +24,7 @@ export default function FirstCommentPanel() {
     try {
       setResult(await generateFirstComments({ text, platform, goal }))
     } catch (e) {
-      setError((e as Error)?.message || 'Failed to generate options')
+      setError(handleApiError(e) || 'Failed to generate options')
     } finally {
       setLoading(false)
     }
@@ -59,7 +62,10 @@ export default function FirstCommentPanel() {
 
       {error && <p data-testid="firstcomment-error" className="text-sm text-red-400">{error}</p>}
 
-      {result && (
+      {result && (result.options ?? []).length === 0 && (
+        <p data-testid="first-comment-empty" className="text-sm text-zinc-400">{t('creatorTools.noResults')}</p>
+      )}
+      {result && (result.options ?? []).length > 0 && (
         <ul className="space-y-1" data-testid="firstcomment-options">
           {result.options.map((o, i) => (
             <li key={i} data-testid="firstcomment-option" className="rounded-lg bg-zinc-950 border border-zinc-800 p-2 text-sm text-zinc-200">

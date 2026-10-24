@@ -50,14 +50,18 @@ async function buildVariantPreviews({ text, title, userId, platforms }, adaptFn)
       adapted = await adaptFn(platform, text, title, userId);
     } catch (e) {
       logger.debug('[repurposeStudio] adapt failed', { platform, error: e.message });
-      adapted = { content: text, hashtags: [], score: 70, suggestions: [] };
+      adapted = { content: text, hashtags: [], score: null, suggestions: [], degraded: true };
     }
+    // A degraded adaptation is the ORIGINAL text, not a variant — keep the flag
+    // so the client can say so, and never invent a score for it (was 85/70).
+    const degraded = Boolean(adapted.degraded) || !adapted.content;
     return {
       platform,
       content: adapted.content || text || '',
       hashtags: Array.isArray(adapted.hashtags) ? adapted.hashtags : [],
-      score: Number.isFinite(adapted.score) ? adapted.score : 85,
+      score: Number.isFinite(adapted.score) ? adapted.score : null,
       suggestions: Array.isArray(adapted.suggestions) ? adapted.suggestions : [],
+      degraded,
       ...aspectFor(platform),
     };
   }));
