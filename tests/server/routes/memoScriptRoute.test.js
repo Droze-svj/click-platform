@@ -51,6 +51,12 @@ const app = express();
 app.use(express.json());
 app.use('/api/memo-script', router);
 
+
+async function waitFor(cond, timeoutMs = 2000) {
+  const end = Date.now() + timeoutMs;
+  while (!cond() && Date.now() < end) await new Promise((r) => setTimeout(r, 10));
+}
+
 describe('POST /api/memo-script', () => {
   beforeEach(() => mockGenerateMemoScript.mockReset());
 
@@ -118,7 +124,9 @@ describe('POST /api/memo-script/transcribe', () => {
     expect(res.body.data.transcript).toBe('hook idea, coffee shops');
     expect(seenPath).toMatch(/\.webm$/);
     expect(mockTranscribe.mock.calls[0][1]).toEqual({ responseFormat: 'json', language: 'en' });
-    await new Promise((r) => setImmediate(r));
+    // Cleanup is async (fs.unlink after the response) — wait for it rather
+    // than assuming one tick (flaked in CI).
+    await waitFor(() => !fs.existsSync(seenPath));
     expect(fs.existsSync(seenPath)).toBe(false);
   });
 
@@ -129,8 +137,9 @@ describe('POST /api/memo-script/transcribe', () => {
       .post('/api/memo-script/transcribe')
       .attach('audio', audio, { filename: 'memo.m4a', contentType: 'audio/mp4' })
       .expect(503);
-    await new Promise((r) => setImmediate(r));
-    const after = fs.readdirSync(require('os').tmpdir() + '/click-memos');
+    const memoDir = require('os').tmpdir() + '/click-memos';
+    await waitFor(() => fs.readdirSync(memoDir).every((f) => before.has(f)));
+    const after = fs.readdirSync(memoDir);
     expect(after.filter((f) => !before.has(f))).toEqual([]);
     expect(mockTranscribe).not.toHaveBeenCalled();
   });
