@@ -610,6 +610,10 @@ module.exports = app;
 // Disabling ETag generation prevents Express from returning "Not Modified" for API JSON routes like /api/auth/me.
 app.set('etag', false);
 
+// Behind Cloudflare → Render, req.ip must be the visitor, not the load
+// balancer — every per-IP rate limit depends on it. See utils/trustProxy.js.
+app.set('trust proxy', require('./utils/trustProxy').trustProxySetting());
+
 // EARLIEST POSSIBLE request logging - must be first to catch ALL requests
 app.use((req, res, next) => {
   if (req.path && req.path.startsWith('/api')) {
