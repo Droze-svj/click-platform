@@ -2206,7 +2206,9 @@
     "synchronizingBuffer": "Progress",
     "anomalyIntercepted": "Error",
     "procTime": "Processing time: {{time}}",
-    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}"
+    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}",
+    "cancelled": "Job cancelled.",
+    "cancelFailed": "Couldn't cancel this job."
   },
   "strategistPage": {
     "clickIntelligence": "Click Intelligence",
@@ -5785,7 +5787,9 @@
     "retrying": "Retrying...",
     "retryJob": "Retry Job",
     "close": "Close",
-    "jobNotFound": "Job not found"
+    "jobNotFound": "Job not found",
+    "retryQueued": "Job queued to run again.",
+    "retryFailed": "Couldn't retry this job."
   },
   "jobProgressViewer": {
     "loadingJobStatus": "Loading job status...",

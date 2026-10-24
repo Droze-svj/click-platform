@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import axios from 'axios'
 import ToastContainer from '../../../components/ToastContainer'
+import { useToast } from '../../../contexts/ToastContext'
 import JobDetailsModal from '../../../components/JobDetailsModal'
 import {
   Search, RefreshCw, Activity, Zap, Timer, X, Eye,
@@ -12,7 +12,7 @@ import {
 import { useAuth } from '../../../hooks/useAuth'
 import { useTranslation } from '@/hooks/useTranslation'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
-import { API_URL } from '../../../lib/api'
+import { apiGet, apiPost, getAuthToken, handleApiError } from '../../../lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/form-field'
 import { StatCard } from '@/components/ui/stat-card'
@@ -32,14 +32,28 @@ interface QueueStats {
 }
 
 interface QueueMetrics {
-  total: number; successful: number; failed: number; averageDuration: number;
-  averageMemory: number; totalCost: number; totalRetries: number;
+  total: number; successful: number; failed: number; totalCost: number;
+}
+
+// GET /jobs/metrics/user answers { totalJobs, successfulJobs, failedJobs,
+// totalCost } — the page read total/successful/failed, so the success rate was
+// undefined / 1 = "NaN%" and the other tiles were blank.
+function toMetrics(raw: any): QueueMetrics | null {
+  if (!raw || typeof raw !== 'object') return null
+  const num = (v: any) => (Number.isFinite(Number(v)) ? Number(v) : 0)
+  return {
+    total: num(raw.total ?? raw.totalJobs),
+    successful: num(raw.successful ?? raw.successfulJobs),
+    failed: num(raw.failed ?? raw.failedJobs),
+    totalCost: num(raw.totalCost),
+  }
 }
 
 export default function JobsPage() {
   const router = useRouter()
   const { user } = useAuth()
   const { t } = useTranslation()
+  const { showToast } = useToast()
   const [loading, setLoading] = useState(true)
   const [userJobs, setUserJobs] = useState<{ active: Job[]; completed: Job[]; failed: Job[] }>({ active: [], completed: [], failed: [] })
   const [, setQueueStats] = useState<Record<string, QueueStats>>({})
@@ -53,23 +67,24 @@ export default function JobsPage() {
   const loadLattice = useCallback(async () => {
     setRefreshing(true)
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return router.push('/login')
-      const headers = { Authorization: `Bearer ${token}` }
-
-      const [jobsRes, metricsRes] = await Promise.all([
-        axios.get(`${API_URL}/jobs/user`, { headers }),
-        axios.get(`${API_URL}/jobs/metrics/user?timeRange=${timeRange}`, { headers }).catch(() => ({ data: { data: null } }))
+      if (!getAuthToken()) return router.push('/login')
+      const [jobsRes, metricsRes]: any[] = await Promise.all([
+        apiGet('/jobs/user', undefined, false),
+        apiGet(`/jobs/metrics/user?timeRange=${encodeURIComponent(timeRange)}`, undefined, false).catch(() => ({ data: null }))
       ])
 
-      const jobsData = jobsRes.data.data || { active: [], completed: [], failed: [] }
-      setUserJobs(jobsData)
-      setUserMetrics(metricsRes.data.data)
+      const jobsData = jobsRes?.data || { active: [], completed: [], failed: [] }
+      setUserJobs({
+        active: Array.isArray(jobsData.active) ? jobsData.active : [],
+        completed: Array.isArray(jobsData.completed) ? jobsData.completed : [],
+        failed: Array.isArray(jobsData.failed) ? jobsData.failed : [],
+      })
+      setUserMetrics(toMetrics(metricsRes?.data))
 
       const isAdmin = !!user && (((user as any).role === 'admin') || !!(user as any).isAdmin)
       if (isAdmin) {
-        const statsRes = await axios.get(`${API_URL}/jobs/dashboard/stats`, { headers }).catch(() => ({ data: { data: {} } }))
-        setQueueStats(statsRes.data.data || {})
+        const statsRes: any = await apiGet('/jobs/dashboard/stats', undefined, false).catch(() => ({ data: {} }))
+        setQueueStats(statsRes?.data || {})
       }
     } catch {
       // best effort — keep existing state
@@ -90,10 +105,11 @@ export default function JobsPage() {
   const handleCancel = async (id: string) => {
     if (!confirm(t('jobsPage.cancelConfirm'))) return
     try {
-      await axios.post(`${API_URL}/jobs/user/${id}/cancel`, {})
+      await apiPost(`/jobs/user/${encodeURIComponent(id)}/cancel`, {})
+      showToast(t('jobsPage.cancelled'), 'success')
       loadLattice()
-    } catch {
-      // best effort
+    } catch (err) {
+      showToast(handleApiError(err) || t('jobsPage.cancelFailed'), 'error')
     }
   }
 
@@ -144,7 +160,7 @@ export default function JobsPage() {
         {userMetrics && (
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard icon={Layers} label={t('jobsPage.metricAccumulatedCycles')} value={userMetrics.total} delta={t('jobsPage.metricAccumulatedCyclesSub')} direction="neutral" />
-            <StatCard icon={ShieldCheck} label={t('jobsPage.metricSuccessResonance')} value={`${((userMetrics.successful / Math.max(userMetrics.total, 1)) * 100).toFixed(1)}%`} delta={t('jobsPage.metricSuccessResonanceSub')} direction="up" />
+            <StatCard icon={ShieldCheck} label={t('jobsPage.metricSuccessResonance')} value={userMetrics.total > 0 ? `${((userMetrics.successful / userMetrics.total) * 100).toFixed(1)}%` : '—'} delta={t('jobsPage.metricSuccessResonanceSub')} direction="up" />
             <StatCard icon={ShieldAlert} label={t('jobsPage.metricFluxDiffractions')} value={userMetrics.failed} delta={t('jobsPage.metricFluxDiffractionsSub')} direction={userMetrics.failed > 0 ? 'down' : 'neutral'} />
             <StatCard icon={Zap} label={t('jobsPage.metricCumulativeCompute')} value={`$${userMetrics.totalCost.toFixed(4)}`} delta={t('jobsPage.metricCumulativeComputeSub')} direction="neutral" />
           </section>
@@ -272,10 +288,10 @@ function FluxCard({ job, onCancel, onView, isDiffracted }: { job: Job; onCancel:
         <div className="mb-3">
           <div className="flex items-center justify-between text-xs text-theme-secondary mb-1.5">
             <span>{t('jobsPage.synchronizingBuffer')}</span>
-            <span className="tabular-nums">{job.progress}%</span>
+            <span className="tabular-nums">{Number.isFinite(Number(job.progress)) ? Math.round(Number(job.progress)) : 0}%</span>
           </div>
           <div className="w-full h-2 bg-accent rounded-full overflow-hidden">
-            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${job.progress}%` }} />
+            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${Number.isFinite(Number(job.progress)) ? Math.min(100, Math.max(0, Number(job.progress))) : 0}%` }} />
           </div>
         </div>
       )}
