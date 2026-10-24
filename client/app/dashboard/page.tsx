@@ -10,6 +10,7 @@ import {
   LayoutGrid, RefreshCw, Target, Fingerprint, Link2, X,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
+import { isPlatformConnected } from '../../lib/connections'
 import { apiGet } from '../../lib/api'
 import { useTranslation } from '../../hooks/useTranslation'
 import { useContainerWidth } from '../../hooks/useContainerWidth'
@@ -161,9 +162,12 @@ export default function DashboardHome() {
       const rawAccounts = connectionsRes.status === 'fulfilled'
         ? (connectionsRes.value?.accounts ?? connectionsRes.value?.data?.accounts ?? {})
         : {}
+      // /oauth/connections lists each platform's connected ACCOUNTS — an empty
+      // array means "not connected". Counting any non-null value showed
+      // "Connected 7" to every brand-new user and hid the connect prompt.
       const connMap: Record<string, boolean> = {}
       for (const [platform, val] of Object.entries(rawAccounts)) {
-        connMap[platform] = val !== null && val !== undefined
+        connMap[platform] = isPlatformConnected(val)
       }
       setConnections(connMap)
     } catch (e) {

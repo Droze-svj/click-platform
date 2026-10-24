@@ -159,8 +159,10 @@ export default function WorkflowRail() {
           </span>
         </button>
 
-        {/* Stages */}
-        <ol className="flex items-center gap-2 flex-1 min-w-0">
+        {/* Stages — natural width, so the row scrolls instead of the chips
+            spilling under the Co-Pilot / Next buttons (flex-1 + min-w-0 let
+            this list shrink below its non-shrinking chips). */}
+        <ol className="flex flex-shrink-0 items-center gap-2">
           {STAGE_ORDER.map((s, i) => {
             const Icon = STAGE_ICONS[s]
             const meta = STAGE_META[s]
@@ -217,7 +219,7 @@ export default function WorkflowRail() {
           onClick={() => setDrawerOpen(!drawerOpen)}
           title="Toggle Co-Pilot"
           aria-label="Toggle Co-Pilot"
-          className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all ${
+          className={`hidden md:flex flex-shrink-0 items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all ${
             drawerOpen 
               ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30 shadow-inner' 
               : 'bg-slate-900 border-white/10 text-slate-400 hover:border-indigo-500/40 hover:text-white'
@@ -245,7 +247,7 @@ export default function WorkflowRail() {
                 : 'bg-surface-200 dark:bg-slate-900 text-surface-400 cursor-not-allowed border border-white/5'
             }`}
           >
-            <span>NEXT: {stageLabel(next.stage)}</span>
+            <span>Next: {stageLabel(next.stage)}</span>
             <ArrowRight size={12} />
           </Link>
         )}
