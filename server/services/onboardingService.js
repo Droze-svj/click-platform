@@ -72,9 +72,14 @@ async function getOnboardingProgress(userId) {
       await progress.save();
     }
 
+    // Each step carries its own `completed` flag. The client reads
+    // step.completed, but the static step list never had one (completion
+    // lives in progress.completedSteps[{ stepId }]), so every step looked
+    // unfinished forever.
+    const done = new Set((progress.completedSteps || []).map((cs) => cs.stepId));
     return {
       progress,
-      steps: ONBOARDING_STEPS,
+      steps: ONBOARDING_STEPS.map((step) => ({ ...step, completed: done.has(step.id) })),
       currentStepData: ONBOARDING_STEPS[progress.currentStep] || null,
       totalSteps: ONBOARDING_STEPS.length,
       completedSteps: progress.completedSteps.length,

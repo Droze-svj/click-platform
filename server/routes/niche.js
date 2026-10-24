@@ -138,7 +138,10 @@ router.put('/select', auth, async (req, res) => {
             });
             await newUserDoc.save();
           } catch (e) {
+            // This used to be swallowed and the reply still said "updated",
+            // though nothing was saved.
             logger.error('Failed to create user doc for niche selection', e);
+            return res.status(500).json({ error: 'Could not save your niche. Please try again.' });
           }
         }
       }
@@ -229,7 +232,10 @@ router.put('/brand', auth, async (req, res) => {
             });
             await newUserDoc.save();
           } catch (e) {
+            // This used to be swallowed and the reply still said "updated",
+            // though nothing was saved.
             logger.error('Failed to create user doc for brand settings', e);
+            return res.status(500).json({ error: 'Could not save your brand settings. Please try again.' });
           }
         }
       }
