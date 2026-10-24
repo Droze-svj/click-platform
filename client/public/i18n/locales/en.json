@@ -5298,7 +5298,9 @@
     "descriptionPlaceholder": "Describe what this workflow does...",
     "trigger": "Trigger",
     "enableWorkflow": "Enable workflow",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "notExecuted": "Workflow did not run: {{reason}}",
+    "someActionsFailed": "Workflow ran, but these steps failed: {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "Enterprise Governance",
@@ -5903,7 +5905,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "Suggested Next Steps",
     "nextStep": "Next step",
-    "continueSetup": "Continue setup"
+    "continueSetup": "Continue setup",
+    "workflowFailed": "Couldn't run that workflow."
   },
   "multiClientRollupDashboard": {
     "title": "Multi-Client Rollup Dashboard",

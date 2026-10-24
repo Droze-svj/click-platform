@@ -1,6 +1,7 @@
 // Enhanced workflow automation service
 
-const User = require('../models/User');
+const mongoose = require('mongoose');
+const Workflow = require('../models/Workflow');
 const Content = require('../models/Content');
 const ScheduledPost = require('../models/ScheduledPost');
 const WorkflowWebhook = require('../models/WorkflowWebhook');
@@ -8,37 +9,51 @@ const { triggerWorkflowWebhook } = require('./webhookService');
 const logger = require('../utils/logger');
 
 /**
- * Create automated workflow
+ * Workflows live in the Workflow collection. They used to be pushed onto
+ * `user.workflows`, a path the User schema does not declare — strict mode
+ * dropped it on save, so no enhanced workflow was ever stored and every
+ * execute answered "User or workflows not found".
+ *
+ * The enhanced spec (trigger / conditions / actions / schedule, in this
+ * service's own vocabulary) is kept whole in `definition`; `triggers`,
+ * `actions` and `status` are filled too so the list endpoints and the
+ * builder can show it.
  */
-async function createWorkflow(userId, workflowData) {
+const TRIGGER_TO_MODEL = { scheduled: 'schedule', event: 'event', conditional: 'conditional' };
+
+function toEnhancedSpec(workflowData = {}) {
+  const trigger = ['manual', 'scheduled', 'event'].includes(workflowData.trigger) ? workflowData.trigger : 'manual';
+  return {
+    kind: 'enhanced',
+    trigger,
+    conditions: Array.isArray(workflowData.conditions) ? workflowData.conditions : [],
+    actions: Array.isArray(workflowData.actions) ? workflowData.actions.filter((a) => a && typeof a.type === 'string') : [],
+    schedule: workflowData.schedule || null,
+  };
+}
+
+async function createWorkflow(userId, workflowData = {}) {
   try {
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new Error('User not found');
+    const name = typeof workflowData.name === 'string' ? workflowData.name.trim() : '';
+    if (!name) {
+      const e = new Error('Workflow name is required'); e.statusCode = 400; throw e;
     }
+    const spec = toEnhancedSpec(workflowData);
+    const workflow = await Workflow.create({
+      userId: String(userId),
+      name,
+      description: workflowData.description || '',
+      definition: spec,
+      triggers: TRIGGER_TO_MODEL[spec.trigger]
+        ? [{ type: TRIGGER_TO_MODEL[spec.trigger], config: spec.schedule ? { schedule: spec.schedule } : {} }]
+        : [],
+      actions: spec.actions.map((a) => ({ type: a.type, config: a })),
+      status: workflowData.enabled === false ? 'paused' : 'active',
+      advanced: true,
+    });
 
-    if (!user.workflows) {
-      user.workflows = [];
-    }
-
-    const workflow = {
-      id: new (require('mongoose').Types.ObjectId)(),
-      name: workflowData.name,
-      description: workflowData.description,
-      trigger: workflowData.trigger, // 'manual', 'scheduled', 'event'
-      conditions: workflowData.conditions || [],
-      actions: workflowData.actions || [],
-      enabled: workflowData.enabled !== false,
-      schedule: workflowData.schedule || null,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    user.workflows.push(workflow);
-    await user.save();
-
-    logger.info('Workflow created', { userId, workflowId: workflow.id });
-    return workflow;
+    logger.info('Workflow created', { userId: String(userId), workflowId: String(workflow._id) });
+    return workflow.toObject();
   } catch (error) {
     logger.error('Error creating workflow', { error: error.message, userId });
     throw error;
@@ -46,37 +61,40 @@ async function createWorkflow(userId, workflowData) {
 }
 
 /**
- * Execute workflow
+ * Execute workflow (owner-scoped).
  */
 async function executeWorkflow(userId, workflowId, context = {}, options = {}) {
   try {
-    const user = await User.findById(userId);
-    if (!user || !user.workflows) {
-      throw new Error('User or workflows not found');
-    }
+    const notFound = () => { const e = new Error('Workflow not found'); e.statusCode = 404; return e; };
+    if (!mongoose.Types.ObjectId.isValid(String(workflowId))) throw notFound();
+    const workflow = await Workflow.findOne({ _id: workflowId, userId: String(userId), isActive: { $ne: false } });
+    if (!workflow) throw notFound();
 
-    const workflow = user.workflows.find(w => w.id.toString() === workflowId.toString());
-    if (!workflow) {
-      throw new Error('Workflow not found');
-    }
-
-    if (!workflow.enabled) {
+    if (workflow.status !== 'active') {
       logger.info('Workflow disabled', { userId, workflowId });
-      return { executed: false, reason: 'Workflow is disabled' };
+      return { executed: false, reason: 'Workflow is paused' };
     }
+
+    const spec = workflow.definition && workflow.definition.kind === 'enhanced'
+      ? workflow.definition
+      : {
+        conditions: [],
+        actions: (workflow.actions || []).map((a) => ({ ...(a.config || {}), type: a.type })).filter((a) => a.type),
+      };
 
     // Check conditions
-    const conditionsMet = await checkConditions(workflow.conditions, userId, context);
+    const conditionsMet = await checkConditions(spec.conditions, userId, context || {});
     if (!conditionsMet) {
       logger.info('Workflow conditions not met', { userId, workflowId });
       return { executed: false, reason: 'Conditions not met' };
     }
 
+    const startedAt = Date.now();
     // Execute actions
     const results = [];
-    for (const action of workflow.actions) {
+    for (const action of spec.actions || []) {
       try {
-        const result = await executeAction(action, userId, context);
+        const result = await executeAction(action, userId, context || {});
         results.push({ action: action.type, success: true, result });
       } catch (error) {
         logger.error('Error executing workflow action', { error: error.message, action: action.type });
@@ -84,6 +102,15 @@ async function executeWorkflow(userId, workflowId, context = {}, options = {}) {
       }
     }
 
+    const allOk = results.every((r) => r.success);
+    try {
+      await Workflow.updateOne({ _id: workflow._id }, {
+        $inc: { executionCount: 1, frequency: 1, [allOk ? 'successCount' : 'failureCount']: 1 },
+        $set: { lastExecuted: new Date(), lastUsed: new Date(), avgExecutionTime: Date.now() - startedAt },
+      });
+    } catch (statErr) {
+      logger.warn('Workflow stats update failed', { error: statErr.message, workflowId });
+    }
     // Trigger webhooks if configured
     try {
       const webhooks = await WorkflowWebhook.find({
@@ -211,13 +238,16 @@ async function executeAction(action, userId, context) {
  */
 async function createContentFromAction(action, userId, context) {
   try {
+    const meta = action.metadata && typeof action.metadata === 'object' ? action.metadata : {};
     const content = new Content({
-      userId,
-      type: action.contentType || 'article',
+      // Caller-supplied metadata first, so it can never override the owner.
+      ...meta,
+      userId: String(userId),
+      type: ['video', 'article', 'podcast', 'transcript'].includes(action.contentType) ? action.contentType : 'article',
       title: action.title || 'Auto-generated Content',
       description: action.description || '',
-      status: 'draft',
-      ...action.metadata
+      // 'draft' is not in the Content status enum — every save failed validation.
+      status: 'completed',
     });
 
     await content.save();
