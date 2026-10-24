@@ -63,9 +63,7 @@ router.post('/generate', auth, requireActiveSubscription, validateContentGenerat
 
     await content.save();
 
-    // Generate content in background using job queue
-    const { addContentGenerationJob, JOB_PRIORITY } = require('../queues');
-    const job = await addContentGenerationJob({
+    const jobData = {
       contentId: content._id.toString(),
       text,
       user: {
@@ -75,10 +73,28 @@ router.post('/generate', auth, requireActiveSubscription, validateContentGenerat
         niche: req.user.niche,
       },
       platforms,
-    }, {
-      priority: JOB_PRIORITY.NORMAL,
-      jobId: `content-${content._id}`,
-    });
+    };
+
+    // Generate content in background using the job queue. Production has no
+    // Redis, so queueing throws — and the Content row used to stay
+    // 'processing' forever (each retry added another). Run the same worker
+    // in-process instead; if that cannot start either, mark the row failed.
+    try {
+      const { addContentGenerationJob, JOB_PRIORITY } = require('../queues');
+      await addContentGenerationJob(jobData, {
+        priority: JOB_PRIORITY.NORMAL,
+        jobId: `content-${content._id}`,
+      });
+    } catch (queueErr) {
+      logger.warn('Content queue unavailable; generating in-process', { contentId: content._id, error: queueErr.message });
+      try {
+        runContentJobInline(jobData);
+      } catch (inlineErr) {
+        await markContentFailed(content._id, 'Content generation could not start. Please try again.');
+        logger.error('Content generation could not start', { contentId: content._id, error: inlineErr.message });
+        return res.status(503).json({ success: false, error: 'Content generation is unavailable right now. Please try again.' });
+      }
+    }
 
     logger.info('Content generation started', {
       contentId: content._id,
@@ -86,28 +102,32 @@ router.post('/generate', auth, requireActiveSubscription, validateContentGenerat
       type: type || 'article'
     });
 
-    // Track action for workflow learning
-    await trackAction(req.user._id, 'generate_content', {
-      entityType: 'content',
-      entityId: content._id,
-      type: type || 'article',
-      platforms: platforms || []
-    });
+    // Workflow learning + engagement are best-effort: a failure here must not
+    // turn an already-started generation into a 500 the client retries.
+    try {
+      await trackAction(req.user._id, 'generate_content', {
+        entityType: 'content',
+        entityId: content._id,
+        type: type || 'article',
+        platforms: platforms || []
+      });
 
-    // Update engagement
-    const { updateStreak, checkAchievements, createActivity } = require('../services/engagementService');
-    await updateStreak(req.user._id);
-    const achievements = await checkAchievements(req.user._id, 'generate_content', {
-      contentId: content._id,
-      platforms: platforms || []
-    });
-    await createActivity(req.user._id, 'content_generated', {
-      title: 'Content Generated! ✨',
-      description: `You generated content for ${(platforms || []).length || 3} platforms`,
-      entityType: 'content',
-      entityId: content._id,
-      metadata: { platforms: platforms || [] }
-    });
+      const { updateStreak, checkAchievements, createActivity } = require('../services/engagementService');
+      await updateStreak(req.user._id);
+      await checkAchievements(req.user._id, 'generate_content', {
+        contentId: content._id,
+        platforms: platforms || []
+      });
+      await createActivity(req.user._id, 'content_generated', {
+        title: 'Content Generated! ✨',
+        description: `You generated content for ${(platforms || []).length || 3} platforms`,
+        entityType: 'content',
+        entityId: content._id,
+        metadata: { platforms: platforms || [] }
+      });
+    } catch (sideErr) {
+      logger.warn('Content generation bookkeeping failed', { contentId: content._id, error: sideErr.message });
+    }
 
     res.json({
       success: true,
@@ -121,6 +141,43 @@ router.post('/generate', auth, requireActiveSubscription, validateContentGenerat
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
+async function markContentFailed(contentId, reason) {
+  try {
+    await Content.updateOne(
+      { _id: contentId, status: 'processing' },
+      { $set: { status: 'failed', errorMessage: String(reason || 'Content generation failed').slice(0, 500) } }
+    );
+  } catch (e) {
+    logger.error('Could not mark content failed', { contentId, error: e.message });
+  }
+}
+
+/**
+ * Run the content-generation worker in this process (no queue). Fire and
+ * forget: the client polls GET /:contentId/status. Whatever happens, the row
+ * leaves 'processing' — completed by the worker, or failed here.
+ */
+function runContentJobInline(jobData) {
+  const { processContentJob } = require('../workers/contentGenerator');
+  const job = {
+    id: `inline-${jobData.contentId}`,
+    data: jobData,
+    attemptsMade: 0,
+    updateProgress: async () => {},
+    log: async () => {},
+  };
+  setImmediate(async () => {
+    try {
+      const outcome = await processContentJob(jobData, job);
+      if (outcome && outcome.success === false) {
+        await markContentFailed(jobData.contentId, outcome.reason || 'Content generation produced nothing');
+      }
+    } catch (err) {
+      await markContentFailed(jobData.contentId, err.message);
+    }
+  });
+}
 
 // Get content generation status (for polling)
 router.get('/:contentId/status', auth, async (req, res) => {

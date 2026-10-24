@@ -97,14 +97,26 @@ export default function NeuralForgePage() {
         setPayloadId(id);
         setSuccess(t('contentPage.successTransmitting'));
         if (!connected) {
+           // The poll used to stop silently on a network error or after 120s,
+           // leaving "transmitting" on screen forever. Always end with a result
+           // or an error the user can see.
+           let finished = false
+           const stop = () => { finished = true; clearInterval(iv); clearTimeout(timeout) }
            const iv = setInterval(async () => {
              try {
-               const sRes: any = await apiGet(`/content/${id}/status`)
-               if (sRes?.status === 'completed' && sRes?.generatedContent) { clearInterval(iv); setManifest(sRes.generatedContent); setSuccess(t('contentPage.successForgingComplete')) }
-               else if (sRes?.status === 'failed') { clearInterval(iv); setError(t('contentPage.errorForgeFailed')) }
-             } catch { clearInterval(iv) }
+               const sRes: any = await apiGet(`/content/${id}/status`, undefined, false)
+               if (finished) return
+               if (sRes?.status === 'completed' && sRes?.generatedContent) { stop(); setManifest(sRes.generatedContent); setSuccess(t('contentPage.successForgingComplete')) }
+               else if (sRes?.status === 'failed') { stop(); setSuccess(''); setError(sRes?.errorMessage || t('contentPage.errorForgeFailed')) }
+             } catch {
+               if (finished) return
+               stop(); setSuccess(''); setError(t('contentPage.errorStatusCheckFailed'))
+             }
            }, 3000)
-           setTimeout(() => clearInterval(iv), 120000)
+           const timeout = setTimeout(() => {
+             if (finished) return
+             stop(); setSuccess(''); setError(t('contentPage.errorGenerationTimeout'))
+           }, 120000)
         }
       }
     } catch {

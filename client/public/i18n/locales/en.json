@@ -1134,7 +1134,9 @@
     "decryptingHeuristics": "Analyzing…",
     "predictiveTelemetry": "Performance forecast",
     "predictiveTelemetryDesc": "Forecasts of how your content may perform.",
-    "scanningTrajectories": "Scanning Trajectories..."
+    "scanningTrajectories": "Scanning Trajectories...",
+    "errorStatusCheckFailed": "Couldn't check on your content. It may still finish; look for it in your library.",
+    "errorGenerationTimeout": "This is taking longer than usual. It may still finish; look for it in your library in a few minutes."
   },
   "forgePage": {
     "documentTitle": "AI Content Creator | Click",
