@@ -8826,6 +8826,11 @@
     "badgeSpeed": "Speed {{speed}}x",
     "badgeExport": "Opened Export"
   },
+  "repurposeView": {
+    "renderFailed": "The {{format}} version failed: {{error}}",
+    "renderFailedGeneric": "The render failed.",
+    "renderTimedOut": "Rendering is taking too long and has stopped reporting back. Please try again."
+  },
   "editorHUD": {
     "saveFailedRetry": "Not saved to your account yet. Click to retry.",
     "section": {

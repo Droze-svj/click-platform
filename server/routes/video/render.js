@@ -181,6 +181,35 @@ function ownerSidecarPath(jobId) {
 function renderOutputPath(jobId) {
   return path.join(RENDER_OUTPUT_DIR, `${jobId}.mp4`);
 }
+// A failed render leaves a `.failed` sidecar ({ error, at }) so the status
+// route can report it. Without it a failed inline render (the only kind in
+// production — there is no Redis/BullMQ) was recorded only on an in-memory
+// object, status answered 'unknown' forever, and the editor spun forever.
+function failedSidecarPath(jobId) {
+  return path.join(RENDER_OUTPUT_DIR, `${jobId}.failed`);
+}
+function markRenderFailed(jobId, message) {
+  if (!jobId) return;
+  try {
+    ensureRenderDir();
+    fs.writeFileSync(failedSidecarPath(jobId), JSON.stringify({
+      error: String(message || 'Render failed').slice(0, 300),
+      at: new Date().toISOString(),
+    }), 'utf8');
+  } catch (_) { /* best-effort */ }
+}
+function readRenderFailure(jobId) {
+  try {
+    const raw = JSON.parse(fs.readFileSync(failedSidecarPath(jobId), 'utf8'));
+    return { error: typeof raw?.error === 'string' ? raw.error : 'Render failed', at: raw?.at || null };
+  } catch (_) {
+    return null;
+  }
+}
+// An inline render that started (owner stamped) but has produced neither an
+// output nor a failure record for this long was interrupted (e.g. a restart).
+const RENDER_STALE_MS = Number(process.env.RENDER_STALE_MS) || 2 * 60 * 60 * 1000;
+
 function writeRenderOwner(jobId, userId) {
   if (!userId) return;
   try { fs.writeFileSync(ownerSidecarPath(jobId), String(userId), 'utf8'); } catch (_) { /* best-effort */ }
@@ -223,7 +252,16 @@ async function getBundleLocation(bundler) {
  * (<= 30s) or as a fallback when BullMQ is unavailable. For long renders the
  * worker variant queues to videoRenderQueue and emits SSE updates.
  */
-async function runRender({ tree, ratio, jobId, userId, tier = 'pro' }) {
+async function runRender(opts) {
+  try {
+    return await runRenderInner(opts);
+  } catch (err) {
+    markRenderFailed(opts && opts.jobId, err && err.message);
+    throw err;
+  }
+}
+
+async function runRenderInner({ tree, ratio, jobId, userId, tier = 'pro' }) {
   // Stamp the owner BEFORE any output file lands in RENDER_OUTPUT_DIR. Stamping
   // only after the render (as before) left a window where the .mp4 existed with
   // no .owner sidecar, and mayAccessRender failed OPEN on a missing sidecar — so
@@ -509,6 +547,11 @@ router.get(
       // Output not present yet — fall through to queue-aware status.
     }
 
+    const failure = readRenderFailure(jobId);
+    if (failure) {
+      return sendSuccess(res, { jobId, status: 'failed', error: failure.error, failedAt: failure.at });
+    }
+
     // Queue-aware status (best effort)
     try {
       const queues = require('../../queues');
@@ -522,6 +565,18 @@ router.get(
       }
     } catch (err) {
       // Ignore queue inspection error and fallback
+    }
+
+    // Inline render (no queue): the owner sidecar is stamped when it starts.
+    try {
+      const started = await fs.promises.stat(ownerSidecarPath(jobId));
+      if (Date.now() - started.mtimeMs > RENDER_STALE_MS) {
+        markRenderFailed(jobId, 'The render was interrupted. Please start it again.');
+        return sendSuccess(res, { jobId, status: 'failed', error: 'The render was interrupted. Please start it again.' });
+      }
+      return sendSuccess(res, { jobId, status: 'processing' });
+    } catch (_) {
+      // Not started yet (or unknown job).
     }
 
     return sendSuccess(res, { jobId, status: 'unknown' });
@@ -554,3 +609,4 @@ module.exports.RENDER_OUTPUT_DIR = RENDER_OUTPUT_DIR;
 // Exposed for unit tests of the ownership ACL.
 module.exports._writeRenderOwner = writeRenderOwner;
 module.exports._mayAccessRender = mayAccessRender;
+module.exports.markRenderFailed = markRenderFailed;

@@ -20,6 +20,7 @@ import {
   Wand2,
 } from 'lucide-react'
 import { apiGet, apiPost } from '../../../lib/api'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 // One source → many platform-native cuts. Each target is smart-reframed
 // (subject-aware crop, not a blind center crop), re-hooked with platform copy,
@@ -53,7 +54,12 @@ interface Variant {
   hashtags: string[]
   status: VariantStatus
   previewUrl?: string   // object URL from the authed blob fetch (preview + download)
+  error?: string        // why the render failed (server message or timeout)
 }
+
+// Stop polling after this long and tell the user, instead of spinning forever
+// on a render that will never report back.
+const RENDER_POLL_TIMEOUT_MS = 30 * 60 * 1000
 
 interface RecipeSummary {
   id: string
@@ -86,10 +92,13 @@ interface RepurposeViewProps {
 
 const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
   const { videoUrl, videoId, projectName, showToast } = props
+  const { t } = useTranslation()
   const [selected, setSelected] = useState<string[]>(['9:16', '1:1', '16:9', '4:5'])
   const [isBusy, setIsBusy] = useState(false)
   const [variants, setVariants] = useState<Variant[]>([])
   const pollingRef = useRef(false)
+  // When the current batch started polling (reset for every new batch).
+  const pollStartedAtRef = useRef(0)
   // Object URLs we create from authed blob fetches — revoked on unmount.
   const objectUrlsRef = useRef<string[]>([])
   const [recipes, setRecipes] = useState<RecipeSummary[]>([])
@@ -104,6 +113,7 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
   const ingestVariants = useCallback((raw: any[]) => {
     const got: Variant[] = (raw || []).map((v: any) => ({ ...v, status: 'processing' as VariantStatus }))
     if (!got.length) { toast('No variants were produced.', 'error'); setIsBusy(false); return }
+    pollStartedAtRef.current = Date.now()
     setVariants(got)
     setIsBusy(true)
   }, [toast])
@@ -196,7 +206,8 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
         setIsBusy(false)
         return
       }
-      setVariants(got)
+      pollStartedAtRef.current = Date.now()
+    setVariants(got)
       if (typeof data?.variantsRequested === 'number' && data.variantsRequested > got.length) {
         toast(`Your plan allows ${got.length} of ${data.variantsRequested} formats. Upgrade for more.`, 'info')
       }
@@ -219,6 +230,14 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
       if (pollingRef.current) return
       pollingRef.current = true
       try {
+        if (pollStartedAtRef.current && Date.now() - pollStartedAtRef.current > RENDER_POLL_TIMEOUT_MS) {
+          const timedOut = t('repurposeView.renderTimedOut')
+          setVariants((prev) => prev.map((v) => (
+            v.status === 'completed' || v.status === 'failed' ? v : { ...v, status: 'failed' as VariantStatus, error: timedOut }
+          )))
+          toast(timedOut, 'error')
+          return
+        }
         const updated = await Promise.all(
           variants.map(async (v) => {
             if (v.status === 'completed' || v.status === 'failed') return v
@@ -238,7 +257,11 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
                 } catch { /* leave preview unset; user can retry */ }
                 return { ...v, status: 'completed' as VariantStatus, previewUrl }
               }
-              if (s === 'failed') return { ...v, status: 'failed' as VariantStatus }
+              if (s === 'failed') {
+                const error = typeof d?.error === 'string' && d.error ? d.error : t('repurposeView.renderFailedGeneric')
+                toast(t('repurposeView.renderFailed', { format: v.platformLabel || v.ratio, error }), 'error')
+                return { ...v, status: 'failed' as VariantStatus, error }
+              }
               return v
             } catch {
               return v
@@ -252,7 +275,7 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
     }, 2500)
 
     return () => clearInterval(id)
-  }, [variants])
+  }, [variants, t, toast])
 
   // Revoke all created object URLs when the panel unmounts.
   useEffect(() => () => { objectUrlsRef.current.forEach((u) => { try { URL.revokeObjectURL(u) } catch { /* noop */ } }) }, [])
@@ -400,7 +423,7 @@ const RepurposeView: React.FC<RepurposeViewProps> = (props) => {
                       {v.status === 'completed' ? (
                         <span className="inline-flex items-center gap-1.5 text-emerald-400 text-[10px] font-black uppercase tracking-widest"><CheckCircle2 className="w-4 h-4" /> Ready</span>
                       ) : v.status === 'failed' ? (
-                        <span className="inline-flex items-center gap-1.5 text-rose-400 text-[10px] font-black uppercase tracking-widest"><AlertCircle className="w-4 h-4" /> Failed</span>
+                        <span title={v.error || undefined} className="inline-flex items-center gap-1.5 text-rose-400 text-[10px] font-black uppercase tracking-widest"><AlertCircle className="w-4 h-4" /> Failed</span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 text-indigo-400 text-[10px] font-black uppercase tracking-widest"><Loader2 className="w-4 h-4 animate-spin" /> Rendering</span>
                       )}
