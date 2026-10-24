@@ -7447,7 +7447,8 @@
     "feedSubtitle": "AI-Analyzed // From your published-post performance",
     "coldStartHint": "Publish posts so Click can analyze what works",
     "noInsightsYet": "No insights yet",
-    "impact": "Impact: {{impact}}"
+    "impact": "Impact: {{impact}}",
+    "loadFailed": "Couldn't load insights."
   },
   "scalingHub": {
     "neuralThroughput": "Throughput",
