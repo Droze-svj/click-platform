@@ -10066,5 +10066,9 @@
     "noToken": "This invitation link is missing its code. Ask for a new invite.",
     "joined": "✓ You joined the team",
     "failed": "Couldn't accept the invitation"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "Too many reset requests. Wait a few minutes, then try again.",
+    "sendFailed": "We couldn't send the reset link right now. Check your connection and try again."
   }
 }

@@ -6,21 +6,23 @@ import { apiPost, handleApiError } from '../../lib/api'
 import { Button, Card, FormField, Input, Icon, AuthShell } from '../../components/ui'
 import { CheckCircle2, ArrowLeft, Mail } from 'lucide-react'
 import ClickLogo from '../../components/ClickLogo'
+import { useTranslation } from '@/hooks/useTranslation'
 
 /**
  * Forgot-password flow.
  *
  * Posts to /api/auth/forgot-password (already implemented server-side).
- * Always shows a success message regardless of whether the email
- * existed — this is the standard practice to prevent account
- * enumeration attacks. The server still only sends the reset email
- * to real accounts; the UI just never tells the attacker.
+ * The server answers the same 200 whether or not the email has an account
+ * (no account enumeration), so "check your email" is shown only on a 2xx.
+ * A 429, 5xx or network failure means no email was sent: the user gets an
+ * error and can retry instead of waiting for a link that never comes.
  */
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const { t } = useTranslation()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,15 +34,14 @@ export default function ForgotPasswordPage() {
     setLoading(true)
     try {
       await apiPost('/auth/forgot-password', { email: email.trim() })
-    } catch (err) {
-      // We deliberately don't surface server errors to the user here.
-      // If the email is malformed the server returns 400; otherwise we
-      // always show the same success state. Account-enumeration safe.
-      // The handleApiError call is kept so dev tooling sees the cause.
-      handleApiError(err)
+      setSubmitted(true)
+    } catch (err: any) {
+      const status = err?.response?.status
+      if (status === 429) setError(t('forgotPasswordPage.rateLimited'))
+      else if (status === 400) setError(handleApiError(err) || t('forgotPasswordPage.sendFailed'))
+      else setError(t('forgotPasswordPage.sendFailed'))
     } finally {
       setLoading(false)
-      setSubmitted(true)
     }
   }
 
