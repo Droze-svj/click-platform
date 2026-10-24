@@ -8887,6 +8887,7 @@
     "export": "Export"
   },
   "quickActionsBar": {
+    "trendsList": "Trending on TikTok now: {{list}}",
     "variantsNeedBase": "Add a caption or hook first so the variant generator has something to work with.",
     "noVariants": "No variants returned — try a longer base hook.",
     "variantsGenerated": "Generated {{count}} variants — open the A/B picker to preview.",

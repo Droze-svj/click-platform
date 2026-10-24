@@ -927,12 +927,26 @@ router.post('/broll/:contentId', auth, asyncHandler(async (req, res) => {
     const content = await resolveContent(contentId);
     if (!content) return sendError(res, 'Content not found', 404);
 
-    // The B-roll service needs segments. Pull them off the content's
-    // transcript if available; otherwise we degrade gracefully.
-    const segments =
-      content.transcript?.segments ||
-      content.metadata?.transcript?.segments ||
-      [];
+    // The B-roll service needs timed segments. Content.transcript is a plain
+    // String, so `content.transcript.segments` never existed and every plan
+    // came back empty; the timed segments live in the caption store.
+    let rawSegments = [];
+    try {
+      rawSegments = await captionStore.getSegments(contentId, { content });
+    } catch (e) {
+      logger.warn('B-roll plan: caption segments unavailable', { contentId, error: e.message });
+    }
+    if (!Array.isArray(rawSegments) || rawSegments.length === 0) {
+      rawSegments = content.metadata?.transcript?.segments || [];
+    }
+    const segments = (Array.isArray(rawSegments) ? rawSegments : [])
+      .map((s) => ({
+        ...s,
+        start: Number(s?.start ?? s?.startTime),
+        end: Number(s?.end ?? s?.endTime),
+        text: typeof s?.text === 'string' ? s.text : '',
+      }))
+      .filter((s) => Number.isFinite(s.start) && Number.isFinite(s.end) && s.end > s.start);
     if (!Array.isArray(segments) || segments.length === 0) {
       return sendSuccess(res, 'No transcript segments available; cannot plan B-roll yet', 200, { plan: [] });
     }

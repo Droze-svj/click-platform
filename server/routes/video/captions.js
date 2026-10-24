@@ -230,6 +230,7 @@ router.post('/:contentId/translate', authenticate, validateObjectId('contentId')
   try {
     const { contentId } = req.params;
     const { targetLanguage } = req.body;
+    const format = (req.body.format || 'srt').toString();
     const userId = getUserIdFromReq(req); // canonical hex — matches stored Content.userId (flip-set)
 
     if (!targetLanguage) {
@@ -242,25 +243,51 @@ router.post('/:contentId/translate', authenticate, validateObjectId('contentId')
       return sendError(res, 'Content not found', 404);
     }
 
-    if (!content.captions || !content.captions.text) {
-      return sendError(res, 'Captions not found. Generate captions first.', 400);
+    // Translation returns the source text unchanged when AI isn't configured —
+    // say so instead of reporting a "translation" that changed nothing.
+    const { isConfigured } = require('../../utils/googleAI');
+    if (!isConfigured) {
+      return sendError(res, 'AI translation is not configured on this server (set GOOGLE_AI_API_KEY). Your captions were left unchanged.', 503);
     }
 
-    // Translate captions
-    const translatedText = await videoCaptionService.translateCaptions(
-      content.captions.text,
-      targetLanguage
-    );
+    // Per-segment translation that keeps the timing, read from (and cached
+    // in) the caption store — the same path as GET /in-language. This used to
+    // translate only the embedded text blob (missing for captions that live
+    // in the caption collection) and write it to a Mixed field without
+    // markModified, so nothing was saved and the client got no segments.
+    let result;
+    try {
+      result = await videoCaptionService.ensureCaptionsInLanguage(contentId, String(targetLanguage), format);
+    } catch (e) {
+      if (/not generated|no captions|have not been generated/i.test(e.message || '')) {
+        return sendError(res, 'Captions not found. Generate captions first.', 400);
+      }
+      throw e;
+    }
 
-    // Update content with translated captions
-    content.captions.translations = content.captions.translations || {};
-    content.captions.translations[targetLanguage] = translatedText;
-    await content.save();
+    // Keep the legacy embedded copy in step (Mixed → markModified, or the
+    // write is silently dropped).
+    try {
+      const lang = String(result.language || targetLanguage).toLowerCase();
+      const translations = { ...((content.captions && content.captions.translations) || {}) };
+      translations[lang] = result.text;
+      content.set('captions.translations', translations);
+      content.markModified('captions.translations');
+      await content.save();
+    } catch (e) {
+      logger.warn('Embedded caption translation not saved (caption store has it)', { contentId, error: e.message });
+    }
 
     return sendSuccess(res, {
-      originalLanguage: content.captions.language,
+      originalLanguage: content.captions?.language || null,
       targetLanguage,
-      translatedText,
+      translatedText: result.text,
+      // Same shape the GET returns, so the editor can show the translation.
+      text: result.text,
+      language: result.language,
+      format,
+      captions: result.formatted,
+      segments: result.segments || [],
     }, 'Captions translated successfully');
   } catch (error) {
     logger.error('Error translating captions', { error: error.message });

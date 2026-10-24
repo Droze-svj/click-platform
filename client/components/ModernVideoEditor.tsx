@@ -2506,6 +2506,28 @@ const ModernVideoEditor: React.FC<{
             onAutoViralEdit={handleAutoViralEdit}
             autoViralBusy={isAutoViralEditing}
             showToast={showToast}
+            contentId={videoId || null}
+            onBrollPlan={(plan) => {
+              // Same placement as Magic B-roll: stock clips on the B-roll track.
+              const segs = plan
+                .filter((p) => p && p.url && Number.isFinite(Number(p.startTime)) && Number(p.duration) > 0)
+                .map((p, i) => {
+                  const start = Number(p.startTime)
+                  const dur = Number(p.duration)
+                  return {
+                    id: `broll-plan-${Date.now()}-${i}`,
+                    startTime: start,
+                    endTime: start + dur,
+                    duration: dur,
+                    type: 'video' as const,
+                    name: t('modernVideoEditor.magicBroll'),
+                    color: '#8b5cf6',
+                    track: 2,
+                    sourceUrl: p.url,
+                  }
+                })
+              if (segs.length) setTimelineSegments((prev: TimelineSegment[]) => [...prev, ...segs])
+            }}
           />
 
           <SmartCleanupPanel
