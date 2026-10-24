@@ -18,7 +18,6 @@ const AUTH_SUCCESS_CACHE_MS = 30_000 // 30 seconds
 
 // Queue for pending auth checks to prevent race conditions
 let authCheckQueue: Array<() => void> = []
-let authCheckTimeout: NodeJS.Timeout | null = null
 
 interface User {
   id: string
@@ -122,23 +121,32 @@ export function useAuth() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const checkAuth = async (retryCount = 0, force = false) => {
-    // Debug logging disabled to prevent console spam
-    // fetch('http://127.0.0.1:5561/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a', ...).catch(() => {})
+  // Every component that calls useAuth() has its own state. Only one of them
+  // fetches /auth/me at a time; the others must ADOPT that result. They used
+  // to just wait and never copy it, so the header, sidebar and dashboard
+  // greeting showed the "Creator" fallback instead of the user's name.
+  const adoptCachedResult = () => {
+    if (!mountedRef.current) return
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    setUser(token && cachedToken === token ? cachedUser : null)
+    setLoading(false)
+  }
 
-    // If auth check is already in progress, queue this request
+  const checkAuth = async (retryCount = 0, force = false) => {
+    // If an auth check is already in progress, wait for it and take its result.
     if (authCheckInProgress) {
       return new Promise<void>((resolve) => {
-        authCheckQueue.push(() => resolve())
+        authCheckQueue.push(() => { adoptCachedResult(); resolve() })
       })
     }
 
-    // Check debounce timing
+    // A check for this same token just finished (debounce window): reuse its
+    // result now rather than queueing behind a check that is no longer running.
     const now = Date.now()
-    if (now - lastAuthCheck < AUTH_CHECK_DEBOUNCE_MS) {
-      return new Promise<void>((resolve) => {
-        authCheckQueue.push(() => resolve())
-      })
+    const currentToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    if (!force && retryCount === 0 && now - lastAuthCheck < AUTH_CHECK_DEBOUNCE_MS && currentToken && cachedToken === currentToken) {
+      adoptCachedResult()
+      return
     }
 
     // Enhanced debugging function (commented out to avoid ERR_CONNECTION_REFUSED)
@@ -276,6 +284,10 @@ export function useAuth() {
           delayMs: 2000,
           errorType: err.code || 'unknown'
         })
+        // Release the lock first (as the 401 path does) — otherwise the retry
+        // queues behind this very call and waits forever.
+        authCheckInProgress = false
+        lastAuthCheck = 0
         await new Promise(resolve => setTimeout(resolve, 2000))
         return checkAuth(retryCount + 1)
       }
@@ -310,16 +322,12 @@ export function useAuth() {
     } finally {
       authCheckInProgress = false
 
-      // Process queued auth checks
+      // Hand the result to EVERY component that was waiting (this used to
+      // release only one of them; the rest waited forever).
       if (authCheckQueue.length > 0) {
-        const nextCheck = authCheckQueue.shift()
-        if (nextCheck) {
-          // Use setTimeout to avoid immediate recursive calls
-          if (authCheckTimeout) clearTimeout(authCheckTimeout)
-          authCheckTimeout = setTimeout(() => {
-            nextCheck()
-          }, 10)
-        }
+        const waiting = authCheckQueue
+        authCheckQueue = []
+        waiting.forEach((fn) => fn())
       }
 
       if (mountedRef.current) {

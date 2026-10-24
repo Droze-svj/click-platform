@@ -78,7 +78,8 @@ export default function ClickDynamicIsland() {
   }, [])
 
   const expandedWidth = Math.min(440, screenWidth - 32)
-  const compactWidth = Math.min(280, screenWidth - 32)
+  // Narrower on phones: it floats over page content there.
+  const compactWidth = screenWidth < 640 ? Math.min(200, screenWidth - 32) : Math.min(280, screenWidth - 32)
   
   // Hydrate custom swarm and drag coordinates from local storage
   useEffect(() => {
@@ -86,7 +87,7 @@ export default function ClickDynamicIsland() {
     if (isSwarmMode(savedSwarm)) setSwarmMode(savedSwarm)
 
     try {
-      const savedCoords = localStorage.getItem('click-dynamic-island-coords')
+      const savedCoords = localStorage.getItem('click-dynamic-island-coords-v2')
       if (savedCoords) {
         setDragOffset(JSON.parse(savedCoords))
       }
@@ -191,7 +192,7 @@ export default function ClickDynamicIsland() {
   const handleDragEnd = (_event: any, info: any) => {
     const coords = { x: dragOffset.x + info.offset.x, y: dragOffset.y + info.offset.y }
     setDragOffset(coords)
-    localStorage.setItem('click-dynamic-island-coords', JSON.stringify(coords))
+    localStorage.setItem('click-dynamic-island-coords-v2', JSON.stringify(coords))
   }
 
   // Keyboard-operable reposition for the drag grip (pointer drag is mouse-only).
@@ -209,7 +210,7 @@ export default function ClickDynamicIsland() {
     e.preventDefault()
     setDragOffset(prev => {
       const coords = { x: prev.x + dx, y: prev.y + dy }
-      try { localStorage.setItem('click-dynamic-island-coords', JSON.stringify(coords)) } catch { /* storage unavailable */ }
+      try { localStorage.setItem('click-dynamic-island-coords-v2', JSON.stringify(coords)) } catch { /* storage unavailable */ }
       return coords
     })
   }
@@ -219,7 +220,11 @@ export default function ClickDynamicIsland() {
   const ActiveIcon = SWARM_ICONS[swarmMode]
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] pointer-events-none w-full max-w-[1200px] px-4 flex justify-center">
+    // Bottom-right, above the phone tab bar. It used to sit fixed at the top
+    // centre, on top of the dashboard header (the search box on desktop, the
+    // page title on phones). Anchored at the bottom, the expanded console grows
+    // upward into free space.
+    <div className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 z-[90] pointer-events-none flex justify-end">
       <m.div
         ref={containerRef}
         layout
@@ -435,7 +440,7 @@ export default function ClickDynamicIsland() {
                     type="button"
                     onClick={() => {
                       setDragOffset({ x: 0, y: 0 })
-                      localStorage.setItem('click-dynamic-island-coords', JSON.stringify({ x: 0, y: 0 }))
+                      localStorage.setItem('click-dynamic-island-coords-v2', JSON.stringify({ x: 0, y: 0 }))
                     }}
                     className="px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-black text-slate-400 hover:text-white uppercase tracking-widest transition-all"
                   >
