@@ -41,7 +41,8 @@ class ContentComplianceService {
       Return only valid JSON.`;
 
       const response = await generateContent(prompt, { maxTokens: 800 });
-      const result = JSON.parse(response || '{"overallStatus": "PASS"}');
+      if (!response) throw new Error('Empty compliance response');
+      const result = JSON.parse(response);
 
       // 2. Advisory Guardrail Logic (Phase 22 Decision)
       const isRisky = result.overallStatus === 'ALERT' || result.overallStatus === 'CAUTION';
@@ -65,7 +66,8 @@ class ContentComplianceService {
       };
     } catch (error) {
       logger.error('Regional Compliance Audit failed', { error: error.message, contentId, region });
-      return { overallStatus: 'PASS', requiresHumanOverride: false }; 
+      // Never report PASS for a check that didn't run.
+      return { overallStatus: 'UNAVAILABLE', error: 'The compliance check could not be completed', requiresHumanOverride: false };
     }
   }
 

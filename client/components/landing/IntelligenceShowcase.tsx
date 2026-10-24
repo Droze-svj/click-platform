@@ -1,7 +1,7 @@
 'use client';
 
 import { m } from 'framer-motion';
-import { Brain, Radar, RefreshCw, Clock, Sparkles, ArrowUpRight, Terminal, Fingerprint, Activity } from 'lucide-react';
+import { Brain, Radar, RefreshCw, Clock, Sparkles } from 'lucide-react';
 
 export function IntelligenceShowcase() {
   return (
@@ -86,14 +86,10 @@ export function IntelligenceShowcase() {
                 <div className="w-14 h-14 rounded-xl bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center text-primary-500 shadow-2xl group-hover:rotate-12 transition-transform duration-500">
                   <Radar className="w-7 h-7" aria-hidden="true" />
                 </div>
-                <div className="flex items-center gap-3">
-                   <Activity size={14} className="text-emerald-500 animate-pulse shrink-0" />
-                   <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-emerald-500 italic truncate">Synced 6h ago</span>
-                </div>
               </div>
               <h3 className="text-2xl md:text-3xl font-black mb-4 tracking-tighter uppercase italic text-surface-900 dark:text-white leading-none">Watches the trends</h3>
               <p className="text-surface-600 dark:text-slate-300 text-base leading-relaxed">
-                Hooks, sounds, formats, hashtags — Click pulls what&apos;s working in your niche right now, every 6 hours. You stop guessing what to post; Click brings the answers to your editor.
+                Hooks, sounds, formats, hashtags — Click regularly pulls what&apos;s trending and brings it into your editor, so you spend less time guessing what to post.
               </p>
             </div>
           </m.div>
@@ -138,38 +134,28 @@ export function IntelligenceShowcase() {
                 <div>
                   <h3 className="text-3xl font-black tracking-tighter uppercase italic text-surface-900 dark:text-white leading-none mb-4">Knows when YOU pop</h3>
                   <p className="text-surface-600 dark:text-slate-300 text-lg leading-relaxed">
-                    Generic &quot;best times to post&quot; charts don&apos;t know your audience. Click does — and stacks platform peaks against your real engagement history to pick the exact slot you&apos;ll land.
+                    Generic &quot;best times to post&quot; charts don&apos;t know your audience. Click looks at platform peak times and your own engagement history to suggest when to post.
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-6 flex-wrap">
+                <span className="w-full text-[10px] font-black uppercase tracking-[0.3em] text-amber-500 italic">Example only</span>
                 {[
-                  { label: 'TikTok', time: '7:42 PM', conf: '94%' },
-                  { label: 'Reels', time: '8:15 PM', conf: '91%' },
-                  { label: 'Shorts', time: '6:30 PM', conf: '88%' },
+                  { label: 'TikTok', time: '7:42 PM' },
+                  { label: 'Reels', time: '8:15 PM' },
+                  { label: 'Shorts', time: '6:30 PM' },
                 ].map((s) => (
                   <div key={s.label} className="px-8 py-4 rounded-2xl bg-surface-page dark:bg-black/40 border-2 border-surface-100 dark:border-white/5 flex items-center gap-6 shadow-xl hover:border-primary-500/30 transition-all magnetic-hover group/pill">
                     <Sparkles className="w-5 h-5 text-amber-500 group-hover/pill:rotate-12 transition-transform" aria-hidden="true" />
                     <div>
                       <div className="text-[10px] font-black uppercase tracking-[0.4em] text-surface-400 dark:text-slate-600 italic leading-none mb-2">{s.label}</div>
-                      <div className="text-xl font-black tabular-nums italic text-surface-900 dark:text-white leading-none">{s.time} <span className="text-primary-500 font-black text-xs ml-3 italic">· {s.conf}</span></div>
+                      <div className="text-xl font-black tabular-nums italic text-surface-900 dark:text-white leading-none">{s.time}</div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Decorative HUD Telemetry */}
-            <div className="mt-12 flex items-center justify-between opacity-0 group-hover:opacity-20 transition-opacity duration-1000">
-               <div className="flex items-center gap-4">
-                  <Fingerprint size={16} className="text-primary-500" />
-                  <span className="text-[9px] font-black uppercase tracking-[0.5em] italic text-primary-500">Predictive sync</span>
-               </div>
-               <div className="flex items-center gap-4">
-                  <span className="text-[9px] font-black uppercase tracking-[0.5em] italic text-primary-500">Click</span>
-                  <Terminal size={16} className="text-primary-500" />
-               </div>
-            </div>
           </m.div>
         </div>
       </div>

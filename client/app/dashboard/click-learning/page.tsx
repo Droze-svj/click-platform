@@ -36,6 +36,7 @@ import ClickEmptyState from '@/components/click/ClickEmptyState'
 import { clickVoice } from '@/lib/clickVoice'
 import { Button } from '../../../components/ui/button'
 import { PageShell } from '../../../components/ui'
+import { weekdayShortNames } from '../../../utils/locale'
 
 interface Counter {
   key: string
@@ -79,7 +80,6 @@ const FACET_META: Record<
   niches: { label: 'Niche', icon: <Brain className="w-4 h-4" />, intent: 'niche' },
 }
 
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 function totalCount(counters?: Counter[]): number {
   if (!Array.isArray(counters)) return 0
@@ -271,7 +271,7 @@ function PublishTiming({
   const topHour = (hours || []).slice().sort((a, b) => (b.count || 0) - (a.count || 0))[0]
   const topDay = (days || []).slice().sort((a, b) => (b.count || 0) - (a.count || 0))[0]
   const hourLabel = topHour ? `${topHour.key}:00` : null
-  const dayLabel = topDay ? DAY_LABELS[Number(topDay.key) % 7] : null
+  const dayLabel = topDay ? weekdayShortNames()[Number(topDay.key) % 7] : null
 
   return (
     <section className="ds-surface-card p-5">

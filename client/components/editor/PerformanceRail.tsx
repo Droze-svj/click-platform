@@ -114,7 +114,7 @@ export default function PerformanceRail({
     return (
       <Panel variant="glass" className={cn('ds-elev-2 p-6 flex items-center gap-3', className)}>
         <Loader2 size={16} className="text-primary animate-spin" aria-hidden />
-        <span className="ds-text-caption text-theme-muted">Calibrating performance metrics…</span>
+        <span className="ds-text-caption text-theme-muted">Loading performance data…</span>
       </Panel>
     )
   }
@@ -196,7 +196,7 @@ export default function PerformanceRail({
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <TrendingUp size={16} aria-hidden />
           </div>
-          <span className="ds-text-label text-theme-primary leading-none">Retention matrix</span>
+          <span className="ds-text-label text-theme-primary leading-none">Retention insights</span>
         </div>
         {lastIngestedAt && (
           <span className="text-[10px] font-mono text-theme-muted tabular-nums">{lastIngestedAt.toLocaleDateString()}</span>

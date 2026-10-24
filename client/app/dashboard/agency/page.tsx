@@ -1,28 +1,13 @@
-'use client'
-
-import dynamic from 'next/dynamic'
-import { PageShell } from '../../../components/ui'
-import ClickLoadingState from '../../../components/click/ClickLoadingState'
+import { redirect } from 'next/navigation'
 
 /**
- * The agency dashboard view carries recharts (and the d3 family behind it),
- * which made this the second-heaviest route in the app at 281kB of first-load
- * JS. It's a single full-bleed view, so loading it on demand costs nothing in
- * perceived speed and takes the charting library off the initial payload.
- *
- * ssr:false — the charts measure their container to size themselves.
+ * /dashboard/agency used to render InfiniteAgencyDashboardView, which was
+ * built almost entirely from invented values — Math.random() agent loads, a
+ * hardcoded "8.42X" ROI, fixed retention/market charts, a fake settled-revenue
+ * fallback and a made-up "decision ledger". Nothing in the product links here,
+ * and once the fabricated parts are removed there is nothing real left to show,
+ * so the route sends people to the dashboard instead of showing fakes.
  */
-const InfiniteAgencyDashboardView = dynamic(
-  () => import('../../../components/editor/views/InfiniteAgencyDashboardView'),
-  { ssr: false, loading: () => <ClickLoadingState intent="loading.analyzing" variant="block" /> }
-)
-
 export default function AgencyPage() {
-  return (
-    // `flush` because this view manages its own full-height canvas bounds; the
-    // shell is here for the shared frame rather than page padding.
-    <PageShell width="full" flush className="h-screen w-full flex flex-col">
-      <InfiniteAgencyDashboardView />
-    </PageShell>
-  )
+  redirect('/dashboard')
 }

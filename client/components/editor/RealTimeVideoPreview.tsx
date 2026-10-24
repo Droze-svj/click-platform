@@ -20,6 +20,7 @@ import { mapTimelineToSource, clampPlaybackRate } from '../../utils/timelinePlay
 import { activeTransitionAt, transitionOverlayStyle } from '../../lib/transitionPreview'
 import { Rnd } from 'react-rnd'
 import { getAssetUrl, getMediaUrl } from '../../utils/url'
+import { useTranslation } from '../../hooks/useTranslation'
 
 /** Coerce a possibly-undefined/NaN number to a finite fallback. */
 function safeNum(n: any, fallback: number): number {
@@ -428,6 +429,7 @@ function blendFiltersAtTime(base: VideoFilter, effects: TimelineEffect[], t: num
 const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
   videoUrl, currentTime, isPlaying, volume, isMuted, playbackSpeed = 1, filters, textOverlays, shapeOverlays = [], imageOverlays = [], svgOverlays = [], gradientOverlays = [], editingWords = [], captionStyle, templateLayout = 'standard', onTimeUpdate, onDurationChange, onPlayPause, showBeforeAfter, onBeforeAfterChange, compareMode, timelineEffects = [], timelineSegments = [], trackVisibility = {}, previewQuality = 'full', chromaKey, onUpdateOverlay, selectedOverlayId, onSelectOverlay, isNeuralActive, videoTransform, videoTransformKeyframes, videoCrop, isTransformMode, onUpdateVideoTransform
 }) => {
+  const { t: tr } = useTranslation()
   const isDraft = previewQuality === 'draft'
   // Multi-clip WYSIWYG: the on-screen source is the base videoUrl unless the
   // active segment carries its own clip (activeSourceUrl). null === base.
@@ -1146,14 +1148,14 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
             />
             {videoLoadError && normalizedVideoUrl && (
               <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/80 px-6 text-center">
-                <p className="text-sm font-medium text-white">Video failed to load</p>
+                <p className="text-sm font-medium text-white">{tr('realTimeVideoPreview.videoFailed')}</p>
                 <p className="max-w-md break-all text-xs text-white/50">{normalizedVideoUrl}</p>
                 <button
                   type="button"
                   onClick={() => { setVideoLoadError(false); setVideoLoadState('loading'); setReloadKey((k) => k + 1) }}
                   className="pointer-events-auto rounded-lg bg-white/10 px-4 py-2 text-sm text-white transition-colors hover:bg-white/20"
                 >
-                  Retry
+                  {tr('realTimeVideoPreview.retry')}
                 </button>
               </div>
             )}
@@ -1179,17 +1181,17 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
               className="absolute top-0 bottom-0 z-30 cursor-ew-resize select-none pointer-events-auto group/split"
               style={{ left: `${splitDividerX}%`, transform: 'translateX(-50%)' }}
               onMouseDown={handleSplitMouseDown}
-              title="Drag to compare Before / After"
+              title={tr('realTimeVideoPreview.dragToCompare')}
             >
               <div className="w-0.5 h-full bg-white shadow-[0_0_12px_rgba(255,255,255,0.95)]" />
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/90 border border-white/80 shadow-lg flex items-center justify-center text-[9px] text-white font-black group-hover/split:scale-125 transition-transform">
                 ↔
               </div>
               <div className="absolute top-3 right-3 pointer-events-none px-2 py-0.5 rounded-full bg-black/85 border border-white/20 text-[8px] font-black uppercase tracking-widest text-slate-300 shadow-md">
-                Before
+                {tr('realTimeVideoPreview.before')}
               </div>
               <div className="absolute top-3 left-3 pointer-events-none px-2 py-0.5 rounded-full bg-indigo-600/90 border border-indigo-400/40 text-[8px] font-black uppercase tracking-widest text-white shadow-md">
-                After
+                {tr('realTimeVideoPreview.after')}
               </div>
             </div>
           )}
@@ -1198,13 +1200,13 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
           {useCompareMode && compareMode === 'before' && (
             <div className="absolute top-3 left-3 z-30 pointer-events-none px-2.5 py-1 rounded-full bg-black/80 border border-amber-500/40 text-[8px] font-black uppercase tracking-widest text-amber-300 shadow-md flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              Raw / Unfiltered
+              {tr('realTimeVideoPreview.rawUnfiltered')}
             </div>
           )}
           {useCompareMode && compareMode === 'after' && (
             <div className="absolute top-3 left-3 z-30 pointer-events-none px-2.5 py-1 rounded-full bg-indigo-600/80 border border-indigo-400/40 text-[8px] font-black uppercase tracking-widest text-white shadow-md flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-              Graded
+              {tr('realTimeVideoPreview.graded')}
             </div>
           )}
           <canvas ref={webGpuCanvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-10 opacity-0" />
@@ -1387,9 +1389,9 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                   {editingTextId === text.id ? (
                     <textarea
                       value={editingTextValue}
-                      title="Edit caption text inline"
-                      aria-label="Edit caption text inline"
-                      placeholder="Type caption text..."
+                      title={tr('realTimeVideoPreview.editCaptionInline')}
+                      aria-label={tr('realTimeVideoPreview.editCaptionInline')}
+                      placeholder={tr('realTimeVideoPreview.captionPlaceholder')}
                       onChange={(e) => setEditingTextValue(e.target.value)}
                       onBlur={() => {
                         onUpdateOverlay?.('text', text.id, { text: editingTextValue })
@@ -1437,6 +1439,8 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                           ...captionCss,
                           // Explicit per-overlay font/spacing win over the style preset.
                           ...(text.fontFamily ? { fontFamily: text.fontFamily } : {}),
+                          ...(text.fontWeight ? { fontWeight: text.fontWeight } : {}),
+                          ...(text.fontStyle ? { fontStyle: text.fontStyle } : {}),
                           letterSpacing: text.letterSpacing ? `${text.letterSpacing}px` : ((captionCss.letterSpacing as any) ?? 'normal'),
                           // Keep the user's explicit background when the preset didn't set one.
                           backgroundColor: (captionCss.backgroundColor as string) ?? (text.backgroundColor || 'transparent'),
@@ -1501,16 +1505,16 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
             const total = ops.reverse + ops.jcut + ops.lcut
             if (total === 0) return null
             const parts: string[] = []
-            if (ops.reverse) parts.push(`${ops.reverse}× reverse`)
-            if (ops.jcut) parts.push(`${ops.jcut}× J-cut`)
-            if (ops.lcut) parts.push(`${ops.lcut}× L-cut`)
+            if (ops.reverse) parts.push(tr('realTimeVideoPreview.opsReverse', { count: ops.reverse }))
+            if (ops.jcut) parts.push(tr('realTimeVideoPreview.opsJCut', { count: ops.jcut }))
+            if (ops.lcut) parts.push(tr('realTimeVideoPreview.opsLCut', { count: ops.lcut }))
             return (
               <div className="absolute top-4 right-4 flex flex-col gap-2 z-50 pointer-events-none">
                 <div
                   className="flex bg-amber-500/10 backdrop-blur-md rounded-xl px-3 py-2 border border-amber-500/25 shadow-2xl items-center gap-2 pointer-events-auto"
-                  title="These ops are applied at export time only — preview shows segments in their original direction with normal audio sync."
+                  title={tr('realTimeVideoPreview.exportOnlyTitle')}
                 >
-                  <span className="text-[9px] font-black uppercase text-amber-300/80 tracking-wider">Export-only</span>
+                  <span className="text-[9px] font-black uppercase text-amber-300/80 tracking-wider">{tr('realTimeVideoPreview.exportOnly')}</span>
                   <span className="text-[10px] font-mono font-bold text-amber-200">{parts.join(' · ')}</span>
                 </div>
               </div>
@@ -1593,7 +1597,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                   )}
                   <img
                     src={getAssetUrl(img.url)}
-                    alt="Image Layer"
+                    alt={tr('realTimeVideoPreview.imageLayer')}
                     className="w-full h-full object-contain pointer-events-none"
                     style={{
                       // When keyframes drive opacity, kfm.opacity is already in the
@@ -1609,7 +1613,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                       el.style.opacity = '1'
                       el.style.background = 'repeating-linear-gradient(45deg,rgba(239,68,68,0.15),rgba(239,68,68,0.15)10px,rgba(239,68,68,0.3)10px,rgba(239,68,68,0.3)20px)'
                       el.style.outline = '1px dashed rgba(239,68,68,0.7)'
-                      el.alt = 'Image failed to load'
+                      el.alt = tr('realTimeVideoPreview.imageFailed')
                     }}
                   />
                 </Rnd>
@@ -1758,7 +1762,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                   ) : (
                     <img
                       src={getAssetUrl(svg.url)}
-                      alt="SVG Layer"
+                      alt={tr('realTimeVideoPreview.svgLayer')}
                       className="w-full h-full object-contain pointer-events-none"
                       onError={(e) => {
                         // Fix #7: surface broken SVG assets instead of silent blank.
@@ -1851,7 +1855,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
         <div className="absolute inset-0 pointer-events-none p-10 flex flex-col justify-between opacity-0 group-hover/preview:opacity-100 transition-opacity duration-300">
           <div className="flex justify-between items-start">
             <div className="px-3 py-1.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-lg">
-              <span className="text-[11px] font-medium text-white/80">Preview</span>
+              <span className="text-[11px] font-medium text-white/80">{tr('realTimeVideoPreview.preview')}</span>
             </div>
             <div className="px-3 py-1.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-lg">
               <span className="text-[11px] text-white/50 font-mono tabular-nums">{videoDimensions?.w ?? 0}×{videoDimensions?.h ?? 0}</span>
@@ -1860,16 +1864,16 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
 
           <div className="flex justify-between items-end">
             <div className="px-3 py-1.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-lg flex items-center gap-2">
-              <span className="text-[10px] uppercase tracking-wide text-white/40">Latency</span>
+              <span className="text-[10px] uppercase tracking-wide text-white/40">{tr('realTimeVideoPreview.latency')}</span>
               <span className="text-[11px] font-mono tabular-nums text-white/80">{latency}ms</span>
             </div>
 
             <div className="px-4 py-2.5 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full flex items-center gap-5 pointer-events-auto">
-              <button type="button" onClick={onPlayPause} aria-label={isPlaying ? 'Pause' : 'Play'} className="text-white hover:text-primary-400 transition-colors">
+              <button type="button" onClick={onPlayPause} aria-label={isPlaying ? tr('realTimeVideoPreview.pause') : tr('realTimeVideoPreview.play')} className="text-white hover:text-primary-400 transition-colors">
                 {isPlaying ? <Pause className="w-5 h-5 fill-white" /> : <Play className="w-5 h-5 fill-white" />}
               </button>
               <div className="w-px h-4 bg-white/10" />
-              <button type="button" onClick={handleBeforeAfterToggle} aria-label="Toggle before/after" title="Before / after" className={`transition-colors ${showAppliedFilters ? 'text-primary-400' : 'text-white/40 hover:text-white/70'}`}>
+              <button type="button" onClick={handleBeforeAfterToggle} aria-label={tr('realTimeVideoPreview.toggleBeforeAfter')} title={tr('realTimeVideoPreview.beforeAfter')} className={`transition-colors ${showAppliedFilters ? 'text-primary-400' : 'text-white/40 hover:text-white/70'}`}>
                 {showAppliedFilters ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               </button>
             </div>
@@ -1894,7 +1898,7 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
             >
               <div className="px-3 py-1.5 bg-black/50 backdrop-blur-md border border-white/10 rounded-full flex items-center gap-2">
                 <Fingerprint className="w-3.5 h-3.5 text-primary-400" />
-                <span className="text-[11px] font-medium text-white/80 leading-none">AI styling active</span>
+                <span className="text-[11px] font-medium text-white/80 leading-none">{tr('realTimeVideoPreview.aiStylingActive')}</span>
               </div>
             </m.div>
           )}

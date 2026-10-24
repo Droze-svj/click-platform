@@ -35,7 +35,7 @@ class NetworkVerificationService {
           results.platforms[platformName] = { 
             status: isHealthy ? 'VALIDATED' : 'DRIFT_DETECTED', 
             lastSync: new Date(),
-            integrityScore: isHealthy ? 0.98 : 0.45
+            healthy: isHealthy // (was a fixed 0.98 / 0.45 "integrity score")
           };
         } else {
           results.platforms[platformName] = { status: 'DECOUPLED' };

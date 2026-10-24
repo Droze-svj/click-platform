@@ -7,6 +7,7 @@ import { useToast } from '../contexts/ToastContext'
 import { Calendar, AlertCircle, Plus, LayoutGrid, Zap } from 'lucide-react'
 import { API_URL } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
+import { weekdayShortNames } from '../utils/locale'
 
 interface ScheduledPost {
   _id: string
@@ -217,7 +218,7 @@ export default function EnhancedContentCalendar() {
       <div className="overflow-x-auto pb-4">
         <div className="min-w-[700px]">
           <div className="grid grid-cols-7 gap-3 mb-4">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            {weekdayShortNames().map(day => (
               <div key={day} className="text-center font-bold text-surface-500 uppercase tracking-wider text-xs py-2">
                 {day}
               </div>

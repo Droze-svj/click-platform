@@ -42,7 +42,7 @@ const STYLES: CaptionStyle[] = [
   { id: 'tt-karaoke',  name: 'TikTok Karaoke',     mood: 'Hype',       family: F_INTER,     weight: 900, fill: '#fff35a', stroke: '2px #000',                                            bg: 'rgba(0,0,0,0.65)', bgPad: '6px 12px', effect: 'highlight', preview: 'WORD POPS HERE' },
   { id: 'reels-bold',  name: 'Reels Bold Pop',     mood: 'Hype',       family: F_INTER,     weight: 900, fill: '#fff',     stroke: '3px #000', shadow: '0 0 18px rgba(255,255,255,0.6)',                          effect: 'pop',       preview: 'YOU WONT BELIEVE' },
   { id: 'shorts',      name: 'YouTube Shorts',     mood: 'Hype',       family: F_INTER,     weight: 800, fill: '#fff',     stroke: '4px #ff3b30',                                                              effect: 'outline',   preview: 'CLICK HERE NOW' },
-  { id: 'meme',        name: 'Meme Impact',        mood: 'Comedy',     family: '"Impact", "Arial Black", system-ui', weight: 700, fill: '#fff',     stroke: '4px #000', tracking: '0.04em',                                            effect: 'outline',   preview: 'WHEN YOU REALIZE' },
+  { id: 'meme',        name: 'Meme Impact',        mood: 'Comedy',     family: '"Anton", Impact, sans-serif', weight: 700, fill: '#fff',     stroke: '4px #000', tracking: '0.04em',                                            effect: 'outline',   preview: 'WHEN YOU REALIZE' },
   { id: 'minimal',     name: 'Minimal Sans',       mood: 'Modern',     family: F_INTER,     weight: 600, fill: '#fff',                                                                                       effect: 'none',      preview: 'A clean message.' },
   { id: 'serif-elite', name: 'Serif Elite',        mood: 'Luxury',     family: F_PLAYFAIR,  weight: 700, italic: true, fill: '#f7e6c4',                                                                       effect: 'none',      preview: 'A timeless story.' },
   { id: 'lower-third', name: 'Lower-Third News',   mood: 'Cinematic',  family: F_INTER,     weight: 600, fill: '#fff',     bg: 'linear-gradient(90deg,#0f172a,#1e293b)', bgPad: '8px 16px',                  effect: 'none',      preview: 'BREAKING — Update' },
@@ -52,7 +52,7 @@ const STYLES: CaptionStyle[] = [
   { id: 'pill',        name: 'Pill Highlight',     mood: 'Modern',     family: F_INTER,     weight: 700, fill: '#fff',     bg: '#7c3aed', bgPad: '6px 16px',                                                  effect: 'highlight', preview: 'NEW DROP' },
   { id: 'pill-inv',    name: 'Pill Inverted',      mood: 'Modern',     family: F_INTER,     weight: 700, fill: '#020205',  bg: '#fde047', bgPad: '6px 16px',                                                  effect: 'highlight', preview: 'LIMITED OFFER' },
   { id: 'retro-vhs',   name: 'Retro VHS',          mood: 'Retro',      family: F_VT323,     weight: 400, fill: '#dafffa',  shadow: '2px 0 #ff00ff, -2px 0 #00ffff',                                            effect: 'glow',      preview: 'PRESS REC ▶' },
-  { id: 'comic',       name: 'Comic Pop',          mood: 'Comedy',     family: '"Comic Sans MS", system-ui', weight: 700, fill: '#fff', stroke: '3px #000', shadow: '4px 4px 0 #ff3b30',                                    effect: 'pop',       preview: 'POW! BOOM!' },
+  { id: 'comic',       name: 'Comic Pop',          mood: 'Comedy',     family: '"Comic Neue", "Comic Sans MS", cursive', weight: 700, fill: '#fff', stroke: '3px #000', shadow: '4px 4px 0 #ff3b30',                                    effect: 'pop',       preview: 'POW! BOOM!' },
   { id: 'handwritten', name: 'Handwritten',        mood: 'Cozy',       family: F_CAVEAT,    weight: 600, fill: '#fff',                                                                              effect: 'none',      preview: 'thinking out loud...' },
   { id: 'mono-tech',   name: 'Mono Tech',          mood: 'Tech',       family: F_JETBRAINS, weight: 600, fill: '#10b981',                                                                                  effect: 'none',      preview: '> running.exe' },
   { id: 'glitch-rgb',  name: 'Glitch RGB',         mood: 'Tech',       family: F_INTER,     weight: 900, fill: '#fff',     shadow: '2px 0 #ff00ff, -2px 0 #00ffff, 0 0 6px rgba(0,0,0,0.6)',                  effect: 'glow',      preview: 'GLITCH MODE' },
@@ -101,24 +101,34 @@ const MOTIONS: MotionPreset[] = [
   { id: 'm-glitch-shake',name: 'Glitch Shake',     mood: 'Tech',      tag: 'Distort',           preview: 'glitch-shake' },
 ]
 
-// ── Fonts (16) ───────────────────────────────────────────────────────────────
+// ── Fonts ────────────────────────────────────────────────────────────────────
+// Every font here is bundled (public/fonts/export) and used by BOTH the preview
+// and the export renderer, so exported text matches what you see. Windows/Mac-
+// only fonts (Impact, Comic Sans, Georgia…) aren't on render servers and can't
+// be bundled, so their closest open equivalents are offered by their real name.
 const FONTS: FontEntry[] = [
-  { id: 'inter',     name: 'Inter',                family: F_INTER,                                            weights: [400, 600, 800, 900], mood: 'Modern',     bestFor: ['Captions', 'UI', 'Lower thirds'] },
-  { id: 'playfair',  name: 'Playfair Display',     family: F_PLAYFAIR,                                         weights: [400, 700, 800, 900], mood: 'Luxury',     bestFor: ['Quote', 'Cinematic', 'Editorial'] },
-  { id: 'jetbrains', name: 'JetBrains Mono',       family: F_JETBRAINS,                                        weights: [400, 500, 700],      mood: 'Tech',       bestFor: ['Code overlay', 'Numbers', 'Tags'] },
-  { id: 'caveat',    name: 'Caveat',               family: F_CAVEAT,                                           weights: [400, 600, 700],      mood: 'Cozy',       bestFor: ['Vlogs', 'Personal', 'Notes'] },
-  { id: 'impact',    name: 'Impact',               family: '"Impact", "Arial Black", system-ui',               weights: [700],                 mood: 'Hype',       bestFor: ['Memes', 'Big stamps'] },
-  { id: 'vt323',     name: 'VT323',                family: F_VT323,                                            weights: [400],                 mood: 'Retro',      bestFor: ['Glitch', 'Terminal', 'VHS'] },
-  { id: 'comic',     name: 'Comic Sans',           family: '"Comic Sans MS", system-ui',                       weights: [400, 700],            mood: 'Comedy',     bestFor: ['Reaction', 'Skit'] },
-  { id: 'arial',     name: 'Arial Black',          family: '"Arial Black", system-ui',                         weights: [900],                 mood: 'Hype',       bestFor: ['Headlines', 'CTAs'] },
-  { id: 'helvetica', name: 'Helvetica',            family: '"Helvetica Neue", Helvetica, system-ui',           weights: [400, 500, 700],       mood: 'Modern',     bestFor: ['Subtitles', 'Editorial'] },
-  { id: 'georgia',   name: 'Georgia',              family: 'Georgia, serif',                                   weights: [400, 700],            mood: 'Editorial',  bestFor: ['Long-form', 'Quotes'] },
-  { id: 'courier',   name: 'Courier New',          family: '"Courier New", monospace',                         weights: [400, 700],            mood: 'Tech',       bestFor: ['Mono captions', 'Receipts'] },
-  { id: 'garamond',  name: 'Garamond',             family: 'Garamond, serif',                                  weights: [400, 700],            mood: 'Luxury',     bestFor: ['Cinema', 'Storytelling'] },
-  { id: 'verdana',   name: 'Verdana',              family: 'Verdana, system-ui',                               weights: [400, 700],            mood: 'Readable',   bestFor: ['Accessibility', 'Mobile'] },
-  { id: 'trebuchet', name: 'Trebuchet MS',         family: '"Trebuchet MS", system-ui',                        weights: [400, 700],            mood: 'Friendly',   bestFor: ['Casual', 'Lifestyle'] },
-  { id: 'tahoma',    name: 'Tahoma',               family: 'Tahoma, system-ui',                                weights: [400, 700],            mood: 'Readable',   bestFor: ['Long captions', 'Body'] },
-  { id: 'palatino',  name: 'Palatino',             family: '"Palatino Linotype", "Book Antiqua", serif',       weights: [400, 700],            mood: 'Editorial',  bestFor: ['Branding', 'Publication'] },
+  { id: 'inter',      name: 'Inter',                 family: F_INTER,                                       weights: [400, 700, 900], mood: 'Modern',    bestFor: ['Captions', 'UI', 'Lower thirds'] },
+  { id: 'montserrat', name: 'Montserrat',            family: '"Montserrat", sans-serif',                    weights: [400, 700, 900], mood: 'Bold',      bestFor: ['Hooks', 'Titles'] },
+  { id: 'poppins',    name: 'Poppins',               family: '"Poppins", sans-serif',                       weights: [400, 700, 900], mood: 'Friendly',  bestFor: ['Captions', 'Lifestyle'] },
+  { id: 'roboto',     name: 'Roboto',                family: '"Roboto", "Helvetica Neue", sans-serif',      weights: [400, 700, 900], mood: 'Modern',    bestFor: ['Subtitles', 'Editorial'] },
+  { id: 'raleway',    name: 'Raleway',               family: '"Raleway", sans-serif',                       weights: [400, 700, 900], mood: 'Elegant',   bestFor: ['Fashion', 'Beauty'] },
+  { id: 'space',      name: 'Space Grotesk',         family: '"Space Grotesk", sans-serif',                 weights: [400, 700],      mood: 'Tech',      bestFor: ['Startups', 'Product'] },
+  { id: 'bebas',      name: 'Bebas Neue',            family: '"Bebas Neue", sans-serif',                    weights: [400],           mood: 'Hype',      bestFor: ['Headlines', 'Sports'] },
+  { id: 'oswald',     name: 'Oswald',                family: '"Oswald", sans-serif',                        weights: [400, 700],      mood: 'Hype',      bestFor: ['Headlines', 'Stats'] },
+  { id: 'anton',      name: 'Anton',                 family: '"Anton", Impact, sans-serif',                 weights: [400],           mood: 'Hype',      bestFor: ['Memes', 'Big stamps'] },
+  { id: 'archivo',    name: 'Archivo Black',         family: '"Archivo Black", "Arial Black", sans-serif',  weights: [400],           mood: 'Hype',      bestFor: ['Headlines', 'CTAs'] },
+  { id: 'playfair',   name: 'Playfair Display',      family: F_PLAYFAIR,                                    weights: [400, 700, 900], mood: 'Luxury',    bestFor: ['Quote', 'Cinematic', 'Editorial'] },
+  { id: 'lora',       name: 'Lora',                  family: '"Lora", serif',                               weights: [400, 700],      mood: 'Editorial', bestFor: ['Branding', 'Publication'] },
+  { id: 'gelasio',    name: 'Gelasio',               family: '"Gelasio", Georgia, serif',                   weights: [400, 700],      mood: 'Editorial', bestFor: ['Long-form', 'Quotes'] },
+  { id: 'garamond',   name: 'EB Garamond',           family: '"EB Garamond", Garamond, serif',              weights: [400, 700],      mood: 'Luxury',    bestFor: ['Cinema', 'Storytelling'] },
+  { id: 'caveat',     name: 'Caveat',                family: F_CAVEAT,                                      weights: [400, 700],      mood: 'Cozy',      bestFor: ['Vlogs', 'Personal', 'Notes'] },
+  { id: 'comic',      name: 'Comic Neue',            family: '"Comic Neue", "Comic Sans MS", cursive',      weights: [400, 700],      mood: 'Comedy',    bestFor: ['Reaction', 'Skit'] },
+  { id: 'jetbrains',  name: 'JetBrains Mono',        family: F_JETBRAINS,                                   weights: [400, 700],      mood: 'Tech',      bestFor: ['Code overlay', 'Numbers', 'Tags'] },
+  { id: 'courier',    name: 'Courier Prime',         family: '"Courier Prime", "Courier New", monospace',   weights: [400, 700],      mood: 'Tech',      bestFor: ['Mono captions', 'Receipts'] },
+  { id: 'vt323',      name: 'VT323',                 family: F_VT323,                                       weights: [400],           mood: 'Retro',     bestFor: ['Glitch', 'Terminal', 'VHS'] },
+  { id: 'atkinson',   name: 'Atkinson Hyperlegible', family: '"Atkinson Hyperlegible", Verdana, sans-serif', weights: [400, 700],     mood: 'Readable',  bestFor: ['Accessibility', 'Mobile'] },
+  { id: 'fira',       name: 'Fira Sans',             family: '"Fira Sans", "Trebuchet MS", sans-serif',     weights: [400, 700],      mood: 'Friendly',  bestFor: ['Casual', 'Lifestyle'] },
+  { id: 'ptsans',     name: 'PT Sans',               family: '"PT Sans", Tahoma, sans-serif',               weights: [400, 700],      mood: 'Readable',  bestFor: ['Long captions', 'Body'] },
 ]
 
 const MOOD_ICONS: Record<string, any> = {
@@ -273,6 +283,9 @@ const TextMotionStudioView: React.FC<Props> = ({
     const ok = mutateOverlay(o => ({
       ...o,
       fontFamily: s.family,
+      // Weight/italic are part of the look (the style card shows them).
+      fontWeight: s.weight,
+      fontStyle: s.italic ? 'italic' : 'normal',
       color: extractSolidColor(s.fill, '#ffffff'),
       style: toTextOverlayStyle(s.effect),
       backgroundColor: s.bg ? extractSolidColor(s.bg, undefined as any) : o.backgroundColor,

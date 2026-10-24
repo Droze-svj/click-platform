@@ -6,8 +6,8 @@ import Phase9Dashboard from '../../../components/Phase9Dashboard';
 import { PageShell } from '../../../components/ui/page';
 
 export const metadata = {
-  title: 'Global Network v9 | Sovereign Omnipresence',
-  description: 'Autonomous Distribution & Federated Intelligence Swarm',
+  title: 'Publishing and insights | Click',
+  description: 'Auto-posting across platforms, shared learning, community replies and concept tests.',
 };
 
 export default function Phase9Page() {

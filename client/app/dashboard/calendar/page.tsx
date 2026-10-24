@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { m, useReducedMotion } from 'framer-motion'
@@ -55,13 +55,15 @@ const SC: Record<string, { label: string; cls: string; icon: any }> = {
   draft:     { label: 'Draft',     cls: 'ds-surface-subtle text-theme-muted',         icon: Focus },
 }
 
-const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
-const DAY_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 
 export default function ContentCalendarPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth() as any
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
+  // Month/day names in the user's language (were hardcoded English).
+  const locale = language === 'zh-Hans' ? 'zh-CN' : language
+  const DAY_SHORT = useMemo(() => Array.from({ length: 7 }, (_, i) =>
+    new Date(2024, 0, 7 + i).toLocaleDateString(locale, { weekday: 'short' })), [locale])
   const { showToast } = useToast()
   const reduceMotion = useReducedMotion()
 
@@ -179,7 +181,7 @@ export default function ContentCalendarPage() {
             </div>
 
             <h2 className="ds-text-h3 text-theme-primary">
-              {view === 'month' ? `${MONTH_NAMES[currentDate.getMonth()]} ${currentDate.getFullYear()}` : view === 'week' ? (t('calendarPage.thisWeek') || 'This Week') : currentDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+              {view === 'month' ? currentDate.toLocaleDateString(locale, { month: 'long', year: 'numeric' }) : view === 'week' ? t('calendarPage.thisWeek') : currentDate.toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })}
             </h2>
 
             <div className="flex items-center gap-1 p-1 rounded-lg ds-surface-subtle">
@@ -190,7 +192,7 @@ export default function ContentCalendarPage() {
                     view === v ? 'bg-primary text-primary-foreground' : 'text-theme-secondary hover:text-theme-primary'
                   )}
                 >
-                  {t(`calendarPage.view_${v}`) || (v.charAt(0).toUpperCase() + v.slice(1))}
+                  {t(`calendarPage.view_${v}`)}
                 </button>
               ))}
             </div>
@@ -282,7 +284,7 @@ export default function ContentCalendarPage() {
                   <div>
                     <h3 className="ds-text-h3 text-theme-primary">{cfg.label}</h3>
                     <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                      <Badge className={cn('gap-1.5', scc.cls)}><StatusIcon size={13} aria-hidden /> {t(`calendarPage.status_${selectedPost.status}`) || scc.label}</Badge>
+                      <Badge className={cn('gap-1.5', scc.cls)}><StatusIcon size={13} aria-hidden /> {t(`calendarPage.status_${SC[selectedPost.status] ? selectedPost.status : 'draft'}`)}</Badge>
                       <span className="ds-text-caption inline-flex items-center gap-1.5"><Clock size={13} aria-hidden /> {new Date(selectedPost.scheduledTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
                     </div>
                   </div>

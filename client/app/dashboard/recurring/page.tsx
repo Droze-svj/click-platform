@@ -14,6 +14,7 @@ import { EmptyState } from '../../../components/ui/empty-state'
 import { SectionHeader } from '../../../components/ui/section-header'
 import { Badge } from '../../../components/ui/badge'
 import { PageShell } from '../../../components/ui'
+import { weekdayShortNames } from '../../../utils/locale'
 
 type PlatformId = 'instagram' | 'tiktok' | 'youtube' | 'twitter' | 'linkedin' | 'facebook'
 
@@ -45,7 +46,6 @@ const PLATFORMS: { id: PlatformId; label: string }[] = [
   { id: 'facebook', label: 'Facebook' },
 ]
 
-const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export default function RecurringPostsPage() {
   const { showToast } = useToast()
@@ -220,7 +220,7 @@ export default function RecurringPostsPage() {
 
             <FormField label={t('recurringPage.daysOfWeek')}>
               <div className="flex flex-wrap gap-2">
-                {DAY_LABELS.map((label, i) => (
+                {weekdayShortNames().map((label, i) => (
                   <button key={i} type="button" onClick={() => toggleDay(i)}
                     aria-pressed={form.daysOfWeek.includes(i) ? 'true' : 'false'}
                     className={cn(
@@ -278,7 +278,7 @@ export default function RecurringPostsPage() {
                     </div>
                     <p className="text-sm truncate font-medium text-theme-primary">{tpl.content.text || tpl.content.mediaUrl || t('recurringPage.noContent')}</p>
                     <div className="flex items-center gap-4 ds-text-caption mt-2 flex-wrap">
-                      <span className="flex items-center gap-1"><Calendar size={12} />{t('recurringPage.cadenceSummary', { days: tpl.cadence.daysOfWeek.map((d) => t(`recurringPage.day_${d}`) || DAY_LABELS[d]).join('/'), time: tpl.cadence.timeOfDay, timezone: tpl.cadence.timezone })}</span>
+                      <span className="flex items-center gap-1"><Calendar size={12} />{t('recurringPage.cadenceSummary', { days: tpl.cadence.daysOfWeek.map((d) => t(`recurringPage.day_${d}`) || weekdayShortNames()[d]).join('/'), time: tpl.cadence.timeOfDay, timezone: tpl.cadence.timezone })}</span>
                       <span>{t('recurringPage.next', { value: formatNext(tpl.nextFireAt) })}</span>
                       <span>{t('recurringPage.firedCount', { count: tpl.fireCount })}</span>
                     </div>

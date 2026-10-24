@@ -1,20 +1,14 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { 
-  ShieldCheck, 
-  Terminal, 
-  Search, 
-  Filter, 
-  Download, 
-  Hash, 
-  Key, 
-  AlertTriangle, 
+import {
+  ShieldCheck,
+  Terminal,
+  Search,
+  Hash,
   Info,
-  ExternalLink,
-  ChevronDown,
   Clock,
-  Fingerprint, ChevronRight
+  Fingerprint,
 } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
 import { apiGet } from '../../../lib/api'
@@ -64,22 +58,11 @@ export const GovernanceDashboard: React.FC = () => {
                         <ShieldCheck className="w-6 h-6" />
                     </div>
                     <div>
-                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Governance Ledger</h4>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-emerald-500/70">Immutable Agency Audit Trail</span>
+                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Audit log</h4>
+                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-emerald-500/70">Actions taken by automations, with the reason for each</span>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-white/5 border border-white/5 text-slate-400">
-                        <Filter className="w-4 h-4" />
-                        <span className="text-[10px] font-black uppercase tracking-widest italic">Severity: All</span>
-                        <ChevronDown className="w-3 h-3" />
-                    </div>
-                    <button className="flex items-center gap-3 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] italic border border-white/10 transition-all">
-                        <Download className="w-4 h-4" />
-                        Export Log
-                    </button>
-                </div>
             </div>
 
             {/* Decision Log */}
@@ -87,10 +70,7 @@ export const GovernanceDashboard: React.FC = () => {
                 <div className="p-8 border-b border-white/10 bg-white/[0.02] flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <Terminal className="w-5 h-5 text-emerald-400" />
-                        <h5 className="text-sm font-black text-white uppercase tracking-widest italic">Immutable Decision Stream</h5>
-                    </div>
-                    <div className="px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                        <span className="text-[8px] font-black uppercase tracking-widest">Integrity Check: VALID</span>
+                        <h5 className="text-sm font-black text-white uppercase tracking-widest italic">Recent actions</h5>
                     </div>
                 </div>
 
@@ -98,12 +78,11 @@ export const GovernanceDashboard: React.FC = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b border-white/5">
-                                <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Timestamp</th>
-                                <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Agency Action</th>
-                                <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Justification</th>
+                                <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Time</th>
+                                <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Action</th>
+                                <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Reason</th>
                                 <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest italic text-center">Severity</th>
-                                <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Decision Hash</th>
-                                <th className="p-6"></th>
+                                <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Decision hash</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -159,11 +138,6 @@ export const GovernanceDashboard: React.FC = () => {
                                             </code>
                                         </div>
                                     </td>
-                                    <td className="p-6">
-                                        <button className="p-2 opacity-0 group-hover:opacity-100 transition-all hover:bg-white/5 rounded-lg text-slate-500 hover:text-white">
-                                            <ExternalLink className="w-4 h-4" />
-                                        </button>
-                                    </td>
                                 </m.tr>
                             ))}
                         </tbody>
@@ -173,42 +147,21 @@ export const GovernanceDashboard: React.FC = () => {
                 {!loading && actions.length === 0 && (
                     <div className="p-24 flex flex-col items-center justify-center text-center space-y-4 opacity-30 italic">
                         <Fingerprint className="w-16 h-16" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em]">No Governance Actions Found</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em]">No actions recorded yet</span>
                     </div>
                 )}
             </div>
 
             {/* Bottom Insight */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className={`${glassStyle} rounded-[2rem] p-6 flex items-center gap-5`}>
-                     <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl">
-                         <Key className="w-5 h-5" />
-                     </div>
-                     <div>
-                         <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Agency Key Status</span>
-                         <h6 className="text-[10px] font-black text-white uppercase italic">Active & Anchored</h6>
-                     </div>
-                </div>
+            <div className="grid grid-cols-1 gap-8">
                 <div className={`${glassStyle} rounded-[2rem] p-6 flex items-center gap-5`}>
                      <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl">
                          <Search className="w-5 h-5" />
                      </div>
                      <div>
-                         <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Total Audits</span>
-                         <h6 className="text-[10px] font-black text-white uppercase italic">{actions.length} Decisions Logged</h6>
+                         <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Total actions</span>
+                         <h6 className="text-[10px] font-black text-white uppercase italic">{actions.length} logged</h6>
                      </div>
-                </div>
-                <div className={`${glassStyle} rounded-[2rem] p-6 flex items-center justify-between group cursor-pointer hover:bg-white/5 transition-all`}>
-                     <div className="flex items-center gap-5">
-                        <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl">
-                            <AlertTriangle className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Risk Mitigations</span>
-                            <h6 className="text-[10px] font-black text-white uppercase italic">0 Breaches Detected</h6>
-                        </div>
-                     </div>
-                     <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-white transition-all" />
                 </div>
             </div>
         </div>

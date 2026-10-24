@@ -1,38 +1,38 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { m, AnimatePresence } from 'framer-motion'
+import React, { useState } from 'react'
 import {
   Zap,
-  Sparkles,
   MessageSquare,
   ChevronDown,
   ChevronRight,
   Target,
   Send,
   Calendar,
-  Smartphone,
-  PlaySquare,
-  Flame,
   Brain,
-  BookOpen,
-  Globe
+  Globe,
+  Scissors
 } from 'lucide-react'
-import { EngagementScore, ContentNiche, CaptionTextStyle, PlatformNiche } from '../../types/editor'
+import { ContentNiche, CaptionTextStyle } from '../../types/editor'
 import { IconButton, Button, Textarea, Badge } from '../ui'
-import { cn } from '../../lib/utils'
+import { useTranslation } from '@/hooks/useTranslation'
 
+// This sidebar used to show "AI Coach" scores (overall / viral / hook, FOMO,
+// curiosity, an "8th Grade" readability grade, a retention heatmap) that were
+// derived from Math.sin(transcript length + duration) plus canned per-niche
+// advice, and "optimizer" buttons that matched keywords. All of that is gone:
+// what remains are controls that really change something.
 interface InsightsSidebarProps {
-  score: EngagementScore
   niche: ContentNiche
   onNicheChange: (niche: ContentNiche) => void
   onCaptionStyleChange: (style: CaptionTextStyle) => void
   onManualOverride: (instruction: string) => void
   onScheduleUpload: () => void
+  /** Opens the real Smart cleanup tool (silence / filler-word removal). */
+  onOpenCleanup?: (tool: 'silence' | 'fillers') => void
   onLanguageChange?: (language: string) => void
   targetLanguage?: string
   selectedCaptionStyle?: CaptionTextStyle
-  showToast?: (m: string, t: 'success' | 'info' | 'error') => void
   onCollapse?: () => void
 }
 
@@ -58,181 +58,26 @@ const styleOptions: { id: CaptionTextStyle; label: string }[] = [
   { id: 'retro', label: '📻 Retro Vibe' }
 ]
 
-const platforms: { id: PlatformNiche; label: string; icon: React.FC<any>; color: string }[] = [
-  { id: 'tiktok', label: 'TikTok', icon: Smartphone, color: 'text-pink-500' },
-  { id: 'reels', label: 'IG Reels', icon: Flame, color: 'text-fuchsia-500' },
-  { id: 'shorts', label: 'YT Shorts', icon: PlaySquare, color: 'text-red-500' }
-]
-
 export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
-  score: initialScore,
   niche,
   onNicheChange,
   onCaptionStyleChange,
   onManualOverride,
   onScheduleUpload,
+  onOpenCleanup,
   onLanguageChange,
   targetLanguage = 'en',
   selectedCaptionStyle = 'bold',
-  showToast,
   onCollapse
 }) => {
+  const { t } = useTranslation()
   const [overrideText, setOverrideText] = useState('')
-  const [activePlatform, setActivePlatform] = useState<PlatformNiche>('tiktok')
-  const [currentScore, setCurrentScore] = useState<EngagementScore>(() => ({
-    overall: initialScore?.overall ?? 85,
-    viralPotential: initialScore?.viralPotential ?? 78,
-    hookStrength: initialScore?.hookStrength ?? 92,
-    sentimentDensity: initialScore?.sentimentDensity ?? 70,
-    trendAlignment: initialScore?.trendAlignment ?? 82,
-    retentionHeatmap: initialScore?.retentionHeatmap || Array(20).fill(80).map((v, i) => v - i * 2),
-    psychology: initialScore?.psychology || {
-      fomo: 65,
-      curiosity: 82,
-      value: 70,
-      readability: '8th Grade'
-    }
-  }))
-  const [advice, setAdvice] = useState('')
-  const [isEcosystemCollapsed, setIsEcosystemCollapsed] = useState(false)
-  const [isOptimizing, setIsOptimizing] = useState(false)
 
-  // Hydration-safe localStorage load on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('click-target-ecosystem-collapsed')
-      if (stored !== null) {
-        setIsEcosystemCollapsed(stored === 'true')
-      }
-    }
-  }, [])
-
-  const toggleEcosystemCollapse = () => {
-    const nextVal = !isEcosystemCollapsed
-    setIsEcosystemCollapsed(nextVal)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('click-target-ecosystem-collapsed', String(nextVal))
-    }
+  const submitOverride = () => {
+    if (!overrideText.trim()) return
+    onManualOverride(overrideText)
+    setOverrideText('')
   }
-
-  // Realistic multidimensional algorithmic recalibration combining Platform and Niche
-  useEffect(() => {
-    if (!initialScore) return
-
-    let viralMod = 0
-    let hookMod = 0
-    let sentimentMod = 0
-    let trendMod = 0
-    let overallMod = 0
-    const rawHeatmap = initialScore.retentionHeatmap || []
-    let retentionDrops: number[] = [...rawHeatmap]
-    let platformAdvice = ''
-
-    // 1. Platform Rules
-    if (activePlatform === 'tiktok') {
-      if ((initialScore.hookStrength || 0) < 70) {
-        retentionDrops = retentionDrops.map((v, i) => (i > 2 ? Math.max(0, v - 25) : v))
-        viralMod -= 12
-        platformAdvice = "CRITICAL: TikTok requires a stronger 3-second hook. Add a visual burst or text pop."
-      } else {
-        retentionDrops = retentionDrops.map((v, i) => (i > 2 ? Math.min(100, v + 8) : v))
-        viralMod += 10
-        hookMod += 5
-        platformAdvice = "Excellent pacing. High probability of entering the 'For You' stream."
-      }
-    } else if (activePlatform === 'shorts') {
-      if ((initialScore.sentimentDensity || 0) > 60) {
-        viralMod += 8
-        platformAdvice = "Good sentiment density. YouTube Shorts rewards high-emotion payoffs."
-      } else {
-        retentionDrops = retentionDrops.map((v, i) => (i > 4 ? Math.max(0, v - 12) : v))
-        viralMod -= 5
-        platformAdvice = "Increase emotional payoff near the end to improve loop rate."
-      }
-    } else if (activePlatform === 'reels') {
-      if ((initialScore.trendAlignment || 0) > 75) {
-        viralMod += 15
-        hookMod += 5
-        platformAdvice = "Strong trend alignment detected. High viral edge on Instagram Reels."
-      } else {
-        viralMod -= 8
-        platformAdvice = "Reels algorithm limits reach for non-trending audio. Consider syncing to a trending track."
-      }
-    }
-
-    // 2. Audience Niche Multipliers & Psychological Adjustments
-    let fomoScore = 65
-    let curiosityScore = 82
-    let valueScore = 70
-    let readabilityLabel = '8th Grade'
-
-    if (niche === 'gaming') {
-      viralMod += 6
-      hookMod += 10
-      trendMod += 10
-      fomoScore = 88
-      curiosityScore = 90
-      valueScore = 50
-      readabilityLabel = '5th Grade'
-      platformAdvice += " [Gaming Niche]: Hyper-fast pacing optimized for high-arousal retention."
-    } else if (niche === 'educational') {
-      overallMod += 8
-      valueScore = 95
-      curiosityScore = 80
-      fomoScore = 35
-      readabilityLabel = '10th Grade'
-      platformAdvice += " [Educational Niche]: Maximizing strategic instructional value to drive saves."
-    } else if (niche === 'b2b') {
-      viralMod -= 10
-      overallMod += 10
-      valueScore = 90
-      curiosityScore = 70
-      fomoScore = 45
-      readabilityLabel = 'College Level'
-      platformAdvice += " [B2B Niche]: Professional metrics dialed for institutional authority."
-    } else if (niche === 'comedy') {
-      viralMod += 15
-      sentimentMod += 18
-      fomoScore = 70
-      curiosityScore = 85
-      valueScore = 40
-      readabilityLabel = '6th Grade'
-      platformAdvice += " [Comedy Niche]: Pacing highlights comedic timing. High share-ability potential."
-    } else if (niche === 'fitness') {
-      viralMod += 8
-      fomoScore = 92
-      curiosityScore = 75
-      valueScore = 82
-      readabilityLabel = '7th Grade'
-      platformAdvice += " [Fitness Niche]: Elevated motivational FOMO drives community engagement."
-    } else if (niche === 'vlog') {
-      sentimentMod += 10
-      curiosityScore = 88
-      fomoScore = 55
-      valueScore = 60
-      readabilityLabel = '8th Grade'
-      platformAdvice += " [Vlog Niche]: Personal storytelling focus optimizes mid-sequence retention."
-    }
-
-    setCurrentScore({
-      ...initialScore,
-      overall: Math.max(0, Math.min(100, (initialScore.overall || 85) + overallMod)),
-      viralPotential: Math.max(0, Math.min(100, (initialScore.viralPotential || 78) + viralMod)),
-      hookStrength: Math.max(0, Math.min(100, (initialScore.hookStrength || 92) + hookMod)),
-      sentimentDensity: Math.max(0, Math.min(100, (initialScore.sentimentDensity || 70) + sentimentMod)),
-      trendAlignment: Math.max(0, Math.min(100, (initialScore.trendAlignment || 82) + trendMod)),
-      retentionHeatmap: retentionDrops,
-      psychology: {
-        fomo: fomoScore,
-        curiosity: curiosityScore,
-        value: valueScore,
-        readability: readabilityLabel
-      }
-    })
-    setAdvice(platformAdvice)
-  }, [activePlatform, niche, initialScore])
-
-  const hasHighDropoff = (currentScore.retentionHeatmap || []).some(v => v < 60)
 
   return (
     <div className="ds-surface-elevated flex flex-col h-full border-l border-border w-80 p-6 overflow-y-auto custom-scrollbar">
@@ -241,236 +86,37 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-border shrink-0">
          <div className="flex items-center gap-2">
             <Brain className="w-4 h-4 text-primary" />
-            <h2 className="ds-text-label text-theme-primary">AI strategic expert</h2>
+            <h2 className="ds-text-label text-theme-primary">{t('insightsSidebar.title')}</h2>
          </div>
          <IconButton aria-label="Collapse insights sidebar" variant="ghost" size="sm" onClick={onCollapse}>
             <ChevronRight className="w-4 h-4" />
          </IconButton>
       </div>
 
-      {/* Universal Expert HUD */}
-      <div className="mb-6 p-4 rounded-xl bg-primary/10 border border-primary/20">
-        <div className="flex items-center gap-3 mb-2">
-          <Brain className="w-5 h-5 text-primary" />
-          <div className="flex flex-col">
-            <span className="ds-text-caption text-primary leading-tight">Expert active</span>
-            <span className="ds-text-body font-medium text-theme-primary capitalize">Niche: {niche}</span>
-          </div>
-        </div>
-        <p className="ds-text-caption text-theme-muted leading-relaxed">
-          Strategic engine engaged using the <span className="text-theme-primary capitalize">{niche}</span> psychology framework.
-        </p>
-      </div>
-
-      {/* Platform Selector */}
-      <div className="mb-6 space-y-3">
-         <div 
-           className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity select-none group/eco"
-           onClick={toggleEcosystemCollapse}
-         >
-           <div className="flex items-center gap-2">
-              <Target className="w-4 h-4 text-theme-muted" />
-              <h3 className="ds-text-label text-theme-secondary">Target ecosystem</h3>
-           </div>
-           <ChevronDown className={cn('w-3.5 h-3.5 text-theme-muted transition-transform duration-300', isEcosystemCollapsed ? '-rotate-90' : 'rotate-0')} />
-         </div>
-         <AnimatePresence initial={false}>
-           {!isEcosystemCollapsed && (
-             <m.div
-               initial={{ height: 0, opacity: 0 }}
-               animate={{ height: 'auto', opacity: 1 }}
-               exit={{ height: 0, opacity: 0 }}
-               transition={{ duration: 0.25, ease: 'easeInOut' }}
-               className="overflow-hidden"
-             >
-                <div className="flex gap-2 ds-surface-subtle p-1 rounded-xl mt-1 relative z-0">
-                  {platforms.map(p => {
-                     const isSelected = activePlatform === p.id
-                     const hasSynergy = currentScore.viralPotential > 80 && isSelected
-                     return (
-                       <button
-                         type="button"
-                         key={p.id}
-                         onClick={() => setActivePlatform(p.id)}
-                         aria-label={`Select ${p.label}`}
-                         title={p.label}
-                         className="flex-1 flex items-center justify-center py-2 rounded-lg transition-all relative group"
-                       >
-                         {isSelected && (
-                           <m.div
-                             layoutId="active-platform-bg"
-                             className="absolute inset-0 bg-white/10 rounded-lg border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)]"
-                             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                           />
-                         )}
-                         <p.icon className={`w-4 h-4 relative z-10 transition-colors ${isSelected ? p.color : 'text-slate-400 opacity-60 group-hover:opacity-100 group-hover:text-white'}`} />
-                         
-                         {hasSynergy && (
-                           <m.div
-                             layoutId="platform-glow"
-                             className={`absolute inset-0 rounded-lg blur-md ${p.color.replace('text', 'bg')} opacity-20`}
-                             initial={{ scale: 0.8 }}
-                             animate={{ scale: 1.2 }}
-                             transition={{ duration: 2, repeat: Infinity, repeatType: 'reverse' }}
-                           />
-                         )}
-                       </button>
-                     )
-                  })}
-                </div>
-             </m.div>
-           )}
-         </AnimatePresence>
-      </div>
-
-      {/* Platform advice + coaching actions */}
       <div className="space-y-6">
-        {/* Neural Platform Advice */}
-        {advice && (
-           <m.div
-             key={`advice-${activePlatform}`}
-             initial={{ opacity: 0, y: 10 }}
-             animate={{ opacity: 1, y: 0 }}
-             className="bg-primary/10 border border-primary/20 rounded-xl p-3 flex gap-3 ds-text-body leading-relaxed text-theme-secondary"
-           >
-             <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-             {advice}
-           </m.div>
-        )}
-
-        {/* CTA Placement Optimizer */}
-        <div className="space-y-4">
-           <div className="flex items-center gap-2">
-              <Target className="w-4 h-4 text-emerald-500" />
-              <h3 className="ds-text-label text-theme-secondary">CTA placement</h3>
-           </div>
-           <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 space-y-2">
-              <span className="ds-text-caption text-emerald-500">Placement guidance</span>
-              <p className="ds-text-caption text-theme-muted leading-relaxed">
-                Place your primary CTA just before the final retention drop, while audience focus is still high.
-              </p>
-           </div>
-        </div>
-
-        <div className="h-px bg-border" />
-
-        {/* Real-time Strategic Action Center (New Premium Feature) */}
-        <div className="space-y-4">
-           <div className="flex items-center justify-between">
+        {/* Quick fixes — open the real Smart cleanup tool, where the user reviews
+            the detected cuts before anything is removed. */}
+        {onOpenCleanup && (
+          <>
+            <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-amber-500" />
-                <h3 className="ds-text-label text-theme-secondary">Strategic actions</h3>
+                <Scissors className="w-4 h-4 text-primary" />
+                <h3 className="ds-text-label text-theme-secondary">{t('insightsSidebar.quickFixes')}</h3>
               </div>
-              <Badge variant="outline">Fixes available</Badge>
-           </div>
-           
-           <div className="space-y-2">
-              {currentScore.hookStrength < 85 && (
-                <m.div 
-                  whileHover={{ scale: 1.02 }}
-                  className="p-3 rounded-2xl bg-rose-500/5 border border-rose-500/10 flex flex-col gap-2 transition-colors duration-250 hover:bg-rose-500/[0.08]"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="ds-text-caption text-rose-500">Weak hook</span>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => {
-                        onManualOverride('inject high-energy kinetic zoom and pattern interrupt graphic in first 2 seconds');
-                        showToast?.('AI Hook Optimizer engaged: injecting kinetic zoom preset at 0.5s', 'success');
-                      }}
-                    >
-                      Fix hook
-                    </Button>
-                  </div>
-                  <p className="ds-text-caption text-theme-muted leading-relaxed">
-                    First 3 seconds are slow. Inject an energetic kinetic zoom pattern-interrupt graphic to capture viewer interest immediately.
-                  </p>
-                </m.div>
-              )}
-
-              {currentScore.trendAlignment < 85 && (
-                <m.div 
-                  whileHover={{ scale: 1.02 }}
-                  className="p-3 rounded-2xl bg-amber-500/5 border border-amber-500/10 flex flex-col gap-2 transition-colors duration-250 hover:bg-amber-500/[0.08]"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="ds-text-caption text-amber-500">Low trend fit</span>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => {
-                        onManualOverride('apply viral rhythmic sound effects and sync transition pacing to high-engagement style');
-                        showToast?.('AI Trend Optimizer engaged: syncing transition pacing with viral style DNA', 'success');
-                      }}
-                    >
-                      Boost fit
-                    </Button>
-                  </div>
-                  <p className="ds-text-caption text-theme-muted leading-relaxed">
-                    Pacing is slightly generic. Sync transitions to viral style patterns and inject high-tempo sfx hooks.
-                  </p>
-                </m.div>
-              )}
-
-              {hasHighDropoff && (
-                <m.div 
-                  whileHover={{ scale: 1.02 }}
-                  className="p-3 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 flex flex-col gap-2 transition-colors duration-250 hover:bg-indigo-500/[0.08]"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="ds-text-caption text-primary">Retention drop</span>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => {
-                        onManualOverride('tighten timeline edits: auto-detect dead air, remove filler words, and split slow sections');
-                        showToast?.('AI Pacing Optimizer engaged: tightening segments to eliminate dead air', 'success');
-                      }}
-                    >
-                      Tighten
-                    </Button>
-                  </div>
-                  <p className="ds-text-caption text-theme-muted leading-relaxed">
-                    Viewer drop-offs detected. Tighten pacing by automatically stripping out filler gaps and silences.
-                  </p>
-                </m.div>
-              )}
-           </div>
-        </div>
-
-        <div className="h-px bg-border" />
-
-        {/* Readability HUD */}
-        <div className="space-y-4">
-           <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-amber-500" />
-              <h3 className="ds-text-label text-theme-secondary">Readability</h3>
-           </div>
-           <div className="flex items-center justify-between p-4 rounded-xl ds-surface-card transition-all cursor-default">
-              <div className="space-y-1">
-                 <div className="ds-text-h3 text-theme-primary">{currentScore.psychology?.readability || '8th Grade'}</div>
-                 <div className="ds-text-caption text-theme-muted">Complexity level</div>
+              <p className="ds-text-caption text-theme-muted leading-relaxed">{t('insightsSidebar.quickFixesHint')}</p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="secondary" size="sm" onClick={() => onOpenCleanup('silence')}>
+                  {t('insightsSidebar.removeSilences')}
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => onOpenCleanup('fillers')}>
+                  {t('insightsSidebar.removeFillers')}
+                </Button>
               </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={isOptimizing}
-                loading={isOptimizing}
-                onClick={() => {
-                  if (isOptimizing) return
-                  setIsOptimizing(true)
-                  onManualOverride('simplify vocabulary, shorten phrases, and optimize readability');
-                  showToast?.('AI Readability Optimizer engaged: simplifying pacing and vocabulary', 'success');
-                  setTimeout(() => setIsOptimizing(false), 1200)
-                }}
-              >
-                 {isOptimizing ? 'Optimizing' : 'Simplify'}
-              </Button>
-           </div>
-        </div>
+            </div>
 
-        <div className="h-px bg-border" />
+            <div className="h-px bg-border" />
+          </>
+        )}
 
         {/* Niche Recalibration */}
         <div className="space-y-4">
@@ -478,6 +124,7 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
             <Target className="w-4 h-4 text-primary" />
             <h3 className="ds-text-label text-theme-secondary">Audience niche</h3>
           </div>
+          <p className="ds-text-caption text-theme-muted -mt-2">{t('insightsSidebar.nicheHint')}</p>
           <div className="grid grid-cols-2 gap-2">
             {nicheOptions.map((opt) => (
               <Button
@@ -561,25 +208,31 @@ export const InsightsSidebar: React.FC<InsightsSidebarProps> = ({
 
         <div className="h-px bg-border" />
 
-        {/* Manual Override */}
+        {/* Quick command — only "add title …" is handled here; anything else is
+            handed to the AI assistant rather than pretending it was applied. */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-primary" />
-            <h3 className="ds-text-label text-theme-secondary">Manual override</h3>
+            <h3 className="ds-text-label text-theme-secondary">{t('insightsSidebar.quickCommand')}</h3>
           </div>
+          <p className="ds-text-caption text-theme-muted -mt-2">{t('insightsSidebar.quickCommandHint')}</p>
           <div className="relative">
             <Textarea
               value={overrideText}
               onChange={(e) => setOverrideText(e.target.value)}
-              placeholder="e.g., 'Make the title more aggressive'..."
-              title="Manual neural override command input"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitOverride() }
+              }}
+              placeholder={t('insightsSidebar.quickCommandPlaceholder')}
+              title={t('insightsSidebar.quickCommand')}
               className="h-24 resize-none pr-12"
             />
             <IconButton
-              aria-label="Send override command"
+              aria-label="Send command"
               variant="primary"
               size="sm"
-              onClick={() => { onManualOverride(overrideText); setOverrideText('') }}
+              disabled={!overrideText.trim()}
+              onClick={submitOverride}
               className="absolute bottom-3 right-3 h-8 w-8"
             >
               <Send className="w-3.5 h-3.5" />

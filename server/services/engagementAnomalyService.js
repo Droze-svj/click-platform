@@ -78,7 +78,7 @@ function detectAnomalies(metrics = {}) {
  * @param {{ platform?: string, niche?: string }} context
  * @returns {Promise<{ action: string, reasoning: string, urgency: string }>}
  */
-async function generateAnomalyAdvice(anomalyType, context = {}) {
+async function generateAnomalyAdvice(anomalyType, context = {}, { allowAI = true } = {}) {
   const { platform = 'tiktok', niche = 'general' } = context;
 
   // Instant local fallbacks (do not require AI)
@@ -110,7 +110,9 @@ async function generateAnomalyAdvice(anomalyType, context = {}) {
     },
   };
 
-  if (!geminiConfigured) {
+  // Nothing to diagnose (or AI not allowed/configured) → the built-in advice;
+  // never spend an AI call on "no anomaly".
+  if (!geminiConfigured || !allowAI || anomalyType === ANOMALY_TYPES.NONE) {
     return fallbacks[anomalyType] || fallbacks[ANOMALY_TYPES.NONE];
   }
 

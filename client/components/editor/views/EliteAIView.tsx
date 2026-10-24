@@ -27,12 +27,11 @@ import { apiGet, apiPost } from '../../../lib/api'
 import { pickHighlightWords, pickCaptionEmoji, DEFAULT_HIGHLIGHT_COLOR } from '../../../lib/captions'
 import { getDefaultTrackForSegmentType, Asset, StyleProfile } from '../../../types/editor'
 import DirectorLog from '../DirectorLog'
-import StyleMimicView from './StyleMimicView'
 import VariantFactoryView from './VariantFactoryView'
-import { SwarmConsensusHUD } from '../SwarmConsensusHUD'
 import { Panel, Button, Badge, SectionHeader, EmptyState, UpgradeModal, LockedBadge } from '../../ui'
 import { cn } from '../../../lib/utils'
 import { useEntitlements } from '../../../hooks/useEntitlements'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 // Pro-tier flagship AI tools, gated honestly via the canonical `ai_agent`
 // entitlement (server/config/entitlements.js — "Autonomous AI agent", Pro).
@@ -87,6 +86,9 @@ interface EliteAIViewProps {
   engagementScore?: any
   userAssets?: Asset[]
   onForgeMaster?: (persona: string) => void
+  // Was used only by "The Mimic" (removed: it ignored the reference URL and
+  // returned a hard-coded profile). Kept optional so the editor's existing prop
+  // still type-checks; nothing reads it here any more.
   onApplyStyleProfile?: (profile: StyleProfile) => void
   onBeatSync?: () => void
 }
@@ -112,19 +114,17 @@ const itemVariants = {
 }
 
 const EliteAIView: React.FC<EliteAIViewProps> = ({
-  videoId, isTranscribing, setIsTranscribing, transcript, setTranscript, editingWords, setEditingWords, aiSuggestions, setTimelineSegments, showToast, setActiveCategory, setTextOverlays, autoEditClips = [], onGenerateClips, onApplyClip, engagementScore, userAssets = [], onForgeMaster, onApplyStyleProfile, onBeatSync
+  videoId, isTranscribing, setIsTranscribing, transcript, setTranscript, editingWords, setEditingWords, aiSuggestions, setTimelineSegments, showToast, setActiveCategory, setTextOverlays, autoEditClips = [], onGenerateClips, onApplyClip, engagementScore, userAssets = [], onForgeMaster, onBeatSync
 }) => {
-  const [view, setView] = useState<'main' | 'mimic' | 'variant-factory'>('main')
+  const { t } = useTranslation()
+  const [view, setView] = useState<'main' | 'variant-factory'>('main')
   const [viralQuotes, setViralQuotes] = useState<any[]>([])
   const [isExtractingQuotes, setIsExtractingQuotes] = useState(false)
   const [isForging, setIsForging] = useState(false)
   const [requirementsReady, setRequirementsReady] = useState<boolean | null>(null)
   const [requirementsMessage, setRequirementsMessage] = useState<string>('')
-  const [activeThought, setActiveThought] = useState('')
+  const [statusCheckFailed, setStatusCheckFailed] = useState(false)
   const [activePersona, setActivePersona] = useState<'beast' | 'minimalist' | 'architect' | 'educator'>('beast')
-  const [showSwarmHUD, setShowSwarmHUD] = useState(false)
-  const [swarmHUDTask, setSwarmHUDTask] = useState('')
-  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null)
   const [spokenLanguage, setSpokenLanguage] = useState('auto')
 
   // Entitlements — honest gate for Pro-only autonomous AI tools + the REAL AI
@@ -173,27 +173,6 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
     { id: 'educator', name: 'The Educator', desc: 'Structured / Clarity First', icon: Sparkles, color: 'emerald' },
   ] as const
 
-  const aiThoughts = useMemo(() => [
-    "Analyzing pacing and engagement…",
-    "Tuning viral hook detection…",
-    "Extracting high-impact moments…",
-    "Processing transcript layers…",
-    "Optimizing for retention…",
-    "Identifying top engagement segments…",
-    "Syncing with trending signals…"
-  ], [])
-
-  useEffect(() => {
-    const thoughtInterval = setInterval(() => {
-      setActiveThought(aiThoughts[Math.floor(Math.random() * aiThoughts.length)])
-    }, 6000)
-    setActiveThought(aiThoughts[0])
-
-    return () => {
-      clearInterval(thoughtInterval)
-    }
-  }, [aiThoughts])
-
   useEffect(() => {
     let cancelled = false
     const check = async () => {
@@ -206,12 +185,28 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
       } catch {
         if (cancelled) return
         setRequirementsReady(false)
-        setRequirementsMessage('AI engine verification failed. Check your configuration.')
+        setRequirementsMessage('')
+        setStatusCheckFailed(true)
       }
     }
     check()
     return () => { cancelled = true }
   }, [])
+
+  // The status line reports only what is really happening — it used to cycle
+  // invented "Syncing with trending signals…" messages every 6 seconds.
+  const isBusy = isForging || isTranscribing || isExtractingQuotes
+  const statusText = isForging
+    ? t('eliteAI.statusForging')
+    : isTranscribing
+      ? t('eliteAI.transcribing')
+      : isExtractingQuotes
+        ? t('eliteAI.statusQuotes')
+        : requirementsReady === null
+          ? t('eliteAI.statusChecking')
+          : requirementsReady
+            ? t('eliteAI.statusReady')
+            : t('eliteAI.transcriptionUnavailableTitle')
 
   const handleForge = async () => {
     if (!aiAgentUnlocked) {
@@ -233,10 +228,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
       showToast('Transcribe the video first', 'error')
       return
     }
-
-    setSwarmHUDTask('Extracting key quotes')
-    setShowSwarmHUD(true)
-    setPendingAction(() => executeExtractQuotes)
+    await executeExtractQuotes()
   }
 
   const executeExtractQuotes = async () => {
@@ -268,7 +260,11 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
   }
 
   const applySemanticCaptions = () => {
-    if (!transcript?.words || !setTextOverlays) return
+    if (!setTextOverlays) return
+    if (!transcript?.words?.length) {
+      showToast(t('eliteAI.transcribeFirst'), 'error')
+      return
+    }
 
     showToast('Generating styled captions…', 'info')
 
@@ -417,12 +413,13 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
     })
 
     setTextOverlays((prev: any[]) => [...prev, ...semanticOverlays])
-    showToast('Dynamic styled captions synthesized successfully.', 'success')
+    showToast(t('eliteAI.captionsAdded', { count: semanticOverlays.length }), 'success')
   }
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
-    showToast('Quote copied to neural clipboard', 'success')
+      .then(() => showToast(t('eliteAI.quoteCopied'), 'success'))
+      .catch(() => showToast(t('eliteAI.quoteCopyFailed'), 'error'))
   }
 
   const wordChunks = useMemo(() => {
@@ -450,17 +447,17 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
     const duration = asset.type === 'broll' ? 5 : asset.duration || 30
 
     setTimelineSegments((prev: any[]) => [...prev, {
-      id: `neural-inject-${asset.id}-${Date.now()}`,
+      id: `asset-${asset.id}-${Date.now()}`,
       startTime,
       endTime: startTime + duration,
       duration,
       type: asset.type === 'music' ? 'audio' : 'video',
-      name: `Neural: ${asset.title}`,
+      name: asset.title,
       color: asset.type === 'music' ? '#10B981' : '#F59E0B',
       track: asset.type === 'music' ? 3 : 2,
       sourceUrl: asset.url
     }])
-    showToast(`Neural Link: ${asset.title} synchronized`, 'success')
+    showToast(t('eliteAI.assetAdded', { title: asset.title || '' }), 'success')
   }
 
   return (
@@ -470,28 +467,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
       animate="visible"
       className="relative mx-auto max-w-[1400px] space-y-8 pb-16 ds-bg-mesh-soft"
     >
-      {/* ── SUBVIEW: THE MIMIC ── */}
       <AnimatePresence mode="wait">
-        {view === 'mimic' && (
-          <m.div
-            key="mimic-view"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.25 }}
-            className="absolute inset-0 z-[100] overflow-y-auto rounded-2xl border border-border bg-background p-6 ds-elev-3"
-          >
-            <StyleMimicView
-              onBack={() => setView('main')}
-              onStyleMirror={(profile) => {
-                onApplyStyleProfile?.(profile)
-                showToast('Mimic DNA Applied to Timeline', 'success')
-                setView('main')
-              }}
-            />
-          </m.div>
-        )}
-
         {view === 'variant-factory' && (
           <m.div
             key="factory-view"
@@ -502,6 +478,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             className="absolute inset-0 z-[100] overflow-y-auto rounded-2xl border border-border bg-background p-6 ds-elev-3"
           >
             <VariantFactoryView
+              topic={transcript?.text || editingWords.map(w => w.word).join(' ')}
               onBack={() => setView('main')}
               onApplyVariant={(variant) => {
                 setTextOverlays?.(prev => [
@@ -518,7 +495,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                     style: 'shadow'
                   }
                 ])
-                showToast(`Applied: ${variant.type} Variant`, 'success')
+                showToast(t('eliteAI.hookAdded'), 'success')
                 setView('main')
               }}
             />
@@ -535,17 +512,10 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <Button
                 variant="primary"
-                onClick={() => (aiAgentUnlocked ? setView('mimic') : openProGate())}
-                leftIcon={aiAgentUnlocked ? <Fingerprint className="h-4 w-4" aria-hidden /> : <Lock className="h-4 w-4" aria-hidden />}
-              >
-                The Mimic
-              </Button>
-              <Button
-                variant="secondary"
                 onClick={() => (aiAgentUnlocked ? setView('variant-factory') : openProGate())}
                 leftIcon={aiAgentUnlocked ? <Target className="h-4 w-4" aria-hidden /> : <Lock className="h-4 w-4" aria-hidden />}
               >
-                Variant Factory
+                {t('eliteAI.hookIdeas')}
               </Button>
               <Button variant="secondary" onClick={onBeatSync} leftIcon={<Radio className="h-4 w-4" aria-hidden />}>
                 Beat-Sync
@@ -591,7 +561,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
 
             {/* Persona Switcher */}
             <div className="space-y-3 border-t border-border pt-5">
-              <p className="ds-text-label text-theme-muted">Director Persona</p>
+              <p className="ds-text-label text-theme-muted">{t('eliteAI.editingStyle')}</p>
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 {personas.map(persona => {
                   const Icon = persona.icon
@@ -619,10 +589,14 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
           </div>
 
           <Panel variant="glass" className="relative min-w-[320px] space-y-3 overflow-hidden">
-             <p className="ds-text-caption">Core status: {requirementsReady ? 'Active' : 'Fault detected'}</p>
+             <p className="ds-text-caption">{t('eliteAI.statusLabel')}</p>
              <div className="flex items-center gap-3">
-                <div className={cn('h-2.5 w-2.5 animate-pulse rounded-full', requirementsReady ? 'bg-emerald-500' : 'bg-rose-500')} />
-                <p className="ds-text-label truncate text-theme-primary max-w-[220px]">{activeThought}</p>
+                <div className={cn(
+                  'h-2.5 w-2.5 rounded-full',
+                  isBusy && 'animate-pulse',
+                  requirementsReady === null ? 'bg-amber-500' : requirementsReady ? 'bg-emerald-500' : 'bg-rose-500'
+                )} />
+                <p className="ds-text-label truncate text-theme-primary max-w-[220px]">{statusText}</p>
              </div>
 
              {/* Agentic Forge Button */}
@@ -651,19 +625,9 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                      ) : (
                        <Lock className="mb-2 h-7 w-7 text-white" aria-hidden />
                      )}
-                     <div className="text-lg font-bold leading-tight text-white">Agentic Forge</div>
-                     <div className="mt-1 text-xs text-white/70">{aiAgentUnlocked ? 'One-click generate' : 'Unlock with Pro'}</div>
+                     <div className="text-lg font-bold leading-tight text-white">{t('eliteAI.forgeTitle')}</div>
+                     <div className="mt-1 text-xs text-white/70">{aiAgentUnlocked ? t('eliteAI.forgeSubtitle') : t('eliteAI.unlockWithPro')}</div>
                   </div>
-
-                  {/* Loading progress indicator while the forge runs */}
-                  {isForging && (
-                    <m.div
-                      initial={{ width: 0 }}
-                      animate={{ width: '100%' }}
-                      transition={{ duration: 5, ease: 'linear' }}
-                      className="absolute bottom-0 left-0 h-1 bg-white/40"
-                    />
-                  )}
                 </button>
              </div>
 
@@ -715,7 +679,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                       </div>
                     </div>
                     <Button variant="primary" size="sm" className="w-full" onClick={() => handleInjectAsset(asset)}>
-                      Inject Draft Node
+                      {t('eliteAI.addToTimeline')}
                     </Button>
                   </div>
                 </m.div>
@@ -734,8 +698,8 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                 <AlertCircle className="h-5 w-5 text-amber-500" aria-hidden />
               </div>
               <div className="space-y-1">
-                <p className="ds-text-label text-amber-500">Neural readiness fault</p>
-                <p className="ds-text-body text-theme-secondary">{requirementsMessage || 'Verify OPENAI_API_KEY in repository configuration.'}</p>
+                <p className="ds-text-label text-amber-500">{t('eliteAI.transcriptionUnavailableTitle')}</p>
+                <p className="ds-text-body text-theme-secondary">{requirementsMessage || t(statusCheckFailed ? 'eliteAI.statusCheckFailed' : 'eliteAI.transcriptionUnavailableBody')}</p>
               </div>
             </div>
           )}
@@ -749,8 +713,8 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
               <Type className="h-7 w-7" aria-hidden />
             </div>
             <div className="space-y-1 text-center">
-              <p className="ds-text-caption">Node Synthesis</p>
-              <p className="ds-text-h3 text-theme-primary">Semantic Captions</p>
+              <p className="ds-text-caption">{t('eliteAI.captionsCaption')}</p>
+              <p className="ds-text-h3 text-theme-primary">{t('eliteAI.captionsTitle')}</p>
             </div>
           </button>
 
@@ -786,11 +750,11 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                 return
               }
               if (requirementsReady === false) {
-                showToast('AI Synthesis Unavailable', 'error')
+                showToast(t('eliteAI.transcriptionUnavailableTitle'), 'error')
                 return
               }
               setIsTranscribing(true)
-              showToast('Extracting neural transcript...', 'info')
+              showToast(t('eliteAI.transcribing'), 'info')
               try {
                 const res = await apiPost<{ success?: boolean; data?: { text: string; words: Array<{ word: string; start: number; end: number }> } }>(
                   '/video/transcribe-editor',
@@ -800,17 +764,17 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                 const words = data?.words ?? []
                 const text = data?.text ?? ''
                 if (words.length === 0) {
-                  showToast('Neural detection empty', 'info')
+                  showToast(t('eliteAI.noSpeech'), 'info')
                   setTranscript(null)
                   setEditingWords([])
                   return
                 }
                 setTranscript({ text, words })
                 setEditingWords(words)
-                showToast(`Synthesis Complete: ${words.length} nodes indexed`, 'success')
+                showToast(t('eliteAI.transcribed', { count: words.length }), 'success')
               } catch (e: any) {
                 console.error('Transcribe error', e)
-                showToast('Synthesis interrupted', 'error')
+                showToast(t('eliteAI.transcriptionFailed'), 'error')
               } finally {
                 setIsTranscribing(false)
               }
@@ -819,7 +783,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
             className="relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 py-6 text-sm font-semibold text-white transition-all disabled:opacity-40 disabled:grayscale"
           >
             {isTranscribing ? <Loader2 className="h-6 w-6 animate-spin" aria-hidden /> : <Fingerprint className="h-6 w-6" aria-hidden />}
-            {isTranscribing ? 'Transcribing…' : requirementsReady === false ? 'Core Offline' : 'Initialize Semantic Extraction'}
+            {isTranscribing ? t('eliteAI.transcribing') : requirementsReady === false ? t('eliteAI.transcriptionUnavailableTitle') : t('eliteAI.transcribeVideo')}
           </m.button>
 
           <div className="flex flex-col items-center justify-between gap-6 rounded-2xl border border-border bg-background/40 p-6 transition-colors hover:border-primary/20 xl:flex-row">
@@ -842,7 +806,8 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                     x: 50, y: 50, fontSize: 28, color: '#ffffff', fontFamily: 'Inter, sans-serif',
                     startTime: q.start ?? 0, endTime: q.end ?? 5, style: 'shadow'
                   }))])
-                  showToast('Top alpha-nodes integrated', 'success')
+                  showToast(t('eliteAI.quotesApplied'), 'success')
+                  setActiveCategory?.('timeline')
                 } else if (aiSuggestions?.length) {
                   const segments = aiSuggestions.map((s: any) => ({
                     id: s.id || `ai-${Date.now()}-${Math.random()}`,
@@ -855,11 +820,11 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                     track: getDefaultTrackForSegmentType('text')
                   }))
                   setTimelineSegments((prev: any[]) => [...prev, ...segments])
-                  showToast('Applied global neural patches', 'success')
+                  showToast(t('eliteAI.suggestionsApplied'), 'success')
+                  setActiveCategory?.('timeline')
                 } else {
-                  showToast('Synthesis required for auto-execution', 'info')
+                  showToast(t('eliteAI.nothingToApply'), 'info')
                 }
-                setActiveCategory?.('timeline')
               }}
               title="Apply all AI suggestions"
             >
@@ -894,50 +859,43 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                     transition={{ delay: i * 0.05 }}
                     className="rounded-2xl border border-border bg-background/40 p-5 transition-colors hover:border-primary/30"
                   >
+                    {/* Scores only when the server actually scored the clip. */}
                     <div className="mb-4 flex items-center justify-between">
-                      <span className="ds-text-caption">Variation {String(i + 1).padStart(2, '0')}</span>
-                      <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500">
-                        {clip.engagementScore?.overall || 0}% rank
-                      </Badge>
+                      <span className="ds-text-caption">{t('eliteAI.clipVariation', { n: String(i + 1).padStart(2, '0') })}</span>
+                      {Number(clip.engagementScore?.overall) > 0 && (
+                        <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500">
+                          {t('eliteAI.clipScore', { score: Math.round(Number(clip.engagementScore.overall)) })}
+                        </Badge>
+                      )}
                     </div>
                     <h5 className="ds-text-label mb-4 truncate text-theme-primary">{clip.name}</h5>
-                    <div className="mb-6 flex items-center gap-3">
-                       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-accent">
-                          <m.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${clip.engagementScore?.viralPotential || 0}%` }}
-                            className="h-full bg-primary"
-                          />
-                       </div>
-                       <span className="ds-text-caption">Viral: {clip.engagementScore?.viralPotential || 0}</span>
-                    </div>
+                    {Number(clip.engagementScore?.viralPotential) > 0 && (
+                      <div className="mb-6 flex items-center gap-3">
+                         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-accent">
+                            <m.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${Math.min(100, Number(clip.engagementScore.viralPotential))}%` }}
+                              className="h-full bg-primary"
+                            />
+                         </div>
+                         <span className="ds-text-caption">{t('eliteAI.clipViral', { score: Math.round(Number(clip.engagementScore.viralPotential)) })}</span>
+                      </div>
+                    )}
                     <Button variant="secondary" size="sm" className="w-full" onClick={() => onApplyClip?.(clip)}>
-                      Apply to Timeline
+                      {t('eliteAI.applyClipToTimeline')}
                     </Button>
                   </m.div>
                 ))}
               </div>
             ) : (
               <div className="flex h-40 items-center justify-center rounded-2xl border-2 border-dashed border-border">
-                 <p className="ds-text-caption">No variants synthesized yet</p>
+                 <p className="ds-text-caption">{t('eliteAI.noClipsYet')}</p>
               </div>
             )}
           </div>
         </div>
        </Panel>
       </m.div>
-
-      <SwarmConsensusHUD
-        isVisible={showSwarmHUD}
-        taskName={swarmHUDTask}
-        onComplete={() => {
-          setShowSwarmHUD(false)
-          if (pendingAction) {
-            pendingAction()
-            setPendingAction(null)
-          }
-        }}
-      />
 
       <UpgradeModal
         open={upgradeOpen}
@@ -1016,28 +974,15 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                         <div className="mb-5 flex items-start justify-between gap-4">
                           <div className="flex flex-col gap-2">
                             <div className="flex flex-wrap items-center gap-2">
-                              <Badge className="bg-orange-500">
-                                Strategic weight: {quote.strategicWeight || (quote.score * 100).toFixed(0)}%
-                              </Badge>
-                              {quote.strategicWeight > 70 && (
-                                <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500">Growth node</Badge>
-                              )}
-                              {quote.integrityVerified && (
-                                <Badge variant="secondary" className="gap-1.5 bg-indigo-500/10 text-indigo-500">
-                                  <ShieldCheck className="h-3 w-3" aria-hidden />
-                                  Integrity verified
+                              <span className="ds-text-caption">{t('eliteAI.quoteNumber', { n: i + 1 })}</span>
+                              {typeof quote.score === 'number' && Number.isFinite(quote.score) && (
+                                <Badge className="bg-orange-500">
+                                  {t('eliteAI.quoteRating', { score: Math.round(Math.min(1, Math.max(0, quote.score)) * 100) })}
                                 </Badge>
                               )}
-                            </div>
-                            <div className="flex items-center gap-3">
-                               <span className="ds-text-caption">Logic {String(i + 1).padStart(2, '0')}</span>
-                               <div className="relative h-1 w-24 overflow-hidden rounded-full bg-accent" title={`Originality Score: ${quote.originalityScore}%`}>
-                                  <m.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${quote.originalityScore || 70}%` }}
-                                    className="h-full bg-gradient-to-r from-orange-500 to-indigo-500"
-                                  />
-                               </div>
+                              {typeof quote.hookType === 'string' && quote.hookType && (
+                                <Badge variant="secondary">{quote.hookType}</Badge>
+                              )}
                             </div>
                           </div>
                           <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover/quote:opacity-100">
@@ -1051,7 +996,7 @@ const EliteAIView: React.FC<EliteAIViewProps> = ({
                                     x: 50, y: 50, fontSize: 32, color: '#ffffff', fontFamily: 'Inter, sans-serif',
                                     startTime: quote.start ?? 0, endTime: quote.end ?? 5, style: 'shadow'
                                   }])
-                                  showToast('Node projected to workspace', 'success')
+                                  showToast(t('eliteAI.quoteAdded'), 'success')
                                 }}
                                 title="Add to workspace"
                                 aria-label="Add quote to workspace"

@@ -1,16 +1,17 @@
 'use client'
 
-import React, { useRef, useEffect } from 'react'
+import React from 'react'
 import {
   Mic, Zap, Scissors, Type, Wand2, ArrowRight, Globe2,
-  ShoppingCart, Rocket, TrendingUp, Activity, Layers, type LucideIcon,
+  ShoppingCart, TrendingUp, Activity, Layers, ExternalLink, type LucideIcon,
 } from 'lucide-react'
 import Image from 'next/image'
-import { apiPost, apiGet, handleApiError } from '../../../lib/api'
+import { apiPost, handleApiError } from '../../../lib/api'
 // Shared with AIContentAnalysis — both wait on the same background-job contract.
 import { awaitVideoJob } from '../../../lib/videoJobs'
-import { Panel, Button, Badge, SectionHeader, StatCard, Textarea, Slider } from '../../ui'
+import { Panel, Button, Badge, SectionHeader, StatCard, Textarea } from '../../ui'
 import { cn } from '../../../lib/utils'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 interface AutomateViewProps {
   voiceoverText: string
@@ -53,29 +54,18 @@ const AutomateView: React.FC<AutomateViewProps> = ({
 }) => {
   const [pipelineStep, setPipelineStep] = React.useState<PipelineStep>('idle')
   const [pipelineError, setPipelineError] = React.useState<string | null>(null)
+  const { t } = useTranslation()
   const [pipelineResult, setPipelineResult] = React.useState<{
     captionsAdded: number
     hookScore?: number
-    hookInterpretation?: string
-    topImprovement?: string
-    scores?: { label: string; value: number; color: string }[]
-    hookType?: string
-    rewrites?: string[]
-    directives?: { action: string; reason: string; impact: 'high' | 'medium' | 'low' }[]
-    weakestMoment?: string
-    strongestMoment?: string
-    summary?: string
-    suggestedTitle?: string
-    suggestedDescription?: string
-    suggestedTags?: string[]
+    /** true when the hook score is the text-only estimate (no AI engine answered). */
+    hookScoreIsEstimate?: boolean
     silenceGapsRemoved?: number
     silenceCleanedVideoUrl?: string
     viralThumbnailUrl?: string
-    distributionConfidence?: number
     roiData?: { salesScore: number; estimatedROI: number; recommendations: any[] }
     sourcedAssets?: { keywords: string[], suggestedAssets: any[] }
     monetizationPlan?: { monetizationSteps: any[], products: any[] }
-    adPotential?: { isHighPotential: boolean; recommendedBudget: number; reason: string; thumbnail?: string }
   } | null>(null)
 
   const [stepProgress, setStepProgress] = React.useState(0)
@@ -87,32 +77,6 @@ const AutomateView: React.FC<AutomateViewProps> = ({
     silenceRemoved: number
     resultUrl?: string
   } | null>(null)
-
-  const [agentJob, setAgentJob] = React.useState<{
-    jobId: string
-    status: 'queued' | 'running' | 'done' | 'error'
-    step?: string
-    progress?: number
-  } | null>(null)
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const startPollAgentJob = (jobId: string) => {
-    setAgentJob({ jobId, status: 'queued', step: 'Waiting for GPU slot…', progress: 0 })
-    const poll = async () => {
-      try {
-        const res = await apiGet<any>(`/agentic/status/${jobId}`)
-        const { status, step, progress } = (res as any)?.data ?? res
-        setAgentJob({ jobId, status, step, progress: progress ?? 0 })
-        if (status === 'done' || status === 'error') return
-        pollRef.current = setTimeout(poll, 2000) as any
-      } catch {
-        setAgentJob(prev => prev ? { ...prev, status: 'error', step: 'Connection error' } : null)
-      }
-    }
-    poll()
-  }
-
-  useEffect(() => () => { if (pollRef.current) clearTimeout(pollRef.current as any) }, [])
 
   const handleViralOneClick = async () => {
     if (!videoUrl) {
@@ -154,16 +118,17 @@ const AutomateView: React.FC<AutomateViewProps> = ({
 
       setPipelineStep('scoring')
       setStepProgress(0)
-      showToast('Step 3/8 — AI Hook Analysis…', 'info')
+      showToast(t('automate.stepHook'), 'info')
       const scoreRes = await apiPost('/video/hook-analysis', {
         videoId, videoUrl: activeVideoUrl, transcript: transcriptText || undefined,
       }) as any
-      // /video/hook-analysis answers with sendSuccess, which spreads the analysis
-      // itself into `data` — there is no `analysis` key at any level. Reading
-      // scoreRes.analysis therefore missed, fell back to the whole envelope, and
-      // hookScore came out 0 for every video in the one-click pipeline.
+      // /video/hook-analysis answers with sendSuccess, which puts the analysis
+      // itself in `data`. Its score field is `hookStrength` (0-100) — there is
+      // no `overallScore` or `score`, so reading those made the hook score 0 for
+      // every video in the one-click pipeline.
       const analysis = (scoreRes?.data ?? scoreRes)
-      const hookScore = analysis?.overallScore ?? analysis?.score ?? 0
+      const hookScore = typeof analysis?.hookStrength === 'number' ? analysis.hookStrength : undefined
+      const hookScoreIsEstimate = analysis?.isFallback === true || analysis?.engine === 'heuristic'
       setStepProgress(100)
 
       setPipelineStep('captioning')
@@ -187,33 +152,32 @@ const AutomateView: React.FC<AutomateViewProps> = ({
 
       setPipelineStep('distribution')
       setStepProgress(0)
-      showToast('Step 5/8 — Viral Distribution Hub…', 'info')
+      showToast(t('automate.stepThumbnail'), 'info')
       const distRes = await apiPost('/video/thumbnails/ai-viral', { videoId, timelineData: { transcript: transcriptText } }) as any
       // Also sendSuccess-wrapped: bestThumbnail/confidence live under .data, so
       // the unwrapped reads here were always undefined and the pipeline never
       // picked up the thumbnail it had just paid to generate.
       const distPayload = distRes?.data ?? distRes
       const viralThumbnailUrl = distPayload?.bestThumbnail
-      const distributionConfidence = distPayload?.confidence
       setStepProgress(100)
 
       setPipelineStep('roi-forecasting')
       setStepProgress(0)
-      showToast('Step 6/8 — ROI Forecasting…', 'info')
+      showToast(t('automate.stepRoi'), 'info')
       const roiRes = await apiPost('/video/advanced/roi-prediction', { videoId, timelineData: { transcript: transcriptText }, audiencePersona: 'Gen-Z' }) as any
       const roiData = roiRes?.data ?? roiRes
       setStepProgress(100)
 
       setPipelineStep('sourcing')
       setStepProgress(0)
-      showToast('Step 7/8 — Autonomous Asset Sourcing…', 'info')
+      showToast(t('automate.stepAssets'), 'info')
       const sourceRes = await apiPost('/video/advanced/source-assets', { transcript: transcriptText }) as any
       const sourcedAssets = sourceRes?.data ?? sourceRes
       setStepProgress(100)
 
       setPipelineStep('monetization')
       setStepProgress(0)
-      showToast('Step 8/8 — Whop Monetization Bridge…', 'info')
+      showToast(t('automate.stepProducts'), 'info')
       const monetRes = await apiPost('/video/advanced/monetization-plan', {
         transcript: transcriptText,
         videoId: videoId
@@ -221,38 +185,17 @@ const AutomateView: React.FC<AutomateViewProps> = ({
       const monetizationPlan = monetRes?.data ?? monetRes
       setStepProgress(100)
 
-      // Direct-to-Ads gating logic (derived from real hook + sales scores)
-      const adPotential = {
-        isHighPotential: hookScore >= 85 && (roiData?.salesScore ?? 0) >= 70,
-        recommendedBudget: 5,
-        reason: (hookScore >= 85) ? 'Exceptional hook velocity detected.' : 'Testing required.',
-        thumbnail: viralThumbnailUrl
-      }
-
       setPipelineStep('done')
       setPipelineResult({
         captionsAdded: captions.length,
         hookScore,
-        hookInterpretation: analysis?.interpretation,
-        topImprovement: analysis?.topImprovement,
-        scores: analysis?.scores,
-        hookType: analysis?.hookType,
-        rewrites: analysis?.rewrites,
-        directives: analysis?.directives,
-        weakestMoment: analysis?.weakestMoment,
-        strongestMoment: analysis?.strongestMoment,
-        summary: analysis?.summary,
-        suggestedTitle: analysis?.suggestedTitle,
-        suggestedDescription: analysis?.suggestedDescription,
-        suggestedTags: analysis?.suggestedTags,
+        hookScoreIsEstimate,
         silenceGapsRemoved,
         silenceCleanedVideoUrl,
         viralThumbnailUrl,
-        distributionConfidence,
         roiData,
         sourcedAssets,
         monetizationPlan,
-        adPotential
       })
       showToast('Pipeline complete!', 'success')
     } catch (err: any) {
@@ -262,13 +205,32 @@ const AutomateView: React.FC<AutomateViewProps> = ({
     }
   }
 
-  const handleLaunchAds = async () => {
+  // AI voiceover — POST /video/advanced/voiceover answers 202 and does the TTS
+  // in the background; sent WITHOUT a videoUrl it returns the narration as an
+  // audio file (audioResultUrl + duration), which becomes a timeline segment.
+  // This button used to have no click handler at all.
+  const handleGenerateVoiceover = async () => {
+    const text = voiceoverText.trim()
+    if (!text) return
+    if (!videoId) {
+      showToast(t('automate.voiceNeedsVideo'), 'error')
+      return
+    }
+    setIsGeneratingVoiceover(true)
     try {
-      showToast('Launching low-CAC ad campaign…', 'info')
-      await apiPost('/video/advanced/launch-test-ad', { videoId, platform: 'tiktok', budget: 5 })
-      showToast('Ad live! Monitoring ROI in Style Vault…', 'success')
+      await apiPost('/video/advanced/voiceover', { videoId, text, voice: selectedVoice })
+      const result = await awaitVideoJob(videoId, 'voiceover')
+      const url = result?.audioResultUrl || result?.resultUrl
+      const duration = Number(result?.duration)
+      if (!url || !Number.isFinite(duration) || duration <= 0) {
+        throw new Error(t('automate.voiceNoAudio'))
+      }
+      onAddVoiceoverSegment(url, duration)
+      showToast(t('automate.voiceAdded'), 'success')
     } catch (err) {
-      showToast('Ad launch failed', 'error')
+      showToast(handleApiError(err) || t('automate.voiceFailed'), 'error')
+    } finally {
+      setIsGeneratingVoiceover(false)
     }
   }
 
@@ -299,7 +261,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
     { key: 'transcribing', label: 'Text', icon: Mic },
     { key: 'scoring', label: 'Score', icon: Zap },
     { key: 'captioning', label: 'Caps', icon: Type },
-    { key: 'distribution', label: 'Viral', icon: Globe2 },
+    { key: 'distribution', label: t('automate.stepLabelThumbnail'), icon: Globe2 },
     { key: 'roi-forecasting', label: 'ROI', icon: Activity },
     { key: 'sourcing', label: 'Assets', icon: Layers },
     { key: 'monetization', label: 'Sell', icon: ShoppingCart }
@@ -329,7 +291,7 @@ const AutomateView: React.FC<AutomateViewProps> = ({
             </div>
             <div>
               <h2 className="ds-text-h3 text-theme-primary">The Viral One-Click</h2>
-              <p className="ds-text-caption text-theme-muted">8-step pipeline: cut, caption, score, distribute, monetize</p>
+              <p className="ds-text-caption text-theme-muted">{t('automate.pipelineDescription')}</p>
             </div>
           </div>
 
@@ -364,7 +326,10 @@ const AutomateView: React.FC<AutomateViewProps> = ({
         {pipelineStep === 'done' && pipelineResult && (
           <div className="space-y-6 ds-anim-rise">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <StatCard label="Hook score" value={`${pipelineResult.hookScore ?? 0}%`} />
+              <StatCard
+                label={pipelineResult.hookScoreIsEstimate ? t('automate.hookScoreEstimate') : t('automate.hookScore')}
+                value={pipelineResult.hookScore != null ? `${pipelineResult.hookScore}/100` : '—'}
+              />
               {pipelineResult.roiData?.salesScore != null && (
                 <StatCard label="Sales score" value={`${pipelineResult.roiData.salesScore}%`} />
               )}
@@ -372,24 +337,6 @@ const AutomateView: React.FC<AutomateViewProps> = ({
                 <StatCard label="Estimated ROI" value={`$${pipelineResult.roiData.estimatedROI.toLocaleString()}`} />
               )}
             </div>
-
-            {/* Ad Scaling */}
-            {pipelineResult.adPotential?.isHighPotential && (
-              <Panel variant="subtle" className="flex flex-col items-center justify-between gap-4 p-5 md:flex-row">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/15">
-                    <Rocket className="h-5 w-5 text-indigo-500" aria-hidden />
-                  </div>
-                  <div>
-                    <p className="ds-text-label text-theme-primary">Low-CAC auto-scaling available</p>
-                    <p className="ds-text-caption text-theme-muted">{pipelineResult.adPotential.reason}</p>
-                  </div>
-                </div>
-                <Button onClick={handleLaunchAds} leftIcon={<Rocket className="h-4 w-4" aria-hidden />}>
-                  Launch ${pipelineResult.adPotential.recommendedBudget}/day test ad
-                </Button>
-              </Panel>
-            )}
 
             {/* Asset Sourcing Gallery */}
             {pipelineResult.sourcedAssets && (
@@ -445,15 +392,21 @@ const AutomateView: React.FC<AutomateViewProps> = ({
             {pipelineResult.viralThumbnailUrl && (
               <Panel variant="subtle" className="flex items-center justify-between gap-4 p-5">
                 <div className="flex items-center gap-4">
-                  <Image src={pipelineResult.adPotential?.thumbnail || pipelineResult.viralThumbnailUrl} alt="Viral frame" width={400} height={225} className="h-12 w-20 rounded-lg border border-subtle object-cover" />
+                  <Image src={pipelineResult.viralThumbnailUrl} alt={t('automate.thumbnailAlt')} width={400} height={225} className="h-12 w-20 rounded-lg border border-subtle object-cover" />
                   <div>
-                    <p className="ds-text-label text-theme-primary">Viral asset ready</p>
-                    <p className="ds-text-caption text-theme-muted">Emotion-cued framing applied</p>
+                    <p className="ds-text-label text-theme-primary">{t('automate.thumbnailReady')}</p>
+                    <p className="ds-text-caption text-theme-muted">{t('automate.thumbnailHint')}</p>
                   </div>
                 </div>
-                <Button variant="secondary" onClick={() => showToast('Publishing to TikTok, IG & YouTube…', 'success')}>
-                  Publish all
-                </Button>
+                <a
+                  href={pipelineResult.viralThumbnailUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-input bg-background px-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+                >
+                  <ExternalLink className="h-4 w-4" aria-hidden />
+                  {t('automate.openThumbnail')}
+                </a>
               </Panel>
             )}
           </div>
@@ -476,8 +429,14 @@ const AutomateView: React.FC<AutomateViewProps> = ({
             value={voiceoverText}
             onChange={e => setVoiceoverText(e.target.value)}
           />
-          <Button variant="secondary" className="w-full" loading={isGeneratingVoiceover} disabled={!voiceoverText.trim()}>
-            Generate voice
+          <Button
+            variant="secondary"
+            className="w-full"
+            onClick={handleGenerateVoiceover}
+            loading={isGeneratingVoiceover}
+            disabled={!voiceoverText.trim() || !videoId || isGeneratingVoiceover}
+          >
+            {t('automate.generateVoice')}
           </Button>
         </Panel>
 

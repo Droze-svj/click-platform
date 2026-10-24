@@ -31,11 +31,15 @@ import { EditorCategory } from '../types/editor'
 export interface Category {
   id: EditorCategory
   label: string
+  /** i18n key for `label` — translate at render with t(labelKey). */
+  labelKey: string
   icon: any
   color: string
   bgColor: string
   textColor: string
   description: string
+  /** i18n key for `description` — translate at render with t(descKey). */
+  descKey: string
   features?: string[]
   badge?: string
 }
@@ -43,6 +47,8 @@ export interface Category {
 export const CATEGORIES: Category[] = [
   {
     id: 'ai-edit',
+    labelKey: 'editorSidebar.cat.aiEdit.label',
+    descKey: 'editorSidebar.cat.aiEdit.desc',
     label: 'AI Auto-Edit',
     icon: Cpu,
     color: 'from-fuchsia-600 to-purple-600',
@@ -53,6 +59,8 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: 'dub',
+    labelKey: 'editorSidebar.cat.dub.label',
+    descKey: 'editorSidebar.cat.dub.desc',
     label: 'Dubbing',
     icon: Globe,
     color: 'from-violet-600 to-fuchsia-600',
@@ -64,6 +72,8 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: 'edit',
+    labelKey: 'editorSidebar.cat.edit.label',
+    descKey: 'editorSidebar.cat.edit.desc',
     label: 'Edit',
     icon: EditToolIcon,
     color: 'from-blue-500 to-blue-600',
@@ -74,6 +84,8 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: 'assets',
+    labelKey: 'editorSidebar.cat.assets.label',
+    descKey: 'editorSidebar.cat.assets.desc',
     label: 'My Assets',
     icon: UploadCloudIcon,
     color: 'from-indigo-500 to-purple-500',
@@ -84,6 +96,8 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: 'effects',
+    labelKey: 'editorSidebar.cat.effects.label',
+    descKey: 'editorSidebar.cat.effects.desc',
     label: 'Effects',
     icon: MagicEffectsIcon,
     color: 'from-purple-500 to-purple-600',
@@ -94,6 +108,8 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: 'color',
+    labelKey: 'editorSidebar.cat.color.label',
+    descKey: 'editorSidebar.cat.color.desc',
     label: 'Color',
     icon: ColorPaletteIcon,
     color: 'from-indigo-500 to-indigo-600',
@@ -104,6 +120,8 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: 'chromakey',
+    labelKey: 'editorSidebar.cat.chromakey.label',
+    descKey: 'editorSidebar.cat.chromakey.desc',
     label: 'Chroma Key',
     icon: MagicWandIcon,
     color: 'from-emerald-500 to-emerald-600',
@@ -114,6 +132,8 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: 'timeline',
+    labelKey: 'editorSidebar.cat.timeline.label',
+    descKey: 'editorSidebar.cat.timeline.desc',
     label: 'Timeline',
     icon: LayersIcon,
     color: 'from-yellow-500 to-orange-500',
@@ -124,6 +144,8 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: 'export',
+    labelKey: 'editorSidebar.cat.export.label',
+    descKey: 'editorSidebar.cat.export.desc',
     label: 'Export',
     icon: UploadCloudIcon,
     color: 'from-red-500 to-pink-500',

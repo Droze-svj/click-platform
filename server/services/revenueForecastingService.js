@@ -59,12 +59,13 @@ async function forecastRevenue(workspaceId, period, filters = {}) {
     const trends = calculateTrends(historicalRevenue, historicalConversions, historicalPosts);
 
     // Generate forecast
-    const forecast = generateForecast(trends, days);
+    const confidence = calculateConfidence(historicalRevenue.length, historicalConversions.length);
+    const forecast = generateForecast(trends, days, confidence);
 
     return {
       forecast,
       trends,
-      confidence: calculateConfidence(historicalRevenue.length, historicalConversions.length),
+      confidence,
       assumptions: [
         'Based on historical performance trends',
         'Assumes consistent posting frequency',
@@ -150,19 +151,19 @@ function calculateTrends(revenue, conversions, posts) {
 /**
  * Generate forecast from trends
  */
-function generateForecast(trends, days) {
+function generateForecast(trends, days, confidence = 40) {
   const forecast = [];
   const { averages } = trends;
 
-  // Simple linear forecast based on averages
+  // Projects your current average forward. (It used to compound an assumed 2%
+  // DAILY growth — ~80% a month — that no data supported.)
   const dailyRevenue = averages.revenuePerPost * averages.postsPerDay;
-  const dailyGrowth = 0.02; // 2% daily growth assumption
 
   for (let i = 1; i <= days; i++) {
     const date = new Date();
     date.setDate(date.getDate() + i);
     
-    const projectedRevenue = dailyRevenue * Math.pow(1 + dailyGrowth, i);
+    const projectedRevenue = dailyRevenue;
     const projectedConversions = (projectedRevenue / averages.revenuePerConversion) || 0;
     const projectedPosts = averages.postsPerDay;
 
@@ -171,7 +172,7 @@ function generateForecast(trends, days) {
       revenue: Math.round(projectedRevenue * 100) / 100,
       conversions: Math.round(projectedConversions),
       posts: Math.round(projectedPosts),
-      confidence: Math.max(50, 100 - (i * 2)) // Decreases over time
+      confidence // how much history backs the projection (calculateConfidence)
     });
   }
 
@@ -179,7 +180,6 @@ function generateForecast(trends, days) {
   const totalRevenue = forecast.reduce((sum, f) => sum + f.revenue, 0);
   const totalConversions = forecast.reduce((sum, f) => sum + f.conversions, 0);
   const totalPosts = forecast.reduce((sum, f) => sum + f.posts, 0);
-  const averageConfidence = forecast.reduce((sum, f) => sum + f.confidence, 0) / forecast.length;
 
   return {
     daily: forecast,
@@ -193,7 +193,7 @@ function generateForecast(trends, days) {
       dailyConversions: Math.round((totalConversions / days) * 100) / 100,
       dailyPosts: Math.round((totalPosts / days) * 100) / 100
     },
-    confidence: Math.round(averageConfidence)
+    confidence
   };
 }
 

@@ -107,8 +107,8 @@ export default function VideoStudioPage() {
   useEffect(() => {
     if (!socket || !connected) return
     const handler = (data: any) => {
-      if (data.status === 'completed') { setSuccess(tr('studio.analysisComplete', '✓ ANALYSIS_COMPLETE: {count} CLIPS_GENERATED', { count: data.clips || 0 })); setTimeout(loadVideos, 500) }
-      else if (data.status === 'failed') { setError(tr('studio.processingFailure', 'PROCESSING_FAILURE: SEQUENCE_ABORTED')); setTimeout(loadVideos, 500) }
+      if (data.status === 'completed') { setSuccess(tr('studio.analysisComplete', '✓ Analysis done: {count} clips created', { count: data.clips || 0 })); setTimeout(loadVideos, 500) }
+      else if (data.status === 'failed') { setError(tr('studio.processingFailure', 'Processing failed. Try uploading again.')); setTimeout(loadVideos, 500) }
     }
     on('video-processed', handler)
     return () => off('video-processed', handler)
@@ -119,10 +119,10 @@ export default function VideoStudioPage() {
 
   const handleUploadResponse = useCallback(async (_file: File, uploadResponse?: any) => {
     setError(''); setSuccess('')
-    if (!uploadResponse) { setError(tr('studio.uploadFailed', 'WRITE_ERR: UPLOAD_FAILED')); return }
+    if (!uploadResponse) { setError(tr('studio.uploadFailed', 'Upload failed')); return }
     const contentId = uploadResponse.data?.contentId || uploadResponse.contentId
-    if (!contentId) { setError(tr('studio.missingContentId', 'PARAM_ERR: MISSING_CONTENT_ID')); return }
-    setSuccess(tr('studio.uploadStable', '✓ UPLOAD_STABLE: ANALYZING_VECTORS...'))
+    if (!contentId) { setError(tr('studio.missingContentId', 'Upload couldn\'t be saved. Try again.')); return }
+    setSuccess(tr('studio.uploadStable', '✓ Uploaded. Analyzing your video...'))
     await loadVideos()
     // Ask the editor to auto-generate captions (snapped to speech) on first open
     // for a just-uploaded video, so the creator lands ready to edit.
@@ -188,7 +188,7 @@ export default function VideoStudioPage() {
   }, [])
 
   const uploadFromPageDrop = useCallback(async (file: File) => {
-    if (!/^video\//.test(file.type)) { setError(tr('studio.invalidVideo', 'MIME_ERR: INVALID_VIDEO_FORMAT')); return }
+    if (!/^video\//.test(file.type)) { setError(tr('studio.invalidVideo', 'That file isn\'t a supported video')); return }
     setError('')
     setPageDropProgress(0)
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
@@ -204,7 +204,7 @@ export default function VideoStudioPage() {
         await handleUploadResponse(file, result)
       } else {
         // Upload succeeded but no contentId surfaced (tus header missing); refresh list.
-        setSuccess(tr('studio.uploadStable', '✓ UPLOAD_STABLE: ANALYZING_VECTORS...'))
+        setSuccess(tr('studio.uploadStable', '✓ Uploaded. Analyzing your video...'))
         await loadVideos()
       }
     } catch (e: any) {
@@ -263,7 +263,7 @@ export default function VideoStudioPage() {
   if (loading) return (
     <div role="status" aria-live="polite" className="ds-bg-mesh-soft flex flex-col items-center justify-center py-48 min-h-screen">
        <Loader2 size={48} className="text-indigo-500 animate-spin mb-6" />
-       <p className="ds-text-label text-theme-muted">{tr('studio.syncingStudio', 'Syncing Neural Studio...')}</p>
+       <p className="ds-text-label text-theme-muted">{tr('studio.syncingStudio', 'Loading your videos...')}</p>
     </div>
   )
 
@@ -283,9 +283,9 @@ export default function VideoStudioPage() {
                   <Upload size={32} aria-hidden />
                 </span>
                 <h2 className="ds-text-h2 text-theme-primary mb-2">
-                  {pageDropProgress !== null ? tr('studio.syncingPayload', 'Syncing Payload...') : tr('studio.dropPayload', 'Drop Payload Here')}
+                  {pageDropProgress !== null ? tr('studio.syncingPayload', 'Uploading...') : tr('studio.dropPayload', 'Drop your video here')}
                 </h2>
-                <p className="ds-text-caption mb-6">{tr('studio.neuralIngestionReady', 'NEURAL_STUDIO_INGESTION_READY')}</p>
+                <p className="ds-text-caption mb-6">{tr('studio.neuralIngestionReady', 'Release to upload')}</p>
                 {pageDropProgress !== null && (
                   <div className="h-2 w-full rounded-full bg-accent overflow-hidden">
                     <div className="h-full bg-indigo-500 transition-all duration-200" style={{ width: `${pageDropProgress}%` }} />
@@ -302,23 +302,23 @@ export default function VideoStudioPage() {
         <SectionHeader
           as="h1"
           title={tr('studio.videoStudio', 'Video Studio')}
-          description={tr('studio.payloadsDetected', '{count} PAYLOADS_DETECTED', { count: videos.length })}
+          description={tr('studio.payloadsDetected', 'Your uploaded videos', { count: videos.length })}
           actions={
             <Button
               variant="secondary"
               size="md"
               leftIcon={<RefreshCw size={16} className={loading ? 'animate-spin' : ''} aria-hidden />}
-              onClick={() => { setSwarmHUDTask('Refreshing inventory'); setShowSwarmHUD(true); loadVideos() }}
+              onClick={() => { setSwarmHUDTask(tr('studio.refreshing', 'Refreshing')); setShowSwarmHUD(true); loadVideos() }}
             >
-              {tr('studio.syncArchive', 'Sync Archive')}
+              {tr('studio.syncArchive', 'Refresh')}
             </Button>
           }
         />
 
         {/* Performance stats — real counts from loaded videos */}
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard className="ds-hover-lift ds-anim-rise" label={tr('studio.payloadInventory', 'Payload Inventory')} value={videos.length} icon={Layers} />
-          <StatCard className="ds-hover-lift ds-anim-rise" label={tr('studio.neuralProcessed', 'Neural Processed')} value={completedCount} icon={ActivitySquare} />
+          <StatCard className="ds-hover-lift ds-anim-rise" label={tr('studio.payloadInventory', 'Total videos')} value={videos.length} icon={Layers} />
+          <StatCard className="ds-hover-lift ds-anim-rise" label={tr('studio.neuralProcessed', 'Processed')} value={completedCount} icon={ActivitySquare} />
           <StatCard className="ds-hover-lift ds-anim-rise" label={tr('studio.syntheticYields', 'Synthetic Yields')} value={totalClips} icon={Sparkles} />
         </section>
 
@@ -330,7 +330,7 @@ export default function VideoStudioPage() {
             </span>
             <h2 className="ds-text-h2 text-theme-primary mb-2">{tr('studio.initializeIntake', 'Initialize Intake')}</h2>
             <p className="ds-text-body text-theme-muted">
-              {tr('studio.intakeHint', 'Inject raw footage or multi-track sequences into the neural matrix. A/B Swarm will auto-calibrate vectors for optimal high-velocity synthesis.')}
+              {tr('studio.intakeHint', 'Upload raw footage and Click will analyze it and suggest clips you can edit and post.')}
             </p>
           </div>
           <div className="p-8 sm:p-10 xl:w-2/3 flex items-center justify-center">
@@ -346,14 +346,14 @@ export default function VideoStudioPage() {
             <header className="flex flex-col md:flex-row items-stretch md:items-center gap-4 justify-between">
                <SectionHeader
                  as="h2"
-                 title={tr('studio.payloadArchive', 'Payload Archive')}
-                 description={tr('studio.secureStorage', 'SECURE_STORAGE_NODES')}
+                 title={tr('studio.payloadArchive', 'Your videos')}
+                 description={tr('studio.secureStorage', 'Everything you\'ve uploaded')}
                  className="min-w-0"
                />
                <div className="flex flex-col sm:flex-row items-center gap-3 flex-1 justify-end max-w-3xl">
                  <div className="relative w-full sm:w-72">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted pointer-events-none" aria-hidden />
-                    <Input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={tr('studio.searchArchive', 'SEARCH_ARCHIVE...')} aria-label={tr('studio.searchArchive', 'SEARCH_ARCHIVE...')} className="pl-9" />
+                    <Input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder={tr('studio.searchArchive', 'Search videos...')} aria-label={tr('studio.searchArchive', 'Search videos...')} className="pl-9" />
                  </div>
                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                     {['all', 'completed', 'processing', 'failed'].map(opt => (
@@ -408,14 +408,14 @@ export default function VideoStudioPage() {
         
         <Panel variant="subtle" className="flex flex-wrap items-center justify-between gap-4">
            <p className="ds-text-caption">
-             <span className="text-indigo-500 font-medium">{tr('studio.tip', 'TUTORIAL_CORE:')}</span> {tr('studio.tipPaste', 'PASTE_URL (⌘V) ON THIS HUD FOR AUTO-SYNC.')}
+             <span className="text-indigo-500 font-medium">{tr('studio.tip', 'Tip:')}</span> {tr('studio.tipPaste', 'Drag a video anywhere on this page to upload it.')}
            </p>
            <div className="flex items-center gap-5">
               <span className="ds-text-caption inline-flex items-center gap-1.5">
-                 <ShieldCheck size={13} className="text-emerald-500" aria-hidden /> {tr('studio.secureTunnel', 'SECURE_TUNNEL')}
+                 <ShieldCheck size={13} className="text-emerald-500" aria-hidden /> {tr('studio.secureTunnel', 'Secure upload')}
               </span>
               <span className="ds-text-caption inline-flex items-center gap-1.5">
-                 <Zap size={13} className="text-amber-500" aria-hidden /> {tr('studio.highVelocity', 'HIGH_VELOCITY')}
+                 <Zap size={13} className="text-amber-500" aria-hidden /> {tr('studio.highVelocity', 'Auto clips')}
               </span>
            </div>
         </Panel>

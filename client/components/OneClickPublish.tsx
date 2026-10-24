@@ -1,13 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { m, AnimatePresence } from 'framer-motion'
+import { m } from 'framer-motion'
 import { 
   Send, 
   CheckCircle2, 
   Loader2, 
   X, 
-  ShieldAlert, 
   RefreshCw, 
   Zap, 
   Target, 
@@ -19,7 +18,7 @@ import {
   ToggleLeft as Toggle
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
-import { apiPost } from '../lib/api'
+import { apiGet, apiPost } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useDialogBehavior } from './ui/modal'
 
@@ -43,29 +42,28 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
   const [isPublishing, setIsPublishing] = useState(false)
   const [published, setPublished] = useState<string[]>([])
   const [isOpen, setIsOpen] = useState(false)
-  const [salvageActive, setSalvageActive] = useState(true)
   const [toneModulation, setToneModulation] = useState<'casual' | 'professional'>('casual')
-  const [showSalvageAlert, setShowSalvageAlert] = useState(false)
+  // Real connection status (was hardcoded "connected" for every platform).
+  const [connectedIds, setConnectedIds] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    apiGet<any>('/oauth/connections')
+      .then((res: any) => {
+        const accounts = res?.accounts || res?.data?.accounts || {}
+        setConnectedIds(new Set(Object.keys(accounts).filter((k) => Array.isArray(accounts[k]) && accounts[k].length > 0)))
+      })
+      .catch(() => setConnectedIds(new Set()))
+  }, [])
   const { showToast } = useToast()
   const { t } = useTranslation()
 
-  const defaultPlatforms: Platform[] = platforms || [
-    { id: 'tiktok', name: 'TikTok', icon: Smartphone, connected: true, color: 'text-pink-500' },
-    { id: 'linkedin', name: 'LinkedIn', icon: Globe, connected: true, color: 'text-blue-500' },
-    { id: 'twitter', name: 'Twitter/X', icon: MessageSquare, connected: true, color: 'text-slate-400' },
-    { id: 'instagram', name: 'Instagram', icon: Target, connected: true, color: 'text-fuchsia-500' },
+  const basePlatforms: Platform[] = platforms || [
+    { id: 'tiktok', name: 'TikTok', icon: Smartphone, connected: false, color: 'text-pink-500' },
+    { id: 'linkedin', name: 'LinkedIn', icon: Globe, connected: false, color: 'text-blue-500' },
+    { id: 'twitter', name: 'Twitter/X', icon: MessageSquare, connected: false, color: 'text-slate-400' },
+    { id: 'instagram', name: 'Instagram', icon: Target, connected: false, color: 'text-fuchsia-500' },
   ]
+  const defaultPlatforms: Platform[] = basePlatforms.map((p) => (platforms ? p : { ...p, connected: connectedIds.has(p.id) }))
 
-  // Phase 10: Salvage Protocol Simulation
-  useEffect(() => {
-    if (published.length > 0 && salvageActive) {
-      const timer = setTimeout(() => {
-        setShowSalvageAlert(true)
-        showToast(t('oneClickPublish.salvageLowCtr'), 'warning')
-      }, 5000) // Fast simulation
-      return () => clearTimeout(timer)
-    }
-  }, [published, salvageActive, showToast, t])
 
   const handlePlatformToggle = (platformId: string) => {
     setSelectedPlatforms(prev =>
@@ -91,7 +89,6 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
             platform: platformId,
             contentId,
             tone: toneModulation,
-            salvageEnabled: salvageActive
           })
 
           publishedPlatforms.push(platformId)
@@ -116,10 +113,6 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
     }
   }
 
-  const handleSalvageSwap = () => {
-    showToast(t('oneClickPublish.variantBDeployed'), 'success')
-    setShowSalvageAlert(false)
-  }
 
   const panelRef = useDialogBehavior(isOpen, () => setIsOpen(false))
 
@@ -216,21 +209,6 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
                     <Sparkles className="w-3 h-3 text-purple-400" /> {t('oneClickPublish.strategicProtocols')}
                  </div>
 
-                 {/* Salvage Toggle */}
-                 <div className="p-5 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-between">
-                    <div className="space-y-1">
-                       <div className="text-[11px] font-black text-white uppercase italic">{t('oneClickPublish.salvageProtocol')}</div>
-                       <div className="text-[8px] font-bold text-slate-500 uppercase">{t('oneClickPublish.autoPivotCtr')}</div>
-                    </div>
-                    <button
-                       type="button"
-                       onClick={() => setSalvageActive(!salvageActive)}
-                       title={salvageActive ? t('oneClickPublish.deactivateSalvage') : t('oneClickPublish.activateSalvage')}
-                       className={`w-12 h-6 rounded-full transition-all relative ${salvageActive ? 'bg-indigo-600' : 'bg-white/10'}`}
-                    >
-                       <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${salvageActive ? 'left-7' : 'left-1'}`} />
-                    </button>
-                 </div>
 
                  {/* Tone Modulator */}
                  <div className="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-3">
@@ -274,44 +252,6 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
            </div>
         </div>
 
-        {/* Salvage Alert Overlay */}
-        <AnimatePresence>
-           {showSalvageAlert && (
-             <m.div 
-               initial={{ opacity: 0, scale: 0.9 }}
-               animate={{ opacity: 1, scale: 1 }}
-               exit={{ opacity: 0, scale: 0.9 }}
-               className="absolute inset-0 bg-indigo-950/80 backdrop-blur-md flex items-center justify-center p-12 z-[101]"
-             >
-                <div className="flex flex-col items-center text-center space-y-6 max-w-sm">
-                   <div className="w-20 h-20 rounded-[2.5rem] bg-rose-500/20 border border-rose-500/40 flex items-center justify-center">
-                      <ShieldAlert className="w-10 h-10 text-rose-500 animate-pulse" />
-                   </div>
-                   <h4 className="text-2xl font-black italic text-[var(--text-main)] uppercase">{t('oneClickPublish.criticalUnderPerformance')}</h4>
-                   <p className="text-sm text-slate-300 font-medium">
-                      {t('oneClickPublish.salvageAlertBefore')} <span className="text-white font-black italic">TIKTOK</span> {t('oneClickPublish.salvageAlertMiddle')} <span className="text-indigo-400 font-bold uppercase tracking-widest">{t('oneClickPublish.variantB')}</span> {t('oneClickPublish.salvageAlertAfter')}
-                   </p>
-                   <div className="flex gap-4 w-full">
-                      <button
-                        type="button"
-                        onClick={() => setShowSalvageAlert(false)}
-                        className="flex-1 py-4 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white"
-                      >
-                        {t('oneClickPublish.ignore')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSalvageSwap}
-                        title={t('oneClickPublish.swapToVariantB')}
-                        className="flex-1 py-4 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-600/20"
-                      >
-                        {t('oneClickPublish.swapVariantB')}
-                      </button>
-                   </div>
-                </div>
-             </m.div>
-           )}
-        </AnimatePresence>
       </m.div>
     </div>
   )

@@ -338,11 +338,22 @@ router.get('/templates', auth, asyncHandler(async (req, res) => {
   const RecurringPostTemplate = require('../models/RecurringPostTemplate');
   const rows = await RecurringPostTemplate.find({ userId }).sort({ createdAt: -1 }).limit(100).lean();
 
+  // cadence is an object ({ daysOfWeek, timeOfDay, timezone }); interpolating
+  // it gave "[object Object] · tiktok".
+  const DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const templateLabel = (r) => {
+    const c = r.cadence || {};
+    const days = Array.isArray(c.daysOfWeek) && c.daysOfWeek.length
+      ? (c.daysOfWeek.length === 7 ? 'Every day' : c.daysOfWeek.map((d) => DAY[d] || '').filter(Boolean).join('/'))
+      : 'Recurring';
+    const when = c.timeOfDay ? ` ${c.timeOfDay}${c.timezone && c.timezone !== 'UTC' ? ` ${c.timezone}` : ' UTC'}` : '';
+    return `${days}${when} · ${r.platform || 'all platforms'}`;
+  };
   res.json(rows.map((r) => ({
     _id: String(r._id),
     // The model has no name field; the cadence + platform is what identifies a
     // template to a human, and inventing a stored name would be worse.
-    name: r.cadence ? `${r.cadence} · ${r.platform || 'all platforms'}` : (r.platform || 'Recurring post'),
+    name: templateLabel(r),
     platforms: r.platform ? [r.platform] : [],
     usageCount: r.fireCount || 0,
     active: r.active !== false,
