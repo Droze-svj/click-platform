@@ -145,6 +145,20 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ error: 'User not found in production database' });
     }
 
+    // Sessions revoked by a password change/reset or "sign out of all
+    // devices", and disabled accounts, lose access immediately — not when the
+    // access token happens to expire. (Mongo accounts; Supabase rows carry
+    // neither field, so these are no-ops there.)
+    {
+      const { isSessionRevoked, isAccountDisabled } = require('../services/authSecurityService');
+      if (isSessionRevoked(decoded, user)) {
+        return res.status(401).json({ error: 'Session expired. Please sign in again.', code: 'SESSION_REVOKED' });
+      }
+      if (isAccountDisabled(user)) {
+        return res.status(403).json({ error: 'This account is disabled.', code: 'ACCOUNT_DISABLED' });
+      }
+    }
+
     // Attach user to request. Supabase users only have `id` (UUID); the
     // lookup above already mirrors it onto `_id`, but belt-and-suspenders
     // so every downstream consumer can read either property safely.
