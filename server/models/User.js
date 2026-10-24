@@ -53,7 +53,10 @@ const userSchema = new mongoose.Schema({
     // expired, which silently blocked every brand-new user from uploading.
     // Paid flows (Whop webhook / billing service) overwrite this on purchase.
     endDate: { type: Date, default: () => new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) },
-    whopSubscriptionId: String,
+    whopSubscriptionId: String, // Whop membership id (mem_…)
+    cancelledAt: Date, // renewal stopped (self-service cancel); access runs to endDate
+    refundRequestedAt: Date,
+    refundTicketId: String,
     // 'monthly' | 'yearly'. The Whop webhook has always written this, but the
     // field was missing from the schema, so Mongoose strict mode silently
     // dropped it and no account ever recorded which billing period it paid for.

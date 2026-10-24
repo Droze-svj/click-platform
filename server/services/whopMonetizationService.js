@@ -143,7 +143,59 @@ async function refundWhopPayment(receiptId, opts = {}) {
   });
 }
 
+/**
+ * Stop a Whop membership renewing (access continues to the end of the period).
+ * https://docs.whop.com/api-reference/memberships/cancel-membership
+ * Resolves { success, configured, membership?, reason? } — never throws.
+ */
+async function cancelWhopMembership(membershipId, { mode = 'at_period_end' } = {}) {
+  const WHOP_API_KEY = process.env.WHOP_API_KEY;
+  if (!WHOP_API_KEY) {
+    return { success: false, configured: false, reason: 'WHOP_API_KEY is not configured.' };
+  }
+  if (!membershipId || !/^mem_/.test(String(membershipId))) {
+    return { success: false, configured: true, reason: 'No Whop membership id recorded for this account.' };
+  }
+  const base = (process.env.WHOP_API_V1_URL || 'https://api.whop.com/api/v1').replace(/\/+$/, '');
+  const payload = JSON.stringify({ cancellation_mode: mode });
+  return new Promise((resolve) => {
+    const url = new URL(`${base}/memberships/${encodeURIComponent(membershipId)}/cancel`);
+    const request = https.request(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${WHOP_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload),
+        accept: 'application/json',
+      },
+      timeout: 15000,
+    }, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        let body = {};
+        try { body = JSON.parse(data || '{}'); } catch { /* non-JSON error body */ }
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          logger.info('Whop membership cancelled', { membershipId, mode, status: body.status });
+          return resolve({ success: true, configured: true, membership: body });
+        }
+        const reason = (body.error && (body.error.message || body.error)) || body.message || `Whop cancel failed with HTTP ${res.statusCode}`;
+        logger.error('Whop membership cancel failed', { membershipId, statusCode: res.statusCode, reason });
+        resolve({ success: false, configured: true, reason: String(reason) });
+      });
+    });
+    request.on('timeout', () => request.destroy(new Error('Whop cancel request timed out')));
+    request.on('error', (err) => {
+      logger.error('Whop membership cancel errored', { membershipId, error: err.message });
+      resolve({ success: false, configured: true, reason: err.message });
+    });
+    request.write(payload);
+    request.end();
+  });
+}
+
 module.exports = {
   fetchWhopProducts,
-  refundWhopPayment
+  refundWhopPayment,
+  cancelWhopMembership
 };
