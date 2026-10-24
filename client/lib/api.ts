@@ -105,6 +105,61 @@ function resolveBaseUrl(): string {
 export const API_URL = resolveBaseUrl()
 
 /**
+ * Many screens call the backend with the default axios instance
+ * (`axios.get(`${API_URL}/…`)`) instead of the helpers below, and never set
+ * an Authorization header. Locally the dev auth bypass let those through, so
+ * they looked fine; in production every one of them was a 401 — the content
+ * detail page, script editor, calendar, templates, job cancel… This attaches
+ * the session token to default-axios requests aimed at our own API. It never
+ * overrides a header the caller set, and skips the routes that mint tokens.
+ */
+const AUTH_PUBLIC_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/forgot-password', '/auth/reset-password', '/auth/oauth/']
+export function isOwnApiUrl(url: string, base: string = API_URL): boolean {
+  if (!url) return false
+  if (url.startsWith('/api/') || url === '/api') return true
+  const b = base.replace(/\/+$/, '')
+  return !!b && /^https?:\/\//.test(b) && (url === b || url.startsWith(`${b}/`))
+}
+if (typeof window !== 'undefined' && !(axios as any).__clickAuthInterceptor) {
+  ;(axios as any).__clickAuthInterceptor = true
+  axios.interceptors.request.use((config) => {
+    const url = String(config.url || '')
+    if (!isOwnApiUrl(url) || AUTH_PUBLIC_PATHS.some((p) => url.includes(p))) return config
+    const headers: any = config.headers || {}
+    const has = typeof headers.get === 'function' ? headers.get('Authorization') : headers.Authorization
+    if (has) return config
+    let token: string | null = null
+    try { token = localStorage.getItem('token') } catch { /* storage blocked */ }
+    if (token) {
+      if (typeof headers.set === 'function') headers.set('Authorization', `Bearer ${token}`)
+      else config.headers = { ...headers, Authorization: `Bearer ${token}` } as any
+    }
+    return config
+  })
+}
+// Same gap for raw fetch() calls to the API (ComplianceDashboard, caches…).
+if (typeof window !== 'undefined' && typeof window.fetch === 'function' && !(window.fetch as any).__clickAuth) {
+  const nativeFetch = window.fetch.bind(window)
+  const authFetch = (input: RequestInfo | URL, init?: RequestInit) => {
+    try {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+      const path = url.startsWith(window.location.origin) ? url.slice(window.location.origin.length) : url
+      if ((isOwnApiUrl(url) || isOwnApiUrl(path)) && !AUTH_PUBLIC_PATHS.some((p) => url.includes(p))) {
+        const headers = new Headers(init?.headers || (typeof input !== 'string' && !(input instanceof URL) ? input.headers : undefined))
+        const token = localStorage.getItem('token')
+        if (token && !headers.has('Authorization')) {
+          headers.set('Authorization', `Bearer ${token}`)
+          return nativeFetch(input, { ...init, headers })
+        }
+      }
+    } catch { /* fall through to the untouched request */ }
+    return nativeFetch(input, init)
+  }
+  ;(authFetch as any).__clickAuth = true
+  window.fetch = authFetch as typeof window.fetch
+}
+
+/**
  * Creates and configures an Axios instance with default settings.
  * 
  * @returns Configured Axios instance
