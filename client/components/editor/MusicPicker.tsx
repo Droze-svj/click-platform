@@ -6,6 +6,7 @@ import { apiGet, apiPost } from '../../lib/api'
 import { AUDIO_TRACKS } from '../../types/editor'
 import { Panel, Button, SectionHeader, EmptyState } from '../ui'
 import { cn } from '../../lib/utils'
+import { useTranslation } from '../../hooks/useTranslation'
 
 interface Track {
   _id: string
@@ -44,6 +45,7 @@ const GEN_GENRES = ['pop', 'electronic', 'hip-hop', 'ambient', 'energetic', 'cal
 const GEN_MOODS = ['energetic', 'happy', 'calm', 'dramatic', 'inspiring']
 
 export default function MusicPicker({ currentTime, setTimelineSegments, showToast }: MusicPickerProps) {
+  const { t } = useTranslation()
   const [data, setData] = React.useState<BrowseData | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [facet, setFacet] = React.useState<Facet>('genre')
@@ -111,17 +113,31 @@ export default function MusicPicker({ currentTime, setTimelineSegments, showToas
     if (attempt > 40) { setGenerating(false); showToast('Generation is taking too long — check back later', 'info'); return }
     try {
       const res = await apiGet<unknown>(`/music/generate/${encodeURIComponent(id)}`)
-      const payload = ((res as { data?: unknown })?.data ?? res) as { status?: string; track?: Track }
+      const payload = ((res as { data?: unknown })?.data ?? res) as { status?: string; track?: Track | null; error?: string }
       if (payload?.status === 'completed' && payload.track) {
         setData((prev) => prev ? { ...prev, tracks: [payload.track as Track, ...prev.tracks] } : prev)
         setGenerating(false)
         showToast('AI track ready — added to your library', 'success')
         return
       }
+      // Terminal states end the poll. 'failed' (and 'completed' with no
+      // track) used to be treated as still running, so the spinner kept
+      // polling until the 2-minute cap and then blamed "taking too long".
+      if (payload?.status === 'failed' || payload?.status === 'error') {
+        setGenerating(false)
+        showToast(payload.error ? t('musicPicker.generationFailedReason', { error: payload.error }) : t('musicPicker.generationFailed'), 'error')
+        return
+      }
+      if (payload?.status === 'completed') {
+        setGenerating(false)
+        showToast(t('musicPicker.generationNoTrack'), 'error')
+        return
+      }
       setTimeout(() => pollGeneration(id, attempt + 1), 3000)
-    } catch {
+    } catch (e: any) {
       setGenerating(false)
-      showToast('Could not check generation status', 'error')
+      const msg = e?.response?.data?.error
+      showToast(typeof msg === 'string' && msg ? msg : 'Could not check generation status', 'error')
     }
   }
 

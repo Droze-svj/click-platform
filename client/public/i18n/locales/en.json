@@ -8831,6 +8831,11 @@
     "renderFailedGeneric": "The render failed.",
     "renderTimedOut": "Rendering is taking too long and has stopped reporting back. Please try again."
   },
+  "musicPicker": {
+    "generationFailed": "AI music generation failed. Please try again.",
+    "generationFailedReason": "AI music generation failed: {{error}}",
+    "generationNoTrack": "The track was generated but could not be saved. Please generate it again."
+  },
   "editorHUD": {
     "saveFailedRetry": "Not saved to your account yet. Click to retry.",
     "section": {

@@ -88,19 +88,33 @@ router.get('/generate/:id', auth, asyncHandler(async (req, res) => {
     const svc = require('../services/aiMusicGenerationService');
     const status = await svc.checkGenerationStatus(gen._id);
     if (status && status.status === 'completed') {
-      const track = await svc.downloadAndStoreTrack(gen._id, userId);
-      if (track && track._id) {
-        // Best-effort: stamp organized-catalog facets from the generation params.
-        try {
-          await Music.updateOne(
-            { _id: track._id, userId },
-            { $set: { energy: gen.params?.energy || 'medium', usageContext: ['background'], vocals: 'instrumental' } },
-          );
-        } catch (_) { /* non-fatal */ }
+      let track = null;
+      try {
+        track = await svc.downloadAndStoreTrack(gen._id, userId);
+      } catch (dlErr) {
+        logger.warn('[music-generate] track download failed', { error: dlErr.message, generationId: String(gen._id) });
       }
-      return sendSuccess(res, { status: 'completed', track: track ? signMediaUrls(track) : null });
+      // "completed" with no stored track is a failure the user must hear
+      // about — it used to return { status: 'completed', track: null } and
+      // the picker kept polling a job that would never produce anything.
+      if (!track || !track._id) {
+        return sendError(res, 'The track was generated but could not be downloaded. Please generate it again.', 502);
+      }
+      // Best-effort: stamp organized-catalog facets from the generation params.
+      try {
+        await Music.updateOne(
+          { _id: track._id, userId },
+          { $set: { energy: gen.params?.energy || 'medium', usageContext: ['background'], vocals: 'instrumental' } },
+        );
+      } catch (_) { /* non-fatal */ }
+      return sendSuccess(res, { status: 'completed', track: signMediaUrls(track) });
     }
-    return sendSuccess(res, { status: (status && status.status) || gen.status || 'processing' });
+    const current = (status && status.status) || gen.status || 'processing';
+    if (current === 'failed') {
+      const reason = (status && status.error) || gen.error || null;
+      return sendSuccess(res, { status: 'failed', error: typeof reason === 'string' ? reason.slice(0, 200) : null });
+    }
+    return sendSuccess(res, { status: current });
   } catch (e) {
     logger.warn('[music-generate] status check failed', { error: e.message });
     return sendError(res, 'Failed to check generation', 502);
