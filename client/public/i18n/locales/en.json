@@ -9011,6 +9011,7 @@
       "competitiveInsights": "Competitive Insights"
     },
     "err": {
+      "analyzeFailed": "Couldn't analyze this video. Try again in a moment.",
       "videoNotFound": "Video data not found in response",
       "loadFailed": "Failed to load video. Please try again.",
       "missingSource": "This video is missing its source file. Re-upload and try again.",
