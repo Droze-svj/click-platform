@@ -40,6 +40,15 @@ const commentSchema = new mongoose.Schema({
     ref: 'Comment'
   },
   mentions: [String],
+  // One entry per (user, type); toggled by POST /api/comments/:id/reaction.
+  reactions: {
+    type: [{
+      _id: false,
+      userId: { type: String, required: true },
+      type: { type: String, enum: ['like', 'helpful'], required: true },
+    }],
+    default: [],
+  },
   createdAt: {
     type: Date,
     default: Date.now

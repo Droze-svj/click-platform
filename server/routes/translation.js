@@ -10,8 +10,10 @@ const {
   getContentTranslations,
   updateTranslation,
   deleteTranslation,
-  getSupportedLanguages
+  getSupportedLanguages,
+  translateText
 } = require('../services/translationService');
+const validator = require('validator');
 const {
   optimizeForPlatform,
   getBestLanguageForPlatform,
@@ -69,10 +71,28 @@ router.post('/detect', auth, asyncHandler(async (req, res) => {
  * Translate content to target language
  */
 router.post('/translate', auth, asyncHandler(async (req, res) => {
-  const { contentId, targetLanguage, ...options } = req.body;
+  const { contentId, targetLanguage, ...options } = req.body || {};
+
+  // Free-text path: the scheduler's "Generate in <language>" translates a
+  // caption that is not saved as Content yet ({ text, targetLanguage, context }).
+  if (!contentId && typeof options.text === 'string' && options.text.trim()) {
+    if (!targetLanguage) return sendError(res, 'Target language is required', 400);
+    // The body passed through the HTML-escaping sanitizer; the caption is plain
+    // text that goes back into a textarea, so undo the escaping before the AI
+    // sees it (otherwise apostrophes come back as &#x27;).
+    const text = validator.unescape(options.text).slice(0, 5000);
+    const result = await translateText(text, String(targetLanguage), {
+      context: typeof options.context === 'string' ? options.context : null,
+    });
+    if (!result.ok) return sendError(res, result.error, result.status || 503);
+    return sendSuccess(res, 'Text translated', 200, {
+      translatedText: result.translatedText,
+      targetLanguage: result.targetLanguage,
+    });
+  }
 
   if (!contentId || !targetLanguage) {
-    return sendError(res, 'Content ID and target language are required', 400);
+    return sendError(res, 'Content ID (or text) and target language are required', 400);
   }
 
   const Content = require('../models/Content');
@@ -115,35 +135,10 @@ router.post('/translate-multiple', auth, asyncHandler(async (req, res) => {
 }));
 
 /**
- * GET /api/translation/content/:contentId/:language
- * Get content in specific language
- */
-router.get('/content/:contentId/:language', auth, asyncHandler(async (req, res) => {
-  const { contentId, language } = req.params;
-  const { fallbackToOriginal = true } = req.query;
-
-  const Content = require('../models/Content');
-  const content = await Content.findOne({
-    _id: contentId,
-    userId: req.user._id
-  });
-
-  if (!content) {
-    return sendError(res, 'Content not found', 404);
-  }
-
-  const translatedContent = await getContentInLanguage(
-    contentId,
-    language,
-    fallbackToOriginal === 'true'
-  );
-  
-  sendSuccess(res, 'Content retrieved', 200, translatedContent);
-}));
-
-/**
  * GET /api/translation/content/:contentId/translations
- * Get all translations for content
+ * Get all translations for content.
+ * Declared BEFORE /content/:contentId/:language — that route would otherwise
+ * take "translations" as a language code, so the list was never reachable.
  */
 router.get('/content/:contentId/translations', auth, asyncHandler(async (req, res) => {
   const { contentId } = req.params;
@@ -160,6 +155,35 @@ router.get('/content/:contentId/translations', auth, asyncHandler(async (req, re
 
   const translations = await getContentTranslations(contentId);
   sendSuccess(res, 'Translations retrieved', 200, { translations });
+}));
+
+/**
+ * GET /api/translation/content/:contentId/:language
+ * Get content in specific language
+ */
+router.get('/content/:contentId/:language', auth, asyncHandler(async (req, res) => {
+  const { contentId, language } = req.params;
+  // Defaults to true. The old `= true` default compared with === 'true' was
+  // false whenever the query param was absent.
+  const fallbackToOriginal = String(req.query.fallbackToOriginal ?? 'true') !== 'false';
+
+  const Content = require('../models/Content');
+  const content = await Content.findOne({
+    _id: contentId,
+    userId: req.user._id
+  });
+
+  if (!content) {
+    return sendError(res, 'Content not found', 404);
+  }
+
+  const translatedContent = await getContentInLanguage(
+    contentId,
+    language,
+    fallbackToOriginal
+  );
+
+  sendSuccess(res, 'Content retrieved', 200, translatedContent);
 }));
 
 /**

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Comment = require('../models/Comment');
 const { getIO } = require('../services/socketService');
 const auth = require('../middleware/auth');
@@ -79,6 +80,37 @@ router.post('/', auth, async (req, res) => {
     } catch (_) { /* socket layer optional */ }
 
     sendSuccess(res, 'Comment created', 201, comment);
+  } catch (err) {
+    sendError(res, err.message, 500);
+  }
+});
+
+/**
+ * POST /api/comments/:commentId/reaction  { type: 'like' | 'helpful' }
+ * Toggle the caller's reaction of that type. Same boundary as reading the
+ * thread: the caller must belong to the comment's team.
+ */
+const REACTION_TYPES = ['like', 'helpful'];
+router.post('/:commentId/reaction', auth, async (req, res) => {
+  const { commentId } = req.params;
+  const type = String((req.body && req.body.type) || '');
+  if (!REACTION_TYPES.includes(type)) {
+    return sendError(res, `type must be one of ${REACTION_TYPES.join(', ')}`, 400);
+  }
+  if (!mongoose.Types.ObjectId.isValid(commentId)) return sendError(res, 'Not found', 404);
+  try {
+    const comment = await Comment.findById(commentId);
+    if (!comment || !(await teamAccessible(req, comment.teamId))) {
+      return sendError(res, 'Not found', 404);
+    }
+    const uid = String(req.user._id || req.user.id);
+    const list = Array.isArray(comment.reactions) ? comment.reactions : [];
+    const had = list.some((r) => r.userId === uid && r.type === type);
+    comment.reactions = had
+      ? list.filter((r) => !(r.userId === uid && r.type === type))
+      : [...list, { userId: uid, type }];
+    await comment.save();
+    sendSuccess(res, had ? 'Reaction removed' : 'Reaction added', 200, comment);
   } catch (err) {
     sendError(res, err.message, 500);
   }

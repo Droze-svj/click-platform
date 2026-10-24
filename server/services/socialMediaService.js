@@ -192,8 +192,12 @@ async function getOptimalPostingTimes(userId, platform) {
       niche = lastContent?.niche || lastContent?.metadata?.niche || 'business';
     }
 
-    const windows = NICHE_POSTING_WINDOWS[niche]?.[platform.toLowerCase()] || 
-                    NICHE_POSTING_WINDOWS['business'][platform.toLowerCase()] || [];
+    // NICHE_POSTING_WINDOWS is keyed by niche only: niche → [{ start, end, label }].
+    // It used to be indexed by [niche][platform] too, which is always undefined,
+    // so every caller got an empty list.
+    const pick = (n) => (Array.isArray(NICHE_POSTING_WINDOWS[n]) ? NICHE_POSTING_WINDOWS[n] : null);
+    const windows = (pick(String(niche).toLowerCase()) || pick('other') || pick('business') || [])
+      .map((w) => ({ start: w.start, end: w.end, label: w.label }));
 
     return {
       platform,

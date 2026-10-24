@@ -93,7 +93,7 @@ export default function ContentDetailPage() {
     if (!content?._id) return
     try {
       const [listRes, langsRes] = await Promise.all([
-        apiGet<{ translations?: { language: string; _id: string }[] }>('/translation/content/' + content._id + '/translations'),
+        apiGet<{ translations?: { language: string; _id: string }[] }>('/translation/content/' + content._id + '/translations', undefined, false),
         apiGet<{ languages?: { code: string; name: string }[] }>('/translation/languages')
       ])
       setTranslationList((listRes as any)?.translations || (listRes as any)?.data?.translations || [])
@@ -129,8 +129,10 @@ export default function ContentDetailPage() {
       const res = await apiPost<{ successful?: any[]; failed?: any[] }>('/translation/translate-multiple', {
         contentId: content._id, languages: ['es', 'fr', 'de']
       })
-      const ok = (res as any)?.successful?.length || 0
-      const fail = (res as any)?.failed?.length || 0
+      // The route answers the {success, data: {successful, failed, skipped}} envelope.
+      const summary = (res as any)?.data ?? res
+      const ok = (summary?.successful?.length || 0) + (summary?.skipped?.length || 0)
+      const fail = summary?.failed?.length || 0
       // Interpolated so RTL/word-order languages can position {{ok}} and
       // {{fail}} naturally in their sentence — concatenation broke Arabic.
       showToast(
@@ -365,7 +367,7 @@ export default function ContentDetailPage() {
                      {/* Temporal Deployment Sync */}
                      <ContentSchedulingAssistant
                         contentId={content._id}
-                        content={{ text: content.transcript || content.description, type: content.type }}
+                        content={{ text: content.transcript || content.description, type: content.type, platform: (content as any).platform || (content as any).platforms?.[0] }}
                      />
 
                      {/* Node Metadata Diagnostic */}

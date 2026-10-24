@@ -4654,7 +4654,8 @@
     "percentOptimal": "{{score}}% optimal",
     "dayAtTime": "{{day}} at {{time}}",
     "schedule": "Schedule",
-    "viewAllOptimalTimes": "View all optimal times →"
+    "viewAllOptimalTimes": "View all optimal times →",
+    "loadFailed": "Couldn't load posting times."
   },
   "contentSuggestions": {
     "loadFailed": "Failed to load suggestions",
