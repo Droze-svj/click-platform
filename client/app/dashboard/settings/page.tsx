@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo, createContext, useContext } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import axios from 'axios'
 import Link from 'next/link'
@@ -69,7 +69,11 @@ interface UserSettings {
   agentic: {
     autonomousSwarm: boolean; slaAutoFulfill: boolean; predictiveThreshold: number;
     digitalTwinProvider: 'heygen' | 'sora' | 'both';
+    // The saved keys never come back from the server: only whether one is
+    // set and its last 4 characters. A typed key is sent once, then cleared.
     heygenApiKey?: string; soraApiKey?: string;
+    heygenApiKeySet?: boolean; heygenApiKeyLast4?: string;
+    soraApiKeySet?: boolean; soraApiKeyLast4?: string;
   }
   videoEditing?: Record<string, any>
 }
@@ -149,12 +153,15 @@ export default function SettingsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
-  const { setLanguage } = useTranslation()
+  const { setLanguage, t } = useTranslation()
   const { setTheme } = useTheme()
   const { ref: shellRef, width } = useContainerWidth<HTMLDivElement>()
   const isNarrow = width > 0 && width < 860
 
   const [loading, setLoading] = useState(true)
+  // True when the saved settings could not be loaded. The form then shows
+  // defaults, so saving is blocked: a save would overwrite the real values.
+  const [loadError, setLoadError] = useState(false)
   const [savingSection, setSavingSection] = useState<SectionId | null>(null)
   const initialLoadDoneRef = useRef(false)
 
@@ -196,14 +203,15 @@ export default function SettingsPage() {
       if (!token) { router.push('/login'); return }
       const response = await axios.get(`${API_URL}/user/settings`, { headers: { Authorization: `Bearer ${token}` } })
       const data = extractApiData<UserSettings>(response)
-      if (data) {
-        setSettings(prev => ({ ...prev, ...data }))
-        if (data.preferences?.language && isValidLang(data.preferences.language)) setLanguage(data.preferences.language)
-        // Apply persisted appearance to the live document.
-        applyAppearance(data.appearance)
-      }
+      if (!data || typeof data !== 'object') throw new Error('empty settings response')
+      setLoadError(false)
+      setSettings(prev => ({ ...prev, ...data }))
+      if (data.preferences?.language && isValidLang(data.preferences.language)) setLanguage(data.preferences.language)
+      // Apply persisted appearance to the live document.
+      applyAppearance(data.appearance)
     } catch (error: any) {
-      if (error.response?.status === 401) router.push('/login')
+      if (error.response?.status === 401) { router.push('/login'); return }
+      setLoadError(true)
     } finally { setLoading(false) }
   }, [router, setLanguage])
 
@@ -251,17 +259,25 @@ export default function SettingsPage() {
 
   /* ── Per-section save (only sends that section's payload) ── */
   const saveSection = useCallback(async (section: SectionId, payload: Partial<UserSettings>) => {
+    if (loadError) {
+      toast(t('settingsPage.saveBlockedNotLoaded'), 'error')
+      return
+    }
     setSavingSection(section)
     try {
       const token = localStorage.getItem('token')
       if (!token) return
-      await axios.put(`${API_URL}/user/settings`, payload, { headers: { Authorization: `Bearer ${token}` } })
+      const response = await axios.put(`${API_URL}/user/settings`, payload, { headers: { Authorization: `Bearer ${token}` } })
+      // Pick up the server's masked view of the API keys (set / last 4) and
+      // drop the typed key from memory.
+      const saved = extractApiData<UserSettings>(response)
+      if (saved?.agentic) setSettings(prev => ({ ...prev, agentic: { ...prev.agentic, ...saved.agentic, heygenApiKey: '', soraApiKey: '' } }))
       toast('Settings saved', 'success')
     } catch (err) {
       toast(handleApiError(err) || 'Could not save settings', 'error')
       throw err
     } finally { setSavingSection(null) }
-  }, [])
+  }, [loadError, t])
 
   /* ── Brand kit save ── */
   const saveBrandKit = async () => {
@@ -424,6 +440,15 @@ export default function SettingsPage() {
               <h2 className="ds-text-h2 text-theme-primary">{activeDef.label}</h2>
             </div>
 
+            {loadError && (
+              <div role="alert" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3">
+                <p className="ds-text-body text-theme-primary">{t('settingsPage.loadFailedSaveBlocked')}</p>
+                <Button variant="secondary" size="sm" onClick={() => { setLoading(true); loadSettings() }}>
+                  {t('common.retry')}
+                </Button>
+              </div>
+            )}
+            <SaveBlockedContext.Provider value={loadError}>
             {activeSection === 'profile' && <ProfileSection user={user} />}
             {activeSection === 'security' && <SecuritySection onDeactivate={deactivateAccount} />}
             {activeSection === 'notifications' && (
@@ -491,6 +516,7 @@ export default function SettingsPage() {
               />
             )}
             {activeSection === 'billing' && <BillingSection />}
+            </SaveBlockedContext.Provider>
           </main>
         </div>
       </PageShell>
@@ -533,10 +559,15 @@ function SelectRow({ label, description, value, options, onChange }: {
   )
 }
 
-function SaveBar({ saving, onSave, label = 'Save changes' }: { saving: boolean; onSave: () => void; label?: string }) {
+// Set while the saved settings failed to load: the sections' Save buttons are
+// disabled so stale defaults can't overwrite the real settings.
+const SaveBlockedContext = createContext(false)
+
+function SaveBar({ saving, onSave, label = 'Save changes', independent = false }: { saving: boolean; onSave: () => void; label?: string; independent?: boolean }) {
+  const blocked = useContext(SaveBlockedContext) && !independent
   return (
     <div className="flex justify-end pt-4 mt-2 border-t border-[var(--border-subtle)]">
-      <Button variant="primary" onClick={onSave} loading={saving} leftIcon={!saving ? <Check size={16} /> : undefined}>
+      <Button variant="primary" onClick={onSave} loading={saving} disabled={blocked} leftIcon={!saving ? <Check size={16} /> : undefined}>
         {saving ? 'Saving…' : label}
       </Button>
     </div>
@@ -899,6 +930,7 @@ function EditingSection({ settings, setField, saving, onSave }: {
 function AutomationSection({ settings, setField, saving, onSave }: {
   settings: UserSettings; setField: (p: string, v: any) => void; saving: boolean; onSave: () => void
 }) {
+  const { t } = useTranslation()
   const g = settings.agentic
   return (
     <Card>
@@ -930,7 +962,7 @@ function AutomationSection({ settings, setField, saving, onSave }: {
         {(g.digitalTwinProvider === 'heygen' || g.digitalTwinProvider === 'both') && (
           <div className="mt-4">
             <FormField label="HeyGen API key" hint="Stored securely and used for HeyGen avatar generation">
-              <Input type="password" autoComplete="off" placeholder="hg_…" value={g.heygenApiKey || ''}
+              <Input type="password" autoComplete="off" placeholder={g.heygenApiKeySet ? t('settingsPage.apiKeySavedPlaceholder', { last4: g.heygenApiKeyLast4 || '' }) : 'hg_…'} value={g.heygenApiKey || ''}
                 onChange={e => setField('agentic.heygenApiKey', e.target.value)} aria-label="HeyGen API key" />
             </FormField>
           </div>
@@ -938,7 +970,7 @@ function AutomationSection({ settings, setField, saving, onSave }: {
         {(g.digitalTwinProvider === 'sora' || g.digitalTwinProvider === 'both') && (
           <div className="mt-4">
             <FormField label="Sora API key" hint="Stored securely and used for Sora avatar generation">
-              <Input type="password" autoComplete="off" placeholder="sk-…" value={g.soraApiKey || ''}
+              <Input type="password" autoComplete="off" placeholder={g.soraApiKeySet ? t('settingsPage.apiKeySavedPlaceholder', { last4: g.soraApiKeyLast4 || '' }) : 'sk-…'} value={g.soraApiKey || ''}
                 onChange={e => setField('agentic.soraApiKey', e.target.value)} aria-label="Sora API key" />
             </FormField>
           </div>
@@ -1017,7 +1049,7 @@ function BrandSection({ brandKit, setBrandKit, loading, saving, onSave }: {
           onChange={v => upd('logoPlacement', v)} />
       </div>
 
-      <SaveBar saving={saving} onSave={onSave} label="Save brand kit" />
+      <SaveBar saving={saving} onSave={onSave} label="Save brand kit" independent />
     </Card>
   )
 }

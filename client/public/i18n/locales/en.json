@@ -360,7 +360,10 @@
     "dangerZone": "Danger zone",
     "irreversibleActions": "Irreversible actions",
     "deleteAccountWarning": "Delete your account: permanently remove all of your videos, posts, connected accounts, and subscription. This cannot be undone.",
-    "deleteAccount": "Delete account"
+    "deleteAccount": "Delete account",
+    "loadFailedSaveBlocked": "We couldn't load your saved settings. Saving is turned off until they load, so your real settings aren't replaced by defaults.",
+    "saveBlockedNotLoaded": "Your saved settings haven't loaded yet. Try again before saving.",
+    "apiKeySavedPlaceholder": "Saved key ending {{last4}}. Enter a new key to replace it"
   },
   "common": {
     "save": "Save",
@@ -6315,7 +6318,9 @@
     "push": "Push",
     "pushDescription": "Browser push notifications",
     "saving": "Saving...",
-    "savePreferences": "Save Preferences"
+    "savePreferences": "Save Preferences",
+    "loadFailed": "We couldn't load your notification preferences. Saving is off until they load.",
+    "saveFailed": "Couldn't save your notification preferences. Please try again."
   },
   "offlineIndicator": {
     "backOnline": "Back online",
