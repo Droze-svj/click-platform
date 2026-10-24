@@ -88,13 +88,19 @@ export default function TasksPage() {
     setRefreshing(true)
     try {
       clearApiCache('/tasks')
-      const params = new URLSearchParams()
+      // The list groups children under their parent client-side (getSubtasks),
+      // but the server only returns root tasks (parentId:null) unless asked —
+      // so every subtask vanished after a reload.
+      const params = new URLSearchParams({ includeSubtasks: '1' })
       if (sortByUrgency) params.set('sortByUrgency', '1')
       const res: any = await apiGet('/tasks?' + params.toString())
       setTasks(Array.isArray(res?.data?.tasks || res) ? (res?.data?.tasks || res) : [])
-    } catch { setTasks([]) }
+    } catch {
+      setTasks([])
+      showToast(t('tasksPage.toastLoadFailed'), 'error')
+    }
     finally { setLoading(false); setRefreshing(false) }
-  }, [user, sortByUrgency])
+  }, [user, sortByUrgency, showToast, t])
 
   useEffect(() => { loadTasks() }, [loadTasks])
 
