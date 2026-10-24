@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiGet, apiPost } from '../../../lib/api'
+import { templateIdFromUrl, loadTemplatePrefill } from '../../../utils/templatePrefill'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { useSocket } from '../../../hooks/useSocket'
 import { useAuth } from '../../../hooks/useAuth'
@@ -61,6 +62,20 @@ export default function NeuralForgePage() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
   useEffect(() => { if (!user) router.push('/login') }, [user, router])
+
+  // Templates page → "Use template" lands here with ?template=<id>.
+  useEffect(() => {
+    const id = templateIdFromUrl()
+    if (!id) return
+    loadTemplatePrefill(id)
+      .then((p) => {
+        if (!p) return
+        if (p.text) setLogicSeed(p.text)
+        if (p.title) setDesignation(p.title)
+        if (p.platforms.length) setActiveNodes(p.platforms)
+      })
+      .catch(() => setError(t('contentPage.errorTemplateLoadFailed')))
+  }, [t])
 
   const loadPayload = useCallback(async (id: string) => {
     try {

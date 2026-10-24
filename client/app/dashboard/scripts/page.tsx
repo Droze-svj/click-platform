@@ -17,6 +17,7 @@ import { useToast } from '../../../contexts/ToastContext'
 import { useWorkflow } from '../../../contexts/WorkflowContext'
 import { useTranslation } from '../../../hooks/useTranslation'
 import { apiGet, apiPost, apiDelete, api } from '../../../lib/api'
+import { templateIdFromUrl, loadTemplatePrefill } from '../../../utils/templatePrefill'
 import ToastContainer from '../../../components/ToastContainer'
 import { Button, IconButton, Panel, StatCard, SectionHeader, Badge, Input, Modal,
   PageShell,
@@ -87,6 +88,23 @@ export default function ScriptsPage() {
   }, [showToast, t])
 
   useEffect(() => { if (!user) router.push('/login'); else loadScripts() }, [user, router, loadScripts])
+
+  // Templates page → "Use template" lands here with ?template=<id>.
+  useEffect(() => {
+    const id = templateIdFromUrl()
+    if (!id) return
+    loadTemplatePrefill(id)
+      .then((p) => {
+        if (!p) return
+        if (p.topic) setSeed(p.topic)
+        if (p.platforms[0]) setPlatform(p.platforms[0])
+        if (p.tone) setTone(p.tone)
+        if (p.audience) setTargetAudience(p.audience)
+        if (p.keywords) setKeywords(p.keywords)
+        setShowTerminal(true)
+      })
+      .catch(() => showToast(t('scriptsPage.toastTemplateLoadFailed'), 'error'))
+  }, [showToast, t])
 
   const handleGenerateScript = async (e: React.FormEvent) => {
     e.preventDefault()

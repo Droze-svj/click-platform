@@ -429,7 +429,7 @@ export default function ContentDetailPage() {
              {activeTab === 'comments' && (
                <m.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
                   <Suspense fallback={<div className="flex justify-center p-48"><RefreshCw size={64} className="animate-spin text-indigo-500" /></div>}>
-                     <CommentsSection entityType="content" entityId={content._id} teamId={undefined} />
+                     <CommentsSection entityType="content" entityId={content._id} />
                   </Suspense>
                </m.div>
              )}

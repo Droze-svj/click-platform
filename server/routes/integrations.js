@@ -16,6 +16,26 @@ const Integration = require('../models/Integration');
 
 const router = express.Router();
 
+/**
+ * An integration as the client may see it: stored secrets never leave the
+ * server (the list used to return config.apiKey/apiSecret/credentials raw).
+ */
+function toPublicIntegration(doc) {
+  if (!doc) return doc;
+  const o = typeof doc.toObject === 'function' ? doc.toObject() : { ...doc };
+  if (o.config) {
+    const { apiKey, apiSecret, credentials, ...rest } = o.config;
+    o.config = {
+      ...rest,
+      apiKeySet: !!apiKey,
+      apiKeyLast4: apiKey ? String(apiKey).slice(-4) : null,
+      apiSecretSet: !!apiSecret,
+      credentialsSet: !!(credentials && Object.keys(credentials).length),
+    };
+  }
+  return o;
+}
+
 // Supabase users have UUID ids — Integration.userId is typed as ObjectId,
 // so Mongoose throws CastError when we query with a UUID. Detect and
 // short-circuit to an empty result instead of 400-ing.
@@ -64,7 +84,7 @@ router.post('/install', auth, asyncHandler(async (req, res) => {
     workspaceId
   });
 
-  sendSuccess(res, 'Integration installed', 201, integration);
+  sendSuccess(res, 'Integration installed', 201, toPublicIntegration(integration));
 }));
 
 /**
@@ -88,7 +108,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
   if (workspaceId) query.workspaceId = String(workspaceId);
 
   const integrations = await Integration.find(query).sort({ createdAt: -1 }).lean();
-  sendSuccess(res, 'Integrations retrieved', 200, { integrations });
+  sendSuccess(res, 'Integrations retrieved', 200, { integrations: integrations.map(toPublicIntegration) });
 }));
 
 /**
@@ -153,12 +173,7 @@ router.put('/:id', auth, asyncHandler(async (req, res) => {
   }
   await integration.save();
 
-  const response = integration.toObject();
-  if (response.config) {
-    delete response.config.apiSecret;
-  }
-
-  sendSuccess(res, 'Integration updated', 200, response);
+  sendSuccess(res, 'Integration updated', 200, toPublicIntegration(integration));
 }));
 
 /**

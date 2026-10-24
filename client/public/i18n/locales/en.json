@@ -1136,7 +1136,8 @@
     "predictiveTelemetryDesc": "Forecasts of how your content may perform.",
     "scanningTrajectories": "Scanning Trajectories...",
     "errorStatusCheckFailed": "Couldn't check on your content. It may still finish; look for it in your library.",
-    "errorGenerationTimeout": "This is taking longer than usual. It may still finish; look for it in your library in a few minutes."
+    "errorGenerationTimeout": "This is taking longer than usual. It may still finish; look for it in your library in a few minutes.",
+    "errorTemplateLoadFailed": "Couldn't load that template. You can still write your own."
   },
   "forgePage": {
     "documentTitle": "AI Content Creator | Click",
@@ -1788,7 +1789,8 @@
     "purgeNodeTitle": "Delete script?",
     "purgeNodeBody": "This will permanently delete the script. This can't be undone.",
     "abortPurge": "Cancel",
-    "commitPurge": "Delete"
+    "commitPurge": "Delete",
+    "toastTemplateLoadFailed": "Couldn't load that template."
   },
   "searchPage": {
     "reconFailed": "Search timed out. Try again.",
@@ -4257,7 +4259,9 @@
     "postComment": "Post Comment",
     "resolved": "Resolved",
     "helpful": "Helpful",
-    "empty": "No comments yet. Be the first to comment!"
+    "empty": "No comments yet. Be the first to comment!",
+    "needsTeam": "Comments are shared with a team.",
+    "needsTeamCta": "Create or join a team"
   },
   "complianceDashboard": {
     "outOf100": "/ 100",

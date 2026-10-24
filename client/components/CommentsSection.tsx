@@ -29,17 +29,32 @@ interface CommentsSectionProps {
   teamId?: string
 }
 
-export default function CommentsSection({ entityType, entityId, teamId }: CommentsSectionProps) {
+export default function CommentsSection({ entityType, entityId, teamId: teamIdProp }: CommentsSectionProps) {
   const { user } = useAuth()
   const { showToast } = useToast()
   const { t } = useTranslation()
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
   const [loading, setLoading] = useState(true)
+  // Comments are team-scoped server-side. Callers that don't know the team
+  // (the content page) get the user's first team; with no team there's
+  // nowhere to post, which is said plainly instead of an always-empty thread.
+  const [teamId, setTeamId] = useState<string | null | undefined>(teamIdProp)
+  useEffect(() => {
+    if (teamIdProp) { setTeamId(teamIdProp); return }
+    let cancelled = false
+    apiGet<any>('/teams', undefined, false)
+      .then((res) => {
+        const list = res?.data ?? res
+        const first = Array.isArray(list) ? list[0] : null
+        if (!cancelled) setTeamId(first?._id ? String(first._id) : null)
+      })
+      .catch(() => { if (!cancelled) setTeamId(null) })
+    return () => { cancelled = true }
+  }, [teamIdProp])
 
   const loadComments = useCallback(async () => {
-    // Comments are team-scoped server-side; without a teamId the API rejects the
-    // request, so render the empty state instead of erroring.
+    if (teamId === undefined) return // still resolving the team
     if (!teamId) { setComments([]); setLoading(false); return }
     try {
       const params = new URLSearchParams({
@@ -113,6 +128,18 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
 
   if (loading) {
     return <div className="text-center py-4 text-gray-500">{t('commentsSection.loading')}</div>
+  }
+
+  if (teamId === null) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold mb-2">{t('commentsSection.title')}</h3>
+        <p className="text-sm text-gray-500">
+          {t('commentsSection.needsTeam')}{' '}
+          <a href="/dashboard/teams" className="text-indigo-500 underline">{t('commentsSection.needsTeamCta')}</a>
+        </p>
+      </div>
+    )
   }
 
   return (
