@@ -528,44 +528,75 @@ router.post('/resend-verification', authRateLimiter, requireSupabase, async (req
  *       401:
  *         description: Invalid credentials
  */
+/**
+ * Finish a login for a MongoDB account (the store production runs on):
+ * lockout, disabled accounts, password check, then either a 2FA challenge or
+ * a token pair. `user` is the full document (password included); null means
+ * no account has this email — answered exactly like a wrong password, after
+ * the same bcrypt work, so neither the message nor the timing reveals it.
+ */
+async function respondMongoLogin(req, res, user, password) {
+  const sec = require('../services/authSecurityService');
+  if (!user) {
+    await sec.equalizeMissTiming(password);
+    return res.status(401).json({ success: false, error: 'Invalid email or password' });
+  }
+
+  const minutesLeft = sec.lockMinutesLeft(user);
+  if (minutesLeft > 0) {
+    return res.status(423).json({
+      success: false,
+      error: `Too many failed sign-in attempts. Try again in ${minutesLeft} minute${minutesLeft === 1 ? '' : 's'}, or reset your password.`,
+      retryAfter: minutesLeft * 60,
+    });
+  }
+
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) {
+    const { attempts, locked } = await sec.recordFailedAttempt(user);
+    logger.warn('Failed login attempt', { userId: String(user._id), attempts, locked, ip: req.ip });
+    if (locked) {
+      return res.status(423).json({
+        success: false,
+        error: `Too many failed sign-in attempts. Try again in ${sec.LOCK_MINUTES} minutes, or reset your password.`,
+        retryAfter: sec.LOCK_MINUTES * 60,
+      });
+    }
+    return res.status(401).json({ success: false, error: 'Invalid email or password' });
+  }
+
+  // Only after a correct password, so account status can't be probed.
+  if (sec.isAccountDisabled(user)) {
+    return res.status(403).json({ success: false, error: 'This account is disabled. Contact support if you think this is a mistake.' });
+  }
+
+  const publicUser = { id: user._id, email: user.email, name: user.name, emailVerified: true };
+
+  if (user.twoFactorEnabled) {
+    // Attempts reset only once the second factor passes (/2fa/verify).
+    return res.json({
+      success: true,
+      message: 'Password accepted. Enter your authentication code.',
+      data: { requiresTwoFactor: true, tempToken: sec.issueTwoFactorPendingToken(user), user: { id: user._id, email: user.email } },
+    });
+  }
+
+  await sec.recordSuccessfulLogin(user);
+  const { token, refreshToken, expiresIn } = issueTokenPair(user._id.toString());
+  return res.json({ success: true, message: 'Login successful', data: { token, refreshToken, expiresIn, user: publicUser } });
+}
+
 router.post('/login',
   authRateLimiter, validateLogin, async (req, res) => {
     try {
 
       const { email, password } = req.body;
-      
-      // Handle Mongoose login fallback if Supabase is not available
+
+      // MongoDB accounts (Supabase auth is off unless ENABLE_SUPABASE_AUTH=true).
       if (!supabase) {
-        logger.info('Using Mongoose login fallback', { email });
         const User = require('../models/User');
-        const user = await User.findOne({ email: email.toLowerCase() });
-
-        if (!user) {
-          return res.status(401).json({ success: false, error: 'Invalid credentials' });
-        }
-
-        const isMatch = await user.comparePassword(password);
-        if (!isMatch) {
-          return res.status(401).json({ success: false, error: 'Invalid credentials' });
-        }
-
-        const { token, refreshToken, expiresIn } = issueTokenPair(user._id.toString());
-
-        return res.json({
-          success: true,
-          message: 'Login successful (Mongoose)',
-          data: {
-            token,
-            refreshToken,
-            expiresIn,
-            user: {
-              id: user._id,
-              email: user.email,
-              name: user.name,
-              emailVerified: true
-            }
-          }
-        });
+        const user = await User.findOne({ email: String(email).toLowerCase() });
+        return respondMongoLogin(req, res, user, password);
       }
 
       // Only try Supabase if it's available
@@ -604,28 +635,7 @@ router.post('/login',
           const User = require('../models/User');
           const mongoUser = await User.findOne({ email: email.toLowerCase() });
           if (mongoUser) {
-            const isMatch = await mongoUser.comparePassword(password);
-            if (isMatch) {
-              logger.info('[login] Mongo fallback lookup successful', { email });
-              const { token, refreshToken, expiresIn } = issueTokenPair(mongoUser._id.toString());
-              return res.json({
-                success: true,
-                message: 'Login successful (Mongoose fallback)',
-                data: {
-                  token,
-                  refreshToken,
-                  expiresIn,
-                  user: {
-                    id: mongoUser._id,
-                    email: mongoUser.email,
-                    name: mongoUser.name,
-                    emailVerified: true,
-                  },
-                },
-              });
-            } else {
-              logger.warn('[login] Mongo fallback user found but password check failed', { email });
-            }
+            return respondMongoLogin(req, res, mongoUser, password);
           } else {
             logger.warn('[login] Mongo fallback user not found', { email });
           }
@@ -809,15 +819,24 @@ router.post('/forgot-password',
       // Check if user exists
       let user;
       let findError;
-      
+
       if (!supabase) {
         const User = require('../models/User');
-        const mongoUser = await User.findOne({ email: email.toLowerCase() });
+        const mongoUser = await User.findOne({ email: String(email).toLowerCase() });
         if (mongoUser) {
-          user = { id: mongoUser._id, email: mongoUser.email, name: mongoUser.name };
-        } else {
-          findError = new Error('Not found');
+          // The link carries a fingerprint of the current password hash, so it
+          // stops working once used (or once the password changes any other way).
+          const { issueResetToken } = require('../services/authSecurityService');
+          try {
+            const { sendPasswordResetEmail } = require('../services/emailService');
+            const sent = await sendPasswordResetEmail(mongoUser.email, issueResetToken(mongoUser), mongoUser.name);
+            if (sent && sent.success === false) logger.warn('[forgot-password] reset email not sent', { error: sent.error });
+          } catch (emailError) {
+            logger.warn('[forgot-password] reset email failed', { error: emailError.message });
+          }
         }
+        // Same answer either way, so this can't be used to find accounts.
+        return res.json({ success: true, message: 'If the email exists, a reset link has been sent.' });
       } else {
         const { data, error } = await supabase
           .from('users')
@@ -872,9 +891,16 @@ router.get('/validate-reset-token/:token', async (req, res) => {
     if (!supabase) {
       try {
         const decoded = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] });
-        if (decoded.type === 'password_reset') {
-          isValid = true;
-          message = 'Token is valid';
+        if (decoded.type === 'password_reset' && mongoose.Types.ObjectId.isValid(String(decoded.userId))) {
+          const User = require('../models/User');
+          const { resetTokenMatches } = require('../services/authSecurityService');
+          const user = await User.findById(decoded.userId).select('password');
+          if (user && resetTokenMatches(decoded, user)) {
+            isValid = true;
+            message = 'Token is valid';
+          } else if (user) {
+            message = 'This reset link has already been used. Request a new one.';
+          }
         }
       } catch (error) {
         // JWT verification failed
@@ -918,15 +944,20 @@ router.post('/reset-password',
         return res.status(400).json({ success: false, error: 'Token and new password are required' });
       }
 
-      // Validate password strength
-      if (newPassword.length < 6) {
-        return res.status(400).json({ success: false, error: 'Password must be at least 6 characters long' });
+      // Same strength rules as sign-up and change-password.
+      const passwordValidation = validatePasswordPolicy(String(newPassword));
+      if (!passwordValidation.isValid) {
+        return res.status(400).json({
+          success: false,
+          error: passwordValidation.errors[0] || 'Password does not meet security requirements',
+          details: passwordValidation.errors,
+        });
       }
 
       // Verify JWT token
       let decoded;
       try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+        decoded = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] });
         if (decoded.type !== 'password_reset') {
           return res.status(400).json({ success: false, error: 'Invalid token type' });
         }
@@ -936,12 +967,20 @@ router.post('/reset-password',
 
       if (!supabase) {
         const User = require('../models/User');
-        const user = await User.findById(decoded.userId);
+        const sec = require('../services/authSecurityService');
+        const user = mongoose.Types.ObjectId.isValid(String(decoded.userId)) ? await User.findById(decoded.userId) : null;
         if (!user) {
-          return res.status(404).json({ success: false, error: 'User not found' });
+          return res.status(400).json({ success: false, error: 'Invalid or expired token' });
+        }
+        if (!sec.resetTokenMatches(decoded, user)) {
+          return res.status(400).json({ success: false, error: 'This reset link has already been used. Request a new one.' });
         }
         user.password = newPassword; // Will be hashed by pre-save hook
+        user.loginAttempts = 0;
+        user.lockUntil = undefined;
         await user.save();
+        // Whoever might have been in the account is signed out everywhere.
+        await sec.revokeSessions(user);
       } else {
         // Hash new password
         const bcrypt = require('bcryptjs');
@@ -1286,6 +1325,29 @@ router.post('/change-password', authRateLimiter, require('../middleware/auth'), 
       });
     }
 
+    // MongoDB accounts. This used to call Supabase unconditionally, so every
+    // password change in production (no Supabase) crashed with a 500.
+    if (!supabase) {
+      const User = require('../models/User');
+      const sec = require('../services/authSecurityService');
+      const mongoUser = await User.findById(req.user._id);
+      if (!mongoUser) return res.status(404).json({ success: false, error: 'User not found' });
+      if (!(await mongoUser.comparePassword(currentPassword))) {
+        return res.status(401).json({ success: false, error: 'Current password is incorrect' });
+      }
+      mongoUser.password = newPassword; // hashed by the pre-save hook
+      await mongoUser.save();
+      // Sign out every other device; this one gets fresh tokens.
+      const iat = await sec.revokeSessions(mongoUser);
+      const { token, refreshToken, expiresIn } = issueTokenPair(String(mongoUser._id), { iat });
+      logger.info('Password changed; other sessions revoked', { userId: String(mongoUser._id) });
+      return res.json({
+        success: true,
+        message: 'Password changed. You were signed out on your other devices.',
+        data: { token, refreshToken, expiresIn },
+      });
+    }
+
     // Get current user with password
     const { data: user, error: userError } = await supabase
       .from('users')
@@ -1330,7 +1392,143 @@ router.post('/change-password', authRateLimiter, require('../middleware/auth'), 
  * POST /api/auth/2fa/setup
  * Setup two-factor authentication
  */
+/**
+ * Two-factor authentication for MongoDB accounts (the production store). The
+ * routes below were Supabase-only — setup answered 503 "2FA store not
+ * configured" and verify/enable dereferenced a null client — so 2FA could not
+ * be turned on in production at all. Secrets are encrypted at rest; backup
+ * codes are stored as hashes and shown once.
+ */
+const mongoTwoFactor = {
+  async setup(req, res) {
+    const User = require('../models/User');
+    const sec = require('../services/authSecurityService');
+    if (!sec.secretEncryptionAvailable()) {
+      return res.status(503).json({ success: false, error: 'Two-factor authentication is not available yet: the server encryption key is not configured.' });
+    }
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+    if (user.twoFactorEnabled) return res.status(400).json({ success: false, error: 'Two-factor authentication is already on' });
+    const setup = await sec.createTotpSetup(user.email);
+    await User.updateOne({ _id: user._id }, { $set: { twoFactorTempSecret: sec.encryptSecret(setup.base32) } });
+    return res.json({
+      success: true,
+      message: 'Scan the QR code with your authenticator app, then enter the 6-digit code to turn it on.',
+      data: { qrCodeDataUrl: setup.qrCodeDataUrl, secret: setup.base32, otpauthUrl: setup.otpauthUrl },
+    });
+  },
+
+  async enable(req, res) {
+    const User = require('../models/User');
+    const sec = require('../services/authSecurityService');
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+    if (user.twoFactorEnabled) return res.status(400).json({ success: false, error: 'Two-factor authentication is already on' });
+    if (!user.twoFactorTempSecret) return res.status(400).json({ success: false, error: 'Start setup first' });
+    const base32 = sec.decryptSecret(user.twoFactorTempSecret);
+    if (!sec.verifyTotp(base32, req.body && req.body.token)) {
+      return res.status(400).json({ success: false, error: 'That code didn\'t match. Check your authenticator app and try again.' });
+    }
+    const { codes, hashes } = sec.generateBackupCodes();
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { twoFactorEnabled: true, twoFactorSecret: user.twoFactorTempSecret, twoFactorBackupCodes: hashes }, $unset: { twoFactorTempSecret: 1 } },
+    );
+    logger.info('2FA enabled', { userId: String(user._id) });
+    return res.json({
+      success: true,
+      message: 'Two-factor authentication is on. Save these backup codes somewhere safe — each works once, and you won\'t see them again.',
+      data: { backupCodes: codes },
+    });
+  },
+
+  async disable(req, res) {
+    const User = require('../models/User');
+    const sec = require('../services/authSecurityService');
+    const { password, token } = req.body || {};
+    if (!password || !token) {
+      return res.status(400).json({ success: false, error: 'Enter your password and a current authentication code (or a backup code)' });
+    }
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+    if (!user.twoFactorEnabled) return res.status(400).json({ success: false, error: 'Two-factor authentication is not on' });
+    if (!(await user.comparePassword(password))) return res.status(401).json({ success: false, error: 'Password is incorrect' });
+    if (!sec.checkSecondFactor(user, token).ok) return res.status(401).json({ success: false, error: 'That code didn\'t match' });
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { twoFactorEnabled: false }, $unset: { twoFactorSecret: 1, twoFactorTempSecret: 1, twoFactorBackupCodes: 1 } },
+    );
+    logger.info('2FA disabled', { userId: String(user._id) });
+    return res.json({ success: true, message: 'Two-factor authentication is off.' });
+  },
+
+  async status(req, res) {
+    const User = require('../models/User');
+    const sec = require('../services/authSecurityService');
+    const user = await User.findById(req.user._id).select('twoFactorEnabled twoFactorTempSecret twoFactorBackupCodes').lean();
+    return res.json({
+      success: true,
+      data: {
+        enabled: Boolean(user && user.twoFactorEnabled),
+        setupPending: Boolean(user && !user.twoFactorEnabled && user.twoFactorTempSecret),
+        backupCodesRemaining: (user && user.twoFactorBackupCodes && user.twoFactorBackupCodes.length) || 0,
+        available: sec.secretEncryptionAvailable(),
+      },
+    });
+  },
+
+  // Second login step: the tempToken from /login plus a TOTP or backup code.
+  async verify(req, res) {
+    const User = require('../models/User');
+    const sec = require('../services/authSecurityService');
+    const { token, tempToken } = req.body || {};
+    if (!token || !tempToken) return res.status(400).json({ success: false, error: 'Enter your authentication code' });
+    const userId = sec.readTwoFactorPendingToken(tempToken);
+    if (!userId || !mongoose.Types.ObjectId.isValid(String(userId))) {
+      return res.status(401).json({ success: false, error: 'Your sign-in expired. Please sign in again.', code: 'TWO_FACTOR_EXPIRED' });
+    }
+    const user = await User.findById(userId);
+    if (!user || !user.twoFactorEnabled || sec.isAccountDisabled(user)) {
+      return res.status(401).json({ success: false, error: 'Your sign-in expired. Please sign in again.', code: 'TWO_FACTOR_EXPIRED' });
+    }
+    const minutesLeft = sec.lockMinutesLeft(user);
+    if (minutesLeft > 0) {
+      return res.status(423).json({ success: false, error: `Too many failed attempts. Try again in ${minutesLeft} minute${minutesLeft === 1 ? '' : 's'}.`, retryAfter: minutesLeft * 60 });
+    }
+    const check = sec.checkSecondFactor(user, token);
+    if (!check.ok) {
+      // Wrong codes count toward the same lockout as wrong passwords.
+      const { locked } = await sec.recordFailedAttempt(user);
+      if (locked) return res.status(423).json({ success: false, error: `Too many failed attempts. Try again in ${sec.LOCK_MINUTES} minutes.`, retryAfter: sec.LOCK_MINUTES * 60 });
+      return res.status(401).json({ success: false, error: 'That code didn\'t match. Try again, or use a backup code.' });
+    }
+    if (check.usedBackupCode) {
+      await User.updateOne({ _id: user._id }, { $set: { twoFactorBackupCodes: check.remaining } });
+    }
+    await sec.recordSuccessfulLogin(user);
+    const { token: accessToken, refreshToken, expiresIn } = issueTokenPair(String(user._id));
+    return res.json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        token: accessToken,
+        refreshToken,
+        expiresIn,
+        user: { id: user._id, email: user.email, name: user.name, emailVerified: true },
+        ...(check.usedBackupCode ? { backupCodesRemaining: check.remaining.length } : {}),
+      },
+    });
+  },
+};
+
 router.post('/2fa/setup', require('../middleware/auth'), async (req, res) => {
+  // MongoDB accounts (production): see mongoTwoFactor above.
+  if (!supabase) {
+    try { return await mongoTwoFactor.setup(req, res); } catch (error) {
+      logger.error('2FA setup failed', { error: error.message });
+      return res.status(500).json({ success: false, error: 'Server error' });
+    }
+  }
   try {
     const userId = req.user.id;
 
@@ -1401,6 +1599,13 @@ router.post('/2fa/setup', require('../middleware/auth'), async (req, res) => {
  * Enable two-factor authentication with verification token
  */
 router.post('/2fa/enable', require('../middleware/auth'), async (req, res) => {
+  // MongoDB accounts (production): see mongoTwoFactor above.
+  if (!supabase) {
+    try { return await mongoTwoFactor.enable(req, res); } catch (error) {
+      logger.error('2FA enable failed', { error: error.message });
+      return res.status(500).json({ success: false, error: 'Server error' });
+    }
+  }
   try {
     const { token } = req.body;
     const userId = req.user.id;
@@ -1476,6 +1681,13 @@ router.post('/2fa/enable', require('../middleware/auth'), async (req, res) => {
  * Disable two-factor authentication
  */
 router.post('/2fa/disable', require('../middleware/auth'), async (req, res) => {
+  // MongoDB accounts (production): see mongoTwoFactor above.
+  if (!supabase) {
+    try { return await mongoTwoFactor.disable(req, res); } catch (error) {
+      logger.error('2FA disable failed', { error: error.message });
+      return res.status(500).json({ success: false, error: 'Server error' });
+    }
+  }
   try {
     const userId = req.user.id;
 
@@ -1530,6 +1742,13 @@ router.post('/2fa/disable', require('../middleware/auth'), async (req, res) => {
  * Get two-factor authentication status
  */
 router.get('/2fa/status', require('../middleware/auth'), async (req, res) => {
+  // MongoDB accounts (production): see mongoTwoFactor above.
+  if (!supabase) {
+    try { return await mongoTwoFactor.status(req, res); } catch (error) {
+      logger.error('2FA status failed', { error: error.message });
+      return res.status(500).json({ success: false, error: 'Server error' });
+    }
+  }
   try {
     const userId = req.user.id;
 
@@ -1572,6 +1791,13 @@ router.get('/2fa/status', require('../middleware/auth'), async (req, res) => {
  * Verify 2FA token (used during login)
  */
 router.post('/2fa/verify', authRateLimiter, async (req, res) => {
+  // MongoDB accounts (production): see mongoTwoFactor above.
+  if (!supabase) {
+    try { return await mongoTwoFactor.verify(req, res); } catch (error) {
+      logger.error('2FA verify failed', { error: error.message });
+      return res.status(500).json({ success: false, error: 'Server error' });
+    }
+  }
   try {
     const { token, tempToken } = req.body;
 
@@ -1672,6 +1898,26 @@ router.post('/deactivate', require('../middleware/auth'), async (req, res) => {
 
     if (!password) {
       return res.status(400).json({ success: false, error: 'Password is required to deactivate account' });
+    }
+
+    // MongoDB accounts: this used to call Supabase unconditionally and crash
+    // in production. Deactivation = account disabled (support can restore it)
+    // and every session ends now.
+    if (!supabase) {
+      const User = require('../models/User');
+      const sec = require('../services/authSecurityService');
+      const mongoUser = await User.findById(req.user._id);
+      if (!mongoUser) return res.status(404).json({ success: false, error: 'User not found' });
+      if (!(await mongoUser.comparePassword(password))) {
+        return res.status(401).json({ success: false, error: 'Invalid password' });
+      }
+      await User.updateOne(
+        { _id: mongoUser._id },
+        { $set: { status: 'suspended', deactivatedAt: new Date(), deactivationReason: String(reason || 'User requested deactivation').slice(0, 200) } },
+      );
+      await sec.revokeSessions(mongoUser);
+      logger.info('Account deactivated', { userId: String(mongoUser._id) });
+      return res.json({ success: true, message: 'Account deactivated. Contact support if you want it restored.' });
     }
 
     // Verify password
@@ -1976,7 +2222,13 @@ router.post('/refresh', async (req, res) => {
     if (mongoose.Types.ObjectId.isValid(String(userId))) {
       try {
         const User = require('../models/User');
-        const mongoUser = await User.findById(userId).select('email').lean();
+        const sec = require('../services/authSecurityService');
+        const mongoUser = await User.findById(userId).select('email status sessionsRevokedAt').lean();
+        // A refresh token issued before a password change / "sign out
+        // everywhere", or for a disabled account, must not mint new access.
+        if (mongoUser && (sec.isSessionRevoked(decoded, mongoUser) || sec.isAccountDisabled(mongoUser))) {
+          return res.status(401).json({ success: false, error: 'Session expired. Please sign in again.', code: 'SESSION_REVOKED' });
+        }
         if (mongoUser) userEmail = mongoUser.email;
       } catch (mongoErr) {
         logger.warn('[refresh] Mongo lookup failed; falling back to Supabase', { error: mongoErr.message });
@@ -2119,10 +2371,23 @@ router.post('/revoke-sessions', require('../middleware/auth'), async (req, res) 
   try {
     const userId = req.user.id;
 
-    // Best-effort like logout: without a Supabase store, report success (the
-    // client-held token is the session) instead of 500ing.
+    // MongoDB accounts: this used to answer "Sessions revoked" without revoking
+    // anything. Now every token issued before this moment stops working (the
+    // auth middleware and /refresh both check sessionsRevokedAt); the device
+    // asking gets fresh tokens so it stays signed in.
     if (!supabase) {
-      return res.json({ success: true, message: 'Sessions revoked' });
+      const User = require('../models/User');
+      const sec = require('../services/authSecurityService');
+      const mongoUser = await User.findById(req.user._id);
+      if (!mongoUser) return res.status(404).json({ success: false, error: 'User not found' });
+      const iat = await sec.revokeSessions(mongoUser);
+      const { token, refreshToken, expiresIn } = issueTokenPair(String(mongoUser._id), { iat });
+      logger.info('All other sessions revoked', { userId: String(mongoUser._id) });
+      return res.json({
+        success: true,
+        message: 'Signed out of all other devices.',
+        data: { token, refreshToken, expiresIn },
+      });
     }
 
     // In a real implementation, you'd invalidate all refresh tokens

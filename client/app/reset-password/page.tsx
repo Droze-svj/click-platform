@@ -94,7 +94,7 @@ function ResetPasswordInner() {
               </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+            <form method="post" onSubmit={handleSubmit} className="space-y-6" noValidate>
               {error && (
                 <div
                   role="alert"

@@ -7,6 +7,7 @@
 
 import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios'
 import { extractApiError } from '../utils/apiResponse'
+import { loginPathForCurrentPage } from './authRedirect'
 
 /**
  * Global upgrade-gate plumbing.
@@ -582,7 +583,7 @@ function createApiClient(): AxiosInstance {
           localStorage.removeItem('refreshToken')
           const onAuthPage = /\/(login|register|signup)(\b|$|\/)/.test(window.location.pathname)
           if (!onAuthPage) {
-            window.location.href = '/login'
+            window.location.href = loginPathForCurrentPage()
           }
         }
       }
