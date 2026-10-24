@@ -5882,17 +5882,53 @@ async function getEditPerformanceAnalytics(videoId) {
  * Each ratio is exported in parallel where possible. Returns an array of
  * { ratio, url, size } so the caller can render a download / share grid.
  */
-async function exportAspectRatios(videoId, aspectRatios = ['9:16', '1:1', '16:9']) {
+async function exportAspectRatios(videoId, aspectRatios = ['9:16', '1:1', '16:9'], scope = {}) {
   const content = await resolveContent(videoId);
   if (!content) throw new Error('Content not found');
 
-  const sourceUrl = content.originalFile?.url;
-  if (!sourceUrl) throw new Error('Content has no source video to re-export');
-  const inputPath = sourceUrl.startsWith('/')
-    ? path.join(__dirname, '../..', sourceUrl)
-    : sourceUrl;
-  if (!inputPath.startsWith('http') && !fs.existsSync(inputPath)) {
-    throw new Error(`Source video not found at ${inputPath}`);
+  const { toAbsolutePath } = require('../utils/pathUtils');
+  // Resolve one of our own media refs (bare "/uploads/x" or an absolute,
+  // possibly signed, ".../uploads/x?exp&sig" URL) to its file on disk.
+  const ownFile = (u) => {
+    if (!u || typeof u !== 'string') return null;
+    let ref = u;
+    if (/^https?:\/\//i.test(u)) {
+      try { ref = decodeURIComponent(new URL(u).pathname); } catch (_) { return null; }
+      if (!/^\/uploads\//i.test(ref)) return null;
+    }
+    const local = toAbsolutePath(ref);
+    return local && fs.existsSync(local) ? local : null;
+  };
+
+  // Clip scope: a clip card asks for ITS clip, not the whole source. Prefer
+  // the clip's own rendered file (it already carries the edit); otherwise cut
+  // the clip's window out of the source.
+  let inputPath = null;
+  let seek = null;
+  const clipId = scope && scope.clipId ? String(scope.clipId) : null;
+  const clips = content.generatedContent?.shortVideos || [];
+  const clip = clipId ? clips.find((c) => String(c._id || c.id) === clipId) : null;
+  if (clipId && !clip) throw new Error('Clip not found');
+  if (clip && clip.url) {
+    inputPath = ownFile(clip.url) || (/^https?:\/\//i.test(clip.url) ? clip.url : null);
+  }
+  if (!inputPath) {
+    const sourceUrl = content.originalFile?.url;
+    if (!sourceUrl) throw new Error('Content has no source video to re-export');
+    inputPath = /^https?:\/\//i.test(sourceUrl) ? (ownFile(sourceUrl) || sourceUrl) : toAbsolutePath(sourceUrl);
+    if (!inputPath || (!/^https?:\/\//i.test(inputPath) && !fs.existsSync(inputPath))) {
+      throw new Error('Source video not found');
+    }
+    const start = Number(scope?.startTime ?? clip?.startTime);
+    const end = Number(scope?.endTime ?? clip?.endTime);
+    if (Number.isFinite(start) && Number.isFinite(end) && start >= 0 && end > start) {
+      seek = { start, duration: end - start };
+    }
+  }
+  if (/^https?:\/\//i.test(inputPath)) {
+    // Remote media (cloud storage) — SSRF-guard before ffmpeg opens it.
+    const { assertPublicUrl } = require('../utils/urlGuard');
+    await assertPublicUrl(inputPath);
   }
 
   // Map each requested ratio to the canonical short-form resolution that
@@ -5925,7 +5961,9 @@ async function exportAspectRatios(videoId, aspectRatios = ['9:16', '1:1', '16:9'
     const cropFilter = `crop='min(iw,ih*${cfg.w}/${cfg.h}):min(ih,iw*${cfg.h}/${cfg.w})',scale=${cfg.w}:${cfg.h}:flags=lanczos,setsar=1`;
 
     await new Promise((resolve, reject) => {
-      ffmpeg(inputPath)
+      const cmd = ffmpeg(inputPath);
+      if (seek) cmd.seekInput(seek.start).duration(seek.duration);
+      cmd
         .videoFilters(cropFilter)
         .videoCodec('libx264')
         .audioCodec('aac')

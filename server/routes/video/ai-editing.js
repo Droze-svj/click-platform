@@ -949,7 +949,7 @@ router.post('/broll/:contentId', auth, asyncHandler(async (req, res) => {
 /**
  * POST /api/video/ai-editing/export-aspect-ratios
  * Re-export a clip into 9:16 / 1:1 / 16:9 / 4:5 in one call.
- * Body: { videoId, aspectRatios?: ['9:16','1:1','16:9'] }
+ * Body: { videoId, aspectRatios?: ['9:16','1:1','16:9'], clipId?, startTime?, endTime? }
  *
  * Returns: { exports: [{ ratio, label, url, resolution, size }] }
  *
@@ -958,7 +958,7 @@ router.post('/broll/:contentId', auth, asyncHandler(async (req, res) => {
  * primitives; the route just exposes them on-demand from the clip card.
  */
 router.post('/export-aspect-ratios', auth, asyncHandler(async (req, res) => {
-  const { videoId, aspectRatios = ['9:16', '1:1', '16:9'] } = req.body;
+  const { videoId, aspectRatios = ['9:16', '1:1', '16:9'], clipId, startTime, endTime } = req.body;
   if (!videoId) return sendError(res, 'Video ID is required', 400);
   if (!Array.isArray(aspectRatios) || aspectRatios.length === 0) {
     return sendError(res, 'aspectRatios must be a non-empty array', 400);
@@ -967,7 +967,10 @@ router.post('/export-aspect-ratios', auth, asyncHandler(async (req, res) => {
   if (!owned) return;
 
   try {
-    const result = await exportAspectRatios(videoId, aspectRatios);
+    // clipId / startTime+endTime scope the export to one clip. Without them
+    // the whole source video is re-encoded (the previous behaviour for every
+    // clip card, which exported the full long-form video three times).
+    const result = await exportAspectRatios(videoId, aspectRatios, { clipId, startTime, endTime });
     sendSuccess(res, 'Aspect-ratio export completed', 200, result);
   } catch (error) {
     logger.error('Aspect-ratio export error', { error: error.message, videoId });
