@@ -8836,6 +8836,9 @@
     "generationFailedReason": "AI music generation failed: {{error}}",
     "generationNoTrack": "The track was generated but could not be saved. Please generate it again."
   },
+  "savedLooksPanel": {
+    "deleteFailed": "Could not delete this look. It is still saved."
+  },
   "editorHUD": {
     "saveFailedRetry": "Not saved to your account yet. Click to retry.",
     "section": {
