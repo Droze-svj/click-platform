@@ -10153,5 +10153,8 @@
   "forgotPasswordPage": {
     "rateLimited": "Too many reset requests. Wait a few minutes, then try again.",
     "sendFailed": "We couldn't send the reset link right now. Check your connection and try again."
+  },
+  "governanceDashboard": {
+    "loadFailed": "Couldn't load the audit log."
   }
 }
