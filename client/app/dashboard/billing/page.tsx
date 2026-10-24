@@ -13,7 +13,7 @@ import Link from 'next/link'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import SubscriptionStatus from '../../../components/SubscriptionStatus'
 import { StatsCardSkeleton, CardSkeleton } from '../../../components/LoadingSkeleton'
-import { apiGet, apiPost } from '../../../lib/api'
+import { apiGet, apiPost, api } from '../../../lib/api'
 import { useAuth } from '../../../hooks/useAuth'
 import { useEntitlements } from '../../../hooks/useEntitlements'
 import { useTranslation } from '../../../hooks/useTranslation'
@@ -115,7 +115,9 @@ const BILLING_LEGAL_FAQS = [
 ]
 
 function fmtNumber(n?: number) { if (n == null) return '0'; return n.toLocaleString() }
-function fmtCurrency(n?: number, cur = 'USD') { if (n == null) return '—'; return new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format(n / 100) }
+// Invoice totals are stored in major units (dollars), as the Whop webhook
+// records them; dividing by 100 showed a $29 invoice as $0.29.
+function fmtCurrency(n?: number, cur = 'USD') { if (n == null) return '—'; return new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format(n) }
 
 export default function BillingPage() {
   const router = useRouter()
@@ -155,6 +157,32 @@ export default function BillingPage() {
     }
   }
 
+  // window.open() can't send the Authorization header, so the download 401'd.
+  // Fetch the PDF through the API client and save it.
+  const downloadInvoice = async (invoiceNumber: string) => {
+    try {
+      const res = await api.get(`/billing/invoices/${encodeURIComponent(invoiceNumber)}/download`, { responseType: 'blob' })
+      const blob: Blob = res.data
+      if (blob.type && !blob.type.includes('pdf')) {
+        // JSON answer: a stored PDF URL.
+        const body = JSON.parse(await blob.text())
+        const url = body?.data?.url
+        if (url) { window.open(url, '_blank', 'noopener'); return }
+        throw new Error('no pdf')
+      }
+      const href = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = href
+      a.download = `invoice-${invoiceNumber}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(href), 10000)
+    } catch {
+      showToast(t('billingPage.invoiceDownloadFailed'), 'error')
+    }
+  }
+
   const handleRequestRefund = async () => {
     try {
       setManageLoading(true)
@@ -189,6 +217,9 @@ export default function BillingPage() {
       setUsage(usageBody?.usage ?? {})
       setLimits(usageBody?.limits ?? {})
       const histBody = h?.data ?? h
+      // Real invoices (BillingHistory, written by the Whop webhook) come back as
+      // `invoices`; the server used to send only `changes`, so this list was
+      // always empty.
       const hist = Array.isArray(histBody) ? histBody : (histBody?.invoices ?? histBody?.history ?? [])
       setHistory(Array.isArray(hist) ? hist : [])
     } catch {
@@ -214,7 +245,13 @@ export default function BillingPage() {
   const handlePlanSelect = (plan: CanonicalPlan) => {
     if (plan.id === currentPlan) return
     if (plan.id === 'free') {
-      handleUpgrade(plan)
+      // Moving to Free = cancelling the paid plan. This used to POST
+      // /billing/upgrade, which only records a pending change nothing ever
+      // completes, and then said "Upgrade started". The cancel dialog calls
+      // POST /billing/cancel, which stops the renewal at Whop (or explains how
+      // to cancel on whop.com when it can't).
+      setManageTab('cancel')
+      setShowManageModal(true)
       return
     }
     setSelectedPlanForCheckout(plan)
@@ -229,15 +266,10 @@ export default function BillingPage() {
         window.location.href = target.href
         return
       }
-      const res: any = await apiPost('/billing/upgrade', {
-        packageId: plan.id,
-        planId: plan.id,
-        billingCycle: billingPeriod,
-      })
-      const url = res?.data?.checkoutUrl || res?.checkoutUrl
-      if (url) { window.location.href = url; return }
-      showToast(t('billingPage.upgradeInitiated', { plan: plan.id.toUpperCase() }), 'success')
-      await loadAll()
+      // No checkout link for this plan/period. Plans change only through a
+      // Whop checkout (the signed webhook grants the tier), so there is
+      // nothing to "start" here — say so instead of reporting success.
+      showToast(t('billingPage.checkoutUnavailable'), 'error')
     } catch (e: any) {
       showToast(e?.response?.data?.error || t('billingPage.upgradeRejected'), 'error')
     } finally {
@@ -643,9 +675,7 @@ export default function BillingPage() {
                           size="sm"
                           aria-label={t('billingPage.downloadInvoice')}
                           className="flex-shrink-0 hidden sm:inline-flex"
-                          onClick={() => {
-                            window.open(`/api/billing/invoices/${invNum}/download`, '_blank')
-                          }}
+                          onClick={() => downloadInvoice(String(invNum))}
                         >
                           <Download size={16} aria-hidden />
                         </IconButton>

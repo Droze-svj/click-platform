@@ -302,7 +302,17 @@ router.get('/history', auth, asyncHandler(async (req, res) => {
 
   const total = await SubscriptionChange.countDocuments({ userId });
 
+  // The invoices themselves (BillingHistory, written by the Whop webhook).
+  // This endpoint used to return only `changes` — plan-change requests, not
+  // payments — so the billing page's invoice list was always empty.
+  let invoices = [];
+  if (isMongoUserId(userId)) {
+    const { getUserBillingHistory } = require('../services/billingHistoryService');
+    invoices = await getUserBillingHistory(userId, { limit: clampInt(limit, 20, 500) });
+  }
+
   sendSuccess(res, 'Billing history retrieved', 200, {
+    invoices,
     changes,
     pagination: {
       page: parseInt(page, 10),

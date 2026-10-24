@@ -86,7 +86,9 @@
     "openLabs": "Open Labs",
     "exploreLabs": "Explore Labs",
     "earlyAccessOn": "Early access — available to you",
-    "earlyAccessAgencyOnly": "Agency-exclusive"
+    "earlyAccessAgencyOnly": "Agency-exclusive",
+    "checkoutUnavailable": "Checkout for this plan is not available right now. Nothing was changed. Please try again later or contact support.",
+    "invoiceDownloadFailed": "Couldn't download the invoice. Please try again."
   },
   "labsPage": {
     "title": "Labs",
