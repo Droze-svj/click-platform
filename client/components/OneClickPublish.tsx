@@ -18,7 +18,7 @@ import {
   ToggleLeft as Toggle
 } from 'lucide-react'
 import { useToast } from '../contexts/ToastContext'
-import { apiGet, apiPost } from '../lib/api'
+import { apiGet, apiPost, handleApiError } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useDialogBehavior } from './ui/modal'
 
@@ -81,19 +81,23 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
 
     setIsPublishing(true)
     const publishedPlatforms: string[] = []
+    const failed: { platform: string; reason: string }[] = []
+    const nameOf = (id: string) => defaultPlatforms.find((p) => p.id === id)?.name || id
 
     try {
       for (const platformId of selectedPlatforms) {
         try {
+          // The server loads the (owned) content by id; it answers 502 when the
+          // platform rejects the post, so only a 2xx counts as published.
           await apiPost('/social/post', {
             platform: platformId,
             contentId,
-            tone: toneModulation,
+            options: { tone: toneModulation },
           })
 
           publishedPlatforms.push(platformId)
         } catch (error) {
-          console.error(`Failed to publish to ${platformId}:`, error)
+          failed.push({ platform: platformId, reason: handleApiError(error) })
         }
       }
 
@@ -103,8 +107,15 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
           t('oneClickPublish.syncComplete', { count: publishedPlatforms.length }),
           'success'
         )
-      } else {
-        showToast(t('oneClickPublish.failedAnyPlatform'), 'error')
+      }
+      if (failed.length > 0) {
+        const list = failed.map((f) => (f.reason ? `${nameOf(f.platform)} (${f.reason})` : nameOf(f.platform))).join(', ')
+        showToast(
+          publishedPlatforms.length > 0
+            ? t('oneClickPublish.someFailed', { platforms: list })
+            : t('oneClickPublish.allFailed', { platforms: list }),
+          'error'
+        )
       }
     } catch (error) {
       showToast(t('oneClickPublish.engineFailure'), 'error')

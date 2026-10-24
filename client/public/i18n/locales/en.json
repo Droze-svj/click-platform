@@ -6540,7 +6540,9 @@
     "variantB": "Variant B",
     "ignore": "Ignore",
     "swapToVariantB": "Swap to Variant B",
-    "swapVariantB": "Swap Variant B"
+    "swapVariantB": "Swap Variant B",
+    "someFailed": "Not published to: {{platforms}}",
+    "allFailed": "Couldn't publish to: {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "Loading {{alt}}",

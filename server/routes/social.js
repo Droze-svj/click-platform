@@ -1,6 +1,7 @@
 // Social media integration routes
 
 const express = require('express');
+const mongoose = require('mongoose');
 const auth = require('../middleware/auth');
 const {
   connectAccount,
@@ -79,10 +80,35 @@ router.get('/accounts', auth, asyncHandler(async (req, res) => {
  *       - bearerAuth: []
  */
 router.post('/post', auth, asyncHandler(async (req, res) => {
-  const { platform, content, options } = req.body;
+  const { platform } = req.body || {};
+  let { content } = req.body || {};
+  const options = { ...((req.body && req.body.options) || {}) };
+  const contentId = (req.body && req.body.contentId) || options.contentId || null;
 
-  if (!platform || !content) {
-    return sendError(res, 'Platform and content are required', 400);
+  if (!platform || (!content && !contentId)) {
+    return sendError(res, 'Platform and content (or contentId) are required', 400);
+  }
+
+  // A contentId is both the source (OneClickPublish sends only the id) and the
+  // doc the service writes the post result into — so it must be the caller's.
+  if (contentId) {
+    const Content = require('../models/Content');
+    const doc = mongoose.Types.ObjectId.isValid(String(contentId))
+      ? await Content.findOne({ _id: contentId, userId: String(req.user._id || req.user.id) }).lean()
+      : null;
+    if (!doc) return sendError(res, 'Content not found', 404);
+    options.contentId = String(doc._id);
+    if (!content) {
+      const clip = (doc.generatedContent && Array.isArray(doc.generatedContent.shortVideos))
+        ? doc.generatedContent.shortVideos.find((v) => v && v.url) : null;
+      content = {
+        title: doc.title || '',
+        description: (doc.content && doc.content.text) || doc.description || doc.title || '',
+        mediaUrl: (doc.content && doc.content.mediaUrl) || (clip && clip.url) || (doc.originalFile && doc.originalFile.url) || undefined,
+        tags: (doc.content && Array.isArray(doc.content.hashtags) && doc.content.hashtags.length)
+          ? doc.content.hashtags : (doc.tags || []),
+      };
+    }
   }
 
   // Pre-flight token check — mirror of /api/scheduler/schedule. Prevents
@@ -104,6 +130,12 @@ router.post('/post', auth, asyncHandler(async (req, res) => {
   }
 
   const post = await postToSocialMedia(req.user._id, platform, content, options);
+  // The service reports failures as { success:false, error } rather than
+  // throwing; answering 200 "Posted successfully" for those told the user a
+  // post went out when it did not.
+  if (!post || post.success === false) {
+    return sendError(res, (post && post.error) || `Posting to ${platform} failed`, 502, { platform });
+  }
   sendSuccess(res, 'Posted successfully', 200, post);
 }));
 
