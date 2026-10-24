@@ -195,10 +195,12 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
       return
     }
 
-    // Publishing to external platforms needs a real, fetchable URL — reject
-    // empty, relative, or mock (blob:) URLs so we never "broadcast" nothing.
+    // Publishing needs a real render: a public URL, or our own /uploads file
+    // (the server reads that from disk). Empty or mock (blob:) URLs are
+    // rejected so we never "broadcast" nothing.
     const url = renderResult?.url || ''
-    const isPublishable = /^https?:\/\//i.test(url)
+    const isPublicUrl = /^https?:\/\//i.test(url)
+    const isPublishable = isPublicUrl || /^\/uploads\//i.test(url)
     if (!isPublishable) {
       showToast(
         renderResult?.url
@@ -216,13 +218,18 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
       const title = projectName || 'Made with Click'
       const results = await Promise.allSettled(selectedPlatforms.map((platform) => {
         if (platform === 'instagram') {
+          // Instagram fetches the video from its own servers — it needs a
+          // public URL, not a file that only exists on this server.
+          if (!isPublicUrl) return Promise.reject(new Error('Instagram needs a public video URL — enable cloud storage and render again'))
           return apiPost(`/oauth/instagram/post`, { videoUrl: url, isReel: true, caption: title })
         }
         if (platform === 'youtube') {
+          // The server resolves our own media to the file on disk and
+          // downloads any other URL before uploading.
           return apiPost(`/oauth/youtube/upload`, { videoFile: url, title, description: 'Made with Click' })
         }
         if (platform === 'tiktok') {
-          return apiPost(`/oauth/tiktok/upload`, { videoFile: url, caption: title })
+          return apiPost(`/oauth/tiktok/post`, { videoUrl: url, caption: title })
         }
         return Promise.reject(new Error(`Posting to ${platform} isn't supported here yet`))
       }))

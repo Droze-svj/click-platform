@@ -66,7 +66,9 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
   const [isScheduling, setIsScheduling] = useState(false)
 
   // Only http(s) URLs are publishable (blob:/relative/empty are not reachable).
-  const isPublishable = /^https?:\/\//i.test(videoUrl || '')
+  // A public URL, or our own /uploads media (the server reads it from disk).
+  const isPublicUrl = /^https?:\/\//i.test(videoUrl || '')
+  const isPublishable = isPublicUrl || /^\/uploads\//i.test(videoUrl || '')
 
   const fetchConnectedAccounts = useCallback(async () => {
     try {
@@ -159,23 +161,23 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
 
       const results = await Promise.allSettled(
         targets.map(platform => {
-          const payload: any = {}
-          let endpoint = `/oauth/${platform}/upload`
-
           if (platform === 'youtube') {
-            payload.videoFile = videoUrl
-            payload.title = caption
-            payload.description = description.trim()
-          } else if (platform === 'instagram') {
-            endpoint = `/oauth/${platform}/post`
-            payload.imageUrl = videoUrl
-            payload.caption = caption
-          } else {
-            payload.videoFile = videoUrl
-            payload.caption = caption
+            // The server resolves our own media to the file on disk and
+            // downloads any other URL before uploading.
+            return apiPost('/oauth/youtube/upload', { videoFile: videoUrl, title: caption, description: description.trim() })
           }
-
-          return apiPost(endpoint, payload)
+          if (platform === 'instagram') {
+            // A video goes out as a Reel (imageUrl posted it as a photo).
+            // Instagram fetches it from its own servers, so it must be public.
+            if (!isPublicUrl) return Promise.reject(new Error('Instagram needs a public video URL'))
+            return apiPost('/oauth/instagram/post', { videoUrl, isReel: true, caption })
+          }
+          if (platform === 'tiktok') {
+            // /post accepts a URL (the server fetches it); /upload wanted a
+            // server file path and failed for every editor publish.
+            return apiPost('/oauth/tiktok/post', { videoUrl, caption })
+          }
+          return apiPost(`/oauth/${platform}/upload`, { videoFile: videoUrl, caption })
         })
       )
 
@@ -226,7 +228,7 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
             contentId: videoId || null,
             platform,
             scheduledTime: when.toISOString(),
-            mediaUrl: isPublishable ? videoUrl : '',
+            mediaUrl: isPublicUrl ? videoUrl : '',
             content: {
               text: description.trim() || title.trim(),
             },
