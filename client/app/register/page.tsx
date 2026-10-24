@@ -106,8 +106,8 @@ export default function Register() {
     const errors: string[] = []
     const feedback: string[] = []
 
-    if (!pwd || pwd.length < 6) {
-      errors.push('Password must be at least 6 characters long')
+    if (!pwd || pwd.length < 8) {
+      errors.push('Password must be at least 8 characters long')
     }
 
     const hasUppercase = /[A-Z]/.test(pwd)
@@ -123,8 +123,8 @@ export default function Register() {
     let strength: 'weak' | 'fair' | 'good' | 'strong' = 'weak'
     if (errors.length === 0) {
       if (pwd.length >= 12 && charTypeCount === 4) strength = 'strong'
-      else if (pwd.length >= 8 && charTypeCount >= 3) strength = 'good'
-      else if (pwd.length >= 6 && charTypeCount >= 3) strength = 'fair'
+      else if (pwd.length >= 10 && charTypeCount >= 3) strength = 'good'
+      else strength = 'fair'
     }
 
     return { isValid: errors.length === 0, errors, strength, feedback }
@@ -313,7 +313,7 @@ export default function Register() {
             {/* ── Step 1: Credentials ────────────────────────────────── */}
             {step === 1 && (
               <>
-              <form onSubmit={handleContinue} className="space-y-5">
+              <form method="post" onSubmit={handleContinue} className="space-y-5">
                 <FormField label="Name" name="name" type="text" value={name} onChange={setName} placeholder="Jane Doe" required autoFocus />
                 <FormField label="Email" name="email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" required />
                 {gated && (
