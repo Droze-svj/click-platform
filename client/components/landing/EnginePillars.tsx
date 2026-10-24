@@ -47,7 +47,7 @@ export function EnginePillars() {
     ? `bg-gradient-to-r ${accent.gradient}`
     : 'bg-gradient-to-r from-primary-400 via-surface-900 dark:via-white to-primary-600';
   return (
-    <section id="features" className="py-48 px-6 bg-surface-page relative overflow-hidden font-inter border-y-2 border-surface-100 dark:border-white/5">
+    <section id="features" className="py-24 md:py-32 px-6 bg-surface-page relative overflow-hidden font-inter border-y-2 border-surface-100 dark:border-white/5">
       
       {/* Background Decor - Spectral Lattice */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-[0.03] dark:opacity-[0.05] pointer-events-none group">
@@ -61,11 +61,11 @@ export function EnginePillars() {
              <span className={`text-[11px] font-black uppercase tracking-[0.6em] ${accentText} italic transition-colors duration-500`}>What Click actually does</span>
           </div>
 
-          <h2 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-none text-surface-900 dark:text-white uppercase italic">
-            THREE JOBS. <span className={`text-transparent bg-clip-text ${headingGradient} transition-all duration-500`}>ZERO EXCUSES.</span>
+          <h2 className="text-[2.75rem] sm:text-6xl md:text-8xl lg:text-9xl break-words font-black tracking-tighter leading-none text-surface-900 dark:text-white uppercase italic">
+            THREE JOBS. <span className={`text-transparent bg-clip-text pr-[0.15em] box-decoration-clone ${headingGradient} transition-all duration-500`}>ZERO EXCUSES.</span>
           </h2>
 
-          <p className="text-surface-500 dark:text-slate-500 max-w-4xl mx-auto text-xl md:text-2xl font-medium italic uppercase tracking-tight opacity-70 leading-relaxed">
+          <p className="text-surface-600 dark:text-slate-300 max-w-4xl mx-auto text-xl md:text-2xl leading-relaxed">
             Editing. Publishing. Learning. The three things that drain your evenings — Click handles them all and gets better at YOUR voice every single time.
           </p>
         </div>
@@ -94,7 +94,7 @@ export function EnginePillars() {
                 </div>
                 
                 <h3 className="text-3xl font-black mb-6 text-surface-900 dark:text-white tracking-tighter uppercase italic leading-none">{p.title}</h3>
-                <p className="text-surface-500 dark:text-slate-500 font-medium leading-relaxed mb-12 italic uppercase tracking-tight opacity-80">{p.desc}</p>
+                <p className="text-surface-600 dark:text-slate-300 leading-relaxed mb-12">{p.desc}</p>
                 
                 <ul className="space-y-6 border-t-2 border-surface-100 dark:border-white/5 pt-10">
                   {p.bullets.map((b) => (
