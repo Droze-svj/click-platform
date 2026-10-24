@@ -3787,6 +3787,9 @@ Transcript: "${transcript.substring(0, 3500)}"`;
             content.generatedContent.shortVideos.push({
               url: uploadResult.url,
               thumbnail: thumbnailUrl,
+              createdAt: new Date(),
+              aiGenerated: true,
+              source: 'ai-auto-edit',
               duration: finalMetadata.format.duration || content.originalFile.duration,
               caption: realCaption,
               hookText,
