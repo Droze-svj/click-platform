@@ -18,6 +18,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  // Public profile (Settings → Profile, PUT /api/auth/profile, POST /avatar).
+  // `username` is the preferred display name shown in greetings.
+  username: { type: String, trim: true, maxlength: 40 },
+  bio: { type: String, trim: true, maxlength: 500 },
+  website: { type: String, trim: true, maxlength: 300 },
+  location: { type: String, trim: true, maxlength: 100 },
+  avatar: String, // Cloudinary URL, or a data: URL when Cloudinary isn't configured
+  socialLinks: { type: mongoose.Schema.Types.Mixed, default: undefined }, // { twitter: 'https://…', … }
   whopUserId: {
     type: String,
     unique: true,

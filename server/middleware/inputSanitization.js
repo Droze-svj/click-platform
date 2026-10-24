@@ -50,6 +50,11 @@ const SANITIZER_BYPASS_PATHS = [
   // HTML — escaping burned `&#x27;` into exported videos wherever a caption had
   // an apostrophe). SSRF guard + ownership checks protect it, not HTML-escaping.
   /^\/api\/video\/manual-editing\/(render|waveform-peaks|filmstrip|beats)(\/|$|\?)/,
+  // Profile edits: escaping turned every website/social URL into
+  // `https:&#x2F;&#x2F;…` (so the URL check rejected all of them) and stored
+  // apostrophes in bios as `&#x27;`. The handler type-checks each field and
+  // React escapes on render — there is no HTML sink.
+  /^\/api\/auth\/profile($|\?)/,
 ];
 
 function sanitizeInput(req, res, next) {

@@ -777,6 +777,32 @@ router.post('/login',
 // it was an open account-enumeration oracle (returned whether an email exists
 // plus id/name) and dereferenced `supabase` with no null guard.
 
+// The profile fields the client reads, for a MongoDB user document or a
+// Supabase row (snake_case, first_name/last_name, niche inside social_links).
+function publicProfile(u) {
+  if (!u) return null;
+  const links = u.socialLinks || u.social_links || {};
+  const { niche: linkNiche, oauth: _oauth, ...publicLinks } = links;
+  const fullName = u.name || `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.email;
+  return {
+    id: u.id || (u._id && String(u._id)),
+    email: u.email,
+    name: fullName,
+    username: u.username || null,
+    first_name: u.first_name || null,
+    last_name: u.last_name || null,
+    subscription: u.subscription,
+    niche: u.niche || linkNiche || null,
+    avatar: u.avatar || null,
+    bio: u.bio || null,
+    website: u.website || null,
+    location: u.location || null,
+    social_links: publicLinks,
+    email_verified: u.email_verified ?? u.emailVerified ?? false,
+    created_at: u.created_at || u.createdAt || null,
+  };
+}
+
 // Get current user
 router.get('/me', require('../middleware/auth'), async (req, res) => {
   // Prevent any caching / 304 Not Modified behavior for auth state.
@@ -785,25 +811,7 @@ router.get('/me', require('../middleware/auth'), async (req, res) => {
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
 
-  res.json({
-    user: {
-      id: req.user.id,
-      email: req.user.email,
-      name: req.user.name,
-      username: req.user.username || null,
-      first_name: req.user.first_name || null,
-      last_name: req.user.last_name || null,
-      subscription: req.user.subscription,
-      niche: req.user.niche,
-      avatar: req.user.avatar,
-      bio: req.user.bio,
-      website: req.user.website,
-      location: req.user.location,
-      social_links: req.user.social_links,
-      email_verified: req.user.email_verified,
-      created_at: req.user.created_at
-    }
-  });
+  res.json({ user: publicProfile(req.user) });
 });
 
 // Request password reset
@@ -1035,27 +1043,7 @@ router.get('/profile', require('../middleware/auth'), async (req, res) => {
     // User data is already available from auth middleware.
     // `username` is the user's preferred display name — what should appear
     // on the dashboard greeting and anywhere a single-name label is shown.
-    const profile = {
-      id: req.user.id,
-      email: req.user.email,
-      name: req.user.name,
-      username: req.user.username || null,
-      first_name: req.user.first_name || null,
-      last_name: req.user.last_name || null,
-      avatar: req.user.avatar,
-      bio: req.user.bio,
-      website: req.user.website,
-      location: req.user.location,
-      social_links: req.user.social_links,
-      // `niche` lives at the JSONB top-level OR inside social_links.niche
-      // (where PUT /auth/profile now stores it). Prefer the social_links
-      // copy because that's what we explicitly persist; fall back to the
-      // legacy req.user.niche for any older user docs.
-      niche: req.user?.social_links?.niche || req.user.niche || null,
-      subscription: req.user.subscription,
-      email_verified: req.user.email_verified,
-      created_at: req.user.created_at
-    };
+    const profile = publicProfile(req.user);
 
     res.json({ success: true, profile });
   } catch (error) {
@@ -1069,14 +1057,13 @@ router.put('/profile', require('../middleware/auth'), async (req, res) => {
   try {
     const { name, username, bio, website, location, social_links, niche } = req.body;
 
-    // Dev users have a non-UUID id (`dev-user-123`) that Supabase rejects.
-    // Return a synthesized success so the dashboard's inline editor still
-    // confirms the change in-session; the real persistence path runs once
-    // the user signs into a real account.
+    // The local dev-bypass user (`dev-user-123`) has no account row to write
+    // to, so it gets a synthesized echo. This used to also catch every id that
+    // wasn't a UUID — i.e. every real MongoDB account — so in production each
+    // profile save answered "updated" and saved nothing.
     const userIdStr = req.user?.id ? String(req.user.id) : '';
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userIdStr);
-    const isDevId = userIdStr.startsWith('dev-') || userIdStr === 'dev-user-123';
-    if (isDevId || (!isUuid && userIdStr)) {
+    const isDevId = req.user?.isDevUser || userIdStr.startsWith('dev-') || userIdStr === 'dev-user-123';
+    if (isDevId) {
       const trimmedName = typeof name === 'string' ? name.trim() : '';
       const parts = trimmedName ? trimmedName.split(/\s+/) : [];
       const profile = {
@@ -1116,6 +1103,58 @@ router.put('/profile', require('../middleware/auth'), async (req, res) => {
 
     if (website && !/^https?:\/\/.+/.test(website)) {
       return res.status(400).json({ success: false, error: 'Website must be a valid URL starting with http:// or https://' });
+    }
+
+    // MongoDB accounts (production has no Supabase).
+    if (!supabase) {
+      const User = require('../models/User');
+      const NICHES = User.schema.path('niche').enumValues;
+      const set = {};
+      const unset = {};
+      const text = (v) => (typeof v === 'string' && v.trim() ? v.trim() : null);
+      const put = (key, v) => { if (v === null) unset[key] = 1; else set[key] = v; };
+      if (name !== undefined) {
+        if (!text(name)) return res.status(400).json({ success: false, error: 'Name must be at least 2 characters long' });
+        set.name = name.trim();
+      }
+      if (username !== undefined) put('username', text(username));
+      if (bio !== undefined) put('bio', text(bio));
+      if (website !== undefined) put('website', text(website));
+      if (location !== undefined) put('location', text(location));
+      if (social_links !== undefined) {
+        if (social_links !== null && (typeof social_links !== 'object' || Array.isArray(social_links))) {
+          return res.status(400).json({ success: false, error: 'social_links must be an object' });
+        }
+        const links = {};
+        for (const [k, v] of Object.entries(social_links || {})) {
+          if (k === 'niche' || k === 'oauth' || !/^[a-z0-9_]{1,30}$/i.test(k)) continue;
+          if (typeof v === 'string' && v.trim()) links[k] = v.trim().slice(0, 300);
+        }
+        put('socialLinks', Object.keys(links).length ? links : null);
+      }
+      if (niche !== undefined) {
+        const n = text(niche) && niche.trim().toLowerCase();
+        if (n && !NICHES.includes(n)) {
+          return res.status(400).json({ success: false, error: `Niche must be one of: ${NICHES.join(', ')}` });
+        }
+        set.niche = n || 'other';
+      }
+      if (!Object.keys(set).length && !Object.keys(unset).length) {
+        return res.status(400).json({ success: false, error: 'No valid fields to update' });
+      }
+      try {
+        const update = {};
+        if (Object.keys(set).length) update.$set = set;
+        if (Object.keys(unset).length) update.$unset = unset;
+        const saved = await User.findByIdAndUpdate(req.user._id, update, { new: true, runValidators: true }).select('-password');
+        if (!saved) return res.status(404).json({ success: false, error: 'User not found' });
+        return res.json({ success: true, message: 'Profile updated successfully', profile: publicProfile(saved) });
+      } catch (err) {
+        if (err.name === 'ValidationError') {
+          return res.status(400).json({ success: false, error: Object.values(err.errors).map((e) => e.message).join('; ') });
+        }
+        throw err;
+      }
     }
 
     // Prepare update data — Supabase `users` table has first_name/last_name
@@ -1273,18 +1312,20 @@ router.post(
         await fs.promises.unlink(req.file.path).catch(() => { /* best-effort */ });
       }
 
-      // Dev users live entirely in-memory — return the encoded avatar so
-      // the dashboard's optimistic preview matches the response, but skip
-      // the Supabase write that would 500 on a non-UUID id.
+      // The local dev-bypass user has no account row — echo the avatar so the
+      // preview matches. (This used to catch every non-UUID id, i.e. every real
+      // MongoDB account, so production avatars were never saved.)
       const userIdStr = req.user?.id ? String(req.user.id) : '';
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userIdStr);
-      const isDevId = userIdStr.startsWith('dev-') || userIdStr === 'dev-user-123';
-      if (isDevId || (!isUuid && userIdStr)) {
+      const isDevId = req.user?.isDevUser || userIdStr.startsWith('dev-') || userIdStr === 'dev-user-123';
+      if (isDevId) {
         return res.json({ success: true, avatar: avatarUrl });
       }
 
       if (!supabase) {
-        return res.status(503).json({ success: false, error: 'Profile service unavailable' });
+        const User = require('../models/User');
+        const r = await User.updateOne({ _id: req.user._id }, { $set: { avatar: avatarUrl } });
+        if (!r.matchedCount) return res.status(404).json({ success: false, error: 'User not found' });
+        return res.json({ success: true, avatar: avatarUrl });
       }
       const { error: updateError } = await supabase
         .from('users')
