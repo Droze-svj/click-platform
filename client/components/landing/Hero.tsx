@@ -13,7 +13,7 @@ export function Hero() {
     ? `bg-gradient-to-r ${accent.gradient}`
     : 'bg-gradient-to-r from-primary-400 via-surface-900 dark:via-white to-fuchsia-400';
   return (
-    <section className="relative pt-56 md:pt-72 pb-24 md:pb-56 px-6 flex flex-col items-center overflow-hidden font-inter">
+    <section className="relative pt-28 sm:pt-32 md:pt-40 pb-20 md:pb-32 px-4 sm:px-6 flex flex-col items-center overflow-hidden font-inter">
       
       {/* High-Fidelity Spectral Atmosphere */}
       <div aria-hidden="true" className="absolute inset-0 -z-10 pointer-events-none">
@@ -22,26 +22,26 @@ export function Hero() {
         <div className="absolute bottom-[-10%] left-[20%] w-[50%] h-[40%] bg-blue-600/10 blur-[160px] rounded-full mix-blend-screen opacity-40" />
       </div>
 
-      <div className="max-w-[1900px] mx-auto text-center space-y-16 relative z-10">
+      <div className="w-full max-w-[1900px] mx-auto text-center space-y-8 md:space-y-10 relative z-10">
         
         {/* Release Protocol Pill */}
         <m.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          className="inline-flex items-center gap-4 px-6 md:px-8 py-3 rounded-full bg-primary-500/10 border-2 border-primary-500/20 text-primary-500 text-[9px] md:text-[11px] font-black uppercase tracking-[0.3em] md:tracking-[0.5em] italic shadow-[0_0_40px_rgba(99,102,241,0.2)] hover:bg-primary-500/20 transition-all cursor-default group magnetic-hover max-w-full"
+          className="inline-flex items-center gap-4 px-6 md:px-8 py-3 rounded-full bg-primary-500/10 border-2 border-primary-500/20 text-primary-500 text-[11px] md:text-xs font-bold uppercase tracking-[0.15em] shadow-[0_0_40px_rgba(99,102,241,0.2)] hover:bg-primary-500/20 transition-all cursor-default group magnetic-hover max-w-full"
         >
           <Sparkles className="w-3 h-3 md:w-4 md:h-4 animate-pulse text-spectral-glow shrink-0" />
-          <span className="truncate md:whitespace-normal">Meet Click — the editor that ships while you sleep</span>
+          <span className="whitespace-normal text-left sm:text-center">Meet Click — the editor that ships while you sleep</span>
         </m.div>
 
         {/* Cinematic Headline Matrix */}
-        <div className="space-y-4 md:space-y-8">
+        <div className="space-y-4 md:space-y-6">
           <m.h1
             initial={{ opacity: 0, y: 80 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-6xl sm:text-7xl md:text-[10rem] lg:text-[12rem] font-black tracking-tighter leading-[0.8] text-surface-900 dark:text-white uppercase italic group text-spectral-glow flex flex-col items-center"
+            className="text-[2.75rem] sm:text-7xl md:text-8xl lg:text-9xl break-words font-black tracking-tighter leading-[0.9] text-surface-900 dark:text-white uppercase italic group text-spectral-glow flex flex-col items-center"
           >
             <span className="block relative">
               CLICK EDITS.
@@ -52,7 +52,7 @@ export function Hero() {
                 className="absolute -bottom-4 left-0 h-1 bg-gradient-to-r from-transparent via-primary-500 to-transparent opacity-50"
               />
             </span>
-            <span className={`text-transparent bg-clip-text ${headlineGradient} drop-shadow-[0_0_30px_rgba(99,102,241,0.3)] transition-all duration-500`}>
+            <span className={`text-transparent bg-clip-text pr-[0.15em] box-decoration-clone ${headlineGradient} drop-shadow-[0_0_30px_rgba(99,102,241,0.3)] transition-all duration-500`}>
               YOU SHOW UP.
             </span>
           </m.h1>
@@ -61,21 +61,21 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="flex flex-wrap items-center justify-center gap-4 md:gap-10 pt-4 md:pt-8"
+            className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:gap-10 pt-2 md:pt-4"
           >
             <div className="flex items-center gap-3 md:gap-4 group/h magnetic-hover">
               <Cpu size={16} className="text-primary-500 group-hover:rotate-12 transition-transform shrink-0" />
-              <span className="text-[8px] md:text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.2em] md:tracking-[0.6em] italic break-words">Edits like you</span>
+              <span className="text-xs md:text-sm font-semibold text-surface-600 dark:text-slate-300 uppercase tracking-wider">Edits like you</span>
             </div>
             <div className="hidden sm:block w-1.5 h-1.5 rounded-full bg-primary-500/20 shadow-inner animate-pulse" />
             <div className="flex items-center gap-3 md:gap-4 group/h magnetic-hover">
               <Globe size={16} className="text-fuchsia-500 group-hover:rotate-12 transition-transform shrink-0" />
-              <span className="text-[8px] md:text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.2em] md:tracking-[0.6em] italic break-words">Posts everywhere</span>
+              <span className="text-xs md:text-sm font-semibold text-surface-600 dark:text-slate-300 uppercase tracking-wider">Posts everywhere</span>
             </div>
             <div className="hidden sm:block w-1.5 h-1.5 rounded-full bg-primary-500/20 shadow-inner animate-pulse [animation-delay:1s]" />
             <div className="flex items-center gap-3 md:gap-4 group/h magnetic-hover">
               <ShieldCheck size={16} className="text-emerald-500 group-hover:rotate-12 transition-transform shrink-0" />
-              <span className="text-[8px] md:text-[10px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-[0.2em] md:tracking-[0.6em] italic break-words">Learns every post</span>
+              <span className="text-xs md:text-sm font-semibold text-surface-600 dark:text-slate-300 uppercase tracking-wider">Learns every post</span>
             </div>
           </m.div>
         </div>
@@ -84,7 +84,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 1 }}
-          className="text-surface-600 dark:text-slate-400 text-xl md:text-3xl font-medium max-w-4xl mx-auto leading-relaxed italic uppercase tracking-tight opacity-80"
+          className="text-surface-600 dark:text-slate-300 text-lg md:text-2xl font-normal max-w-3xl mx-auto leading-relaxed"
         >
           Drop one raw video. Click cuts the dead air, writes the hooks, picks the post time, and ships it to TikTok, Reels, Shorts, X, and LinkedIn — then watches what works and gets sharper for tomorrow. You stay creative. Click stays awake.
         </m.p>
@@ -94,21 +94,21 @@ export function Hero() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 1 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-8 pt-12"
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 pt-2"
         >
           <Link
             href="/register?plan=free"
-            className="group w-full sm:w-auto px-16 py-7 rounded-[2.5rem] bg-surface-900 dark:bg-white text-white dark:text-black text-[12px] font-black uppercase tracking-[0.6em] italic transition-all shadow-[0_40px_80px_rgba(0,0,0,0.5)] hover:shadow-[0_60px_120px_rgba(0,0,0,0.7)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white flex items-center justify-center gap-6 active:scale-95 border-none btn-shimmer magnetic-hover"
+            className="group w-full sm:w-auto px-10 py-5 rounded-full bg-surface-900 dark:bg-white text-white dark:text-black text-base font-bold transition-all shadow-[0_40px_80px_rgba(0,0,0,0.5)] hover:shadow-[0_60px_120px_rgba(0,0,0,0.7)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white flex items-center justify-center gap-6 active:scale-95 border-none btn-shimmer magnetic-hover"
           >
-            Let Click cook
-            <ArrowRight className="w-6 h-6 group-hover:translate-x-4 transition-transform duration-500" />
+            Start free
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform duration-300" aria-hidden="true" />
           </Link>
           <a
             href="#workflow"
-            className="group w-full sm:w-auto px-16 py-7 rounded-[2.5rem] bg-surface-card dark:bg-black/40 backdrop-blur-[40px] border-2 border-surface-100 dark:border-white/10 text-surface-900 dark:text-white text-[12px] font-black uppercase tracking-[0.6em] italic hover:bg-surface-card hover:border-primary-500/40 transition-all flex items-center justify-center gap-6 active:scale-95 shadow-2xl magnetic-hover"
+            className="group w-full sm:w-auto px-10 py-5 rounded-full bg-surface-card dark:bg-black/40 backdrop-blur-[40px] border-2 border-surface-100 dark:border-white/10 text-surface-900 dark:text-white text-base font-bold hover:bg-surface-card hover:border-primary-500/40 transition-all flex items-center justify-center gap-6 active:scale-95 shadow-2xl magnetic-hover"
           >
-            <Play className="w-6 h-6 fill-current group-hover:scale-125 transition-transform duration-500" />
-            See it in 60 seconds
+            <Play className="w-5 h-5 fill-current group-hover:scale-110 transition-transform duration-300" aria-hidden="true" />
+            See how it works
           </a>
         </m.div>
 
@@ -117,9 +117,9 @@ export function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.9, duration: 1 }}
-          className="text-[10px] md:text-xs text-surface-400 dark:text-slate-600 font-bold uppercase tracking-[0.4em] italic pt-2"
+          className="text-sm text-surface-500 dark:text-slate-400 font-medium"
         >
-          Free forever. No card. First clip out in 90 seconds.
+          Free plan, no card needed. Your first clip in about 90 seconds.
         </m.p>
       </div>
 
@@ -162,7 +162,7 @@ export function Hero() {
       </div>
 
       {/* Cinematic Gradient Fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-surface-page via-surface-page/50 to-transparent z-10 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-surface-page via-surface-page/50 to-transparent z-10 pointer-events-none" />
 
     </section>
   );

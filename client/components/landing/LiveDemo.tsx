@@ -273,7 +273,7 @@ export function LiveDemo() {
   };
 
   return (
-    <section className="px-4 md:px-6 pb-48 font-inter relative">
+    <section className="px-4 md:px-6 pb-24 md:pb-32 font-inter relative">
       {/* Section heading — without this, the dashboard mockup floats
           with no context. Visitors who skim need to know "this is what
           you'll actually see when you sign up". */}
