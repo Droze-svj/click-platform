@@ -1726,7 +1726,8 @@
     "statusPublished": "Published",
     "statusFailed": "Failed",
     "statusDraft": "Draft",
-    "viewSequenceDetails": "View details"
+    "viewSequenceDetails": "View details",
+    "toastScheduledPartial": "Scheduled {{ok}} of {{total}} posts. The rest failed: {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "Couldn't load scripts",
@@ -10177,5 +10178,14 @@
     "chatRateLimited": "You've hit the AI limit for now. Try again in a little while.",
     "chatUnavailable": "The AI couldn't answer right now. Try again in a moment.",
     "chatOffline": "I can't reach the assistant right now. Check your connection and try again."
+  },
+  "postStatus": {
+    "scheduled": "Scheduled",
+    "awaitingApproval": "Awaiting approval",
+    "publishing": "Publishing",
+    "published": "Published",
+    "retrying": "Retrying",
+    "failed": "Failed",
+    "cancelled": "Cancelled"
   }
 }
