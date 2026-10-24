@@ -187,15 +187,27 @@ router.delete('/:id', auth, asyncHandler(async (req, res) => {
  * Sync content to/from integration
  */
 router.post('/:id/sync', auth, asyncHandler(async (req, res) => {
-  const { content, direction = 'push' } = req.body;
+  const { content } = req.body || {};
+  // The integrations page's "Sync" button posts {}: that is a pull (refresh
+  // from the integration), not a push of nothing. A push still needs content.
+  const direction = (req.body && req.body.direction) || (content ? 'push' : 'pull');
 
-  if (!content) {
-    return sendError(res, 'Content is required', 400);
+  if (direction === 'push' && !content) {
+    return sendError(res, 'Content is required to push', 400);
   }
 
   if (!(await getOwnedIntegration(req, res))) return;
-  const result = await syncContentToIntegration(req.params.id, content, direction);
-  sendSuccess(res, 'Content synced', 200, result);
+  try {
+    const result = await syncContentToIntegration(req.params.id, content, direction);
+    if (!result) return sendError(res, `Unsupported sync direction: ${direction}`, 400);
+    sendSuccess(res, 'Content synced', 200, result);
+  } catch (err) {
+    if (/not active/i.test(err.message)) {
+      return sendError(res, 'This integration is not active. Reconnect it, then sync again.', 409);
+    }
+    // The remote service failed (unreachable, auth rejected, blocked URL).
+    return sendError(res, `Sync failed: ${err.message}`, 502);
+  }
 }));
 
 /**
