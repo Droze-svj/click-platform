@@ -52,7 +52,7 @@ const DOMAIN_MAP: Record<string, string> = { 'social-media': 'instagram', instag
 
 export default function ScriptsPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { showToast } = useToast()
   const { state: workflow, completeStage } = useWorkflow()
   const { t } = useTranslation()
@@ -87,7 +87,12 @@ export default function ScriptsPage() {
     } finally { setLoading(false) }
   }, [showToast, t])
 
-  useEffect(() => { if (!user) router.push('/login'); else loadScripts() }, [user, router, loadScripts])
+  useEffect(() => {
+    // useAuth starts with user=null while /auth/me is in flight — wait for it,
+    // or a direct link / refresh bounces a signed-in user to /login.
+    if (authLoading) return
+    if (!user) router.push('/login'); else loadScripts()
+  }, [user, authLoading, router, loadScripts])
 
   // Templates page → "Use template" lands here with ?template=<id>.
   useEffect(() => {

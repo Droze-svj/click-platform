@@ -17,12 +17,13 @@ export const dynamic = 'force-dynamic';
 
 export default function InfrastructurePage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { t } = useTranslation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return // user is null until /auth/me answers
     if (!user) {
       router.push('/login');
       return;
@@ -48,7 +49,7 @@ export default function InfrastructurePage() {
     };
 
     checkAdmin();
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   if (loading) return (
     <div className="ds-bg-mesh-soft min-h-screen flex flex-col items-center justify-center py-48" aria-busy="true">

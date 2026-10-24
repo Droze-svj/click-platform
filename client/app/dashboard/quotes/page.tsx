@@ -48,14 +48,15 @@ function getImageUrl(path: string): string {
 }
 
 export default function QuotesPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const { showToast } = useToast()
   const { t } = useTranslation()
 
   useEffect(() => {
+    if (authLoading) return // user is null until /auth/me answers
     if (!user) router.push('/login')
-  }, [user, router])
+  }, [user, authLoading, router])
 
   const [quoteText, setQuoteText] = useState('')
   const [style, setStyle] = useState('modern')

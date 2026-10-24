@@ -56,7 +56,7 @@ const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shad
 export default function ContentDetailPage() {
   const router = useRouter()
   const params = useParams()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { showToast } = useToast()
   const { t } = useTranslation()
   
@@ -85,9 +85,10 @@ export default function ContentDetailPage() {
   }, [params.id, router, showToast])
 
   useEffect(() => {
+    if (authLoading) return // user is null until /auth/me answers
     if (!user) { router.push('/login'); return }
     if (params.id) loadContent()
-  }, [user, router, params.id, loadContent])
+  }, [user, authLoading, router, params.id, loadContent])
 
   const loadTranslations = useCallback(async () => {
     if (!content?._id) return

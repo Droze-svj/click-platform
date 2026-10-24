@@ -48,7 +48,7 @@ const RESONANCE_NODES = [
 export default function NeuralForgePage() {
   const router = useRouter()
   const { t } = useTranslation()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { socket, connected, on, off } = useSocket(user?.id || null)
 
   const [logicSeed, setLogicSeed] = useState('')
@@ -61,7 +61,7 @@ export default function NeuralForgePage() {
   const [payloadId, setPayloadId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  useEffect(() => { if (!user) router.push('/login') }, [user, router])
+  useEffect(() => { if (!authLoading && !user) router.push('/login') }, [user, authLoading, router])
 
   // Templates page → "Use template" lands here with ?template=<id>.
   useEffect(() => {

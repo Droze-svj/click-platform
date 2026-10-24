@@ -47,7 +47,7 @@ const CATEGORIES = ['task', 'project', 'content', 'approval', 'mention', 'system
 export default function NotificationsPage() {
   const router = useRouter()
   const { t } = useTranslation()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { socket } = useSocket(user?.id ?? null)
   const { showToast } = useToast()
 
@@ -96,10 +96,11 @@ export default function NotificationsPage() {
   }, [])
 
   useEffect(() => {
+    if (authLoading) return // user is null until /auth/me answers
     if (!user) { router.push('/login'); return }
     loadSignals()
     loadLiveStatus()
-  }, [user, loadSignals, loadLiveStatus, router])
+  }, [user, authLoading, loadSignals, loadLiveStatus, router])
 
   useEffect(() => {
     if (socket) {
