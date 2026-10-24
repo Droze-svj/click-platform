@@ -90,7 +90,8 @@ function buildDigest({ periodStart, periodEnd, thisWeek = {}, priorWeek = {}, ne
       totalEngagement: Number(thisWeek.totalEngagement) || 0,
       totalReach: Number(thisWeek.totalReach) || 0,
       avgEngagementRate: round(thisRate),
-      postCount: wins.length,
+      // Every post in the window — `wins` is only the top 5.
+      postCount: Number.isFinite(Number(thisWeek.postCount)) ? Number(thisWeek.postCount) : wins.length,
     },
     wins,
     platformTrends,

@@ -79,7 +79,7 @@ export default function HookVariantsCard({ niche, platform, className = '' }: Ho
   const pick = async (variant: Variant) => {
     setPickedId(variant.id)
     try {
-      await apiPost('/style-profile/pick', { facet: 'hooks' as any, key: variant.id })
+      await apiPost('/style-profile/pick', { facet: 'hookStyles', key: variant.id })
     } catch { /* best-effort signal */ }
   }
 

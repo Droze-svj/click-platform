@@ -160,6 +160,7 @@ router.post('/pick', auth, async (req, res) => {
     const profile = await UserStyleProfile.recordPick(userId, facet, key);
     res.json({ success: true, data: profile });
   } catch (err) {
+    if (/^Invalid facet/.test(err.message)) return res.status(400).json({ success: false, error: err.message });
     logger.error('[style-profile] pick failed', err);
     res.status(500).json({ success: false, error: err.message });
   }
