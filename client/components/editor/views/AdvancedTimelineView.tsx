@@ -12,9 +12,10 @@ import { TimelineSegment } from '../../../types/editor'
 import { formatTime, resolveTimelineOverlaps } from '../../../utils/editorUtils'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { Text } from 'react-konva'
-import { useLocalVAD } from '../../../hooks/useLocalVAD'
 import { useCompetitorGhosting } from '../../../hooks/useCompetitorGhosting'
 import { cn } from '../../../lib/utils'
+import { getMediaUrl } from '../../../utils/url'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 // ── Types & constants ─────────────────────────────────────────────────────────
 
@@ -61,6 +62,70 @@ function heatColor(level: string): string {
 // Right-click context menu data
 interface CtxMenu { x: number; y: number; segId: string }
 
+// ── Sound / silence detection (runs on the real decoded audio) ────────────────
+
+interface SoundSegment { start: number; end: number; isSound: boolean }
+
+/** Don't pull files bigger than this into memory just to find silences. */
+const MAX_AUDIO_ANALYSIS_BYTES = 400 * 1024 * 1024
+const ANALYSIS_FRAME_SEC = 0.03
+const MIN_SILENCE_SEC = 0.3
+const MIN_SOUND_SEC = 0.2
+
+/**
+ * Energy-based sound/silence detection over a decoded AudioBuffer.
+ * Mixes to mono, computes RMS per 30 ms frame, and treats frames well above the
+ * quietest part of the clip (the noise floor) as sound. Short silences and
+ * short blips are merged so the overlay shows meaningful regions.
+ */
+function detectSoundSegments(audio: AudioBuffer): SoundSegment[] {
+  const { sampleRate, numberOfChannels, length } = audio
+  const frameLen = Math.max(1, Math.round(sampleRate * ANALYSIS_FRAME_SEC))
+  const frameCount = Math.ceil(length / frameLen)
+  if (frameCount === 0) return []
+  const channels = Array.from({ length: numberOfChannels }, (_, c) => audio.getChannelData(c))
+  const rms = new Float32Array(frameCount)
+  for (let f = 0; f < frameCount; f++) {
+    const startIdx = f * frameLen
+    const endIdx = Math.min(length, startIdx + frameLen)
+    let sum = 0
+    for (let i = startIdx; i < endIdx; i++) {
+      let v = 0
+      for (let c = 0; c < numberOfChannels; c++) v += channels[c][i]
+      v /= numberOfChannels
+      sum += v * v
+    }
+    rms[f] = Math.sqrt(sum / Math.max(1, endIdx - startIdx))
+  }
+  const sorted = Array.from(rms).sort((a, b) => a - b)
+  const noiseFloor = sorted[Math.floor(sorted.length * 0.1)] ?? 0
+  const threshold = Math.max(noiseFloor * 3, 0.01)
+
+  // Raw runs of sound / silence
+  const runs: SoundSegment[] = []
+  for (let f = 0; f < frameCount; f++) {
+    const isSound = rms[f] >= threshold
+    const t0 = (f * frameLen) / sampleRate
+    const t1 = Math.min(length, (f + 1) * frameLen) / sampleRate
+    const last = runs[runs.length - 1]
+    if (last && last.isSound === isSound) last.end = t1
+    else runs.push({ start: t0, end: t1, isSound })
+  }
+  // Absorb short silences into sound, then drop short blips of sound.
+  const absorb = (list: SoundSegment[], isSound: boolean, minLen: number) => {
+    const out: SoundSegment[] = []
+    for (const r of list) {
+      const flip = r.isSound === isSound && r.end - r.start < minLen && out.length > 0
+      const seg = flip ? { ...r, isSound: !isSound } : { ...r }
+      const last = out[out.length - 1]
+      if (last && last.isSound === seg.isSound) last.end = seg.end
+      else out.push(seg)
+    }
+    return out
+  }
+  return absorb(absorb(runs, false, MIN_SILENCE_SEC), true, MIN_SOUND_SEC)
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
@@ -74,10 +139,12 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
   onSegmentSelect,
   aiSuggestions,
   showToast,
+  videoUrl,
   setActiveCategory: _setActiveCategory,
   showAiPreviews = true,
   retentionHeatmap = [],
 }) => {
+  const { t: tr } = useTranslation()
   const duration = videoState?.duration ?? 60
   const playheadTime = videoState?.currentTime ?? 0
 
@@ -90,19 +157,45 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
   const [ctxMenu, setCtxMenu] = useState<CtxMenu | null>(null)
   const [selectedTrackFilter, setSelectedTrackFilter] = useState<number | null>(null)
 
-  // Local AI VAD (Phase 1)
-  const { isReady: vadReady, isProcessing: vadProcessing, vadSegments, processAudio } = useLocalVAD()
+  // Sound / silence detection on the current video's real audio
+  const [soundSegments, setSoundSegments] = useState<SoundSegment[]>([])
+  const [soundProcessing, setSoundProcessing] = useState(false)
 
-  // Competitor Ghosting (Task 4.1)
+  // Example pacing templates (illustrative curves, not real creator data)
   const { profiles, activeProfile, loadGhostCurve, clearGhostCurve, getExpectedEnergyAtTime } = useCompetitorGhosting()
 
-  const handleRunVAD = () => {
-    if (!vadReady || vadProcessing) return
-    // In a real V6 implementation, we extract the AudioBuffer from the video URL using OfflineAudioContext.
-    // For this Phase 1 structure demonstration, we pass a dummy buffer to trigger the Web Worker.
-    const dummyBuffer = new Float32Array(44100 * 15) // 15 seconds of silence
-    processAudio(dummyBuffer)
-    showToast('Running Local Edge AI (VAD)', 'info')
+  const handleFindSilences = async () => {
+    if (!videoUrl || soundProcessing) return
+    setSoundProcessing(true)
+    let audioCtx: AudioContext | null = null
+    try {
+      const res = await fetch(getMediaUrl(videoUrl), { credentials: 'same-origin' })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const size = Number(res.headers.get('content-length') || 0)
+      if (size > MAX_AUDIO_ANALYSIS_BYTES) {
+        showToast(tr('timelineView.silencesTooLarge'), 'error')
+        return
+      }
+      const data = await res.arrayBuffer()
+      const AudioCtor: typeof AudioContext | undefined =
+        window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      if (!AudioCtor) throw new Error('Web Audio unavailable')
+      audioCtx = new AudioCtor()
+      const audio = await audioCtx.decodeAudioData(data)
+      const segments = detectSoundSegments(audio)
+      setSoundSegments(segments)
+      const silences = segments.filter(s => !s.isSound).length
+      if (!segments.some(s => s.isSound)) {
+        showToast(tr('timelineView.silencesNoSound'), 'info')
+      } else {
+        showToast(tr('timelineView.silencesFound', { count: silences }), 'success')
+      }
+    } catch {
+      showToast(tr('timelineView.silencesFailed'), 'error')
+    } finally {
+      audioCtx?.close().catch(() => {})
+      setSoundProcessing(false)
+    }
   }
 
   const stagePaddingX = LABEL_WIDTH
@@ -327,30 +420,30 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
 
           <div className="h-4 w-px bg-border" />
 
-          {/* Local VAD */}
+          {/* Sound / silence detection */}
           <button
             type="button"
-            onClick={handleRunVAD}
-            disabled={!vadReady || vadProcessing}
+            onClick={handleFindSilences}
+            disabled={!videoUrl || soundProcessing}
             className={cn(
               'rounded-lg border px-3 py-1.5 text-[10px] font-medium transition-colors disabled:opacity-50',
-              vadProcessing ? 'border-sky-500/30 bg-sky-500/15 text-sky-500' : 'border-subtle ds-surface-subtle text-theme-secondary hover:text-theme-primary'
+              soundProcessing ? 'border-sky-500/30 bg-sky-500/15 text-sky-500' : 'border-subtle ds-surface-subtle text-theme-secondary hover:text-theme-primary'
             )}
-            title="Run Local Edge VAD"
+            title={tr('timelineView.findSilencesHint')}
           >
-            {vadProcessing ? 'Processing…' : 'Run VAD'}
+            {soundProcessing ? tr('timelineView.findingSilences') : tr('timelineView.findSilences')}
           </button>
 
           <div className="h-4 w-px bg-border" />
 
-          {/* Ghosting Overlay Selector */}
-          <div className="flex items-center gap-1 rounded-lg border border-subtle ds-surface-subtle px-1.5 py-1">
+          {/* Example pacing template selector */}
+          <div className="flex items-center gap-1 rounded-lg border border-subtle ds-surface-subtle px-1.5 py-1" title={tr('timelineView.pacingHint')}>
             <button
               type="button"
               onClick={() => clearGhostCurve()}
               className={cn('rounded-md px-1.5 py-0.5 text-[10px] font-medium transition-colors', !activeProfile ? 'bg-indigo-500/15 text-indigo-500' : 'text-theme-muted hover:text-theme-primary')}
             >
-              Raw
+              {tr('timelineView.pacingNone')}
             </button>
             {profiles.map(p => (
               <button
@@ -358,8 +451,9 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
                 key={p.id}
                 onClick={() => loadGhostCurve(p.id)}
                 className={cn('rounded-md px-1.5 py-0.5 text-[10px] font-medium transition-colors', activeProfile?.id === p.id ? 'bg-indigo-500/15 text-indigo-500' : 'text-theme-muted hover:text-theme-primary')}
+                title={tr(p.nameKey)}
               >
-                {p.name.split(' ')[0]}
+                {tr(p.shortNameKey)}
               </button>
             ))}
             <Ghost className={cn('ml-1 h-3 w-3', activeProfile ? 'text-indigo-500' : 'text-theme-muted')} aria-hidden />
@@ -466,7 +560,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
                 </Layer>
               )}
 
-              {/* ── Competitor Ghosting Overlay (Task 4.1) ─────────────── */}
+              {/* ── Example pacing template overlay ─────────────────────── */}
               {activeProfile && (
                 <Layer y={RULER_HEIGHT}>
                   <Line
@@ -487,7 +581,7 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
                   <Text
                     x={10}
                     y={totalTrackHeight - 20}
-                    text={`Ghost: ${activeProfile.name}`}
+                    text={tr('timelineView.pacingOverlayLabel', { name: tr(activeProfile.nameKey) })}
                     fill="#F59E0B"
                     fontSize={10}
                     fontStyle="bold"
@@ -496,17 +590,17 @@ const AdvancedTimelineView: React.FC<AdvancedTimelineViewProps> = ({
                 </Layer>
               )}
 
-              {/* ── Local VAD Speech overlay ──────────────────────────────── */}
-              {vadSegments.length > 0 && (
+              {/* ── Sound regions from the real audio ─────────────────────── */}
+              {soundSegments.length > 0 && (
                 <Layer y={RULER_HEIGHT}>
-                  {vadSegments.map((zone, i) => (
+                  {soundSegments.map((zone, i) => (
                     <Rect
-                      key={`vad-${i}`}
+                      key={`sound-${i}`}
                       x={timeToX(zone.start)}
                       y={0}
                       width={timeToX(zone.end - zone.start)}
                       height={totalTrackHeight}
-                      fill={zone.isSpeech ? 'rgba(56, 189, 248, 0.08)' : 'rgba(0,0,0,0)'}
+                      fill={zone.isSound ? 'rgba(56, 189, 248, 0.08)' : 'rgba(0,0,0,0)'}
                       listening={false}
                     />
                   ))}

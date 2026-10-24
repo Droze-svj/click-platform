@@ -12,7 +12,6 @@ import {
   Users,
   Shield,
   Activity,
-  Zap,
   RefreshCw,
   Database,
   CheckCircle,
@@ -284,25 +283,6 @@ export default function TeamDetailsPage() {
                 <Button variant="secondary" size="md" onClick={() => router.push('/dashboard/content')} className="w-full">{t('teamDetailPage.synchronizeAssets')}</Button>
               </Panel>
 
-              <Panel variant="bento" className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-primary"><Zap size={22} aria-hidden /></div>
-                  <div>
-                    <h3 className="ds-text-h3 text-theme-primary">{t('teamDetailPage.swarmTelemetry')}</h3>
-                    <p className="ds-text-caption">{t('teamDetailPage.realTimeNodeStatus')}</p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between px-4 py-3 rounded-lg ds-surface-subtle">
-                    <span className="ds-text-caption">{t('teamDetailPage.idDnaRegistry')}</span>
-                    <span className="ds-text-caption text-primary inline-flex items-center gap-1.5"><CheckCircle size={13} aria-hidden /> {t('teamDetailPage.verified')}</span>
-                  </div>
-                  <div className="flex items-center justify-between px-4 py-3 rounded-lg ds-surface-subtle">
-                    <span className="ds-text-caption">{t('teamDetailPage.neuralSyncRate')}</span>
-                    <span className="ds-text-caption text-primary">{t('teamDetailPage.syncRateOptimal')}</span>
-                  </div>
-                </div>
-              </Panel>
             </div>
           </main>
 

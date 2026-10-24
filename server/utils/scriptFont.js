@@ -32,6 +32,19 @@ const NOTO_FONT_CANDIDATES = {
   ],
 };
 
+// Bold faces (fonts-noto-cjk / fonts-noto-core ship them) so bold non-Latin
+// text isn't silently drawn regular.
+const NOTO_BOLD_CANDIDATES = {
+  cjk: [
+    '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc',
+    '/usr/share/fonts/truetype/noto-cjk/NotoSansCJK-Bold.ttc',
+    '/System/Library/Fonts/PingFang.ttc',
+  ],
+  arabic: ['/usr/share/fonts/truetype/noto/NotoNaskhArabic-Bold.ttf'],
+  thai: ['/usr/share/fonts/truetype/noto/NotoSansThai-Bold.ttf'],
+  devanagari: ['/usr/share/fonts/truetype/noto/NotoSansDevanagari-Bold.ttf'],
+};
+
 const _scriptFontCache = {};
 
 // Latin default-font candidates (macOS / Linux / Windows), tried in order. Used
@@ -83,15 +96,21 @@ function detectTextScript(text) {
   return null;
 }
 
-/** Path to an installed Noto font covering `text`'s script, or null. Cached. */
-function notoFontForText(text) {
+/**
+ * Path to an installed Noto font covering `text`'s script, or null. Cached.
+ * `weight` ≥ 600 prefers the bold face when one is installed.
+ */
+function notoFontForText(text, weight) {
   const script = detectTextScript(text);
   if (!script) return null;
-  if (!(script in _scriptFontCache)) {
-    _scriptFontCache[script] = (NOTO_FONT_CANDIDATES[script] || [])
-      .find((p) => { try { return fs.existsSync(p); } catch (_) { return false; } }) || null;
+  const bold = Number(weight) >= 600;
+  const key = bold ? `${script}:bold` : script;
+  if (!(key in _scriptFontCache)) {
+    const exists = (p) => { try { return fs.existsSync(p); } catch (_) { return false; } };
+    _scriptFontCache[key] = (bold && (NOTO_BOLD_CANDIDATES[script] || []).find(exists))
+      || (NOTO_FONT_CANDIDATES[script] || []).find(exists) || null;
   }
-  return _scriptFontCache[script];
+  return _scriptFontCache[key];
 }
 
 /**

@@ -37,6 +37,7 @@ import OptimalPostingWindow from '../OptimalPostingWindow'
 import { Panel, Button, Badge, SectionHeader } from '../../ui'
 import { cn } from '../../../lib/utils'
 import { getMediaUrl } from '../../../utils/url'
+import { withExportFonts } from '../../../utils/exportFont'
 
 const EXPORT_PRESETS = [
   { id: 'shorts', label: 'YT Shorts', icon: Youtube, color: 'from-red-500 to-red-700', res: '1080×1920', width: 1080, height: 1920, bitrateMbps: 4, format: 'mp4', quality: undefined, fps: 30, platformHint: 'Clear value, Subscribe CTA', glow: 'rgba(220,38,38,0.3)' },
@@ -538,7 +539,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                            audio: audio || undefined,
                            videoTransform: videoTransform || {},
                            videoTransformKeyframes: videoTransformKeyframes || [],
-                           textOverlays: textOverlays || [],
+                           textOverlays: withExportFonts(textOverlays),
                            shapeOverlays: shapeOverlays || [],
                            imageOverlays: imageOverlays || [],
                            svgOverlays: svgOverlays || [],
@@ -608,7 +609,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                       audio: audio || undefined,
                       videoTransform: videoTransform || {},
                       videoTransformKeyframes: videoTransformKeyframes || [],
-                      textOverlays: textOverlays || [],
+                      textOverlays: withExportFonts(textOverlays),
                       shapeOverlays: shapeOverlays || [],
                       imageOverlays: imageOverlays || [],
                       svgOverlays: svgOverlays || [],

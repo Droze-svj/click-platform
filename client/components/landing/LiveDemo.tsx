@@ -93,7 +93,7 @@ function scoreHook(text: string, nicheId: Niche): { score: number; tip: string }
   else if (nicheId === 'finance' && !/\$|\d/.test(t)) tip = 'Anchor with a dollar amount in the first 4 words. Finance hooks live or die on specificity.';
   else if (nicheId === 'fitness' && !/before|after|\d/i.test(t)) tip = 'Promise a transformation or include a number (weeks, reps, lbs).';
   else if (nicheId === 'lifestyle' && !/pov|i\s+|my\s+/i.test(lower.slice(0, 16))) tip = 'Lifestyle wins with POV framing. Try opening with "I" or "POV:".';
-  else if (score >= 80) tip = 'Strong hook. Click would publish this with caption motion in the first 6 seconds.';
+  else if (score >= 80) tip = 'Strong hook. Clear, specific and short.';
 
   return { score, tip };
 }
@@ -179,14 +179,14 @@ const NICHES = [
     accent: 'from-emerald-500/20 to-emerald-500/0',
     pillBg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     metrics: [
-      { label: 'Hook strength', value: 94, suffix: '/100', help: 'How likely the first 3 seconds stop the scroll. Scored from your hook against 2,300+ finance-niche winners.' },
-      { label: 'Predicted reach', value: 312, suffix: 'K', prefix: '+', help: 'Estimated views in the next 7 days based on platform median × your niche × your account velocity.' },
-      { label: 'Retention', value: 78, suffix: '%', help: 'Forecast of what % of viewers will reach the end of the clip. 78% = top decile for finance shorts.' },
+      { label: 'Hook strength', value: 94, suffix: '/100', help: 'Example value. How likely the first 3 seconds are to stop the scroll.' },
+      { label: 'Predicted reach', value: 312, suffix: 'K', prefix: '+', help: 'Example value. An estimate of how many views a post might get.' },
+      { label: 'Retention', value: 78, suffix: '%', help: 'Example value. The share of viewers who watch to the end.' },
     ],
     bars: [40, 55, 80, 95, 70, 90, 100, 88, 92, 78],
     barLabels: ['Apr 02', 'Apr 05', 'Apr 09', 'Apr 12', 'Apr 16', 'Apr 19', 'Apr 23', 'Apr 26', 'May 01', 'May 04'],
     barCaptions: ['HYSA breakdown', 'Tax loophole list', 'Roth vs 401k', '5 IRA mistakes', '$ I lost in fees', 'Side-hustle Q1', 'Compound interest', 'Bank vs CD ladder', 'Tax-bracket math', 'Credit-card churn'],
-    insight: 'Finance hooks anchor on a real dollar amount in the first 4 words. Click rewrites yours to match — and shows the predicted lift before you publish.',
+    insight: 'Finance hooks tend to work better when a specific dollar amount appears in the first few words.',
   },
   {
     id: 'fitness' as const,
@@ -195,14 +195,14 @@ const NICHES = [
     accent: 'from-rose-500/20 to-rose-500/0',
     pillBg: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
     metrics: [
-      { label: 'Hook strength', value: 91, suffix: '/100', help: 'Fitness opens hit harder with a transformation promise. We grade your hook against that pattern.' },
-      { label: 'Predicted reach', value: 184, suffix: 'K', prefix: '+', help: 'Forecast from your last 30 days of fitness posts + current trending sounds.' },
-      { label: 'Retention', value: 83, suffix: '%', help: 'Above the 75% threshold for the explore page on Reels + Shorts in this niche.' },
+      { label: 'Hook strength', value: 91, suffix: '/100', help: 'Example value. Fitness openers often work better with a clear before-and-after promise.' },
+      { label: 'Predicted reach', value: 184, suffix: 'K', prefix: '+', help: 'Example value. An estimate of how many views a post might get.' },
+      { label: 'Retention', value: 83, suffix: '%', help: 'Example value. The share of viewers who watch to the end.' },
     ],
     bars: [25, 45, 60, 88, 95, 70, 82, 100, 75, 90],
     barLabels: ['Apr 02', 'Apr 04', 'Apr 08', 'Apr 11', 'Apr 14', 'Apr 18', 'Apr 22', 'Apr 25', 'Apr 29', 'May 03'],
     barCaptions: ['Form check (squat)', 'Push-pull split', '12-week recomp', 'Cardio myths', 'Protein math', 'Mobility drills', '5×5 starter', 'Deload week', 'Sleep & gains', 'Pre/post pump'],
-    insight: 'Fitness shorts win on B-roll pacing. Click auto-cuts to the moment of demonstration and ducks the talking-head intro by default.',
+    insight: 'Fitness shorts tend to hold attention when they get to the demonstration quickly instead of a long talking-head intro.',
   },
   {
     id: 'lifestyle' as const,
@@ -211,14 +211,14 @@ const NICHES = [
     accent: 'from-violet-500/20 to-violet-500/0',
     pillBg: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
     metrics: [
-      { label: 'Hook strength', value: 88, suffix: '/100', help: 'Lifestyle hooks lean on POV framing + a specific aesthetic choice. We score yours against both.' },
-      { label: 'Predicted reach', value: 221, suffix: 'K', prefix: '+', help: 'Higher reach is typical for lifestyle content — but only when paired with the right posting window.' },
-      { label: 'Retention', value: 72, suffix: '%', help: 'Lifestyle retention skews lower because watch sessions are shorter. 72% is a healthy bar.' },
+      { label: 'Hook strength', value: 88, suffix: '/100', help: 'Example value. Lifestyle openers often lean on POV framing and a clear visual style.' },
+      { label: 'Predicted reach', value: 221, suffix: 'K', prefix: '+', help: 'Example value. An estimate of how many views a post might get.' },
+      { label: 'Retention', value: 72, suffix: '%', help: 'Example value. The share of viewers who watch to the end.' },
     ],
     bars: [50, 70, 65, 80, 95, 100, 85, 78, 92, 70],
     barLabels: ['Apr 01', 'Apr 04', 'Apr 07', 'Apr 10', 'Apr 13', 'Apr 17', 'Apr 21', 'Apr 24', 'Apr 28', 'May 02'],
     barCaptions: ['Morning reset', 'Coffee ritual', 'Apartment tour', 'Capsule wardrobe', 'Sunday meal prep', 'Slow-living POV', 'Journaling stack', 'Plant haul', 'Aesthetic desk', 'Weekend reset'],
-    insight: 'Lifestyle audiences scroll fast. Click adds caption motion to the first 6 seconds and tightens cut-points to keep retention above the 70% threshold.',
+    insight: 'Lifestyle audiences scroll fast, so tight cuts and readable captions in the first few seconds matter.',
   },
 ];
 
@@ -283,10 +283,10 @@ export function LiveDemo() {
           See it in action
         </div>
         <h2 className="text-3xl md:text-5xl font-black tracking-tighter leading-tight text-surface-900 dark:text-white mb-4">
-          What Click actually does <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-fuchsia-400">— per niche.</span>
+          What Click shows you <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-fuchsia-400">— an example per niche.</span>
         </h2>
         <p className="text-surface-500 dark:text-slate-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-          Every metric below is what Click forecasts <em>before</em> you publish — so you ship the version most likely to land for your audience, not the one that just happened to be the first take.
+          This is an illustrative example. The numbers below are made up to show the kind of feedback you get; they are not real results or forecasts. The hook scorer underneath runs in your browser so you can try it on your own idea.
         </p>
       </div>
 
@@ -335,11 +335,11 @@ export function LiveDemo() {
                 click — {niche.label.toUpperCase()} • demo
               </div>
               <div className="hidden md:flex items-center gap-4 ml-auto">
-                {/* Honest "demo" indicator (renamed from misleading "live").
-                    The numbers below are samples, not real-time data. */}
+                {/* Honest "demo" indicator. Every number below is invented
+                    for illustration — not real or forecast data. */}
                 <div className="flex items-center gap-3 px-4 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
                   <Info className="w-3 h-3 text-amber-400" />
-                  <span className="text-[9px] text-amber-400 font-black uppercase tracking-widest italic">Sample data</span>
+                  <span className="text-[9px] text-amber-400 font-black uppercase tracking-widest italic">Illustrative example</span>
                 </div>
               </div>
             </div>
@@ -433,7 +433,7 @@ export function LiveDemo() {
                 <div className="flex-1 min-h-[160px] md:min-h-[200px] bg-surface-page/50 dark:bg-white/[0.03] rounded-[3rem] border-2 border-surface-100 dark:border-white/5 p-6 md:p-10 relative overflow-hidden shadow-inner group/chart">
                   <div className="absolute top-5 left-7 flex items-center gap-3 opacity-30">
                      <Terminal size={14} className="text-primary-500" />
-                     <span className="text-[9px] font-black uppercase tracking-[0.5em] italic text-surface-300 dark:text-white/20">Engagement (last 10 posts) · hover for detail</span>
+                     <span className="text-[9px] font-black uppercase tracking-[0.5em] italic text-surface-300 dark:text-white/20">Example engagement (10 sample posts) · hover for detail</span>
                   </div>
                   {/* Bars are now interactive. Hovering surfaces the
                       post-level detail (date + topic + engagement score)
@@ -476,7 +476,7 @@ export function LiveDemo() {
                               >
                                 <div className="text-[9px] opacity-60">{label}</div>
                                 <div>{caption}</div>
-                                <div className="text-primary-400 dark:text-primary-600 font-black tabular-nums">{h}% engagement</div>
+                                <div className="text-primary-400 dark:text-primary-600 font-black tabular-nums">{h}% engagement (example)</div>
                               </Motion.div>
                             )}
                           </AnimatePresence>
@@ -702,8 +702,8 @@ export function LiveDemo() {
                           </div>
 
                           <div className="hidden md:flex flex-col text-[10px] font-bold uppercase tracking-widest gap-0.5">
-                            <span className={result.score >= 80 ? 'text-emerald-500' : 'text-surface-400 dark:text-slate-500'}>● Top decile</span>
-                            <span className={result.score >= 60 && result.score < 80 ? 'text-primary-500' : 'text-surface-300 dark:text-slate-600'}>● Above median</span>
+                            <span className={result.score >= 80 ? 'text-emerald-500' : 'text-surface-400 dark:text-slate-500'}>● Strong</span>
+                            <span className={result.score >= 60 && result.score < 80 ? 'text-primary-500' : 'text-surface-300 dark:text-slate-600'}>● Good</span>
                             <span className={result.score >= 35 && result.score < 60 ? 'text-amber-500' : 'text-surface-300 dark:text-slate-600'}>● Needs work</span>
                             <span className={result.score < 35 && result.score > 0 ? 'text-rose-500' : 'text-surface-300 dark:text-slate-600'}>● Rewrite</span>
                           </div>
@@ -727,7 +727,7 @@ export function LiveDemo() {
                               <div className="flex items-center gap-2 mb-2">
                                 <Sparkles className="w-3.5 h-3.5 text-primary-500" />
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-primary-500">
-                                  Click would rewrite this as
+                                  Example rewrite (numbers are placeholders)
                                 </span>
                               </div>
                               <p className="text-sm md:text-base font-bold text-surface-900 dark:text-white italic leading-relaxed">

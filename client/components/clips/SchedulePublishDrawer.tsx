@@ -28,6 +28,7 @@ import { Calendar, Clock, Send, X, Sparkles, CheckCircle2, Info, Loader2 } from 
 import type { Clip } from './ClipCard'
 import { apiPost } from '../../lib/api'
 import { useDialogBehavior } from '../ui/modal'
+import { weekdayShortNames } from '../../utils/locale'
 
 interface Props {
   open: boolean
@@ -66,7 +67,7 @@ function toLocalInput(iso: string): string {
 function slotLabel(iso: string): string {
   const d = new Date(iso)
   if (!Number.isFinite(d.getTime())) return iso
-  const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()]
+  const day = weekdayShortNames()[d.getDay()]
   const hour = d.getHours()
   const ap = hour < 12 ? 'am' : 'pm'
   const h12 = ((hour + 11) % 12) + 1

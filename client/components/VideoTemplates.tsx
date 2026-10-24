@@ -111,7 +111,7 @@ export default function VideoTemplates({ onApplyTemplate, currentFilters }: Vide
         y: 20,
         fontSize: 48,
         color: '#FFFFFF',
-        fontFamily: 'Impact, Arial Black, sans-serif',
+        fontFamily: '"Anton", Impact, sans-serif',
         startTime: 0,
         endTime: 3
       }],

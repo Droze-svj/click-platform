@@ -1437,6 +1437,8 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                           ...captionCss,
                           // Explicit per-overlay font/spacing win over the style preset.
                           ...(text.fontFamily ? { fontFamily: text.fontFamily } : {}),
+                          ...(text.fontWeight ? { fontWeight: text.fontWeight } : {}),
+                          ...(text.fontStyle ? { fontStyle: text.fontStyle } : {}),
                           letterSpacing: text.letterSpacing ? `${text.letterSpacing}px` : ((captionCss.letterSpacing as any) ?? 'normal'),
                           // Keep the user's explicit background when the preset didn't set one.
                           backgroundColor: (captionCss.backgroundColor as string) ?? (text.backgroundColor || 'transparent'),

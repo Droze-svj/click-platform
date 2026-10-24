@@ -100,6 +100,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
   const [trackHandle, setTrackHandle] = useState('')
   const [trackLoading, setTrackLoading] = useState(false)
   const [trackResult, setTrackResult] = useState<{ handle: string; platform: string } | null>(null)
+  const [trackError, setTrackError] = useState<string | null>(null)
 
   // There was a "Live Viral Delta" feed here: a socket listener for a
   // `viral-delta` event, feeding a live line chart behind a pulsing "Live"
@@ -117,6 +118,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
       setBenchmark(body?.data ?? body)
       setLastRefresh(new Date())
     } catch {
+      setBenchmark(null) // don't keep showing stale numbers (or zeros) after a failure
       setError('Could not load benchmark data')
     } finally {
       setLoading(false)
@@ -226,13 +228,16 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                 e.preventDefault()
                 if (!trackHandle.trim()) return
                 setTrackLoading(true)
+                setTrackError(null)
                 try {
-                  await apiPost('/competitive/track', { handle: trackHandle.trim(), platform })
+                  // The route takes a list (competitorUsernames); it used to be
+                  // sent { handle } — always rejected, yet shown as "Now tracking".
+                  await apiPost('/competitive/track', { competitorUsernames: [trackHandle.trim().replace(/^@/, '')], platform })
                   setTrackResult({ handle: trackHandle.trim(), platform })
                   setTrackHandle('')
                 } catch {
-                  setTrackResult({ handle: trackHandle.trim(), platform })
-                  setTrackHandle('')
+                  setTrackResult(null)
+                  setTrackError(`Couldn't start tracking ${trackHandle.trim()}. Try again.`)
                 } finally {
                   setTrackLoading(false)
                 }
@@ -256,6 +261,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                 Track handle
               </Button>
             </form>
+            {trackError && <p role="alert" className="text-sm text-rose-500">{trackError}</p>}
             {trackResult && (
               <div className="flex items-center justify-between gap-3 rounded-xl border border-indigo-500/20 bg-indigo-500/10 p-4">
                 <span className="flex items-center gap-2 text-sm text-theme-primary">
@@ -270,6 +276,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
             )}
           </Panel>
 
+          {(loading || benchmark) && (
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
 
             {/* Percentile card */}
@@ -340,6 +347,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                   Growth → Outliers, which reads /seo/video-retention/:externalId. */}
             </Panel>
           </div>
+          )}
 
           {!loading && benchmark && (
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">

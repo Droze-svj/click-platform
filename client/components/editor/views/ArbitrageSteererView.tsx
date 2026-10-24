@@ -1,22 +1,18 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { 
-  TrendingUp, 
-  Target, 
-  BarChart3, 
-  MousePointer2, 
-  ExternalLink, 
-  Zap, 
-  ShieldCheck,
-  ChevronUp,
-  ChevronDown,
+import React, { useState, useEffect, useCallback } from 'react'
+import {
+  TrendingUp,
+  Target,
+  Zap,
   DollarSign,
-  PieChart,
-  ArrowRightLeft
+  ArrowRightLeft,
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
 } from 'lucide-react'
-import { m, AnimatePresence } from 'framer-motion'
 import { apiGet, apiPost } from '../../../lib/api'
+import { useToast } from '../../../contexts/ToastContext'
 
 interface ArbitrageOffer {
   id: string
@@ -30,179 +26,187 @@ interface ArbitrageOffer {
 }
 
 interface ArbitrageManifest {
-  activeSteer: ArbitrageOffer
+  activeSteer: ArbitrageOffer | null
   manifest: ArbitrageOffer[]
-  autonomyState: {
+  autonomyState?: {
     canAutoSteer: boolean
-    superiority: string
+    superiority: string | null
     recommendation: string
   }
-  recommendation: string
+  recommendation?: string
 }
 
 const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
 
+const num = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0)
+
+/**
+ * Offer ranking from GET /api/phase10_12/arbitrage/manifest (the user's own
+ * monetization offers ranked by conversion rate × price). "Mark as preferred"
+ * records a steering decision via POST /api/phase10_12/arbitrage/steer (stored
+ * as a SteeringDecision; nothing downstream reads it yet, so the copy only
+ * claims that the choice was saved).
+ */
 export const ArbitrageSteererView: React.FC = () => {
+    const { showToast } = useToast()
     const [manifest, setManifest] = useState<ArbitrageManifest | null>(null)
     const [loading, setLoading] = useState(true)
-    const [isSteering, setIsSteering] = useState(false)
+    const [failed, setFailed] = useState(false)
+    const [steeringId, setSteeringId] = useState<string | null>(null)
+    const [steeredId, setSteeredId] = useState<string | null>(null)
 
-    useEffect(() => {
-        fetchManifest()
-    }, [])
-
-    const fetchManifest = async () => {
+    const fetchManifest = useCallback(async () => {
+        setLoading(true)
+        setFailed(false)
         try {
-            const data = await apiGet('/phase10_12/arbitrage/manifest')
-            setManifest(data)
+            const data = await apiGet<ArbitrageManifest>('/phase10_12/arbitrage/manifest', undefined, false)
+            setManifest(data && typeof data === 'object' ? data : null)
         } catch (err) {
-            console.error('Failed to fetch monetization data')
+            console.error('Failed to fetch monetization data', err)
+            setManifest(null)
+            setFailed(true)
         } finally {
             setLoading(false)
         }
+    }, [])
+
+    useEffect(() => {
+        fetchManifest()
+    }, [fetchManifest])
+
+    const performSteer = async (offer: ArbitrageOffer) => {
+        setSteeringId(offer.id)
+        try {
+            const res: any = await apiPost('/phase10_12/arbitrage/steer', { offerId: offer.id })
+            if (res?.status === 'steered') {
+                setSteeredId(String(res.offerId ?? offer.id))
+                showToast(`Saved ${res.offerName || offer.name} as your preferred offer.`, 'success')
+            } else {
+                showToast('Couldn\'t save that choice. Please try again.', 'error')
+            }
+        } catch {
+            showToast('Couldn\'t save that choice. Please try again.', 'error')
+        } finally {
+            setSteeringId(null)
+        }
     }
 
-    const performSteer = async (offerId: string) => {
-        setIsSteering(true)
-        // In a real scenario, this would update the Neural Broadcaster's destination config
-        showToast('Neural Broadcaster Steer Initialized', 'info')
-        setTimeout(() => setIsSteering(false), 2000)
-    }
+    if (loading) return <div role="status" aria-label="Loading" className="h-96 flex items-center justify-center"><TrendingUp className="w-8 h-8 animate-pulse text-indigo-500" aria-hidden="true" /></div>
 
-    const showToast = (m: string, t: any) => {
-        // Mock toast hook integration
-        console.log(m, t)
-    }
-
-    if (loading) return <div className="h-96 flex items-center justify-center"><TrendingUp className="w-8 h-8 animate-pulse text-indigo-500" /></div>
+    const offers = Array.isArray(manifest?.manifest) ? manifest!.manifest : []
+    const best = manifest?.activeSteer || null
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Steering Header */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div className="flex items-center gap-6">
-                    <div className="p-4 rounded-[1.2rem] bg-indigo-500 text-white shadow-xl shadow-indigo-500/20">
-                        <ArrowRightLeft className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Arbitrage Steering</h4>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-indigo-500/70">Monetization Velocity Engine</span>
-                    </div>
+            {/* Header */}
+            <div className="flex items-center gap-6">
+                <div className="p-4 rounded-[1.2rem] bg-indigo-500 text-white shadow-xl shadow-indigo-500/20">
+                    <ArrowRightLeft className="w-6 h-6" aria-hidden="true" />
                 </div>
-
-                <div className="flex flex-wrap gap-3">
-                   <div className="px-6 py-4 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-4">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Autonomous Sync: ACTIVE</span>
-                   </div>
-                   <button className="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] italic shadow-2xl transition-all">
-                       Inject Offer Node
-                   </button>
+                <div>
+                    <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Offer ranking</h4>
+                    <span className="text-[11px] font-bold text-slate-500 mt-1 block">Which of your offers earns the most per click.</span>
                 </div>
             </div>
 
-            {/* Active Steering Matrix */}
+            {failed && (
+                <div role="alert" className={`${glassStyle} rounded-[2rem] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}>
+                    <p className="flex items-center gap-3 text-rose-300 text-sm font-semibold"><AlertTriangle className="w-5 h-5 shrink-0" aria-hidden="true" /> Couldn&apos;t load your offers.</p>
+                    <button type="button" onClick={fetchManifest} className="px-6 py-2 rounded-xl bg-white text-black text-[10px] font-black uppercase tracking-widest">Try again</button>
+                </div>
+            )}
+
+            {!failed && offers.length === 0 ? (
+                <div className={`${glassStyle} rounded-[2.5rem] p-10 text-center text-sm text-slate-400`}>
+                    {manifest?.recommendation || 'No active offers yet. Add a product to a monetization plan to see it ranked here.'}
+                </div>
+            ) : !failed && (
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                
-                {/* Left Column: Metrics & Recommendation */}
+                {/* Left: best offer */}
                 <div className="xl:col-span-1 space-y-6">
                     <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-8 relative overflow-hidden`}>
                         <div className="flex items-center gap-4">
-                            <Target className="w-6 h-6 text-indigo-400" />
-                            <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Yield Analysis</h5>
+                            <Target className="w-6 h-6 text-indigo-400" aria-hidden="true" />
+                            <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Top offer</h5>
                         </div>
 
                         <div className="space-y-6 relative z-10">
                             <div className="space-y-2">
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Global Best EPC</span>
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Expected earnings per click</span>
                                 <h3 className="text-4xl font-black text-emerald-400 italic tracking-tighter uppercase leading-none">
-                                    ${manifest?.activeSteer.priority.toFixed(2)}
+                                    {best ? `$${num(best.priority).toFixed(2)}` : '—'}
                                 </h3>
+                                {best && <p className="text-xs font-bold text-white">{best.name}</p>}
                             </div>
 
-                            <div className="p-6 bg-indigo-500/10 border border-indigo-500/20 rounded-3xl space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <Zap className="w-4 h-4 text-indigo-400" />
-                                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Recommended Steer</span>
+                            {manifest?.recommendation && (
+                                <div className="p-6 bg-indigo-500/10 border border-indigo-500/20 rounded-3xl space-y-3">
+                                    <div className="flex items-center gap-3">
+                                        <Zap className="w-4 h-4 text-indigo-400" aria-hidden="true" />
+                                        <span className="text-[10px] font-black text-white uppercase tracking-widest">Suggestion</span>
+                                    </div>
+                                    <p className="text-xs font-bold text-white leading-relaxed">
+                                        {manifest.recommendation}
+                                    </p>
                                 </div>
-                                <p className="text-xs font-bold text-white italic leading-relaxed">
-                                    {manifest?.recommendation}
-                                </p>
-                                <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                                   <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Confidence: HIGH</span>
-                                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Sync: 42ms</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="absolute -bottom-10 -right-10 opacity-5">
-                            <TrendingUp className="w-40 h-40" />
-                        </div>
-                    </div>
-
-                    <div className="p-8 bg-indigo-600 rounded-[2.5rem] space-y-4 text-white">
-                        <div className="flex items-center justify-between">
-                            <PieChart className="w-8 h-8" />
-                            <span className="text-[10px] font-black uppercase tracking-widest opacity-80 italic">Capture Efficiency</span>
-                        </div>
-                        <div>
-                            <h3 className="text-3xl font-black italic tracking-tighter leading-none uppercase">94.2%</h3>
-                            <span className="text-[9px] font-black uppercase tracking-widest opacity-80">Network ROI Purity</span>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                {/* Right Column: Offer Ledger */}
+                {/* Right: offer list */}
                 <div className="xl:col-span-2 space-y-6">
                     <div className={`${glassStyle} rounded-[2.5rem] p-10 space-y-8`}>
                         <div className="flex items-center justify-between">
-                            <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Monetization Plan</h5>
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{manifest?.manifest.length} Active Nodes</span>
+                            <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Your offers</h5>
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{offers.length} active</span>
                         </div>
 
                         <div className="space-y-4">
-                            {manifest?.manifest.map((offer, idx) => (
-                                <div key={idx} className="p-6 bg-black/40 border border-white/5 rounded-3xl group hover:border-indigo-500/30 transition-all">
+                            {offers.map((offer) => {
+                                const isSteered = steeredId === offer.id
+                                const busy = steeringId === offer.id
+                                return (
+                                <div key={offer.id} className="p-6 bg-black/40 border border-white/5 rounded-3xl group hover:border-indigo-500/30 transition-all">
                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                      <div className="flex items-center gap-6">
-                                         <div className={`p-4 rounded-2xl ${idx === 0 ? 'bg-indigo-500 text-white' : 'bg-white/5 text-slate-500'} transition-colors`}>
-                                             <DollarSign className="w-6 h-6" />
+                                      <div className="flex items-center gap-6 min-w-0">
+                                         <div className={`p-4 rounded-2xl ${isSteered ? 'bg-indigo-500 text-white' : 'bg-white/5 text-slate-500'} transition-colors`}>
+                                             <DollarSign className="w-6 h-6" aria-hidden="true" />
                                          </div>
-                                         <div className="space-y-1">
-                                            <h6 className="text-lg font-black text-white italic tracking-tighter uppercase leading-none">{offer.name}</h6>
-                                            <div className="flex items-center gap-3">
-                                               <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{offer.platform}</span>
-                                               <div className="w-1 h-1 bg-slate-800 rounded-full" />
-                                               <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">{offer.category}</span>
-                                            </div>
+                                         <div className="space-y-1 min-w-0">
+                                            <h6 className="text-lg font-black text-white italic tracking-tighter uppercase leading-none truncate">{offer.name}</h6>
+                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{offer.platform}</span>
                                          </div>
                                       </div>
 
                                       <div className="flex flex-wrap items-center gap-6">
                                          <div className="text-right">
-                                            <span className="text-[8px] font-black text-slate-600 uppercase block mb-1">EPC Score</span>
-                                            <span className="text-xl font-black text-emerald-400 italic">${offer.priority.toFixed(2)}</span>
+                                            <span className="text-[8px] font-black text-slate-500 uppercase block mb-1">Per click</span>
+                                            <span className="text-xl font-black text-emerald-400 italic">${num(offer.priority).toFixed(2)}</span>
                                          </div>
                                          <div className="text-right">
-                                            <span className="text-[8px] font-black text-slate-600 uppercase block mb-1">Conv. Rate</span>
-                                            <span className="text-xl font-black text-white italic">{(offer.cvr * 100).toFixed(0)}%</span>
+                                            <span className="text-[8px] font-black text-slate-500 uppercase block mb-1">Conversion rate</span>
+                                            <span className="text-xl font-black text-white italic">{(num(offer.cvr) * 100).toFixed(1)}%</span>
                                          </div>
                                          <button
                                             type="button"
-                                            onClick={() => performSteer(offer.id)}
-                                            className={`${idx === 0 ? 'bg-indigo-600' : 'bg-white/5 border border-white/10'} px-6 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest italic hover:scale-105 transition-all`}
+                                            onClick={() => performSteer(offer)}
+                                            disabled={busy || steeringId !== null}
+                                            className={`${isSteered ? 'bg-emerald-600' : 'bg-indigo-600 hover:bg-indigo-500'} px-6 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest text-white transition-all flex items-center gap-2 disabled:opacity-60`}
                                          >
-                                            {idx === 0 ? 'ACTIVE STEER' : 'Steer Engine'}
+                                            {busy ? <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" /> : isSteered ? <CheckCircle2 className="w-3 h-3" aria-hidden="true" /> : null}
+                                            {isSteered ? 'Preferred' : 'Mark as preferred'}
                                          </button>
                                       </div>
                                    </div>
                                 </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     </div>
                 </div>
-
             </div>
+            )}
         </div>
     )
 }

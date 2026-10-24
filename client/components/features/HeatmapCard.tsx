@@ -3,6 +3,7 @@
 import { Fragment } from 'react'
 import type { Heatmap } from '@/lib/featuresApi'
 import { heatmapMax, cellIntensity, cellLabel } from '@/lib/featureViewModels'
+import { weekdayShortNames } from '../../utils/locale'
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h)
 const DAYS = [0, 1, 2, 3, 4, 5, 6]
@@ -26,7 +27,7 @@ export default function HeatmapCard({ heatmap }: { heatmap: Heatmap | null }) {
   const byCell = new Map<number, number>()
   for (const c of heatmap.grid) byCell.set(c.day * 24 + c.hour, c.avgEngagement)
   const { peak } = heatmap
-  const labels = heatmap.dayLabels || ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const labels = heatmap.dayLabels || weekdayShortNames()
 
   return (
     <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4 space-y-2" data-testid="heatmap-card">

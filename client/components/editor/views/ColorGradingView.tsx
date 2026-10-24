@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Palette, Sparkles, Activity, Layers, RefreshCw, CircleDot } from 'lucide-react'
+import { Sparkles, Activity, Layers, RefreshCw, CircleDot } from 'lucide-react'
 import { VideoFilter } from '../../../types/editor'
 import { useTranslation } from '../../../hooks/useTranslation'
 import { Panel, Button, Badge, Slider, SectionHeader } from '../../ui'
@@ -456,9 +456,6 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
           <p className="max-w-md text-xs text-theme-muted">
             Move the central reticle to shift the color balance of specific luminance ranges. Master Balance adjusts global luminosity for the target range.
           </p>
-          <Button variant="secondary" size="sm" leftIcon={<Palette className="h-3.5 w-3.5" aria-hidden />} title="Match Color Node">
-            Match Node
-          </Button>
         </div>
       </Panel>
 

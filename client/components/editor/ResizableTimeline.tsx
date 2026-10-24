@@ -2605,13 +2605,16 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                         portals, AI-director) — decorative, OFF by default for a
                         calm timeline; toggled on via the Insights control. */}
                     {showInsights && (<>
-                    {/* RETENTION HEATMAP OVERLAY TRACK (ENHANCED) */}
+                    {/* RETENTION HEATMAP — only drawn from a real, server-provided
+                        heatmap (a generated clip's score). The editor used to feed
+                        this lane a Math.sin() curve presented as an AI prediction. */}
+                    {(engagementScore?.retentionHeatmap?.length ?? 0) > 0 && (
                     <div className="relative h-6 w-full bg-black/40 rounded-xl border border-white/5 mb-6 group/heatmap overflow-hidden">
                        <div className="absolute inset-y-0 left-0 flex items-center px-4 z-10 pointer-events-none">
                           <Activity className="w-3 h-3 text-indigo-400 opacity-50" />
-                          <span className="text-[10px] font-black text-indigo-400/50 uppercase tracking-[0.2em] ml-2">Retention Heatmap // AI Prediction</span>
+                          <span className="text-[10px] font-black text-indigo-400/50 uppercase tracking-[0.2em] ml-2">Audience retention</span>
                        </div>
-                      {engagementScore?.retentionHeatmap.map((val, i) => (
+                      {engagementScore?.retentionHeatmap?.map((val, i) => (
                         <div
                           key={i}
                           style={{
@@ -2626,6 +2629,7 @@ const ResizableTimeline: React.FC<ResizableTimelineProps> = ({ duration, current
                         />
                       ))}
                     </div>
+                    )}
 
                     {/* V4: NEURAL WAVEFORM TRACK */}
                     <div className="relative h-14 w-full bg-white/[0.02] border border-white/5 rounded-2xl mb-8 overflow-hidden group/waveform shadow-inner">

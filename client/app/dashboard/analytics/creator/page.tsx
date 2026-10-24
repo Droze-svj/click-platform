@@ -158,15 +158,24 @@ export default function HeuristicMatrixPage() {
 
   const bestEditStyle = styleAttribution[0]?.style || '—'
 
+  // Hook types arrive as raw values ("curiosity-gap"); show their label.
+  const HOOK_LABELS = ['pattern_interrupt', 'question', 'curiosity_gap', 'stat', 'story']
+  const hookLabel = useCallback((type?: string) => {
+    const k = String(type || '').replace(/-/g, '_').toLowerCase()
+    return HOOK_LABELS.includes(k) ? t(`analyticsCreatorPage.hookType.${k}`) : k.replace(/_/g, ' ')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t])
+
   const aiSummary = useMemo(() => {
     const worstVideo = [...videos].sort((a, b) => a.hookDropOff - b.hookDropOff).reverse()[0]
     const bestVideo = [...videos].sort((a, b) => b.viralScore - a.viralScore)[0]
     return {
-      headline: t('analyticsCreatorPage.aiHeadline', { hookType: bestVideo?.hookType.replace(/-/g, '_').toUpperCase() }),
+      headline: t('analyticsCreatorPage.aiHeadline', { hookType: hookLabel(bestVideo?.hookType) }),
       action: t('analyticsCreatorPage.aiAction', { title: worstVideo?.title.substring(0, 35), dropOff: worstVideo?.hookDropOff }),
-      opportunity: t('analyticsCreatorPage.aiOpportunity', { style: bestEditStyle.toUpperCase(), views: Math.round(totals.views * 0.18 / 1000) }),
+      // No projected-views number: it was views × 0.18, not a forecast.
+      opportunity: t('analyticsCreatorPage.aiOpportunity', { style: bestEditStyle }),
     }
-  }, [videos, bestEditStyle, totals.views, t])
+  }, [videos, bestEditStyle, hookLabel, t])
 
   // Narrow content: hide the per-row views column so nothing overflows.
   const compact = width > 0 && width < 640
@@ -330,7 +339,7 @@ export default function HeuristicMatrixPage() {
                           <div className="min-w-0 flex-1">
                             <p className="ds-text-label text-theme-primary truncate">{video.title}</p>
                             <p className="ds-text-caption flex items-center gap-2 flex-wrap">
-                              <span className="inline-flex items-center gap-1"><Target size={11} aria-hidden /> {t('analyticsCreatorPage.nodeSignal', { value: video.hookType.replace(/-/g, '_') })}</span>
+                              <span className="inline-flex items-center gap-1"><Target size={11} aria-hidden /> {t('analyticsCreatorPage.nodeSignal', { value: hookLabel(video.hookType) })}</span>
                               <span aria-hidden>·</span>
                               <span>{t('analyticsCreatorPage.nodeSubstrate', { value: video.editStyle })}</span>
                             </p>

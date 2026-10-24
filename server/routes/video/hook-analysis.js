@@ -1,6 +1,6 @@
 // AI Hook & Script Analysis Route — Click Intelligence Engine
 // Primary: GPT-4o | Fallback: Gemini 2.0 | Heuristic: Pattern-based
-// POST /api/video/ai-hook-analysis
+// POST /api/video/hook-analysis
 
 const express = require('express');
 const auth = require('../../middleware/auth');
@@ -116,7 +116,7 @@ router.post('/', auth, requireFeature('ai_analysis'), asyncHandler(async (req, r
 
   // === LAST RESORT: Heuristic ===
   logger.warn('All AI engines unavailable — returning heuristic hook analysis', { videoId });
-  return sendSuccess(res, 'Hook analysis (heuristic)', 200, { ...generateFallbackAnalysis(transcript), engine: 'heuristic' });
+  return sendSuccess(res, 'Hook analysis (heuristic)', 200, { ...generateFallbackAnalysis(transcript, duration), engine: 'heuristic' });
 }));
 
 /**
@@ -211,49 +211,110 @@ router.post('/auto-caption', auth, requireFeature('auto_captions'), asyncHandler
 }));
 
 /**
- * Smart heuristic fallback when no AI is available
+ * Text-only fallback when no AI engine is available.
+ *
+ * Deterministic: the same transcript always gets the same scores, and every
+ * score comes from something countable in the text (a question, a number, an
+ * exclamation, sentence length, speaking rate). It used to add Math.random() to
+ * each score, so re-running the same video gave different numbers, and it padded
+ * the result with canned "insights" ("I analyzed 1,000 videos…", "72% of
+ * short-form is watched muted") that no analysis ever produced. Anything we
+ * cannot measure from text alone is left empty/unknown, and `isFallback: true`
+ * lets the UI say these are rough text-only estimates.
  */
-function generateFallbackAnalysis(transcript) {
-  const words = transcript.trim().split(/\s+/);
+function generateFallbackAnalysis(transcript, duration) {
+  const text = String(transcript || '').trim();
+  const words = text.split(/\s+/).filter(Boolean);
   const wordCount = words.length;
-  const hasQuestion = transcript.includes('?');
-  const hasNumbers = /\d/.test(transcript);
-  const firstWords = words.slice(0, 8).join(' ').toLowerCase();
-  const hasExclamation = transcript.includes('!');
+  const sentences = text.split(/[.!?]+/).map((x) => x.trim()).filter(Boolean);
+  const opening = (sentences[0] || text).slice(0, 160);
+  const openingWords = opening.split(/\s+/).filter(Boolean).length;
 
-  const hookStrength = Math.min(95,
-    55 + (hasQuestion ? 12 : 0) + (hasNumbers ? 10 : 0) + (hasExclamation ? 8 : 0) + Math.floor(Math.random() * 10)
-  );
-  const hookType = hasQuestion ? 'question' : hasNumbers ? 'stat' : hasExclamation ? 'pattern-interrupt' : 'story';
+  const openingHasQuestion = /\?/.test(text.slice(0, opening.length + 1));
+  const openingHasNumber = /\d/.test(opening);
+  const openingHasExclamation = /!/.test(text.slice(0, opening.length + 1));
+  const addressesViewer = /\b(you|your)\b/i.test(opening);
+
+  const clamp = (v) => Math.max(0, Math.min(100, Math.round(v)));
+
+  // Hook: a short opening line that asks, quantifies, exclaims or speaks to the
+  // viewer directly scores higher. Base 50, capped at 90 — text alone can't
+  // justify a top score.
+  const hookStrength = clamp(Math.min(90,
+    50
+    + (openingHasQuestion ? 12 : 0)
+    + (openingHasNumber ? 10 : 0)
+    + (openingHasExclamation ? 6 : 0)
+    + (addressesViewer ? 6 : 0)
+    + (openingWords > 0 && openingWords <= 12 ? 6 : 0)
+  ));
+
+  // Pacing: words per second when the duration is known (about 2.3–3.2 wps is a
+  // comfortable short-form speaking rate); otherwise average sentence length
+  // (shorter sentences read faster).
+  let pacing;
+  const secs = Number(duration);
+  if (Number.isFinite(secs) && secs > 0 && wordCount > 0) {
+    const wps = wordCount / secs;
+    const distance = wps < 2.3 ? 2.3 - wps : wps > 3.2 ? wps - 3.2 : 0;
+    pacing = clamp(85 - distance * 30);
+  } else {
+    const avgSentence = sentences.length ? wordCount / sentences.length : wordCount;
+    pacing = clamp(85 - Math.max(0, avgSentence - 14) * 2.5);
+  }
+
+  // Tone consistency can't be measured from plain text without a model —
+  // report a neutral midpoint rather than a made-up number.
+  const toneCohesion = 50;
+
+  const viralPotential = clamp(hookStrength * 0.6 + pacing * 0.4);
+
+  const hookType = openingHasQuestion ? 'question' : openingHasNumber ? 'stat' : openingHasExclamation ? 'pattern-interrupt' : 'story';
+
+  const directives = [];
+  if (!openingHasQuestion && !openingHasNumber) {
+    directives.push({
+      action: 'Open with a question or a specific number',
+      reason: 'Your first line is a plain statement — a question or a concrete number gives viewers a reason to keep watching',
+      impact: 'high',
+    });
+  }
+  if (openingWords > 20) {
+    directives.push({
+      action: 'Shorten your first sentence',
+      reason: `Your opening sentence is ${openingWords} words long — get to the point sooner`,
+      impact: 'medium',
+    });
+  }
+  if (!addressesViewer) {
+    directives.push({
+      action: 'Speak to the viewer directly in the first line',
+      reason: 'Your opening never says "you" — addressing the viewer makes it feel personal',
+      impact: 'low',
+    });
+  }
 
   return {
     hookStrength,
-    toneCohesion: Math.floor(65 + Math.random() * 25),
-    pacing: Math.floor(60 + Math.random() * 30),
-    viralPotential: Math.min(95, Math.floor((hookStrength * 0.4) + (wordCount > 50 ? 12 : 5) + 30 + Math.random() * 15)),
+    toneCohesion,
+    pacing,
+    viralPotential,
     hookType,
-    psychologicalTrigger: hasQuestion ? 'curiosity' : hasNumbers ? 'authority' : 'social-proof',
-    weakestMoment: `${Math.floor(wordCount * 0.5 * 0.4)}–${Math.floor(wordCount * 0.65 * 0.4)}s`,
-    strongestMoment: '0–8s',
-    rewrites: [
-      `Wait — ${firstWords}... but most people get this completely wrong.`,
-      `Here's the truth about ${words[0]} ${words[1] || ''} that nobody talks about...`,
-      `I analyzed 1,000 videos to find this — here's what actually works:`
-    ],
-    directives: [
-      { action: 'Add a 3-second visual hook before the first word', reason: 'Stops the scroll before audio kicks in', impact: 'high' },
-      { action: 'Cut the opening sentence in half — front-load the value', reason: 'Opens with a clear pattern interrupt', impact: 'high' },
-      { action: 'Burn in captions — 72% of short-form is watched muted', reason: 'Doubles watch time on muted feeds', impact: 'medium' }
-    ],
-    summary: 'Solid foundation — the hook needs urgency and a stronger pattern interrupt to maximize retention.',
-    suggestedTitle: `The truth about ${words[0] || 'this'}...`,
-    suggestedDescription: `Most people don't know this. Watch to the end to see exactly why it matters. 👇\n\nFollow for daily insights that actually move the needle.`,
-    suggestedTags: ['#viral', '#contentcreator', '#tips', '#foryou', '#trending'],
-    platformRecommendation: 'tiktok',
-    estimatedRetentionCurve: ['strong-open', 'mid-drop', 'unknown-close'],
+    psychologicalTrigger: openingHasQuestion ? 'curiosity' : openingHasNumber ? 'authority' : 'unknown',
+    weakestMoment: 'Unknown',
+    strongestMoment: 'Unknown',
+    rewrites: [],
+    directives: directives.slice(0, 3),
+    summary: 'AI analysis was unavailable, so these are rough estimates from the text only (questions, numbers, sentence length and speaking rate).',
+    suggestedTitle: null,
+    suggestedDescription: null,
+    suggestedTags: [],
+    platformRecommendation: null,
+    estimatedRetentionCurve: ['unknown'],
     contentNiche: null,
     isFallback: true,
   };
 }
 
 module.exports = router;
+module.exports.generateFallbackAnalysis = generateFallbackAnalysis;

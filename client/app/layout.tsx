@@ -2,6 +2,7 @@
 
 import "../styles/layout-autofit.css";
 import "./globals.css";
+import "./export-fonts.css";
 import React from 'react';
 import { Inter, Playfair_Display, Caveat, JetBrains_Mono, VT323 } from 'next/font/google';
 import { ToastProvider } from '../contexts/ToastContext';

@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react'
-import { Zap, Sparkles, Filter, Type, Music, Plus, Trash2, Clock, ChevronDown, ChevronRight, ChevronLeft, ToggleLeft, ToggleRight, Copy, Settings2, Search, Layers, Lock, Unlock, MoveUp, MoveDown, Clipboard, ClipboardPaste, Save, FolderOpen, X, GripVertical, Link, Unlink, SlidersHorizontal, BookmarkPlus, Timer, PlusCircle, MinusCircle, Waypoints, Spline } from 'lucide-react'
+import { Zap, Sparkles, Filter, Type, Music, Plus, Trash2, Clock, ChevronDown, ChevronRight, ChevronLeft, ToggleLeft, ToggleRight, Copy, Settings2, Search, Layers, Lock, Unlock, MoveUp, MoveDown, Clipboard, ClipboardPaste, Save, FolderOpen, X, GripVertical, Link, Unlink, SlidersHorizontal, BookmarkPlus, Timer, PlusCircle, MinusCircle } from 'lucide-react'
 import { EditorCategory, TimelineEffect, TimelineEffectType, EFFECT_PRESETS, EFFECT_TYPE_COLORS, EffectEasing, EFFECT_EASINGS, EffectTemplate, TimelineSegment, TransformKeyframe, KeyframeEasing, KEYFRAME_EASINGS, KEYFRAME_ANIMATION_PRESETS } from '../../../types/editor'
 import { formatTime } from '../../../utils/editorUtils'
 import { interpolateTransformAtTime, interpolateEffectTransformAtTime, type InterpolatedTransform } from '../../../utils/keyframeEasing'
 import { keyframeEasingToGsap } from '../../../utils/gsapKeyframes'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 interface EffectsViewProps {
   videoState: any
@@ -72,6 +73,7 @@ const EffectsView: React.FC<EffectsViewProps> = ({
   timelineEffects = [], setTimelineEffects, selectedEffectId, setSelectedEffectId,
   selectedSegmentId = null, timelineSegments = [], setTimelineSegments, onSeek
 }) => {
+  const { t: tr } = useTranslation()
   const [expandedCategory, setExpandedCategory] = useState<TimelineEffectType | null>('retention')
   const [customDuration, setCustomDuration] = useState(0.5)
   const [searchQuery, setSearchQuery] = useState('')
@@ -614,18 +616,6 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                     Paste KF
                   </button>
                 )}
-                <button
-                 type="button"
-                  onClick={() => {
-                    showToast('Analyzing motion…', 'info')
-                    setTimeout(() => showToast('Motion track locked', 'success'), 1500)
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/30 transition-colors group/track"
-                  title="Pin overlay to moving objects in the video"
-                >
-                  <Waypoints className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                  Motion Track
-                </button>
               </div>
               <span className="text-[10px] text-theme-muted w-full sm:w-auto">
                 {isEffect ? effect!.name : segment!.name} · {formatTime(currentTime)}{keyframeAtPlayhead ? ' · on keyframe' : ''}
@@ -635,15 +625,15 @@ const EffectsView: React.FC<EffectsViewProps> = ({
               Stopwatch = enable keyframes for that property. Move playhead, adjust values; interpolation creates motion. Linear = mechanical, Ease In/Out = natural, Bounce = organic.
             </p>
             <div className="px-4 py-2 flex items-center gap-2 border-b border-subtle">
-              <span className="text-[9px] text-theme-muted">Stack: GSAP</span>
+              <span className="text-[9px] text-theme-muted">{tr('effectsView.easingPreview')}</span>
               <div ref={gsapDemoRef} className="w-8 h-8 rounded-lg bg-amber-500/40 shrink-0" style={{ transformOrigin: 'center center' }} />
               <button
                type="button"
                 onClick={() => runGsapDemo(keyframeAtPlayhead?.easing ?? keyframes[keyframes.length - 1]?.easing ?? 'ease-in-out')}
                 className="text-[10px] font-bold text-amber-600 hover:text-amber-500 whitespace-nowrap"
-                title="Run gsap.to(box, { rotation: 360, duration: 2, ease }) using current keyframe easing"
+                title={tr('effectsView.easingPreviewHint')}
               >
-                Preview GSAP
+                {tr('effectsView.previewEasing')}
               </button>
             </div>
             <div className="p-4 space-y-3">
@@ -770,26 +760,6 @@ const EffectsView: React.FC<EffectsViewProps> = ({
                 {keyframes.length > 0 && (
                   <span className="text-[9px] text-theme-muted ml-1">{keyframes.length} keyframe{keyframes.length !== 1 ? 's' : ''}</span>
                 )}
-              </div>
-              <div className="flex items-center gap-3 rounded-2xl ds-surface-subtle p-3">
-                <div className="flex items-center gap-2">
-                  <Spline className="h-3.5 w-3.5 text-indigo-500" aria-hidden />
-                  <span className="ds-text-caption text-theme-muted">Bezier Curve</span>
-                </div>
-                <div className="flex flex-1 items-center gap-3">
-                  <div className="relative flex h-8 w-16 items-center justify-center overflow-hidden rounded border border-subtle ds-surface-card">
-                     <svg className="h-full w-full overflow-visible p-1" viewBox="0 0 100 100">
-                        <path d="M 0 100 C 42 100 58 0 100 0" stroke="currentColor" fill="none" className="text-indigo-500" strokeWidth="3" />
-                     </svg>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="0.42, 0, 0.58, 1"
-                    aria-label="Bezier control points"
-                    className="flex-1 rounded-lg border border-subtle ds-surface-card px-3 py-1.5 font-mono text-xs text-theme-primary outline-none placeholder:text-theme-muted focus:border-indigo-500/50"
-                  />
-                  <button type="button" className="rounded-lg bg-indigo-500/10 px-3 py-1.5 text-xs font-semibold text-indigo-500 transition-all hover:bg-indigo-500/20">Apply</button>
-                </div>
               </div>
               </div>
             </div>

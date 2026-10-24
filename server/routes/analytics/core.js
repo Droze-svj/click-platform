@@ -18,6 +18,35 @@ const getSupabaseClient = () => {
   );
 };
 
+// Production auth/data is MongoDB-only (no Supabase), so the Supabase `posts`
+// queries below always came back empty there and these screens never showed
+// anything. Published posts + their synced stats live on ScheduledPost.
+async function loadPublishedPostsFromMongo(userId, limit) {
+  const ScheduledPost = require('../../models/ScheduledPost');
+  const rows = await ScheduledPost.find({ userId, status: 'posted' })
+    .sort({ postedAt: -1 })
+    .limit(limit)
+    .select('platform postedAt content.text analytics')
+    .lean();
+  return rows.map((r) => {
+    const a = r.analytics || {};
+    const b = a.engagementBreakdown || {};
+    const rate = (a.engagementRate && (a.engagementRate.byReach || a.engagementRate.byImpressions)) || 0;
+    const text = String((r.content && r.content.text) || '').trim();
+    return {
+      id: String(r._id),
+      title: text ? text.split('\n')[0].slice(0, 80) : null,
+      platform: r.platform || 'other',
+      postedAt: r.postedAt || null,
+      views: b.views || a.impressions || 0,
+      likes: b.likes || 0,
+      shares: b.shares || 0,
+      comments: b.comments || 0,
+      engagementRate: Math.round(rate * 100) / 100,
+    };
+  });
+}
+
 /**
  * GET /api/analytics/overview
  * Get high-level analytics overview for the dashboard
@@ -1005,7 +1034,6 @@ async function computeBestPostingTime(supabase, userId) {
 router.get('/engagement/command-center', auth, asyncHandler(async (req, res) => {
   try {
     const supabase = getSupabaseClient();
-    const { analyzePost } = require('../../services/engagementAnomalyService');
 
     // Fetch real latest posts with analytics. If Supabase isn't configured
     // (Mongo-only stack, dev mode), skip the query and fall through to the
@@ -1025,7 +1053,7 @@ router.get('/engagement/command-center', auth, asyncHandler(async (req, res) => 
       realPosts = data || [];
     }
 
-    const formattedPosts = (realPosts || []).map(p => {
+    let formattedPosts = (realPosts || []).map(p => {
       const stats = p.post_analytics?.[0] || {};
       return {
         postId: p.id,
@@ -1039,6 +1067,18 @@ router.get('/engagement/command-center', auth, asyncHandler(async (req, res) => 
         hoursSincePost: 24
       };
     });
+    if (!supabase) {
+      const now = Date.now();
+      formattedPosts = (await loadPublishedPostsFromMongo(req.user._id, 10)).map((p) => {
+        const hours = p.postedAt ? Math.max(1, (now - new Date(p.postedAt).getTime()) / 3600000) : 24;
+        return {
+          postId: p.id, platform: p.platform, title: p.title,
+          views: p.views, likes: p.likes, comments: p.comments, shares: p.shares,
+          velocity: Math.round(p.views / hours),
+          hoursSincePost: Math.round(hours),
+        };
+      });
+    }
 
     // No real published posts → empty payload + isFallback. Previously
     // injected a fake `sim-1` TikTok post (47K views) so the
@@ -1052,21 +1092,25 @@ router.get('/engagement/command-center', auth, asyncHandler(async (req, res) => 
       });
     }
 
-    const analyzedPosts = await Promise.all(
-      formattedPosts.map(async (p) => {
-        try {
-          const analysis = await analyzePost(p);
-          return {
-            ...p,
-            potencyScore: analysis.score ?? null,
-            anomalies: analysis.anomalies || [],
-          };
-        } catch (err) {
-          logger.warn('Post analysis failed', { postId: p.postId, error: err.message });
-          return { ...p, potencyScore: null, anomalies: [] };
-        }
-      })
-    );
+    // Anomalies are detected locally. AI advice only for posts that actually
+    // have one, and at most 3 per load — this used to make one Gemini call per
+    // post (10 per page view) and then drop the answer (it read fields
+    // analyzePost doesn't return).
+    const { detectAnomalies, generateAnomalyAdvice } = require('../../services/engagementAnomalyService');
+    let aiBudget = 3;
+    const analyzedPosts = [];
+    for (const p of formattedPosts) {
+      const anomaly = detectAnomalies(p);
+      let advice = null;
+      try {
+        const allowAI = anomaly.type !== 'none' && aiBudget > 0;
+        if (allowAI) aiBudget -= 1;
+        advice = await generateAnomalyAdvice(anomaly.type, { platform: p.platform }, { allowAI });
+      } catch (err) {
+        logger.warn('Post analysis failed', { postId: p.postId, error: err.message });
+      }
+      analyzedPosts.push({ ...p, anomalyType: anomaly.type, diagnosis: anomaly.diagnosis, anomalyAdvice: advice });
+    }
 
     res.json({
       success: true,
@@ -1088,8 +1132,8 @@ router.get('/engagement/command-center', auth, asyncHandler(async (req, res) => 
 router.get('/creator/stats', auth, asyncHandler(async (req, res) => {
   try {
     const supabase = getSupabaseClient();
-    // Supabase-less environments (Mongo-only / dev) fall through to the empty-
-    // state branch below, which already returns realistic seed data.
+    // Supabase-less environments (production is Mongo-only) read published
+    // ScheduledPosts instead — see loadPublishedPostsFromMongo.
     let posts = [];
     if (supabase) {
       const { data } = await supabase
@@ -1106,7 +1150,7 @@ router.get('/creator/stats', auth, asyncHandler(async (req, res) => {
       posts = data || [];
     }
 
-    const stats = (posts || []).map(p => {
+    let stats = (posts || []).map(p => {
       const a = (Array.isArray(p.post_analytics) ? p.post_analytics[0] : p.post_analytics) || {};
       const metadata = a.metadata || {};
       return {
@@ -1129,6 +1173,26 @@ router.get('/creator/stats', auth, asyncHandler(async (req, res) => {
         engagementRate: a.engagement_rate || 0
       };
     });
+
+    if (!supabase) {
+      stats = (await loadPublishedPostsFromMongo(req.user._id, 100)).map((p) => ({
+        id: p.id,
+        title: p.title,
+        platform: p.platform,
+        views: p.views,
+        likes: p.likes,
+        shares: p.shares,
+        comments: p.comments,
+        completionRate: null,
+        hookDropOff: null,
+        editStyle: null,
+        hookType: null,
+        publishedAt: p.postedAt,
+        viralScore: Math.round(p.engagementRate * 10),
+        trend: null,
+        engagementRate: p.engagementRate,
+      }));
+    }
 
     // Empty-state for new accounts. Previously injected two fake posts
     // (LinkedIn 850K views, Twitter 420K) so the creator-stats panel

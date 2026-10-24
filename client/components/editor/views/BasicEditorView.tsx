@@ -30,7 +30,6 @@ import {
   Upload,
   Timer,
   PlusCircle,
-  Fingerprint,
   Radio,
   Layers,
   Box,
@@ -1161,20 +1160,6 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
 
   const [selectedFilterName, setSelectedFilterName] = React.useState('')
   const [globalSearch, setGlobalSearch] = React.useState('')
-  const [neuralAutoFraming, setNeuralAutoFraming] = React.useState(true)
-  const [focusTarget, setFocusTarget] = React.useState<'face' | 'action' | 'custom'>('face')
-  const [trackingOffset, setTrackingOffset] = React.useState({ x: 0, y: 0 })
-
-  React.useEffect(() => {
-    if (!neuralAutoFraming) return
-    const interval = setInterval(() => {
-      setTrackingOffset({
-        x: Math.round((Math.random() - 0.5) * 12 * 100) / 100,
-        y: Math.round((Math.random() - 0.5) * 8 * 100) / 100,
-      })
-    }, 800)
-    return () => clearInterval(interval)
-  }, [neuralAutoFraming])
   const [layerOpacities, setLayerOpacities] = React.useState<Record<string, number>>({})
   const [captionLoading, setCaptionLoading] = React.useState(false)
   const [captionStyle, setCaptionStyle] = React.useState<'tiktok-pop' | 'hormozi-bold' | 'minimal-white' | 'neon-glow' | 'vlog-kinetic' | 'cyberpunk-neon' | 'oled-darkroom' | 'youtube-shorts' | 'meme-impact' | 'retro-vhs' | 'serif-quote'>('tiktok-pop')
@@ -1237,7 +1222,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
         'cyberpunk-neon': { fontSize: 38, style: 'neon',          fontFamily: 'Courier New' },
         'oled-darkroom':  { fontSize: 32, style: 'outline',       fontFamily: 'Inter' },
         'youtube-shorts': { fontSize: 38, style: 'bold-kinetic', fontFamily: 'Inter' },
-        'meme-impact':    { fontSize: 40, style: 'outline',       fontFamily: 'Impact' },
+        'meme-impact':    { fontSize: 40, style: 'outline',       fontFamily: '"Anton", Impact, sans-serif' },
         'retro-vhs':      { fontSize: 34, style: 'neon',          fontFamily: 'Courier New' },
         'serif-quote':    { fontSize: 36, style: 'none',          fontFamily: 'Georgia' },
       }
@@ -1741,84 +1726,6 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                     className={`py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${templateLayout === l.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white/[0.02] text-slate-400 hover:bg-white/10 hover:text-white border border-white/[0.06]'}`}
                   >{l.label}</m.button>
                 ))}
-              </div>
-            </div>
-
-            {/* Neural Auto-Framing / AI Focus Tracking */}
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/5 border border-indigo-500/20 space-y-3 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <Fingerprint className="w-3.5 h-3.5 text-indigo-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300">{t('editor.neuralFocusTracking')}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${neuralAutoFraming ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'bg-slate-600'}`} />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNeuralAutoFraming(!neuralAutoFraming)
-                      showToast(`AI Auto-Framing ${!neuralAutoFraming ? 'Activated' : 'Suspended'}`, 'info')
-                    }}
-                    className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border transition-all ${
-                      neuralAutoFraming 
-                        ? 'bg-indigo-600/40 border-indigo-400/35 text-indigo-200' 
-                        : 'bg-white/5 border-white/10 text-slate-500 hover:text-white'
-                    }`}
-                  >
-                    {neuralAutoFraming ? t('editor.active') : t('editor.offline')}
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block">{t('editor.trackingPriorityTarget')}</span>
-                <div className="grid grid-cols-3 gap-1">
-                  {([
-                    { id: 'face', label: '⚡ Speaker', desc: 'Focus face' },
-                    { id: 'action', label: '🎯 Action', desc: 'Peak movement' },
-                    { id: 'custom', label: '🎬 Custom', desc: 'Manual ROI' }
-                  ] as const).map(target => (
-                    <button
-                      key={target.id}
-                      type="button"
-                      disabled={!neuralAutoFraming}
-                      onClick={() => {
-                        setFocusTarget(target.id)
-                        showToast(`Focus target changed to ${t(`editor.${target.id}`)}`, 'success')
-                      }}
-                      className={`py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all ${
-                        !neuralAutoFraming 
-                          ? 'opacity-40 cursor-not-allowed bg-white/5 border border-transparent text-slate-600' 
-                          : focusTarget === target.id 
-                            ? 'bg-indigo-600 text-white shadow-lg border border-indigo-400/30' 
-                            : 'bg-white/5 border border-white/[0.06] text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      {t(`editor.${target.id}`)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Dynamic telemetry output */}
-              <div className="bg-black/60 border border-white/[0.06] rounded-xl p-2.5 font-mono text-[8px] text-indigo-300 space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <span>{t('editor.status')}</span>
-                  <span className={neuralAutoFraming ? 'text-emerald-400 animate-pulse font-bold' : 'text-slate-500 font-bold'}>
-                    {neuralAutoFraming ? t('editor.lockAcquired') : t('editor.standby')}
-                  </span>
-                </div>
-                {neuralAutoFraming ? (
-                  <div className="grid grid-cols-2 gap-1 select-none">
-                    <div>ROI_X: <span className="text-white font-bold">{trackingOffset.x > 0 ? `+${trackingOffset.x.toFixed(2)}` : trackingOffset.x.toFixed(2)}%</span></div>
-                    <div>ROI_Y: <span className="text-white font-bold">{trackingOffset.y > 0 ? `+${trackingOffset.y.toFixed(2)}` : trackingOffset.y.toFixed(2)}%</span></div>
-                    <div>FPS_DRIFT: <span className="text-white font-bold">0.08ms</span></div>
-                    <div>NET_WEIGHT: <span className="text-white font-bold">0.994</span></div>
-                  </div>
-                ) : (
-                  <div className="text-slate-600 italic select-none">{t('editor.telemetryPlaceholder')}</div>
-                )}
               </div>
             </div>
           </div>

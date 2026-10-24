@@ -7,6 +7,7 @@ const express = require('express')
 const router = express.Router()
 const { authenticateToken } = require('../middleware/auth')
 const { requireFeature, addTierContext } = require('../middleware/tierGate')
+const logger = require('../utils/logger')
 const {
   getCompetitiveBenchmarks,
   getNextWeekRecommendations,
@@ -23,20 +24,11 @@ router.get('/benchmarks', authenticateToken, addTierContext, async (req, res) =>
     const data = await getCompetitiveBenchmarks(userId, platform, timeframe)
     res.json({ success: true, data })
   } catch (err) {
-    
-    // Return a graceful mock so the frontend always has data to show
-    res.json({
-      success: true,
-      data: {
-        user: { avgEngagement: 0, avgReach: 0, postCount: 0, engagementRate: 0 },
-        industry: { median: 300, top25: 1000, top10: 2500, percentile: 10 },
-        competitors: { avgEngagement: 250, avgReach: 5000, postFrequency: 'daily', topPerformingTypes: ['video'], bestPostingTimes: ['18:00', '21:00'] },
-        gap: { toMedian: -300, toTop25: -1000, toTop10: -2500 },
-        recommendations: [
-          { type: 'post_frequency', priority: 'high', title: 'Post 3x per week', action: 'Consistency beats virality', estimatedImpact: '+20% reach' }
-        ]
-      },
-      _mock: true
+    // No invented industry bands: if the benchmark can't be computed, say so.
+    logger.error('Competitive benchmarks failed', { error: err.message })
+    res.status(503).json({
+      success: false,
+      error: 'Benchmarks are unavailable right now. Please try again later.'
     })
   }
 })

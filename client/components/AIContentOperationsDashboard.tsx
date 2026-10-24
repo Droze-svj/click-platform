@@ -1,42 +1,16 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import axios from 'axios'
-import { m, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useCallback } from 'react'
+import { m } from 'framer-motion'
 import { useToast } from '../contexts/ToastContext'
 import { useSocket } from '../hooks/useSocket'
-import { useAuth } from '../hooks/useAuth'
-import { apiGet } from '../lib/api'
+import { apiGet, apiPost } from '../lib/api'
 import {
-  Activity,
   TrendingUp,
-  Target,
-  AlertCircle,
-  CheckCircle2,
-  BarChart3,
-  Calendar,
-  Zap,
   RefreshCw,
-  Lightbulb,
-  Award,
-  TrendingDown,
-  Sparkles,
-  ShieldCheck,
-  ZapOff,
+  Stethoscope,
   BrainCircuit,
-  Orbit,
-  ArrowUpRight,
-  MousePointer2,
-  Cpu,
-  Fingerprint,
-  Radio,
-  Lock,
-  Layers,
-  Activity as ActivityIcon,
-  Filter,
-  Eye,
-  Settings,
-  UserPlus
+  AlertCircle,
 } from 'lucide-react'
 import TeamPresence from './TeamPresence'
 import RealTimeActivityTicker from './RealTimeActivityTicker'
@@ -76,7 +50,10 @@ interface NextWeekData {
   weeklyPlan: PlanItem[]
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+interface RefreshRec {
+  action?: string
+  title?: string
+}
 
 // Animation Variants
 const containerVariants = {
@@ -101,104 +78,58 @@ const itemVariants = {
 
 const glassStyle = "backdrop-blur-[40px] bg-white/[0.03] border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.8)]"
 
+// The health endpoints return { overallScore, scores, gaps }; normalise once.
+function toHealth(d: any): HealthMetric | null {
+  if (!d || typeof d !== 'object' || !Number.isFinite(Number(d.overallScore))) return null
+  const score = Math.round(Number(d.overallScore))
+  const metrics: Record<string, number> = {}
+  if (d.scores && typeof d.scores === 'object') {
+    for (const [k, v] of Object.entries(d.scores)) {
+      if (Number.isFinite(Number(v))) metrics[k] = Math.round(Number(v))
+    }
+  }
+  return {
+    overall: { score, grade: calculateGrade(score) },
+    metrics,
+    gaps: (Array.isArray(d.gaps) ? d.gaps : [])
+      .map((g: any) => ({ recommendation: g?.recommendation || g?.description || '' }))
+      .filter((g: { recommendation: string }) => g.recommendation),
+  }
+}
+
 export default function AIContentOperationsDashboard() {
-  const [refreshRecs, setRefreshRecs] = useState<any[]>([])
-  const [contentId, setContentId] = useState<string | null>(null)
+  const [refreshRecs, setRefreshRecs] = useState<RefreshRec[]>([])
   const [teamId, setTeamId] = useState<string | null>(null)
-  const [directiveClaims, setDirectiveClaims] = useState<Record<string, any>>({})
-  const [trends, setTrends] = useState<any[]>([])
-  const [competitors, setCompetitors] = useState<any[]>([])
-  const [predictedGaps, setPredictedGaps] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
-  const [isAutoLoopActive, setIsAutoLoopActive] = useState(true)
-  const [isScanning, setIsScanning] = useState(false)
-  const [scanProgress, setScanProgress] = useState(0)
-  const [repairLogs, setRepairLogs] = useState<string[]>([])
-  const [showRepairLogs, setShowRepairLogs] = useState(false)
-  const [activeThought, setActiveThought] = useState('')
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
+  const [checking, setChecking] = useState(false)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [selectedPlatform, setSelectedPlatform] = useState('twitter')
   const [healthCheck, setHealthCheck] = useState<HealthMetric | null>(null)
-  const [benchmarks, setBenchmarks] = useState<any>(null)
   const [nextWeek, setNextWeek] = useState<NextWeekData | null>(null)
   const { showToast } = useToast()
-  const { socket, connected, on, off } = useSocket()
-  const { user } = useAuth()
+  const { socket, connected } = useSocket()
   const { t } = useTranslation()
 
-  const platformThemes: Record<string, { accent: string, glow: string, bg: string, accentHex: string }> = {
-    twitter: { accent: 'indigo-500', glow: 'rgba(99,102,241,0.4)', bg: 'from-indigo-600/10', accentHex: '#6366f1' },
-    linkedin: { accent: 'blue-500', glow: 'rgba(59,130,246,0.4)', bg: 'from-blue-600/10', accentHex: '#3b82f6' },
-    facebook: { accent: 'blue-600', glow: 'rgba(37,99,235,0.4)', bg: 'from-blue-700/10', accentHex: '#2563eb' },
-    instagram: { accent: 'fuchsia-500', glow: 'rgba(217,70,239,0.4)', bg: 'from-fuchsia-600/10', accentHex: '#d946ef' },
-    youtube: { accent: 'rose-600', glow: 'rgba(225,29,72,0.4)', bg: 'from-rose-700/10', accentHex: '#e11d48' },
-    tiktok: { accent: 'cyan-400', glow: 'rgba(34,211,238,0.4)', bg: 'from-cyan-500/10', accentHex: '#22d3ee' }
+  const platformThemes: Record<string, { accentHex: string, glow: string }> = {
+    twitter: { glow: 'rgba(99,102,241,0.4)', accentHex: '#6366f1' },
+    linkedin: { glow: 'rgba(59,130,246,0.4)', accentHex: '#3b82f6' },
+    facebook: { glow: 'rgba(37,99,235,0.4)', accentHex: '#2563eb' },
+    instagram: { glow: 'rgba(217,70,239,0.4)', accentHex: '#d946ef' },
+    youtube: { glow: 'rgba(225,29,72,0.4)', accentHex: '#e11d48' },
+    tiktok: { glow: 'rgba(34,211,238,0.4)', accentHex: '#22d3ee' }
   }
 
   const currentTheme = platformThemes[selectedPlatform] || platformThemes.twitter
 
-  const aiThoughts = [
-    t('aiContentOperationsDashboard.thoughtNeuralLatency'),
-    t('aiContentOperationsDashboard.thoughtCrossPlatform'),
-    t('aiContentOperationsDashboard.thoughtViralCoefficient'),
-    t('aiContentOperationsDashboard.thoughtEcosystemEntropy'),
-    t('aiContentOperationsDashboard.thoughtAutonomousLoop'),
-    t('aiContentOperationsDashboard.thoughtBrollClusters'),
-    t('aiContentOperationsDashboard.thoughtStrategicTelemetry')
-  ]
-
-  useEffect(() => {
-    const thoughtInterval = setInterval(() => {
-      setActiveThought(aiThoughts[Math.floor(Math.random() * aiThoughts.length)])
-    }, 8000)
-    return () => clearInterval(thoughtInterval)
-    // aiThoughts is a stable list of strings declared in the component body.
-    // Including it would re-run this effect on every render and reset the
-    // rotating thought interval.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const claimDirective = async (directiveId: string) => {
-    if (!socket || !teamId || !user) return
-
-    socket.emit('directive:claim', {
-      teamId,
-      directiveId,
-      userName: user.name
-    })
-
-    socket.emit('activity:pulse', {
-      teamId,
-      pulse: {
-        userName: user.name,
-        action: 'Claimed Directive',
-        target: directiveId.split(' - ')[0] || 'Optimization',
-        type: 'collaboration'
-      }
-    })
-  }
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY })
-    }
-    window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [])
-
+  // Join the user's first team so the comments panel has a room.
   useEffect(() => {
     if (!socket || !connected) return
-
-    const handlePresence = (data: any) => {}
-
-    on('presence-update', handlePresence)
-    socket.emit('get-presence')
-
+    let cancelled = false
     const loadTeamContext = async () => {
       try {
         const teamRes = await apiGet('/teams')
         const teams = (teamRes as any)?.data || []
-        if (teams.length > 0) {
+        if (!cancelled && teams.length > 0) {
           const tid = teams[0]._id
           setTeamId(tid)
           socket.emit('join:team', { teamId: tid })
@@ -208,18 +139,8 @@ export default function AIContentOperationsDashboard() {
       }
     }
     loadTeamContext()
-
-    const handleClaimed = ({ directiveId, claim }: any) => {
-      setDirectiveClaims(prev => ({ ...prev, [directiveId]: claim }))
-    }
-
-    on('directive:claimed', handleClaimed)
-
-    return () => {
-      off('presence-update', handlePresence)
-      off('directive:claimed', handleClaimed)
-    }
-  }, [socket, connected, on, off])
+    return () => { cancelled = true }
+  }, [socket, connected])
 
   const platforms = [
     { id: 'twitter', name: 'Twitter/X', icon: '𝕏' },
@@ -230,112 +151,58 @@ export default function AIContentOperationsDashboard() {
     { id: 'tiktok', name: 'TikTok', icon: '🎵' }
   ]
 
-  useEffect(() => {
-    loadDashboard()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPlatform])
-
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async (manual = false) => {
     setLoading(true)
+    setLoadFailed(false)
+    let failures = 0
+    const settle = <T,>(p: Promise<T>) => p.catch(() => { failures += 1; return null })
     try {
-      const token = localStorage.getItem('token')
-      const headers = { Authorization: `Bearer ${token}` }
-
-      const results = await Promise.all([
-        apiGet('/content-operations/health').catch(() => null),
-        apiGet(`/content-operations/benchmarks?platform=${selectedPlatform}`).catch(() => null),
-        apiGet(`/content-operations/next-week?platform=${selectedPlatform}`).catch(() => null),
-        apiGet('/content-operations/trends').catch(() => null),
-        apiGet(`/content-operations/competitors/compare?platform=${selectedPlatform}`).catch(() => null),
-        apiGet('/content-operations/refresh/recommendations').catch(() => null)
+      const [healthRaw, nextWeekRaw, refreshRaw] = await Promise.all([
+        settle(apiGet<any>('/content-operations/health', undefined, false)),
+        settle(apiGet<any>(`/content-operations/next-week?platform=${selectedPlatform}`, undefined, false)),
+        settle(apiGet<any>('/content-operations/refresh/recommendations', undefined, false)),
       ])
 
-      const [healthRaw, benchmarksRaw, nextWeekRaw, trendsRaw, competitorRaw, refreshRaw] = results as any[]
+      setHealthCheck(toHealth(healthRaw?.data))
+      const nw = nextWeekRaw?.data
+      setNextWeek(nw && typeof nw === 'object' ? nw : null)
+      setRefreshRecs(Array.isArray(refreshRaw?.data) ? refreshRaw.data : [])
 
-      // Correctly extract the 'data' property from each response wrapper
-      if (healthRaw?.data) {
-        const d = healthRaw.data
-        setHealthCheck({
-          overall: {
-            score: d.overallScore || 0,
-            grade: calculateGrade(d.overallScore || 0)
-          },
-          metrics: d.scores || {},
-          gaps: (d.gaps || []).map((g: any) => ({
-            recommendation: g.recommendation || g.description || 'Improve content'
-          }))
-        })
+      if (failures === 3) {
+        setLoadFailed(true)
+        showToast(t('aiContentOperationsDashboard.toastSyncInterrupted'), 'error')
+      } else if (failures > 0) {
+        showToast(t('aiContentOperationsDashboard.toastPartialLoad'), 'warning')
+      } else if (manual) {
+        showToast(t('aiContentOperationsDashboard.toastRefreshed'), 'success')
       }
-
-      if (benchmarksRaw?.data) setBenchmarks(benchmarksRaw.data)
-      if (nextWeekRaw?.data) setNextWeek(nextWeekRaw.data)
-      if (trendsRaw?.data) setTrends(trendsRaw.data.overallScore || [])
-      if (competitorRaw?.data) setCompetitors(competitorRaw.data)
-      if (refreshRaw?.data) setRefreshRecs(Array.isArray(refreshRaw.data) ? refreshRaw.data : [])
-
-      setActiveThought(t('aiContentOperationsDashboard.thoughtSyncComplete'))
-      showToast(t('aiContentOperationsDashboard.toastIntelligenceUpdated'), 'success')
-    } catch (error: any) {
-      console.error('Sync error:', error)
-      showToast(t('aiContentOperationsDashboard.toastSyncInterrupted'), 'error')
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedPlatform, showToast, t])
 
-  const startDeepScan = async () => {
-    setIsScanning(true)
-    setScanProgress(0)
-    setRepairLogs([])
-    setShowRepairLogs(false)
+  useEffect(() => {
+    loadDashboard()
+  }, [loadDashboard])
 
-    const token = localStorage.getItem('token')
-    const headers = { Authorization: `Bearer ${token}` }
-
+  // POST /health/monitor runs a real health check (and raises an alert
+  // notification when the score is low). It returns the check, or null on
+  // failure — report exactly that.
+  const runHealthCheck = async () => {
+    setChecking(true)
     try {
-      setRepairLogs(prev => [...prev, t('aiContentOperationsDashboard.logInitProbe')])
-      await import('../lib/api').then(m => m.apiPost('/content-operations/health/monitor', { autoOptimize: true })).catch(() => {})
-      setScanProgress(20)
-
-      setRepairLogs(prev => [...prev, t('aiContentOperationsDashboard.logScanningPatterns', { platform: selectedPlatform })])
-      await new Promise(r => setTimeout(r, 800))
-      setScanProgress(40)
-
-      setRepairLogs(prev => [...prev, t('aiContentOperationsDashboard.logPredictingGaps')])
-      const gapRes: any = await import('../lib/api').then(m => m.apiGet('/content-operations/gaps/predict')).catch(() => null)
-      if (gapRes?.data) setPredictedGaps(gapRes.data)
-      setScanProgress(70)
-
-      setRepairLogs(prev => [...prev, t('aiContentOperationsDashboard.logOptimizingSignals')])
-      await new Promise(r => setTimeout(r, 800))
-      setScanProgress(90)
-
-      setRepairLogs(prev => [...prev, t('aiContentOperationsDashboard.logEcosystemHealed')])
-      setScanProgress(100)
-
-      setTimeout(() => {
-        setIsScanning(false)
-        setShowRepairLogs(true)
-        showToast(t('aiContentOperationsDashboard.toastIntegrityRestored'), 'success')
-        loadDashboard()
-      }, 1000)
-    } catch (error) {
-      setRepairLogs(prev => [...prev, t('aiContentOperationsDashboard.logProbeAborted')])
-      setIsScanning(false)
+      const res: any = await apiPost('/content-operations/health/monitor', {})
+      const health = toHealth(res?.data)
+      if (!health) {
+        showToast(t('aiContentOperationsDashboard.toastDeepScanFailed'), 'error')
+        return
+      }
+      setHealthCheck(health)
+      showToast(t('aiContentOperationsDashboard.toastHealthScore', { score: String(health.overall.score) }), 'success')
+    } catch {
       showToast(t('aiContentOperationsDashboard.toastDeepScanFailed'), 'error')
-    }
-  }
-
-  const applyAutoOptimization = async () => {
-    setLoading(true)
-    try {
-      await import('../lib/api').then(m => m.apiPost('/content-operations/health/auto-optimize', {}))
-      showToast(t('aiContentOperationsDashboard.toastOptimizationApplied'), 'success')
-      loadDashboard()
-    } catch (error) {
-      showToast(t('aiContentOperationsDashboard.toastOptimizationFailed'), 'error')
     } finally {
-      setLoading(false)
+      setChecking(false)
     }
   }
 
@@ -349,85 +216,18 @@ export default function AIContentOperationsDashboard() {
     }
   }
 
-  const cosmicBg = "relative overflow-hidden selection:bg-indigo-500/30"
+  const gapValue = nextWeek && Number.isFinite(Number(nextWeek.gap)) ? Math.round(Number(nextWeek.gap)).toLocaleString() : null
 
   return (
-    <div className={`min-h-screen bg-[#020202] text-slate-200 ${cosmicBg}`}>
-      {/* Immersive Background System */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E')] opacity-[0.03]" />
+    <div className="min-h-screen bg-[#020202] text-slate-200 relative overflow-hidden selection:bg-indigo-500/30">
+      {/* Decorative background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(99,102,241,0.08),transparent_50%),radial-gradient(circle_at_50%_100%,rgba(139,92,246,0.05),transparent_50%)]" />
-
-        <m.div
-          animate={{ x: mousePos.x / 40, y: mousePos.y / 40 }}
-          className="absolute inset-0 opacity-20 mix-blend-screen"
-        >
-          <div
-            className="absolute top-1/4 left-1/4 w-[800px] h-[800px] blur-[150px] rounded-full animate-pulse transition-all duration-1000"
-            style={{ backgroundColor: `${currentTheme.accentHex}15` }}
-          />
-          <div className="absolute bottom-1/4 right-1/4 w-[900px] h-[900px] bg-indigo-600/5 blur-[200px] rounded-full animate-pulse transition-all duration-1000" style={{ animationDelay: '2s' }} />
-        </m.div>
+        <div
+          className="absolute top-1/4 left-1/4 w-[800px] h-[800px] blur-[150px] rounded-full opacity-20 transition-all duration-1000"
+          style={{ backgroundColor: `${currentTheme.accentHex}15` }}
+        />
       </div>
-
-      {/* Scanning Overlay */}
-      <AnimatePresence>
-        {isScanning && (
-          <m.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-3xl"
-          >
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-            <div className="text-center space-y-16 max-w-2xl w-full px-8 relative">
-              <div className="relative inline-block">
-                <m.div
-                  animate={{ rotate: 360, scale: [1, 1.05, 1] }}
-                  transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
-                  className={`w-56 h-56 rounded-full border-2 border-dashed border-${currentTheme.accent}/40 flex items-center justify-center relative shadow-[0_0_50px_${currentTheme.glow}]`}
-                >
-                  <Cpu className={`w-24 h-24 text-${currentTheme.accent}`} />
-                </m.div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <m.div
-                    animate={{ opacity: [0, 1, 0], scale: [0.8, 1.4, 0.8] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                    className={`w-72 h-72 rounded-full border border-${currentTheme.accent}/20`}
-                  />
-                </div>
-              </div>
-              <div className="space-y-6">
-                <h3 className="text-6xl font-black text-[var(--text-main)] uppercase tracking-tighter italic leading-none">{t('aiContentOperationsDashboard.neuralProbe')} <span style={{ color: currentTheme.accentHex }}>{t('aiContentOperationsDashboard.alpha')}</span></h3>
-                <p className="text-slate-500 text-xl font-medium tracking-tight uppercase">{t('aiContentOperationsDashboard.recalibratingPrefix')} <span style={{ color: currentTheme.accentHex }} className="font-black italic">{selectedPlatform}</span> {t('aiContentOperationsDashboard.recalibratingSuffix')}</p>
-              </div>
-              <div className="space-y-6">
-                <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
-                  <m.div
-                    className="h-full bg-gradient-to-r from-transparent via-white to-transparent"
-                    style={{ width: `${scanProgress}%`, backgroundColor: currentTheme.accentHex, boxShadow: `0 0 30px ${currentTheme.glow}` }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${scanProgress}%` }}
-                  />
-                </div>
-              </div>
-              <div className="bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-10 text-left font-mono text-xs h-52 relative overflow-hidden shadow-3xl backdrop-blur-xl">
-                 <div className="space-y-4">
-                  <AnimatePresence mode="popLayout">
-                    {repairLogs.map((log, i) => (
-                      <m.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} className="flex items-center gap-6 text-emerald-400 font-bold">
-                        <span className="text-slate-700 font-black tabular-nums">[{new Date().toLocaleTimeString([], { hour12: false })}]</span>
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)] animate-pulse" />
-                        <span className="tracking-tight uppercase">{log}</span>
-                      </m.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              </div>
-            </div>
-          </m.div>
-        )}
-      </AnimatePresence>
 
       <m.div
         variants={containerVariants}
@@ -435,8 +235,8 @@ export default function AIContentOperationsDashboard() {
         animate="visible"
         className="relative z-10 max-w-[1600px] mx-auto space-y-12 px-6 py-16 md:px-12"
       >
-        {/* Elite Navigation Control Cluster */}
-        <m.div variants={itemVariants} className="flex flex-col xl:flex-row items-center justify-between gap-12 bg-white/[0.01] border border-white/5 rounded-[3.5rem] p-4 backdrop-blur-3xl shadow-3xl">
+        {/* Platform selector + actions */}
+        <m.div variants={itemVariants} className="flex flex-col xl:flex-row items-center justify-between gap-8 bg-white/[0.01] border border-white/5 rounded-[3.5rem] p-4 backdrop-blur-3xl">
           <div className="flex flex-wrap items-center justify-center gap-2 pl-4">
             <div className="mr-6 pr-6 border-r border-white/10 hidden xl:block">
               <TeamPresence />
@@ -446,135 +246,134 @@ export default function AIContentOperationsDashboard() {
                 type="button"
                 key={p.id}
                 onClick={() => setSelectedPlatform(p.id)}
-                className={`group relative overflow-hidden px-10 py-5 rounded-[2.2rem] transition-all duration-500 flex items-center gap-4 ${selectedPlatform === p.id ? `bg-white text-black shadow-2xl scale-105 -translate-y-1` : 'text-slate-600 hover:text-white border border-transparent'}`}
+                aria-pressed={selectedPlatform === p.id}
+                className={`group relative overflow-hidden px-8 py-4 rounded-[2.2rem] transition-all duration-500 flex items-center gap-3 ${selectedPlatform === p.id ? `bg-white text-black shadow-2xl` : 'text-slate-500 hover:text-white border border-transparent'}`}
               >
-                <span className="text-xl relative z-10">{p.icon}</span>
-                <span className="text-[11px] font-black uppercase tracking-[0.3em] relative z-10">{p.name}</span>
-                {selectedPlatform === p.id && (
-                  <m.div layoutId="platform-glow" className="absolute inset-0 bg-white" transition={{ type: "spring", bounce: 0.1, duration: 0.6 }} />
-                )}
+                <span className="text-xl relative z-10" aria-hidden="true">{p.icon}</span>
+                <span className="text-[11px] font-black uppercase tracking-[0.2em] relative z-10">{p.name}</span>
               </button>
             ))}
           </div>
           <div className="flex items-center gap-4 pr-4">
-            <m.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} onClick={loadDashboard} className="flex items-center gap-4 px-12 py-5 rounded-[2.2rem] bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 transition-all font-black text-[11px] uppercase tracking-[0.4em] italic">
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> {t('aiContentOperationsDashboard.syncLogic')}
-            </m.button>
-            <m.button whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} onClick={startDeepScan} style={{ backgroundColor: currentTheme.accentHex, boxShadow: `0 20px 40px ${currentTheme.glow}` }} className="flex items-center gap-4 px-12 py-5 rounded-[2.2rem] text-white font-black text-[11px] uppercase tracking-[0.4em] border border-white/20 italic">
-              <Fingerprint className="w-4 h-4" /> {t('aiContentOperationsDashboard.deepScan')}
-            </m.button>
+            <button type="button" onClick={() => loadDashboard(true)} disabled={loading} className="flex items-center gap-3 px-10 py-4 rounded-[2.2rem] bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] transition-all font-black text-[11px] uppercase tracking-[0.2em] disabled:opacity-50">
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" /> {t('aiContentOperationsDashboard.refresh')}
+            </button>
+            <button type="button" onClick={runHealthCheck} disabled={checking} aria-busy={checking} style={{ backgroundColor: currentTheme.accentHex, boxShadow: `0 20px 40px ${currentTheme.glow}` }} className="flex items-center gap-3 px-10 py-4 rounded-[2.2rem] text-white font-black text-[11px] uppercase tracking-[0.2em] border border-white/20 disabled:opacity-60">
+              {checking ? <RefreshCw className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Stethoscope className="w-4 h-4" aria-hidden="true" />}
+              {checking ? t('aiContentOperationsDashboard.checking') : t('aiContentOperationsDashboard.runHealthCheck')}
+            </button>
           </div>
         </m.div>
 
-        {/* Elite Sub-Header (Neural Status) */}
-        <m.div variants={itemVariants} className={`relative flex flex-col lg:flex-row items-center gap-12 p-16 rounded-[4.5rem] border-white/5 overflow-hidden ${glassStyle}`}>
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] blur-[150px] rounded-full pointer-events-none" style={{ backgroundColor: `${currentTheme.accentHex}10` }} />
-          <div className="space-y-12 flex-1 text-center lg:text-left">
-            <div className="space-y-6">
-              <h1 className="text-[8rem] md:text-[12rem] font-black tracking-tighter italic leading-[0.7] bg-gradient-to-b from-white via-white to-white/10 bg-clip-text text-transparent">{t('aiContentOperationsDashboard.neuralLine1')}<br />{t('aiContentOperationsDashboard.neuralLine2')}</h1>
-              <p className="text-slate-400 text-3xl font-medium tracking-tight max-w-4xl mt-10 leading-relaxed">
-                {t('aiContentOperationsDashboard.autonomousPrefix')} <span style={{ color: currentTheme.accentHex }} className="font-black italic underline underline-offset-[12px] decoration-4">{t('aiContentOperationsDashboard.dominating')}</span> {t('aiContentOperationsDashboard.autonomousMid')} <span className="text-white font-black">{selectedPlatform}</span> {t('aiContentOperationsDashboard.autonomousSuffix')}
-              </p>
-            </div>
-            <div className="flex items-center justify-center lg:justify-start gap-10">
-              <div className="flex items-center gap-6 px-10 py-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5 backdrop-blur-3xl min-w-[400px]">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center border border-white/10 shadow-2xl" style={{ backgroundColor: `${currentTheme.accentHex}20` }}>
-                  <Sparkles className="w-6 h-6" style={{ color: currentTheme.accentHex }} />
-                </div>
-                <AnimatePresence mode="wait">
-                  <m.div key={activeThought} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="text-[14px] font-black text-slate-300 uppercase tracking-[0.3em] italic">{activeThought}</m.div>
-                </AnimatePresence>
-              </div>
-            </div>
-            <div className="mt-8 border-t border-white/5 pt-8">
+        {/* Header */}
+        <m.div variants={itemVariants} className={`relative flex flex-col lg:flex-row items-center gap-12 p-12 md:p-16 rounded-[4.5rem] border-white/5 overflow-hidden ${glassStyle}`}>
+          <div className="space-y-8 flex-1 text-center lg:text-left">
+            <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] bg-gradient-to-b from-white via-white to-white/30 bg-clip-text text-transparent">{t('aiContentOperationsDashboard.pageTitle')}</h1>
+            <p className="text-slate-400 text-xl md:text-2xl font-medium tracking-tight max-w-3xl leading-relaxed">
+              {t('aiContentOperationsDashboard.pageSubtitle', { platform: platforms.find(p => p.id === selectedPlatform)?.name || selectedPlatform })}
+            </p>
+            <div className="border-t border-white/5 pt-8">
               <RealTimeActivityTicker />
             </div>
           </div>
-          <div className="relative group/core scale-125 lg:scale-110 pr-8">
-            <div className={`w-80 h-80 rounded-[5.5rem] flex items-center justify-center bg-white/[0.01] border border-white/5 backdrop-blur-3xl relative overflow-hidden transition-all duration-1000 ${isAutoLoopActive ? 'shadow-2xl' : ''}`} style={{ boxShadow: isAutoLoopActive ? `0 0 100px ${currentTheme.glow}` : 'none' }}>
-              <div className="relative w-48 h-48">
-                <m.div animate={{ scale: isAutoLoopActive ? [1, 1.1, 1] : 1, rotate: isAutoLoopActive ? 360 : 0 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }} className="absolute inset-0 border-4 border-white/10 rounded-full border-dashed" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <BrainCircuit className="w-32 h-32" style={{ color: isAutoLoopActive ? currentTheme.accentHex : '#1e293b', filter: isAutoLoopActive ? `drop-shadow(0 0 40px ${currentTheme.accentHex}60)` : 'none' }} />
-                </div>
-              </div>
-            </div>
-            <m.button whileHover={{ scale: 1.05, y: -4 }} whileTap={{ scale: 0.95 }} onClick={() => setIsAutoLoopActive(!isAutoLoopActive)} style={{ backgroundColor: isAutoLoopActive ? currentTheme.accentHex : '#0f172a', boxShadow: isAutoLoopActive ? `0 20px 50px ${currentTheme.glow}` : 'none' }} className={`absolute -bottom-8 left-1/2 -translate-x-1/2 px-12 py-5 rounded-[2.2rem] border border-white/10 text-white`}>
-              <Zap className={`w-5 h-5 ${isAutoLoopActive ? 'fill-white' : ''}`} />
-              <span className="text-[11px] font-black uppercase tracking-[0.4em] italic">{isAutoLoopActive ? t('aiContentOperationsDashboard.neuralActive') : t('aiContentOperationsDashboard.suspended')}</span>
-            </m.button>
+          <div className="hidden lg:flex w-64 h-64 rounded-[4.5rem] items-center justify-center bg-white/[0.01] border border-white/5" aria-hidden="true">
+            <BrainCircuit className="w-28 h-28" style={{ color: currentTheme.accentHex }} />
           </div>
         </m.div>
 
-        {/* Intelligence Grid */}
+        {loadFailed && (
+          <div role="alert" className={`${glassStyle} p-8 rounded-[3rem] flex flex-col sm:flex-row items-center justify-between gap-4`}>
+            <p className="flex items-center gap-3 text-rose-300 font-semibold"><AlertCircle className="w-5 h-5" aria-hidden="true" /> {t('aiContentOperationsDashboard.loadFailed')}</p>
+            <button type="button" onClick={() => loadDashboard(true)} className="px-8 py-3 rounded-full bg-white text-black text-[11px] font-black uppercase tracking-widest">{t('aiContentOperationsDashboard.retry')}</button>
+          </div>
+        )}
+
+        {/* Health + next week */}
         <m.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <div className="lg:col-span-12 xl:col-span-5 space-y-12">
-            <div className={`${glassStyle} p-16 rounded-[4rem] group border-white/5`}>
-              {healthCheck && healthCheck.overall && (
-                <div className="space-y-16">
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <div className={`text-[20rem] font-black italic leading-[0.5] ${getGradeColor(healthCheck.overall.grade)}`}>{healthCheck.overall.grade}</div>
-                    <div className="text-[8rem] font-black text-white italic tabular-nums">{healthCheck.overall.score}%</div>
+          <div className="lg:col-span-12 xl:col-span-5">
+            <div className={`${glassStyle} p-12 md:p-16 rounded-[4rem] border-white/5 h-full`}>
+              <h2 className="text-3xl font-black text-white uppercase tracking-tight mb-8">{t('aiContentOperationsDashboard.neuralAudit')}</h2>
+              {healthCheck ? (
+                <div className="space-y-12">
+                  <div className="flex items-end justify-center gap-8 py-6">
+                    <div className={`text-[9rem] font-black leading-none ${getGradeColor(healthCheck.overall.grade)}`}>{healthCheck.overall.grade}</div>
+                    <div className="text-6xl font-black text-white tabular-nums pb-4">{healthCheck.overall.score}%</div>
                   </div>
-                  <div className="grid grid-cols-3 gap-8">
-                    {healthCheck.metrics && Object.entries(healthCheck.metrics).map(([key, val]: [string, number]) => (
-                      <div key={key} className="p-8 rounded-[2rem] bg-white/[0.01] border border-white/5 text-center">
-                        <div className="text-[9px] text-slate-600 font-black uppercase italic tracking-widest">{key}</div>
-                        <div className="text-4xl font-black text-white tabular-nums">{val}%</div>
-                      </div>
-                    ))}
-                  </div>
+                  {Object.keys(healthCheck.metrics).length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+                      {Object.entries(healthCheck.metrics).map(([key, val]) => (
+                        <div key={key} className="p-6 rounded-[2rem] bg-white/[0.01] border border-white/5 text-center">
+                          <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{key}</div>
+                          <div className="text-3xl font-black text-white tabular-nums">{val}%</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {healthCheck.gaps.length > 0 && (
+                    <ul className="space-y-3">
+                      {healthCheck.gaps.slice(0, 3).map((g, i) => (
+                        <li key={i} className="text-sm text-slate-300 leading-relaxed">• {g.recommendation}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ) : (
+                <div className="py-12 text-center">
+                  <div className="text-6xl font-black text-slate-600">—</div>
+                  <p className="text-sm text-slate-500 mt-4">{loading ? t('aiContentOperationsDashboard.loading') : t('aiContentOperationsDashboard.noHealthData')}</p>
                 </div>
               )}
             </div>
           </div>
-          <div className="lg:col-span-12 xl:col-span-7 space-y-12">
-            <div className={`${glassStyle} p-16 rounded-[4.5rem] group border-white/5`}>
-              <div className="flex-1 space-y-12">
-                <div className="flex items-center gap-6">
-                  <TrendingUp className="w-8 h-8 text-emerald-400" />
-                  <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase">{t('aiContentOperationsDashboard.apexFlow')}</h2>
-                </div>
-                <div className="text-8xl font-black text-white italic tabular-nums leading-none">
-                  {nextWeek ? `+${nextWeek.gap}%` : '+38.2%'}
-                </div>
-                {nextWeek?.weeklyPlan && (
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {nextWeek.weeklyPlan.slice(0, 4).map((plan, i) => (
-                      <div key={i} className="p-8 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
-                        <div className="text-[10px] font-black text-slate-600 uppercase italic mb-4">{plan.day}</div>
-                        <h4 className="text-2xl font-black text-[var(--text-main)] italic uppercase">{plan.content.title}</h4>
-                      </div>
-                    ))}
-                  </div>
-                )}
+          <div className="lg:col-span-12 xl:col-span-7">
+            <div className={`${glassStyle} p-12 md:p-16 rounded-[4.5rem] border-white/5 h-full space-y-10`}>
+              <div className="flex items-center gap-6">
+                <TrendingUp className="w-8 h-8 text-emerald-400" aria-hidden="true" />
+                <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight">{t('aiContentOperationsDashboard.nextWeekTitle')}</h2>
               </div>
+              {nextWeek ? (
+                <>
+                  {nextWeek.goal && <p className="text-lg text-slate-300 leading-relaxed">{nextWeek.goal}</p>}
+                  <div>
+                    <div className="text-6xl font-black text-white tabular-nums leading-none">{gapValue ?? '—'}</div>
+                    <div className="text-[11px] font-black text-slate-500 uppercase tracking-widest mt-3">{t('aiContentOperationsDashboard.gapLabel')}</div>
+                  </div>
+                  {Array.isArray(nextWeek.weeklyPlan) && nextWeek.weeklyPlan.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {nextWeek.weeklyPlan.slice(0, 4).map((plan, i) => (
+                        <div key={i} className="p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
+                          <div className="text-[10px] font-black text-slate-500 uppercase mb-3">{plan.day}</div>
+                          <h4 className="text-xl font-black text-white">{plan.content?.title}</h4>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="py-8">
+                  <div className="text-6xl font-black text-slate-600">—</div>
+                  <p className="text-sm text-slate-500 mt-4">{loading ? t('aiContentOperationsDashboard.loading') : t('aiContentOperationsDashboard.noPlanData')}</p>
+                </div>
+              )}
             </div>
           </div>
         </m.div>
 
-        {/* Footer Intelligence */}
-        <m.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          <div className={`${glassStyle} p-12 rounded-[3.5rem]`}>
-            <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase mb-8">{t('aiContentOperationsDashboard.decayAlert')}</h3>
-            <div className="space-y-4">
-              {refreshRecs.slice(0, 3).map((rec, i) => (
-                <div key={i} className="text-sm text-slate-400 italic">[{rec.action}] {rec.title}</div>
+        {/* Posts to refresh */}
+        <m.div variants={itemVariants} className={`${glassStyle} p-12 rounded-[3.5rem]`}>
+          <h3 className="text-2xl font-black text-white uppercase mb-6">{t('aiContentOperationsDashboard.refreshTitle')}</h3>
+          {refreshRecs.length > 0 ? (
+            <ul className="space-y-3">
+              {refreshRecs.slice(0, 5).map((rec, i) => (
+                <li key={i} className="text-sm text-slate-300">
+                  {rec.action && <span className="font-black uppercase text-[11px] text-indigo-300 mr-2">{rec.action}</span>}
+                  {rec.title}
+                </li>
               ))}
-            </div>
-          </div>
-          <div className={`${glassStyle} p-12 rounded-[3.5rem]`}>
-            <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase mb-8">{t('aiContentOperationsDashboard.neuralAudit')}</h3>
-            <div className="text-6xl font-black text-white italic tabular-nums">99.9%</div>
-            <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mt-2">{t('aiContentOperationsDashboard.complianceScore')}</div>
-          </div>
-          <div className={`${glassStyle} p-12 rounded-[3.5rem]`}>
-            <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase mb-8">{t('aiContentOperationsDashboard.autoLoop')}</h3>
-            <p className="text-slate-400 text-sm italic mb-6">{t('aiContentOperationsDashboard.autoLoopDescription')}</p>
-            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-               <m.div animate={{ x: ['-100%', '100%'] }} transition={{ duration: 3, repeat: Infinity, ease: 'linear' }} className="h-full w-1/3 bg-white/20" />
-            </div>
-          </div>
+            </ul>
+          ) : (
+            <p className="text-sm text-slate-500">{loading ? t('aiContentOperationsDashboard.loading') : t('aiContentOperationsDashboard.noRefreshRecs')}</p>
+          )}
         </m.div>
 
         {teamId && (

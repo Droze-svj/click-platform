@@ -41,7 +41,7 @@ const NOT_A_DIALOG = new Map<string, string>([
   ],
   [
     'components/AIContentOperationsDashboard.tsx',
-    'a scan progress overlay with zero focusable controls and no close path — a busy indicator, not a dialog',
+    'a decorative background layer (pointer-events-none, aria-hidden) behind the page content; it has no controls',
   ],
   [
     'components/ModernVideoEditor.tsx',

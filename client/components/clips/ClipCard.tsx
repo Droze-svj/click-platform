@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Star, Download, Share2, Trash2, Play, Sparkles, Check, Send, Crop, Loader2 } from 'lucide-react'
 import { apiPost, apiDelete } from '../../lib/api'
+import { weekdayShortNames } from '../../utils/locale'
 
 function CheckIcon() {
   return <Check className="w-3.5 h-3.5 text-white" />
@@ -24,7 +25,7 @@ function formatSlot(iso: string): string {
   if (d.toDateString() === today.toDateString()) return `Today ${h12}${ap}`
   const tomorrow = new Date(); tomorrow.setDate(today.getDate() + 1)
   if (d.toDateString() === tomorrow.toDateString()) return `Tomorrow ${h12}${ap}`
-  const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()]
+  const day = weekdayShortNames()[d.getDay()]
   return `${day} ${h12}${ap}`
 }
 

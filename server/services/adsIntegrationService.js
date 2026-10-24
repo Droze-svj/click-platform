@@ -1,43 +1,35 @@
 const logger = require('../utils/logger');
 
 /**
- * Task 8.3: Direct-to-Ads Integration
- * Logic for pushing top-performing variants to paid social tests.
+ * Direct-to-Ads integration.
+ *
+ * Click is NOT connected to any paid-ads platform (no TikTok Ads / Meta Ads
+ * credentials, OAuth scopes or campaign API client exist). This used to resolve
+ * a made-up `ad_<timestamp>` id after a 1.5s sleep, so the editor told creators
+ * "Ad live! Monitoring ROI…" when nothing had been launched and no money could
+ * ever be spent or tracked. It now fails honestly with a 501 until a real
+ * integration is built.
  */
 
-async function calculateAdPotential(hookScore, salesScore) {
-  // Threshold: Hook > 85 AND Sales > 70
-  const isHighPotential = hookScore >= 85 && salesScore >= 70;
-
-  return {
-    isHighPotential,
-    recommendedBudget: isHighPotential ? 5 : 0,
-    platform: 'TikTok Ads',
-    reason: isHighPotential
-      ? 'Exceptional hook velocity detected. Low-CAC test recommended.'
-      : 'Hook or Sales potential below auto-scaling threshold.'
-  };
+class AdsNotConfiguredError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'AdsNotConfiguredError';
+    this.statusCode = 501;
+    this.code = 'ADS_NOT_CONFIGURED';
+  }
 }
 
-async function launchTestAd(videoId, platform = 'tiktok', budget = 5) {
-  logger.info('Launching test ad', { videoId, platform, budget });
+const NOT_CONFIGURED_MESSAGE =
+  "Ad campaigns aren't available: Click isn't connected to TikTok Ads or Meta Ads, so no ad was created.";
 
-  // Mock API integration with TikTok Ads / Meta Ads
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        success: true,
-        adId: `ad_${Date.now()}`,
-        status: 'pending_review',
-        dailyBudget: budget,
-        currency: 'USD',
-        monitoringEnabled: true
-      });
-    }, 1500);
-  });
+async function launchTestAd(videoId, platform = 'tiktok', budget = 5) {
+  logger.info('Test ad requested but no ads integration is configured', { videoId, platform, budget });
+  throw new AdsNotConfiguredError(NOT_CONFIGURED_MESSAGE);
 }
 
 module.exports = {
-  calculateAdPotential,
-  launchTestAd
+  launchTestAd,
+  AdsNotConfiguredError,
+  NOT_CONFIGURED_MESSAGE,
 };

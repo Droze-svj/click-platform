@@ -677,11 +677,10 @@ async function autoOptimizeContent(userId, contentId) {
  */
 async function predictFutureGaps(userId) {
   try {
-    const trends = await analyzeHistoricalTrends(userId);
-    return [
-      { category: 'diversity', probability: 0.8, predictedDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
-      { category: 'volume', probability: 0.6, predictedDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) }
-    ];
+    // There's no forecasting model behind this yet. It used to return fixed
+    // "80% diversity gap in 7 days / 60% volume gap in 14 days" for everyone;
+    // return nothing rather than invented probabilities.
+    return [];
   } catch (error) {
     return [];
   }

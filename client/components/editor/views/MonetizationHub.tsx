@@ -2,20 +2,21 @@
 
 import React from 'react'
 import { m, AnimatePresence } from 'framer-motion'
-import { 
-  ShoppingCart, 
-  ExternalLink, 
-  QrCode, 
-  TrendingUp, 
-  DollarSign, 
-  Package, 
-  AlertCircle, 
-  Sparkles, 
+import {
+  ShoppingCart,
+  ExternalLink,
+  TrendingUp,
+  DollarSign,
+  Package,
+  Sparkles,
   RefreshCw,
   ShoppingBag,
-  Store
+  Store,
+  QrCode,
+  Download,
 } from 'lucide-react'
-import { apiGet, apiPost } from '../../../lib/api'
+import { apiGet, apiPost, apiPatch, handleApiError } from '../../../lib/api'
+import { useTranslation } from '../../../hooks/useTranslation'
 
 interface Product {
   id: string;
@@ -24,7 +25,6 @@ interface Product {
   currency: string;
   checkout_url: string;
   image?: string;
-  activeCampaigns?: number;
 }
 
 interface MonetizationHubProps {
@@ -37,62 +37,91 @@ interface MonetizationHubProps {
 
 type Provider = 'whop' | 'shopify';
 
+const unwrap = (res: any) => (res && typeof res === 'object' && 'data' in res ? res.data : res)
+
+/**
+ * Products from the creator's connected store (GET /api/monetization/products)
+ * plus an AI plan of moments in this video to show them
+ * (POST /api/video/advanced/monetization-plan).
+ *
+ * Removed: a hard-coded "$42,892.12 ad-assisted revenue / 4.2% conversion /
+ * +12% vs last 7d" card, a fake "bridge health" panel (42ms latency, webhooks
+ * "Active"), a canned "optimization alert", and "Get QR" / "View SKU" buttons
+ * with no handlers. "View" now opens the product's real checkout link.
+ */
 const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialProducts, transcript, onClose, onPlanGenerated }) => {
+  const { t } = useTranslation()
   const [provider, setProvider] = React.useState<Provider>('whop')
   const [products, setProducts] = React.useState<Product[]>(initialProducts)
+  // QR code for a product link (GET /api/monetization/qr), shown under the card.
+  const [qr, setQr] = React.useState<{ id: string; dataUrl: string } | null>(null)
+  const [qrLoadingId, setQrLoadingId] = React.useState<string | null>(null)
+  const showQr = async (product: Product) => {
+    if (qr?.id === product.id) { setQr(null); return }
+    setQrLoadingId(product.id); setError(null)
+    try {
+      const data = unwrap(await apiGet<any>(`/monetization/qr?url=${encodeURIComponent(product.checkout_url || '')}`))
+      if (data?.dataUrl) setQr({ id: product.id, dataUrl: data.dataUrl })
+      else setError(t('monetizationHub.qrFailed'))
+    } catch {
+      setError(t('monetizationHub.qrFailed'))
+    } finally {
+      setQrLoadingId(null)
+    }
+  }
   const [isGenerating, setIsGenerating] = React.useState(false)
   const [isLoadingProducts, setIsLoadingProducts] = React.useState(false)
   const [isSaving, setIsSaving] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [productsLoadFailed, setProductsLoadFailed] = React.useState(false)
   const [currentPlan, setCurrentPlan] = React.useState<any>(null)
 
-  // Fetch existing plan on mount
+  // Fetch existing plan on mount (404 = no plan yet, which is normal).
   React.useEffect(() => {
+    let cancelled = false
     const fetchExistingPlan = async () => {
       try {
-        const response = await fetch(`/api/monetization/plan/content/${contentId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        })
-        const result = await response.json()
-        if (result.success && result.data) {
-          setCurrentPlan(result.data)
-          if (result.data.provider) setProvider(result.data.provider)
+        const plan = unwrap(await apiGet<any>(`/monetization/plan/content/${encodeURIComponent(contentId)}`))
+        if (!cancelled && plan && typeof plan === 'object' && Array.isArray(plan.triggers)) {
+          setCurrentPlan(plan)
+          if (plan.provider === 'whop' || plan.provider === 'shopify') setProvider(plan.provider)
         }
-      } catch (err) {
-        console.error('Failed to fetch existing monetization plan', err)
+      } catch {
+        /* no saved plan for this video yet */
       }
     }
     if (contentId) fetchExistingPlan()
+    return () => { cancelled = true }
   }, [contentId])
 
-  // Fetch products when provider changes
+  // Fetch products when provider changes. The route answers
+  // { data: { products, provider } } — storing `data` itself as the list (as
+  // this used to) put an object where an array was expected.
   React.useEffect(() => {
+    let cancelled = false
     const fetchProducts = async () => {
       setIsLoadingProducts(true)
-      setError(null)
+      setProductsLoadFailed(false)
       try {
-        const result = await apiGet<any>(`/monetization/products?provider=${provider}`)
-        if (result?.success) {
-          setProducts(result.data)
-        } else if (Array.isArray(result?.data)) {
-          setProducts(result.data)
-        } else {
-          setError(result?.message || 'Failed to fetch SKUs')
-        }
+        const data = unwrap(await apiGet<any>(`/monetization/products?provider=${provider}`))
+        const list = Array.isArray(data) ? data : Array.isArray(data?.products) ? data.products : []
+        if (!cancelled) setProducts(list)
       } catch (err) {
-        setError('Connection to Monetization Bridge failed')
+        if (!cancelled) {
+          setProducts([])
+          setProductsLoadFailed(true)
+        }
       } finally {
-        setIsLoadingProducts(false)
+        if (!cancelled) setIsLoadingProducts(false)
       }
     }
     fetchProducts()
+    return () => { cancelled = true }
   }, [provider])
 
   const handleGeneratePlan = async () => {
     if (!transcript) {
-      setError('No transcript available for analysis')
+      setError(t('monetizationHub.needsTranscript'))
       return
     }
 
@@ -100,48 +129,34 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
     setError(null)
 
     try {
-      const result = await apiPost<any>('/video/advanced/monetization-plan', {
+      const plan = unwrap(await apiPost<any>('/video/advanced/monetization-plan', {
         transcript,
         videoId: contentId,
         provider,
-      })
-      if (result?.success && result?.data) {
-        setCurrentPlan(result.data)
-      } else if (result?.data) {
-        setCurrentPlan(result.data)
+      }))
+      if (plan && typeof plan === 'object') {
+        setCurrentPlan(plan)
       } else {
-        setError(result?.message || 'Failed to generate plan')
+        setError(t('monetizationHub.planFailed'))
       }
-    } catch (err: any) {
-      setError(err?.message || 'An error occurred during plan generation')
+    } catch (err) {
+      setError(handleApiError(err) || t('monetizationHub.planFailed'))
     } finally {
       setIsGenerating(false)
     }
   }
 
   const handleUpdateTrigger = async (triggerIndex: number, startTime: number) => {
-    if (!currentPlan?._id) return
+    if (!currentPlan?._id || !Number.isFinite(startTime) || startTime < 0) return
 
     setIsSaving(true)
     try {
       const updatedTriggers = [...currentPlan.triggers]
       updatedTriggers[triggerIndex] = { ...updatedTriggers[triggerIndex], startTime }
-
-      const response = await fetch(`/api/monetization/plan/${currentPlan._id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ triggers: updatedTriggers })
-      })
-
-      const result = await response.json()
-      if (result.success) {
-        setCurrentPlan(result.data)
-      }
+      const plan = unwrap(await apiPatch<any>(`/monetization/plan/${currentPlan._id}`, { triggers: updatedTriggers }))
+      if (plan && typeof plan === 'object') setCurrentPlan(plan)
     } catch (err) {
-      console.error('Failed to update trigger', err)
+      setError(handleApiError(err) || t('monetizationHub.saveFailed'))
     } finally {
       setIsSaving(false)
     }
@@ -152,29 +167,15 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
 
     setIsSaving(true)
     try {
-       const response = await fetch(`/api/monetization/plan/${currentPlan._id}/finalize`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-
-      const result = await response.json()
-      if (result.success) {
-        setCurrentPlan(result.data)
-        if (onPlanGenerated) onPlanGenerated(result.data)
+      const plan = unwrap(await apiPost<any>(`/monetization/plan/${currentPlan._id}/finalize`, {}))
+      if (plan && typeof plan === 'object') {
+        setCurrentPlan(plan)
+        if (onPlanGenerated) onPlanGenerated(plan)
       }
     } catch (err) {
-      console.error('Failed to finalize plan', err)
+      setError(handleApiError(err) || t('monetizationHub.saveFailed'))
     } finally {
       setIsSaving(false)
-    }
-  }
-
-  const handleApplyToTimeline = () => {
-    if (currentPlan && onPlanGenerated) {
-      onPlanGenerated(currentPlan)
-      onClose()
     }
   }
 
@@ -182,20 +183,19 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
     whop: {
       color: 'text-emerald-400',
       bg: 'bg-emerald-500',
-      border: 'border-emerald-500/20',
       shadow: 'shadow-[0_10px_20px_rgba(16,185,129,0.2)]',
-      label: 'Whop Verified'
     },
     shopify: {
       color: 'text-indigo-400',
       bg: 'bg-indigo-500',
-      border: 'border-indigo-500/20',
       shadow: 'shadow-[0_10px_20px_rgba(99,102,241,0.2)]',
-      label: 'Shopify Secure'
     }
   }
 
   const activeStyle = providerStyles[provider]
+  const triggers: any[] = Array.isArray(currentPlan?.triggers) ? currentPlan.triggers : []
+  const showTriggers = triggers.length > 0
+  const isFinalized = currentPlan?.status === 'finalized'
 
   return (
     <m.div
@@ -204,267 +204,235 @@ const MonetizationHub: React.FC<MonetizationHubProps> = ({ contentId, initialPro
       exit={{ opacity: 0, scale: 0.95 }}
       className="flex flex-col gap-8 h-full"
     >
-      <div className="flex items-center justify-between px-2">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-2">
         <div>
-          <div className="flex items-center gap-4">
-             <h2 className={`text-2xl font-black uppercase tracking-[0.2em] italic ${activeStyle.color} flex items-center gap-4`}>
+          <div className="flex flex-wrap items-center gap-4">
+             <h2 className={`text-2xl font-bold ${activeStyle.color} flex items-center gap-3`}>
                 {provider === 'whop' ? <ShoppingCart className="w-6 h-6" /> : <ShoppingBag className="w-6 h-6" />}
-                Monetization Bridge
+                {t('monetizationHub.title')}
              </h2>
-             <div className="flex bg-white/5 p-1 rounded-xl border border-white/10 ml-4">
+             <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
                 <button
                   type="button"
                   onClick={() => setProvider('whop')}
-                  className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${provider === 'whop' ? 'bg-emerald-500 text-black' : 'text-slate-500 hover:text-white'}`}
+                  className={`px-4 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${provider === 'whop' ? 'bg-emerald-500 text-black' : 'text-slate-500 hover:text-white'}`}
                 >
                   Whop
                 </button>
                 <button
                   type="button"
                   onClick={() => setProvider('shopify')}
-                  className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${provider === 'shopify' ? 'bg-indigo-500 text-black' : 'text-slate-500 hover:text-white'}`}
+                  className={`px-4 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${provider === 'shopify' ? 'bg-indigo-500 text-black' : 'text-slate-500 hover:text-white'}`}
                 >
                   Shopify
                 </button>
              </div>
           </div>
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-2">
-            Active storefront SKUs integrated into the autonomous distribution relay
+          <p className="text-xs text-slate-500 mt-2">
+            {t('monetizationHub.subtitle')}
           </p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
+          className="px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-slate-500 hover:text-white transition-colors"
         >
-          [ Close Bridge ]
+          {t('monetizationHub.close')}
         </button>
       </div>
 
-      <div className="grid grid-cols-12 gap-8 flex-1 min-h-0">
-        <div className="col-span-4 flex flex-col gap-6">
-           <div className="bg-white/[0.02] border border-white/5 rounded-[3rem] p-8 flex flex-col justify-between h-56 group overflow-hidden relative">
-              <div className={`absolute top-0 right-0 w-48 h-48 ${activeStyle.bg}/10 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2`} />
-              <div className="relative z-10 flex justify-between items-start">
-                 <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Total Ad-Assisted Revenue</span>
-                    <span className="text-4xl font-black italic mt-2 text-white">$42,892.12</span>
-                 </div>
-                 <div className={`p-2 rounded-xl bg-white/5 border border-white/10 ${activeStyle.color}`}>
-                    <TrendingUp className="w-4 h-4" />
-                 </div>
-              </div>
-
-              <div className="relative z-10 flex items-center gap-4 border-t border-white/5 pt-6">
-                 <div className="flex-1 space-y-2">
-                    <div className="flex justify-between text-[8px] font-black uppercase text-slate-500">
-                       <span>Conversion Rate</span>
-                       <span className="text-white">4.2%</span>
-                    </div>
-                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                       <m.div initial={{ width: 0 }} animate={{ width: '42%' }} className={`h-full ${activeStyle.bg}`} />
-                    </div>
-                 </div>
-                 <div className="text-right">
-                    <span className={`text-[8px] font-black ${activeStyle.color} uppercase tracking-widest`}>+12% vs last 7d</span>
-                 </div>
-              </div>
-           </div>
-
-           <div className="bg-white/[0.02] border border-white/5 rounded-[3rem] p-8 flex-1 flex flex-col gap-6">
-              <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-widest flex items-center gap-2">
-                 <Store className="w-4 h-4 text-violet-400" />
-                 Bridge Health Node
-              </h3>
-
-              <div className="space-y-4 flex-1">
-                 {[
-                   { label: 'Latency', value: '42ms' },
-                   { label: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Webhooks`, value: 'Active' },
-                   { label: 'Relay Engine', value: 'Hot' },
-                 ].map((stat, i) => (
-                   <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</span>
-                      <div className="flex items-center gap-2">
-                         <span className="text-[10px] font-mono text-white">{stat.value}</span>
-                         <div className={`w-1 h-1 rounded-full ${activeStyle.bg} animate-pulse`} />
-                      </div>
-                   </div>
-                 ))}
-              </div>
-
-              <div className="p-4 rounded-2xl bg-orange-500/5 border border-orange-500/20 flex gap-4">
-                 <AlertCircle className="w-5 h-5 text-orange-400 flex-shrink-0" />
-                 <div>
-                    <p className="text-[9px] font-black text-orange-400 uppercase">Optimization Alert</p>
-                    <p className="text-[8px] text-slate-400 uppercase italic mt-1 leading-relaxed">AI suggests prioritizing {provider === 'whop' ? 'digital access' : 'physical variants'} for these segment types.</p>
-                 </div>
-              </div>
-           </div>
-        </div>
-
-        <div className="col-span-8 bg-white/[0.02] border border-white/5 rounded-[3rem] p-8 flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between mb-8">
-               <h3 className="text-[11px] font-black text-[var(--text-main)] uppercase tracking-widest">{provider === 'whop' ? 'Whop Storefront' : 'Shopify Catalog'} SKUs</h3>
-               <div className="flex items-center gap-4">
-                  {error && <span className="text-[10px] text-rose-500 font-black uppercase animate-pulse">{error}</span>}
-                  <button
-                    type="button"
-                    onClick={handleGeneratePlan}
-                    disabled={isGenerating || !transcript}
-                    className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
-                      isGenerating 
-                        ? 'bg-white/5 text-slate-500 cursor-wait' 
-                        : `${activeStyle.bg} text-black hover:bg-white ${activeStyle.shadow}`
-                    }`}
-                  >
-                    {isGenerating ? (
-                      <>
-                        <RefreshCw className="w-3 h-3 animate-spin" />
-                        Analyzing Transcript...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-3 h-3" />
-                        Generate AI Monetization Plan
-                      </>
-                    )}
-                  </button>
-
-                  {currentPlan && (
-                    <m.div
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="flex items-center gap-4"
-                    >
-                      <div className={`px-4 py-2 rounded-xl border flex items-center gap-2 ${currentPlan.status === 'finalized' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-400'}`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${currentPlan.status === 'finalized' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
-                        <span className="text-[9px] font-black uppercase tracking-widest leading-none">
-                          {currentPlan.status.toUpperCase()}
-                        </span>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={handleFinalizePlan}
-                        disabled={isSaving || currentPlan.status === 'finalized'}
-                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
-                          currentPlan.status === 'finalized'
-                            ? 'bg-white/5 text-slate-500'
-                            : 'bg-white text-black hover:bg-emerald-500 hover:text-white'
-                        }`}
-                      >
-                        {isSaving ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Package className="w-3.5 h-3.5" />}
-                        {currentPlan.status === 'finalized' ? 'Plan Released' : 'Finalize Strategy'}
-                      </button>
-                    </m.div>
-                  )}
-
-                  <div className={`flex items-center gap-2 px-3 py-1 ${activeStyle.bg}/10 border ${activeStyle.border} rounded-full`}>
-                     <span className={`text-[8px] font-black ${activeStyle.color} uppercase`}>{activeStyle.label}</span>
-                  </div>
-               </div>
-            </div>
-
-           <div className="grid grid-cols-2 gap-4 flex-1 overflow-y-auto custom-scrollbar pr-2">
-              <AnimatePresence mode="wait">
-                <m.div 
-                  key={provider}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="contents"
+      <div className="bg-white/[0.02] border border-white/5 rounded-[3rem] p-8 flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+             <h3 className="text-sm font-semibold text-[var(--text-main)] flex items-center gap-2">
+               <Store className="w-4 h-4 text-violet-400" aria-hidden />
+               {showTriggers
+                 ? t('monetizationHub.planHeading')
+                 : provider === 'whop' ? t('monetizationHub.whopProducts') : t('monetizationHub.shopifyProducts')}
+             </h3>
+             <div className="flex flex-wrap items-center gap-4">
+                {(error || productsLoadFailed) && (
+                  <span className="text-xs text-rose-500 font-medium" role="alert">{error || t('monetizationHub.loadFailed')}</span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleGeneratePlan}
+                  disabled={isGenerating || !transcript}
+                  title={!transcript ? t('monetizationHub.needsTranscript') : undefined}
+                  className={`px-6 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 disabled:opacity-50 ${
+                    isGenerating
+                      ? 'bg-white/5 text-slate-500 cursor-wait'
+                      : `${activeStyle.bg} text-black hover:bg-white ${activeStyle.shadow}`
+                  }`}
                 >
-                  {currentPlan?.triggers?.map((step: any, idx: number) => (
-                    <m.div
-                      key={idx}
-                      whileHover={{ y: -5 }}
-                      className="p-6 rounded-[2rem] bg-white/[0.04] border border-white/10 group transition-all space-y-4"
+                  {isGenerating ? (
+                    <>
+                      <RefreshCw className="w-3 h-3 animate-spin" aria-hidden />
+                      {t('monetizationHub.generating')}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3" aria-hidden />
+                      {t('monetizationHub.generate')}
+                    </>
+                  )}
+                </button>
+
+                {currentPlan?._id && (
+                  <m.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-4"
+                  >
+                    <button
+                      type="button"
+                      onClick={handleFinalizePlan}
+                      disabled={isSaving || isFinalized || !showTriggers}
+                      className={`px-6 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 disabled:opacity-60 ${
+                        isFinalized
+                          ? 'bg-white/5 text-slate-500'
+                          : 'bg-white text-black hover:bg-emerald-500 hover:text-white'
+                      }`}
                     >
-                      <div className="flex justify-between items-start">
-                        <div className={`w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10`}>
-                           <span className="text-[10px] font-black text-white italic">#{idx + 1}</span>
-                        </div>
+                      {isSaving ? <RefreshCw className="w-3 h-3 animate-spin" aria-hidden /> : <Package className="w-3.5 h-3.5" aria-hidden />}
+                      {isFinalized ? t('monetizationHub.planFinalized') : t('monetizationHub.finalize')}
+                    </button>
+                  </m.div>
+                )}
+             </div>
+          </div>
+
+         {currentPlan && !showTriggers && (
+           <p className="mb-6 text-xs text-slate-400">{t('monetizationHub.noTriggers')}</p>
+         )}
+
+         {!showTriggers && !isLoadingProducts && products.length === 0 ? (
+           <div className="flex flex-1 flex-col items-center justify-center gap-3 py-12 text-center">
+             <Store className="w-8 h-8 text-slate-600" aria-hidden />
+             <p className="text-sm font-semibold text-[var(--text-main)]">{t('monetizationHub.noProductsTitle')}</p>
+             <p className="max-w-sm text-xs text-slate-500">
+               {provider === 'whop' ? t('monetizationHub.noProductsWhop') : t('monetizationHub.noProductsShopify')}
+             </p>
+           </div>
+         ) : (
+         <div className="grid grid-cols-1 gap-4 flex-1 overflow-y-auto custom-scrollbar pr-2 md:grid-cols-2">
+            <AnimatePresence mode="wait">
+              <m.div
+                key={showTriggers ? 'plan' : provider}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="contents"
+              >
+                {showTriggers ? triggers.map((step: any, idx: number) => (
+                  <m.div
+                    key={idx}
+                    whileHover={{ y: -5 }}
+                    className="p-6 rounded-[2rem] bg-white/[0.04] border border-white/10 group transition-all space-y-4"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
+                         <span className="text-xs font-bold text-white">#{idx + 1}</span>
+                      </div>
+                      {typeof step.intentScore === 'number' && Number.isFinite(step.intentScore) && (
                         <div className="text-right">
                            <div className="flex items-center gap-1 justify-end">
-                              <TrendingUp className="w-3 h-3 text-emerald-400" />
-                              <span className="text-[9px] font-black text-emerald-400 uppercase">{(step.intentScore * 100).toFixed(0)}% Intent</span>
+                              <TrendingUp className="w-3 h-3 text-emerald-400" aria-hidden />
+                              <span className="text-[11px] font-semibold text-emerald-400">
+                                {t('monetizationHub.buyingIntent', { score: Math.round(step.intentScore * 100) })}
+                              </span>
                            </div>
-                           <p className="text-[8px] text-slate-500 uppercase tracking-widest mt-1">AI Recommendation</p>
+                           <p className="text-[10px] text-slate-500 mt-1">{t('monetizationHub.aiEstimate')}</p>
                         </div>
-                      </div>
+                      )}
+                    </div>
 
-                      <div>
-                        <h4 className="text-[12px] font-black text-[var(--text-main)] uppercase tracking-wider mb-1 truncate">{step.productName}</h4>
-                        <p className="text-[9px] text-slate-500 italic line-clamp-2 leading-relaxed">"{step.reason}"</p>
-                      </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-[var(--text-main)] mb-1 truncate">{step.productName}</h4>
+                      {step.reason && <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">&quot;{step.reason}&quot;</p>}
+                    </div>
 
-                      <div className="flex items-center gap-4 pt-4 border-t border-white/5">
-                         <div className="flex-1">
-                            <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest">Trigger Time (s)</span>
-                            <div className="flex items-center gap-2 mt-1">
-                               <input 
-                                 type="number" 
-                                 value={step.startTime}
-                                 onChange={(e) => handleUpdateTrigger(idx, parseFloat(e.target.value))}
-                                 disabled={currentPlan.status === 'finalized'}
-                                 title="Adjust Trigger Time (seconds)"
-                                 aria-label="Adjust Trigger Time (seconds)"
-                                 className="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-[10px] text-white font-mono outline-none focus:border-indigo-500"
-                               />
-                               <span className="text-[9px] text-slate-600">sec</span>
-                            </div>
-                         </div>
+                    <div className="flex items-center gap-4 pt-4 border-t border-white/5">
+                       <div className="flex-1">
+                          <span className="text-[10px] font-semibold text-slate-500">{t('monetizationHub.showAt')}</span>
+                          <div className="flex items-center gap-2 mt-1">
+                             <input
+                               type="number"
+                               min={0}
+                               value={step.startTime}
+                               onChange={(e) => handleUpdateTrigger(idx, parseFloat(e.target.value))}
+                               disabled={isFinalized}
+                               title={t('monetizationHub.showAt')}
+                               aria-label={t('monetizationHub.showAt')}
+                               className="w-16 bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs text-white font-mono outline-none focus:border-indigo-500"
+                             />
+                             <span className="text-[10px] text-slate-600">{t('monetizationHub.seconds')}</span>
+                          </div>
+                       </div>
+                       {step.productPrice != null && (
                          <div className="text-right">
-                            <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest">Pricing</span>
-                            <p className="text-[11px] font-black text-white mt-1">${step.productPrice}</p>
+                            <span className="text-[10px] font-semibold text-slate-500">{t('monetizationHub.price')}</span>
+                            <p className="text-sm font-bold text-white mt-1">{step.productCurrency || ''} {step.productPrice}</p>
                          </div>
+                       )}
+                    </div>
+                  </m.div>
+                )) : products.map((product) => (
+                  <m.div
+                    key={product.id}
+                    whileHover={{ y: -5, backgroundColor: 'rgba(255,255,255,0.04)' }}
+                    className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/10 group transition-all"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
+                         {provider === 'whop' ? <DollarSign className={`w-6 h-6 ${activeStyle.color}`} aria-hidden /> : <ShoppingBag className={`w-6 h-6 ${activeStyle.color}`} aria-hidden />}
                       </div>
-                    </m.div>
-                  )) || products.map((product) => (
-                    <m.div
-                      key={product.id}
-                      whileHover={{ y: -5, backgroundColor: 'rgba(255,255,255,0.04)' }}
-                      className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/10 group cursor-pointer transition-all"
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div className={`w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:${activeStyle.bg} transition-colors`}>
-                           {provider === 'whop' ? <DollarSign className={`w-6 h-6 ${activeStyle.color} group-hover:text-white transition-colors`} /> : <ShoppingBag className={`w-6 h-6 ${activeStyle.color} group-hover:text-white transition-colors`} />}
-                        </div>
-                        <div className="flex gap-2">
-                           <button
-                             type="button"
-                             title="View SKU"
-                             aria-label="View SKU"
-                             className="p-2 rounded-xl bg-white/5 border border-white/10 text-slate-500 hover:text-white transition-all"
-                           >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                           </button>
-                        </div>
-                      </div>
+                      {/^https?:\/\//i.test(product.checkout_url || '') && (
+                        <a
+                          href={product.checkout_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={t('monetizationHub.viewProduct')}
+                          aria-label={t('monetizationHub.viewProduct')}
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-[11px] font-semibold text-slate-400 hover:text-white transition-all"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+                          {t('monetizationHub.view')}
+                        </a>
+                      )}
+                      {/^https?:\/\//i.test(product.checkout_url || '') && (
+                        <button
+                          type="button"
+                          onClick={() => showQr(product)}
+                          disabled={qrLoadingId === product.id}
+                          aria-pressed={qr?.id === product.id}
+                          title={t('monetizationHub.qrTitle')}
+                          className="ml-2 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-[11px] font-semibold text-slate-400 hover:text-white transition-all disabled:opacity-50"
+                        >
+                          <QrCode className="w-3.5 h-3.5" aria-hidden />
+                          {t('monetizationHub.qr')}
+                        </button>
+                      )}
+                    </div>
 
-                      <h4 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-wider mb-1 truncate">{product.name}</h4>
-                      <p className={`text-[10px] font-mono ${activeStyle.color} flex items-center gap-1 mb-6`}>
-                        {product.currency.toUpperCase()} ${product.price}
-                        <span className="text-[8px] text-slate-600 uppercase ml-2">Per Interaction</span>
-                      </p>
-
-                      <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                         <div className="flex flex-col">
-                            <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest">Active Ads</span>
-                            <span className="text-[11px] font-black text-white">{product.activeCampaigns || 0} Nodes</span>
-                         </div>
-                         <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[8px] font-black uppercase tracking-widest group-hover:bg-white group-hover:text-black transition-all">
-                            <QrCode className="w-3 h-3" />
-                            Get QR
-                         </button>
+                    <h4 className="text-sm font-bold text-[var(--text-main)] mb-1 truncate">{product.name}</h4>
+                    <p className={`text-xs font-mono ${activeStyle.color}`}>
+                      {String(product.currency || '').toUpperCase()} {product.price}
+                    </p>
+                    {qr?.id === product.id && (
+                      <div className="mt-4 flex flex-col items-center gap-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element -- data URL from our API */}
+                        <img src={qr.dataUrl} alt={t('monetizationHub.qrAlt', { name: product.name })} className="w-40 h-40 rounded-xl bg-white p-2" />
+                        <a href={qr.dataUrl} download={`${String(product.name || 'product').replace(/[^\w-]+/g, '-').slice(0, 40)}-qr.png`} className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-300 hover:text-white">
+                          <Download className="w-3.5 h-3.5" aria-hidden /> {t('monetizationHub.qrDownload')}
+                        </a>
                       </div>
-                    </m.div>
-                  ))}
-                </m.div>
-              </AnimatePresence>
-           </div>
-        </div>
+                    )}
+                  </m.div>
+                ))}
+              </m.div>
+            </AnimatePresence>
+         </div>
+         )}
       </div>
     </m.div>
   )
