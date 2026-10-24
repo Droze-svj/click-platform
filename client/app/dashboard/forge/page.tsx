@@ -144,7 +144,8 @@ export default function OneClickForgePage() {
                     <button
                       key={item._id}
                       type="button"
-                      onClick={() => router.push(`/dashboard/video/edit/${item._id}`)}
+                      // History items are Scripts (GET /intelligence/factory/history), not videos.
+                      onClick={() => router.push(`/dashboard/scripts/${item._id}`)}
                       className="w-full text-left rounded-xl border border-input p-4 hover:bg-accent transition-colors ds-hover-lift"
                     >
                       <div className="flex items-center justify-between mb-3">

@@ -95,11 +95,17 @@ class SovereignToolboxService {
   async executeTool(toolId, videoId, options, userId) {
     logger.info(`[Toolbox] Executing tool: ${toolId}`, { videoId, userId });
 
+    options = options || {};
+    const need = (cond, what) => {
+      if (!cond) { const e = new Error(`${what} is required for ${toolId}`); e.statusCode = 400; throw e; }
+    };
     switch (toolId) {
     case 'silence-removal':
+      need(options.path, 'options.path');
       return await aiVideoEditingService.detectSilencePeriods(options.path, options.threshold, options.minDuration);
       
     case 'viral-clips':
+      need(options.topic, 'options.topic');
       return await openShortsService.generateShortContent(userId, options.topic, options.niche);
 
     case 'auto-captions':
@@ -108,6 +114,8 @@ class SovereignToolboxService {
       return await videoCaptionService.generateAutoCaptions(videoId, options);
 
     case 'bg-swap':
+      need(videoId, 'videoId');
+      need(options.backgroundUrl || options.blurAmount, 'options.backgroundUrl or options.blurAmount');
       return await creativeToolsService.swapBackground(videoId, options.backgroundUrl, options.blurAmount, userId);
 
     case 'ai-avatar':
@@ -116,14 +124,13 @@ class SovereignToolboxService {
     case 'cinematic-3d':
       return await visualSynthesisService.initializeSynthesis(`synth-${videoId}`, options.prompt, options);
 
-    default:
-      // For tools not explicitly mapped to a single function yet, return a successful "Planned Execution" manifest
-      return {
-        success: true,
-        toolId,
-        message: `Sovereign ${toolId} upgrade initialized. Processing via Click Neural Hub.`,
-        autonomousUpgrade: this.tools.find(t => t.id === toolId)?.upgrade
-      };
+    default: {
+      // Not wired to anything. This used to answer success ("upgrade
+      // initialized… Processing via Click Neural Hub") while doing nothing.
+      const e = new Error(`${toolId} isn't available from the toolbox yet — use it from the video editor.`);
+      e.statusCode = this.tools.some((t) => t.id === toolId) ? 501 : 400;
+      throw e;
+    }
     }
   }
 }
