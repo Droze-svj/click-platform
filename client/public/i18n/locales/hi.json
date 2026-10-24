@@ -846,11 +846,11 @@
     "title": "उपलब्धियाँ",
     "subtitle": "अपनी उपलब्धियाँ और प्रगति ट्रैक करें।",
     "refreshRegistry": "रीफ़्रेश करें",
-    "statTierLabel": "विकासवादी स्तर",
+    "statTierLabel": "लेवल",
     "statTierSub": "अगले लेवल तक {{pct}}%",
-    "statMilestonesLabel": "डिक्रिप्टेड मील के पत्थर",
+    "statMilestonesLabel": "अनलॉक हुए माइलस्टोन",
     "statMilestonesSub": "अब तक अनलॉक हुईं",
-    "statStreakLabel": "सुसंगति रेखा",
+    "statStreakLabel": "चालू स्ट्रीक",
     "statStreakSub": "सबसे अच्छा: {{peak}}",
     "statVolumeLabel": "बनाया गया कंटेंट",
     "statVolumeSub": "कुल बनाए गए कंटेंट",
@@ -861,14 +861,14 @@
     "detailPayloads": "कंटेंट",
     "detailScripts": "स्क्रिप्ट",
     "recentBreakthroughs": "हालिया सफलताएँ",
-    "decryptedOn": "डिक्रिप्टेड {{date}}",
+    "decryptedOn": "{{date}} को अनलॉक हुआ",
     "ascensionVerified": "अनलॉक हुआ",
     "nodeMatrix": "सभी उपलब्धियाँ",
-    "decrypted": "decrypted",
+    "decrypted": "अनलॉक हुआ",
     "logicGated": "लॉक है",
     "milestones": {
       "first_video": {
-        "name": "उत्पत्ति प्रतिपादन",
+        "name": "पहला वीडियो",
         "description": "अपना पहला वीडियो बनाएँ।"
       },
       "first_content": {
@@ -900,11 +900,11 @@
         "description": "50 वीडियो पूरे करें।"
       },
       "streak_7": {
-        "name": "सुसंगति 7",
+        "name": "7 दिन की स्ट्रीक",
         "description": "लगातार 7 दिन एक्टिव रहें।"
       },
       "streak_30": {
-        "name": "सुसंगति 30",
+        "name": "30 दिन की स्ट्रीक",
         "description": "लगातार 30 दिन एक्टिव रहें।"
       },
       "streak_100": {
@@ -925,7 +925,7 @@
       },
       "early_adopter": {
         "name": "शुरुआती यूज़र",
-        "description": "उत्पत्ति चरण के दौरान एकीकृत।"
+        "description": "शुरुआत में ही Click से जुड़े।"
       },
       "power_user": {
         "name": "पावर यूज़र",
@@ -993,7 +993,7 @@
     "authorize": "प्राधिकृत",
     "dissent": "मतभेद",
     "historyTitle": "अनुमोदन इतिहास",
-    "historySubtitle": "सर्वसम्मति निर्णयों और नोडल प्राधिकरणों के अपरिवर्तनीय रिकॉर्ड।",
+    "historySubtitle": "पिछली मंज़ूरियों और अस्वीकृतियों का रिकॉर्ड।",
     "protocolLogsAnalyzed": "{{count}} रिक्वेस्ट",
     "emptyTitle": "यहाँ अभी कुछ नहीं है",
     "emptyState": "अभी कोई अप्रूवल रिक्वेस्ट नहीं है।",
@@ -1126,7 +1126,7 @@
     "purgeForgeBuffer": "पर्ज फोर्ज बफर",
     "neuralHeuristics": "सुझाव",
     "neuralHeuristicsDesc": "अपना कंटेंट बेहतर बनाने के तरीके।",
-    "decryptingHeuristics": "ह्यूरिस्टिक्स को डिक्रिप्ट किया जा रहा है...",
+    "decryptingHeuristics": "विश्लेषण हो रहा है…",
     "predictiveTelemetry": "परफ़ॉर्मेंस का अनुमान",
     "predictiveTelemetryDesc": "आपका कंटेंट कैसा परफ़ॉर्म कर सकता है, इसके पूर्वानुमान।",
     "scanningTrajectories": "प्रक्षेपपथ को स्कैन किया जा रहा है..."
@@ -1288,7 +1288,7 @@
     "refreshData": "सदस्यता डेटा ताज़ा करें",
     "activeNodeUplink": "मौजूदा प्लान",
     "protocolId": "प्लान ID:",
-    "rootGenesis": "जड़ उत्पत्ति",
+    "rootGenesis": "स्टार्टर",
     "genericAccess": "सामान्य पहुंच",
     "lifecycleStatus": "जीवनचक्र स्थिति:",
     "uninitialized": "अप्रारंभीकृत",
@@ -1307,7 +1307,7 @@
     "coreMatrixUplink": "मुख्य फ़ीचर",
     "primeCommandUplink": "सभी फ़ीचर का एक्सेस",
     "activeProtocol": "मौजूदा प्लान",
-    "ascending": "आरोही...",
+    "ascending": "अपग्रेड हो रहा है…",
     "genesisUplink": "शुरू करें",
     "escalateProtocol": "अपग्रेड करें"
   },
@@ -1825,7 +1825,7 @@
     "heroIntro": "अपने सोशल अकाउंट Click से कनेक्ट करें। हर कनेक्शन से चालू होता है",
     "heroFeature1": "ऑटोमैटिक पोस्टिंग",
     "heroFeature2": "एंगेजमेंट ट्रैकिंग",
-    "heroFeature3": "सिंथेटिक दर्शक विश्लेषण",
+    "heroFeature3": "दर्शकों की इनसाइट्स",
     "heroAnd": "और",
     "statNeuralEncryption": "टोकन एन्क्रिप्शन",
     "statUplinkLatency": "कनेक्शन स्पीड",
@@ -2375,7 +2375,7 @@
     "collaborationIntro1": "हर टीम को मिलते हैं",
     "collaborationHighlight1": "शेयर किए गए एसेट",
     "collaborationIntro2": ",",
-    "collaborationHighlight2": "अतुल्यकालिक फीडबैक लूप",
+    "collaborationHighlight2": "कमेंट और फ़ीडबैक",
     "collaborationIntro3": ", और एक एकीकृत",
     "collaborationHighlight3": "उत्पादन कतार",
     "collaborationIntro4": "। सबका काम एक जगह रखें।",
@@ -3113,7 +3113,7 @@
     "neuralLine1": "कंटेंट",
     "neuralLine2": "केंद्र",
     "autonomousPrefix": "ऑटो मोड",
-    "dominating": "हावी",
+    "dominating": "चल रहा है",
     "autonomousMid": "the",
     "autonomousSuffix": "कतार।",
     "neuralActive": "ऑटो मोड चालू",
@@ -3998,7 +3998,7 @@
     "latticeHealth": "नेटवर्क हेल्थ",
     "aggregatedRevenue": "एकत्रित राजस्व",
     "victoryVectors": "आज की जीत",
-    "encirclementTitle": "वैश्विक घेरा",
+    "encirclementTitle": "ग्रोथ का सारांश",
     "encirclementSubtitle": "पूरे Click में शेयर की गई इनसाइट्स",
     "godModeSaturationActive": "लाइव",
     "decentralizedIntelligenceLedger": "एक्टिविटी लॉग",
@@ -4018,7 +4018,7 @@
     "tabStability": "सिस्टम स्वास्थ्य",
     "versionLabel": "Click",
     "overlordTerminalSynced": "कनेक्टेड",
-    "mainTitle": "ओवरलॉर्ड टर्मिनल पर क्लिक करें",
+    "mainTitle": "Click कंट्रोल सेंटर",
     "mainSubtitle": "मॉनेटाइज़ेशन और ऑटोमेशन कंट्रोल।"
   },
   "clickDebugPanel": {
@@ -5408,7 +5408,7 @@
     "presetVibrantPopName": "जीवंत पॉप",
     "presetVibrantPopDesc": "बोल्ड, संतृप्त रंग",
     "presetSoftDreamyName": "कोमल स्वप्निल",
-    "presetSoftDreamyDesc": "अलौकिक, सौम्य रूप",
+    "presetSoftDreamyDesc": "हल्का, कोमल लुक",
     "presetElectricVibeName": "बिजली",
     "presetElectricVibeDesc": "उच्च-ऊर्जा जीवंत रूप",
     "presetRetroVintageName": "रेट्रो विंटेज",
@@ -6232,7 +6232,20 @@
     "appliedStyleProfile": "{{name}} स्टाइल लागू हुई",
     "packApplied": "{{name}} लागू हुआ: {{grade}} कलर ग्रेड और उसकी कैप्शन स्टाइल",
     "packAppliedGradeOnly": "{{name}} लागू हुआ: {{grade}} कलर ग्रेड। इसकी कैप्शन स्टाइल इस्तेमाल करने के लिए कैप्शन चालू करें।",
-    "packApplyFailed": "{{name}} लागू नहीं हो सका: इसका कलर ग्रेड नहीं मिला"
+    "packApplyFailed": "{{name}} लागू नहीं हो सका: इसका कलर ग्रेड नहीं मिला",
+    "beatRecut": "✦ {{count}} बीट क्लिप में दोबारा काटा गया ({{replaced}} वीडियो क्लिप बदले गए)",
+    "beatCut": "✦ {{count}} बीट-सिंक क्लिप में काटा गया",
+    "autoViralAnalysing": "✦ ऑटो वायरल एडिट — बीट और कैप्शन का विश्लेषण हो रहा है…",
+    "autoViralNothingFound": "ऑटो वायरल एडिट को म्यूज़िक बीट या काम का ट्रांसक्रिप्ट चाहिए — दोनों में से कुछ नहीं मिला।",
+    "autoViralNeedsTranscript": "ऑटो वायरल एडिट को कैप्शन के लिए ट्रांसक्रिप्ट या कट के लिए म्यूज़िक चाहिए। पहले ट्रांसक्राइब करें, फिर कोशिश करें।",
+    "autoViralCuts": "{{clips}} बीट क्लिप · {{transitions}} ट्रांज़िशन",
+    "autoViralCaptions": "{{count}} कराओके कैप्शन",
+    "autoViralDone": "✦ ऑटो वायरल एडिट: {{summary}}",
+    "autoViralFailed": "ऑटो वायरल एडिट नहीं हो सका — आपकी टाइमलाइन में कोई बदलाव नहीं हुआ।",
+    "resizeTimelineAria": "टाइमलाइन का साइज़ बदलें (ऊपर या नीचे खींचें)",
+    "resizeTimelineTitle": "टाइमलाइन का साइज़ बदलने के लिए खींचें",
+    "timelineHeading": "टाइमलाइन",
+    "cmdCategoryEditor": "एडिटर"
   },
   "nicheStrategyPanel": {
     "tabHooks": "हुक्स",
@@ -6310,13 +6323,13 @@
     "featuresTitle": "विशिष्ट विशेषताएं",
     "featuresDescription": "मल्टी-प्लेटफ़ॉर्म इंटेलिजेंस और पूर्वानुमानित विकास को अनलॉक करें।",
     "completeTitle": "सब सेट है",
-    "completeDescription": "अब आप सामाजिक परिदृश्य पर हावी होने के लिए तैयार हैं।",
+    "completeDescription": "आप बनाना शुरू करने के लिए तैयार हैं।",
     "eliteAccessGranted": "संभ्रांत प्रवेश प्रदान किया गया",
     "closeOnboarding": "ऑनबोर्डिंग बंद करें",
     "back": "पीछे",
-    "startDominating": "हावी होना शुरू करें",
+    "startDominating": "शुरू करें",
     "nextIntelligence": "अगली इंटेलिजेंस",
-    "clickGenesis": "उत्पत्ति पर क्लिक करें",
+    "clickGenesis": "Click में आपका स्वागत है",
     "welcomeBodyBefore": "एकमात्र मंच जो सिर्फ लिखता नहीं है—यह",
     "welcomeBodyOperates": "संचालित",
     "welcomeBodyAfter": "। चलिए आपका ब्रांड सेट करते हैं।",
@@ -6489,7 +6502,7 @@
     "syncing": "अपडेट हो रहा है...",
     "restart": "पुनः आरंभ करें",
     "dismissInstallPrompt": "इंस्टॉल प्रॉम्प्ट को ख़ारिज करें",
-    "installDescription": "तेज़, ऑफ़लाइन-सक्षम कार्यस्थान पर चढ़ें। विशिष्ट सामग्री संचालन के लिए निर्मित।",
+    "installDescription": "तेज़ ऐप के लिए Click इंस्टॉल करें, जो ऑफ़लाइन भी चलता है।",
     "initializeInstallation": "इंस्टालेशन प्रारंभ करें",
     "tagInstant": "तुरंत",
     "tagEdge": "किनारा",
@@ -6779,7 +6792,7 @@
     "navAeoMetadata": "एईओ मेटाडेटा",
     "navUgcRaw": "यूजीसी रॉ",
     "navZeroPartyData": "शून्य-पार्टी डेटा",
-    "headerPill": "चरण 8 - बाज़ार प्रभुत्व",
+    "headerPill": "चरण 8 — ग्रोथ टूल",
     "headerTitle": "ग्रोथ टूल",
     "headerSubtitle": "5 सिस्टम जो क्लिक को निर्विवाद बनाते हैं"
   },
@@ -6850,14 +6863,14 @@
     "pcv": "पीसीवी",
     "steerSwarmToThisOffer": "इस ऑफ़र पर फ़ोकस करें",
     "s2sNetworkDown": "S2S नेटवर्क डाउन",
-    "globalEncirclementTitle": "वैश्विक घेरा",
+    "globalEncirclementTitle": "ग्रोथ का सारांश",
     "globalEncirclementSubtitle": "सभी अकाउंट की इनसाइट",
     "godModeActiveBadge": "सक्रिय",
     "networkHealth": "नेटवर्क स्वास्थ्य",
     "aggregatedRevenue": "एकत्रित राजस्व",
     "victoryVectors": "टॉप परफ़ॉर्मर",
     "logInitializingTunnel": "[सिस्टम] S2S एन्क्रिप्टेड सुरंग प्रारंभ किया जा रहा है...",
-    "logEncirclementActive": "[सिस्टम] घेरा सक्रिय। {{count}} सहोदर उदाहरण जुड़े हुए हैं।",
+    "logEncirclementActive": "{{count}} वर्कस्पेस जुड़े हुए हैं।",
     "logVectorReceived": "हुक \"{{hook}}\" {{cluster}} में सबसे आगे है।",
     "logLocalSynthesis": "लोकल नतीजे अपडेट हुए: मोमेंटम वेटिंग +{{percent}}%।",
     "productionStabilityTitle": "उत्पादन स्थिरता",
@@ -6878,7 +6891,7 @@
     "navGlobalS2s": "वैश्विक S2S",
     "navSystemHealth": "सिस्टम स्वास्थ्य",
     "headerPill": "एडवांस्ड टूल",
-    "headerTitle": "अधिपति टर्मिनल",
+    "headerTitle": "कंट्रोल सेंटर",
     "headerSubtitle": "मार्केट विस्तार"
   },
   "quickActions": {
@@ -6983,7 +6996,7 @@
     "razorTool": "रेजर टूल (एस)",
     "editMode": "संपादन मोड",
     "modeNormal": "सामान्य",
-    "modeRipple": "लहर",
+    "modeRipple": "रिपल",
     "modeRoll": "रोल",
     "modeSlip": "फिसलना",
     "setInPoint": "बिंदु में सेट करें (I)",
@@ -7098,7 +7111,31 @@
   "realTimeVideoPreview": {
     "overlayAlt": "उपरिशायी",
     "metadataError": "वीडियो मेटाडेटा लोड करने में विफल. सीओआरएस या यूआरएल वैधता की जांच करें।",
-    "bootingRenderEngine": "प्रीव्यू लोड हो रहा है..."
+    "bootingRenderEngine": "प्रीव्यू लोड हो रहा है...",
+    "videoFailed": "वीडियो लोड नहीं हो सका",
+    "retry": "फिर कोशिश करें",
+    "dragToCompare": "पहले / बाद में की तुलना के लिए खींचें",
+    "before": "पहले",
+    "after": "बाद में",
+    "rawUnfiltered": "रॉ / बिना फ़िल्टर",
+    "graded": "ग्रेड किया गया",
+    "editCaptionInline": "कैप्शन टेक्स्ट सीधे एडिट करें",
+    "captionPlaceholder": "कैप्शन टेक्स्ट लिखें...",
+    "opsReverse": "{{count}}× रिवर्स",
+    "opsJCut": "{{count}}× J-कट",
+    "opsLCut": "{{count}}× L-कट",
+    "exportOnlyTitle": "ये बदलाव सिर्फ़ एक्सपोर्ट के समय लागू होते हैं — प्रीव्यू में क्लिप अपनी मूल दिशा में और सामान्य ऑडियो सिंक के साथ चलते हैं।",
+    "exportOnly": "सिर्फ़ एक्सपोर्ट में",
+    "imageLayer": "इमेज लेयर",
+    "imageFailed": "इमेज लोड नहीं हो सकी",
+    "svgLayer": "SVG लेयर",
+    "preview": "प्रीव्यू",
+    "latency": "लेटेंसी",
+    "pause": "रोकें",
+    "play": "चलाएँ",
+    "toggleBeforeAfter": "पहले/बाद में बदलें",
+    "beforeAfter": "पहले / बाद में",
+    "aiStylingActive": "AI स्टाइलिंग चालू"
   },
   "realtimeCollaboration": {
     "failedToJoin": "सहयोग सत्र में शामिल होने में विफल",
@@ -7172,7 +7209,137 @@
   },
   "resizableTimeline": {
     "restore": "टाइमलाइन का आकार पुनर्स्थापित करें",
-    "maximize": "समयरेखा को अधिकतम करें"
+    "maximize": "समयरेखा को अधिकतम करें",
+    "snapKind": {
+      "word": "शब्द",
+      "silence": "ठहराव",
+      "beat": "बीट",
+      "marker": "मार्कर",
+      "edge": "किनारा",
+      "playhead": "प्लेहेड",
+      "boundary": "सीमा"
+    },
+    "realignedCountOne": "1 कैप्शन आवाज़ पर स्नैप किया गया",
+    "realignedCount": "{{count}} कैप्शन आवाज़ पर स्नैप किए गए",
+    "alreadyAligned": "कैप्शन पहले से अलाइन हैं",
+    "markerNamePrompt": "मार्कर का नाम (वैकल्पिक):",
+    "unsoloTrack": "ट्रैक का सोलो हटाएँ",
+    "soloTrack": "ट्रैक सोलो करें",
+    "soloShort": "S",
+    "unmuteTrack": "ट्रैक अनम्यूट करें",
+    "muteTrack": "ट्रैक म्यूट करें",
+    "unlockTrack": "ट्रैक अनलॉक करें",
+    "lockTrack": "ट्रैक लॉक करें",
+    "prevFrameTitle": "पिछला फ़्रेम (←)",
+    "prevFrame": "पिछला फ़्रेम",
+    "pauseTitle": "रोकें (Space)",
+    "playTitle": "चलाएँ (Space)",
+    "pause": "रोकें",
+    "play": "चलाएँ",
+    "nextFrameTitle": "अगला फ़्रेम (→)",
+    "nextFrame": "अगला फ़्रेम",
+    "goToTimeLabel": "समय पर जाएँ (समय लिखें, Enter दबाएँ)",
+    "goToTimeTitle": "समय लिखें (जैसे 1:05.5) और वहाँ जाने के लिए Enter दबाएँ",
+    "splitTitle": "प्लेहेड के नीचे वाला क्लिप स्प्लिट करें (S)",
+    "split": "स्प्लिट",
+    "deleteTitle": "चुना हुआ हिस्सा डिलीट करें (Delete)",
+    "delete": "डिलीट",
+    "rippleOnTitle": "रिपल चालू: डिलीट करने पर हर ट्रैक की खाली जगह भर जाती है",
+    "rippleOffTitle": "रिपल बंद: डिलीट करने पर खाली जगह रह जाती है",
+    "ripple": "रिपल",
+    "ungroupTitle": "चुने हुए क्लिप अनग्रुप करें",
+    "ungroup": "अनग्रुप",
+    "groupTitle": "चुने हुए क्लिप ग्रुप करें ताकि वे साथ में खिसकें और डिलीट हों",
+    "group": "ग्रुप",
+    "setInTitle": "प्लेहेड पर इन पॉइंट सेट करें (I)",
+    "in": "इन",
+    "setOutTitle": "प्लेहेड पर आउट पॉइंट सेट करें (O)",
+    "out": "आउट",
+    "clearInOutTitle": "इन/आउट हटाएँ (Alt+X)",
+    "clearInOutLabel": "इन और आउट पॉइंट हटाएँ",
+    "snapTitle": "क्लिप को किनारों, प्लेहेड और मार्कर पर स्नैप करें",
+    "snap": "स्नैप",
+    "speechTitle": "क्लिप और कैप्शन को बोले गए शब्दों पर स्नैप करें",
+    "speechDisabledTitle": "आवाज़ पर स्नैप चालू करने के लिए कैप्शन बनाएँ",
+    "speech": "आवाज़",
+    "realignTitle": "हर कैप्शन की टाइमिंग बोले गए शब्दों से मिलाएँ",
+    "realign": "कैप्शन दोबारा अलाइन करें",
+    "dragToPan": "खिसकाने के लिए खींचें",
+    "showTracks": "ट्रैक दिखाएँ",
+    "allTracks": "सभी ट्रैक",
+    "track": {
+      "captions": "कैप्शन",
+      "mainVideo": "मुख्य वीडियो",
+      "broll": "B-roll",
+      "audio": "ऑडियो",
+      "effects": "इफ़ेक्ट",
+      "captionsSub": "स्क्रीन पर टेक्स्ट",
+      "mainVideoSub": "आपकी फ़ुटेज",
+      "brollSub": "कटअवे और इमेज",
+      "audioSub": "म्यूज़िक, आवाज़ और साउंड इफ़ेक्ट"
+    },
+    "viewGroup": "टाइमलाइन व्यू",
+    "view": {
+      "clips": "क्लिप",
+      "clipsTitle": "सिर्फ़ क्लिप",
+      "hybrid": "क्लिप + स्क्रिप्ट",
+      "hybridTitle": "ऊपर स्क्रिप्ट के साथ क्लिप",
+      "script": "स्क्रिप्ट",
+      "scriptTitle": "टेक्स्ट से एडिट करें"
+    },
+    "zoomOut": "ज़ूम आउट",
+    "zoomIn": "ज़ूम इन",
+    "hideInsights": "AI इनसाइट्स लेन छिपाएँ",
+    "showInsights": "AI इनसाइट्स लेन दिखाएँ",
+    "insights": "इनसाइट्स",
+    "inOutSpan": "इन/आउट: {{time}}",
+    "inPointTitle": "इन पॉइंट: {{time}} (बदलने के लिए खींचें)",
+    "outPointTitle": "आउट पॉइंट: {{time}} (बदलने के लिए खींचें)",
+    "beatLabel": "बीट ({{time}}s)",
+    "markerTitle": "{{name}}: {{time}} (खिसकाने के लिए खींचें, जाने के लिए क्लिक करें, एडिट के लिए राइट-क्लिक करें)",
+    "marker": "मार्कर",
+    "markerTag": "{{name}} ({{time}})",
+    "resolve": "हल करें",
+    "close": "बंद करें",
+    "captionsCountOne": "1 कैप्शन",
+    "captionsCount": "{{count}} कैप्शन",
+    "clipsCountOne": "1 क्लिप",
+    "clipsCount": "{{count}} क्लिप",
+    "itemsCountOne": "1 आइटम",
+    "itemsCount": "{{count}} आइटम",
+    "audienceRetention": "दर्शक रिटेंशन",
+    "retentionTitle": "रिटेंशन: {{value}}%",
+    "audioWaveform": "ऑडियो वेवफ़ॉर्म",
+    "audioWaveformNoAudio": "ऑडियो वेवफ़ॉर्म (कोई ऑडियो नहीं)",
+    "trimStart": "शुरुआत ट्रिम करें",
+    "trimEnd": "अंत ट्रिम करें",
+    "jCut": "J-कट",
+    "lCut": "L-कट",
+    "trimmedStart": "शुरुआत ट्रिम हुई",
+    "trimmedEnd": "अंत ट्रिम हुआ",
+    "freeze": "फ़्रीज़",
+    "reverseSpeed": "रिवर्स {{speed}}×",
+    "keyframes": "कीफ़्रेम",
+    "playheadTitle": "प्लेहेड: {{time}} (स्क्रब करने के लिए खींचें)",
+    "scrubTitle": "स्क्रब: {{time}}",
+    "dragPlayhead": "प्लेहेड खींचें",
+    "origin": "मूल: {{time}}",
+    "moveDelta": "खिसकाव: {{delta}}",
+    "trackNumber": "ट्रैक {{number}}",
+    "clipsMoving": "{{count}} क्लिप खिसक रहे हैं",
+    "trimStartAt": "शुरुआत ट्रिम: {{time}}",
+    "trimEndAt": "अंत ट्रिम: {{time}}",
+    "workAreaIn": "वर्क एरिया की शुरुआत: {{time}}",
+    "workAreaOut": "वर्क एरिया का अंत: {{time}}",
+    "span": "अवधि: {{time}}",
+    "menu": {
+      "splitAtPlayhead": "प्लेहेड पर स्प्लिट करें",
+      "duplicate": "क्लिप डुप्लिकेट करें",
+      "ungroup": "क्लिप अनग्रुप करें",
+      "group": "क्लिप ग्रुप करें",
+      "rippleDelete": "रिपल डिलीट"
+    },
+    "sceneChange": "सीन बदलाव"
   },
   "revenueOracle": {
     "synchronizing": "रेवेन्यू डेटा लोड हो रहा है...",
@@ -7682,7 +7849,7 @@
     "neuralScheduling": "स्मार्ट शेड्यूलिंग",
     "neuralSchedulingDesc": "पोस्ट उस समय के लिए शेड्यूल करें जब आपके दर्शक सबसे ज़्यादा सक्रिय हों।",
     "evergreenSynthesis": "एवरग्रीन रीसायकलिंग",
-    "evergreenSynthesisDesc": "अनंत भंडार आरओआई के लिए स्व-उपचार सामग्री रीसाइक्लिंग सक्रिय करें।",
+    "evergreenSynthesisDesc": "अपने सबसे अच्छा प्रदर्शन करने वाले कंटेंट को अपने-आप दोबारा इस्तेमाल करें।",
     "initiateSequence": "अनुक्रम आरंभ करें",
     "neuralProcessing": "प्रोसेसिंग",
     "ecosystemCalibration": "सेट हो रहा है...",
@@ -7691,7 +7858,7 @@
     "synchronization": "पाइपलाइन",
     "verified": "सत्यापित",
     "nodesPrimedPrefix": "आपकी पोस्ट",
-    "primed": "दुरुस्त",
+    "primed": "तैयार",
     "nodesPrimedSuffix": "पब्लिश होने के लिए।",
     "estimatedYield": "अनुमानित उपज",
     "neuralIntegrity": "क्वालिटी चेक",
@@ -8517,5 +8684,1369 @@
     "shift1d": "+1 दिन",
     "shift1w": "+1 हफ़्ता",
     "moveWarning": "पोस्ट खिसकाने से एक ही प्लेटफ़ॉर्म पर एक ही समय पर दो पोस्ट आ सकती हैं। जो पोस्ट पब्लिश हो रही हैं या हो चुकी हैं, वे नहीं खिसकेंगी।"
+  },
+  "editorSidebar": {
+    "cat": {
+      "aiEdit": {
+        "label": "AI ऑटो-एडिट",
+        "desc": "वन-क्लिक AI एडिटिंग"
+      },
+      "dub": {
+        "label": "डबिंग",
+        "desc": "अपनी आवाज़ का 10 भाषाओं में अनुवाद करें"
+      },
+      "edit": {
+        "label": "एडिट",
+        "desc": "बेसिक एडिटिंग टूल"
+      },
+      "assets": {
+        "label": "मेरे एसेट",
+        "desc": "म्यूज़िक, इमेज और B-roll क्लिप जोड़ें"
+      },
+      "effects": {
+        "label": "इफ़ेक्ट",
+        "desc": "फ़िल्टर और सुधार"
+      },
+      "color": {
+        "label": "रंग",
+        "desc": "प्रोफ़ेशनल कलर ग्रेडिंग"
+      },
+      "chromakey": {
+        "label": "क्रोमा की",
+        "desc": "ग्रीन स्क्रीन और कंपोज़िटिंग"
+      },
+      "timeline": {
+        "label": "टाइमलाइन",
+        "desc": "एडवांस्ड एडिटिंग"
+      },
+      "export": {
+        "label": "एक्सपोर्ट",
+        "desc": "शेयर और एक्सपोर्ट करें"
+      },
+      "aiAssist": {
+        "label": "AI असिस्ट",
+        "desc": "स्मार्ट कट · सुझावों की समीक्षा · लागू करें और अनडू करें"
+      },
+      "monetize": {
+        "label": "कमाई करें",
+        "desc": "प्रोडक्ट लिंक · QR · AI कमाई प्लान"
+      },
+      "stockLibrary": {
+        "label": "स्टॉक लाइब्रेरी",
+        "desc": "B-roll · म्यूज़िक · GIF · स्टिकर · ट्रांज़िशन · साउंड इफ़ेक्ट"
+      },
+      "textMotion": {
+        "label": "टेक्स्ट और मोशन",
+        "desc": "कैप्शन · एनिमेशन · मोशन · फ़ॉन्ट"
+      }
+    },
+    "group": {
+      "edit": {
+        "label": "एडिट",
+        "desc": "कट, ग्रेड, कंपोज़िट — एडिटिंग का मुख्य हिस्सा।"
+      },
+      "media": {
+        "label": "मीडिया",
+        "desc": "एसेट, स्टॉक, कैप्शन और टेक्स्ट।"
+      },
+      "ai": {
+        "label": "AI",
+        "desc": "वन-क्लिक AI ऑटो-एडिट + कई भाषाओं में डबिंग।"
+      },
+      "export": {
+        "label": "एक्सपोर्ट",
+        "desc": "रेंडर और शेयर करें।"
+      }
+    },
+    "badge": {
+      "new": "नया",
+      "agency": "एजेंसी",
+      "pro": "PRO",
+      "beta": "BETA"
+    },
+    "title": "एडिटर टूल",
+    "ready": "तैयार",
+    "expand": "साइडबार बड़ा करें",
+    "collapse": "साइडबार छोटा करें",
+    "searchPlaceholder": "टूल खोजें (⌘F)",
+    "clearSearch": "खोज साफ़ करें",
+    "all": "सभी",
+    "recent": "हाल के",
+    "noTools": "कोई टूल नहीं मिला",
+    "pinned": "पिन किए गए",
+    "allTools": "सभी टूल",
+    "unpin": "अनपिन करें",
+    "pinToTop": "ऊपर पिन करें",
+    "device": {
+      "desktop": "डेस्कटॉप",
+      "tablet": "टैबलेट",
+      "mobile": "मोबाइल"
+    },
+    "shortcuts": "कीबोर्ड शॉर्टकट",
+    "closeShortcuts": "शॉर्टकट बंद करें",
+    "searchTools": "टूल खोजें"
+  },
+  "editorHUD": {
+    "section": {
+      "edit": "एडिटिंग",
+      "color": "रंग",
+      "ai": "AI टूल",
+      "effects": "इफ़ेक्ट",
+      "timeline": "टाइमलाइन",
+      "export": "एक्सपोर्ट",
+      "styleVault": "Style Vault",
+      "aiEdit": "AI एडिटिंग",
+      "assets": "एसेट",
+      "growth": "एनालिटिक्स",
+      "chromakey": "क्रोमा की",
+      "visualFx": "विज़ुअल FX",
+      "aiAnalysis": "AI विश्लेषण",
+      "collaborate": "मिलकर काम करें",
+      "scripts": "स्क्रिप्ट",
+      "scheduling": "शेड्यूलिंग",
+      "shortClips": "छोटे क्लिप",
+      "predict": "अनुमान",
+      "distribution": "डिस्ट्रिब्यूशन",
+      "spatial": "स्पेशियल",
+      "agent": "AI एजेंट",
+      "dub": "डबिंग"
+    },
+    "layout": {
+      "balanced": "संतुलित",
+      "balancedDesc": "प्रीव्यू और टाइमलाइन बराबर बँटे हुए",
+      "cinematic": "सिनेमैटिक",
+      "cinematicDesc": "बड़ा प्रीव्यू, प्लेबैक पर फ़ोकस",
+      "timelineFocus": "टाइमलाइन फ़ोकस",
+      "timelineFocusDesc": "टाइमलाइन की बारीक एडिटिंग के लिए ज़्यादा जगह"
+    },
+    "projectName": "प्रोजेक्ट का नाम",
+    "savingEllipsis": "सेव हो रहा है…",
+    "saveFailed": "सेव नहीं हो सका",
+    "allChangesSaved": "सभी बदलाव सेव हो गए",
+    "saving": "सेव हो रहा है",
+    "saved": "सेव हुआ",
+    "undoTitle": "अनडू (⌘Z)",
+    "redoTitle": "रीडू (⌘Y)",
+    "undo": "अनडू",
+    "redo": "रीडू",
+    "command": "खोजें या कमांड चलाएँ",
+    "commandTitle": "खोजें या कमांड चलाएँ (⌘K)",
+    "workspaceLayoutTitle": "वर्कस्पेस लेआउट (L)",
+    "workspaceLayout": "वर्कस्पेस लेआउट",
+    "gpu": "GPU: {{backend}}",
+    "agentRunning": "AI एजेंट चल रहा है",
+    "makeViralTitle": "वन-क्लिक वायरल रेसिपी चलाएँ — हुक, कट, B-roll, बीट सिंक, CTA",
+    "working": "काम चल रहा है…",
+    "makeViral": "वायरल बनाएँ",
+    "focusMode": "फ़ोकस मोड",
+    "moreActions": "और कार्य",
+    "more": "और",
+    "keyboardShortcuts": "कीबोर्ड शॉर्टकट",
+    "exportTitle": "एक्सपोर्ट और पब्लिश करें",
+    "export": "एक्सपोर्ट"
+  },
+  "quickActionsBar": {
+    "variantsNeedBase": "पहले एक कैप्शन या हुक जोड़ें, ताकि वैरिएंट जनरेटर के पास काम करने को कुछ हो।",
+    "noVariants": "कोई वैरिएंट नहीं मिला — लंबा बेस हुक आज़माएँ।",
+    "variantsGenerated": "{{count}} वैरिएंट बने — प्रीव्यू के लिए A/B पिकर खोलें।",
+    "variantsFailed": "वैरिएंट नहीं बन सके: {{error}}",
+    "unknownError": "अज्ञात एरर",
+    "brollNeedsClip": "B-roll सुझाने के लिए पहले एक क्लिप लोड करें।",
+    "noBrollGaps": "B-roll के लिए कोई खाली जगह नहीं मिली — आपका क्लिप पहले से विज़ुअली भरपूर है।",
+    "brollSuggested": "{{count}} B-roll जोड़ने के सुझाव मिले। देखने के लिए टाइमलाइन खोलें।",
+    "brollFailed": "B-roll सुझाव नहीं मिल सके: {{error}}",
+    "trendsWarmingUp": "ट्रेंड फ़ीड तैयार हो रही है — एक मिनट में फिर कोशिश करें।",
+    "trendsLoaded": "अभी ट्रेंडिंग: {{sounds}} साउंड · {{hashtags}} हैशटैग। पिकर खुल रहा है।",
+    "trendsFailed": "ट्रेंड लोड नहीं हो सके: {{error}}",
+    "styleApplied": "आपका स्टाइल लागू हुआ: {{items}}",
+    "styleAppliedGeneric": "आपका सीखा हुआ स्टाइल लागू हुआ।",
+    "styleNeedsClips": "पहले 3 क्लिप पब्लिश करें ताकि Click आपका स्टाइल सीख सके।",
+    "styleTimedOut": "आपके स्टाइल अनुरोध का समय खत्म हो गया। फिर से कोशिश करें।",
+    "styleLoadFailed": "आपका स्टाइल लोड नहीं हो सका। फिर से कोशिश करें।",
+    "viralEdit": "वायरल एडिट",
+    "viralEditLong": "ऑटो वायरल एडिट — एक टैप में पूरा एडिट",
+    "applyStyle": "स्टाइल लागू करें",
+    "split": "स्प्लिट",
+    "splitLong": "प्लेहेड पर स्प्लिट करें",
+    "captions": "कैप्शन",
+    "grade": "ग्रेड",
+    "effects": "इफ़ेक्ट",
+    "aiTools": "AI टूल",
+    "clean": "क्लीन",
+    "cleanLong": "स्मार्ट क्लीनअप",
+    "variants": "वैरिएंट",
+    "variantsLong": "A/B वैरिएंट",
+    "broll": "B-roll",
+    "brollLong": "B-roll सुझाएँ",
+    "trends": "ट्रेंड",
+    "trendsLong": "अभी ट्रेंडिंग",
+    "learnedFrom": "Click ने आपके {{count}} पब्लिश किए गए क्लिप से सीखा",
+    "ariaLoading": "{{label}} — लोड हो रहा है",
+    "ariaShortcut": "{{label}} (शॉर्टकट {{key}})"
+  },
+  "aiAutoEdit": {
+    "preset": {
+      "mrbeastEnergy": "MrBeast एनर्जी",
+      "mrbeastEnergyTagline": "बड़ा दाँव · पैटर्न ब्रेक",
+      "hormoziBold": "Hormozi बोल्ड",
+      "hormoziBoldTagline": "पक्का आँकड़ा · उलटी राय",
+      "cinematicDoc": "सिनेमैटिक डॉक",
+      "cinematicDocTagline": "धीमा तनाव · हल्के कट",
+      "educationalClean": "साफ़ शैक्षिक",
+      "educationalCleanTagline": "सवाल से शुरुआत · सीधे तथ्य",
+      "newsAuthority": "न्यूज़ अथॉरिटी",
+      "newsAuthorityTagline": "हेडलाइन · ब्रेकिंग · एक्सपर्ट",
+      "casualVlog": "कैज़ुअल व्लॉग",
+      "casualVlogTagline": "रोज़मर्रा · बातचीत वाला",
+      "mysteryHook": "रहस्य हुक",
+      "mysteryHookTagline": "जिज्ञासा लूप · धीमा खुलासा",
+      "gymGrit": "जिम ग्रिट",
+      "gymGritTagline": "हाई-इंटेंसिटी · सख़्त प्यार",
+      "adhdOverload": "ADHD ओवरलोड",
+      "adhdOverloadTagline": "हंगामा · पॉप-बर्स्ट · ओवरस्टिम",
+      "podcastGoldmine": "पॉडकास्ट खज़ाना",
+      "podcastGoldmineTagline": "अथॉरिटी · चैप्टर · वॉर्म डॉक",
+      "retentionMachine": "रिटेंशन मशीन",
+      "retentionMachineTagline": "खुले लूप · B-roll · चैप्टर"
+    },
+    "opt": {
+      "auto": "ऑटो",
+      "vivid": "चटकीला",
+      "cinematic": "सिनेमैटिक",
+      "natural": "नैचुरल",
+      "cool": "कूल",
+      "warm": "वॉर्म",
+      "vintage": "विंटेज",
+      "bw": "ब्लैक एंड व्हाइट",
+      "upbeatPop": "अपबीट पॉप",
+      "chill": "चिल",
+      "darkAmbient": "डार्क एम्बिएंट",
+      "synthwave": "Synthwave",
+      "phonk": "Phonk",
+      "lofi": "Lo-fi",
+      "question": "सवाल",
+      "stat": "आँकड़ा",
+      "mystery": "रहस्य",
+      "story": "कहानी",
+      "boldClaim": "बोल्ड दावा",
+      "patternBreak": "पैटर्न ब्रेक",
+      "fastCut": "फ़ास्ट कट",
+      "crossfade": "क्रॉसफ़ेड",
+      "glitch": "ग्लिच",
+      "whipPan": "व्हिप पैन",
+      "hardCut": "हार्ड कट",
+      "modern": "मॉडर्न",
+      "bold": "बोल्ड",
+      "minimal": "मिनिमल",
+      "neon": "नियॉन",
+      "pill": "पिल",
+      "top": "ऊपर",
+      "middle": "बीच में",
+      "bottom": "नीचे",
+      "lowerThird": "लोअर थर्ड",
+      "energetic": "ऊर्जावान",
+      "calm": "शांत",
+      "authoritative": "भरोसेमंद",
+      "playful": "चंचल",
+      "serious": "गंभीर",
+      "urgency": "जल्दबाज़ी",
+      "value": "वैल्यू",
+      "curiosity": "जिज्ञासा",
+      "off": "बंद",
+      "sparse": "कम",
+      "balanced": "संतुलित",
+      "heavy": "भारी",
+      "gentle": "हल्का",
+      "medium": "मध्यम",
+      "aggressive": "तेज़-तर्रार",
+      "educational": "शैक्षिक",
+      "entertaining": "मनोरंजक",
+      "motivational": "प्रेरक",
+      "promotional": "प्रमोशनल"
+    },
+    "brief": {
+      "title": "मार्केटिंग ब्रीफ़",
+      "postingTimes": "पोस्ट करने का सबसे अच्छा समय",
+      "competitiveInsights": "प्रतिस्पर्धी इनसाइट्स"
+    },
+    "err": {
+      "videoNotFound": "जवाब में वीडियो डेटा नहीं मिला",
+      "loadFailed": "वीडियो लोड नहीं हो सका। कृपया फिर से कोशिश करें।",
+      "missingSource": "इस वीडियो की सोर्स फ़ाइल नहीं मिली। दोबारा अपलोड करके फिर कोशिश करें।",
+      "tooManyPresets": "एक एडिट में ज़्यादा से ज़्यादा 3 स्टाइल प्रीसेट मिला सकते हैं।",
+      "serviceError": "AI सेवा में एरर आया: {{error}}",
+      "serviceInternal": "AI सेवा में अंदरूनी एरर आया। थोड़ी देर में फिर कोशिश करें।",
+      "sessionExpired": "आपका सेशन खत्म हो गया। फिर से साइन इन करके कोशिश करें।",
+      "rateLimited": "एडिट के बहुत ज़्यादा अनुरोध। थोड़ा रुककर फिर कोशिश करें।",
+      "rejected": "अनुरोध अस्वीकार हुआ ({{status}})। अपनी जानकारी जाँचें और फिर कोशिश करें।",
+      "timeout": "एडिट अनुरोध का समय खत्म हो गया। वीडियो बहुत बड़ा हो सकता है या सर्वर धीमा जवाब दे रहा है।",
+      "network": "सर्वर से कनेक्ट नहीं हो पा रहा। अपना कनेक्शन जाँचें और फिर कोशिश करें।",
+      "startFailed": "AI एडिट शुरू नहीं हो सका। फिर से कोशिश करें।"
+    },
+    "badge": "AI ऑटो एडिट",
+    "title": "AI नियम सेट करें",
+    "untitled": "बिना नाम का प्रोजेक्ट",
+    "toggleTheme": "थीम बदलें",
+    "analyze": "वीडियो का विश्लेषण करें",
+    "analyzing": "विश्लेषण हो रहा है...",
+    "backToVideos": "वीडियो पर वापस जाएँ",
+    "processingTitle": "वीडियो प्रोसेस हो रहा है",
+    "processingBody": "AI आपके वीडियो का विश्लेषण, कटिंग और ऑप्टिमाइज़ेशन कर रहा है...",
+    "initializing": "शुरू हो रहा है",
+    "result": {
+      "title": "आपका एडिट तैयार है",
+      "body": "बारीकी से बदलने के लिए एडिटर में खोलें, या जैसा है वैसा ही डाउनलोड करें।",
+      "editsApplied": "एडिट लागू हुए",
+      "openInEditor": "एडिटर में खोलें",
+      "downloadTitle": "एडिट किया हुआ वीडियो डाउनलोड करें",
+      "download": "डाउनलोड करें",
+      "viewClipsTitle": "बनाए गए क्लिप देखें",
+      "viewClips": "क्लिप देखें",
+      "dismissTitle": "यह नतीजा हटाएँ",
+      "dismiss": "हटाएँ"
+    },
+    "diag": {
+      "title": "डायग्नोस्टिक्स",
+      "complete": "विश्लेषण पूरा हुआ",
+      "suggestedLength": "सुझाई गई लंबाई"
+    },
+    "plan": {
+      "title": "आपका एडिट प्लान",
+      "subtitle": "दाईं ओर की सेटिंग से AI क्या करेगा",
+      "opening": "शुरुआत",
+      "openingHook": "सबसे दमदार पल से शुरू करें",
+      "openingOriginal": "मूल शुरुआत रखें",
+      "pacing": "रफ़्तार",
+      "pacingGentle": "हल्के कट",
+      "pacingFast": "तेज़, कसे हुए कट",
+      "pacingBalanced": "संतुलित कट",
+      "deadAir": "खाली चुप्पी",
+      "removed": "हटाया गया",
+      "kept": "रखा गया",
+      "captions": "कैप्शन",
+      "burnedIn": "वीडियो में जड़े हुए",
+      "off": "बंद",
+      "clips": "क्लिप",
+      "under30s": "30s से कम",
+      "fullLength": "पूरी लंबाई",
+      "oneVideo": "एक एडिट किया हुआ वीडियो",
+      "format": "फ़ॉर्मैट"
+    },
+    "director": {
+      "title": "AI डायरेक्टर",
+      "subtitle": "3 तक स्टाइल चुनें या हर सेटिंग को बारीकी से बदलें।",
+      "presetsOne": "{{count}} प्रीसेट: {{names}}",
+      "presetsOther": "{{count}} प्रीसेट: {{names}}"
+    },
+    "targetPlatform": "लक्ष्य प्लेटफ़ॉर्म",
+    "contentTone": "कंटेंट का टोन",
+    "stylePreset": "स्टाइल प्रीसेट",
+    "presetsSelected": "{{count}}/3 चुने गए · हटाने के लिए फिर क्लिक करें",
+    "presetCap": "3 तक प्रीसेट — बदलने के लिए एक हटाएँ",
+    "presetSelectedTitle": "चुना गया #{{n}} — हटाने के लिए क्लिक करें",
+    "presetSelect": "स्टाइल चुनें: {{name}}",
+    "presetSelectedAria": "चुना गया स्टाइल #{{n}}: {{name}}",
+    "aiTasks": "AI टास्क",
+    "task": {
+      "removeSilence": "चुप्पी हटाएँ",
+      "removeSilenceDesc": "खाली चुप्पी और ठहराव अपने-आप काटें",
+      "optimizePacing": "रफ़्तार सुधारें",
+      "optimizePacingDesc": "रिटेंशन के लिए कसे हुए कट",
+      "enhanceAudio": "ऑडियो बेहतर करें",
+      "enhanceAudioDesc": "शोर कम करना + लेवलिंग",
+      "generateClips": "छोटे क्लिप बनाएँ",
+      "generateClipsDesc": "वायरल पल निकालें",
+      "addCaptions": "वीडियो में कैप्शन जोड़ें",
+      "addCaptionsDesc": "शब्दों के साथ सिंक डायनामिक टेक्स्ट",
+      "enhanceColor": "कलर करेक्शन",
+      "enhanceColorDesc": "ऑटो LUT + ग्रेड"
+    },
+    "output": "आउटपुट",
+    "aspectRatio": "आस्पेक्ट रेशियो",
+    "clipsToGenerate": "बनाने हैं कितने क्लिप",
+    "clipCountAria": "बनाने के लिए क्लिप की संख्या",
+    "targetLength": "लक्ष्य लंबाई",
+    "full": "पूरा",
+    "pacing": "रफ़्तार",
+    "advanced": "एडवांस्ड",
+    "advancedHint": "मूड, कैप्शन, ट्रांज़िशन, आवाज़, B-roll, CTA",
+    "sel": {
+      "colorGrade": "कलर ग्रेड",
+      "musicGenre": "म्यूज़िक जॉनर",
+      "hookStyle": "हुक स्टाइल",
+      "transitions": "ट्रांज़िशन",
+      "captionStyle": "कैप्शन स्टाइल",
+      "subtitlePosition": "सबटाइटल की जगह",
+      "voiceTone": "आवाज़ का टोन",
+      "ctaStyle": "CTA स्टाइल",
+      "brollFrequency": "B-roll कितनी बार"
+    },
+    "speedRamping": "स्पीड रैंपिंग",
+    "speedRampingHint": "एनर्जी के लिए क्लिप को तेज़ और धीमा करता है",
+    "toggleSpeedRamping": "स्पीड रैंपिंग चालू/बंद करें",
+    "prioritizeHook": "हुक को प्राथमिकता दें",
+    "prioritizeHookHint": "रिटेंशन के लिए पहले 3s को असरदार बनाएँ",
+    "togglePrioritizeHook": "हुक प्राथमिकता चालू/बंद करें",
+    "creativeDirection": "क्रिएटिव दिशा",
+    "creativeDirectionHint": "वैकल्पिक · AI की डिफ़ॉल्ट सेटिंग की जगह लेता है",
+    "creativeDirectionPlaceholder": "जैसे: इसे सिनेमैटिक और डार्क बनाएँ, जंप कट नहीं, 0:42 पर भावुक ठहराव को उभारें…",
+    "autoFit": "ऑटो-फ़िट",
+    "aiPlan": "AI प्लान",
+    "preloadedStyle": "आपका स्टाइल पहले से लोड है",
+    "planLine": {
+      "composeOne": "{{count}} {{aspect}} क्लिप बनाएँ, लक्ष्य {{length}}",
+      "composeOther": "{{count}} {{aspect}} क्लिप बनाएँ, लक्ष्य {{length}}",
+      "forPlatform": "{{platform}} के लिए",
+      "tone": "{{tone}} टोन",
+      "acrossPresets": "{{presets}} के साथ ({{count}} अलग-अलग एंगल)",
+      "autoStyle": "{{auto}} स्टाइल के साथ",
+      "autoDetected": "अपने-आप पहचाना गया",
+      "grade": "{{grade}} कलर ग्रेड",
+      "hook": "{{hook}} हुक",
+      "pacing": "{{pacing}} रफ़्तार",
+      "speedRamping": "स्पीड रैंपिंग चालू",
+      "broll": "{{broll}} B-roll"
+    },
+    "tasksOne": "{{count}} टास्क",
+    "tasksOther": "{{count}} टास्क",
+    "estimate": "लगभग {{time}}",
+    "chip": {
+      "captions": "कैप्शन",
+      "autoGrade": "ऑटो कलर",
+      "speedRamp": "स्पीड रैंप"
+    },
+    "composing": "आपका एडिट तैयार हो रहा है…",
+    "composeOne": "{{count}} क्लिप बनाएँ",
+    "composeOther": "{{count}} क्लिप बनाएँ",
+    "using": "{{names}} इस्तेमाल हो रहा है",
+    "autoSelectPreset": "आपके कंटेंट के आधार पर प्रीसेट अपने-आप चुनें",
+    "tasksOnOne": "{{count}} टास्क चालू",
+    "tasksOnOther": "{{count}} टास्क चालू",
+    "dismissError": "यह एरर हटाएँ",
+    "dismiss": "हटाएँ"
+  },
+  "propertiesPanel": {
+    "layout": {
+      "bottom": "नीचे",
+      "bottomTitle": "नीचे",
+      "lowerThird": "निचला",
+      "lowerThirdTitle": "लोअर थर्ड",
+      "top": "ऊपर",
+      "topTitle": "ऊपर",
+      "fullWidth": "पूरी चौड़ाई",
+      "fullWidthTitle": "पूरी चौड़ाई वाला बार"
+    },
+    "tab": {
+      "transform": "पोज़िशन",
+      "color": "रंग",
+      "captions": "कैप्शन",
+      "text": "टेक्स्ट",
+      "clip": "क्लिप"
+    },
+    "reset": "रीसेट",
+    "title": "प्रॉपर्टी",
+    "activeTab": "{{tab}} सेटिंग",
+    "close": "प्रॉपर्टी बंद करें",
+    "clipProperties": "क्लिप प्रॉपर्टी",
+    "selectedClip": "चुना गया क्लिप",
+    "playbackSpeed": "प्लेबैक स्पीड",
+    "playbackSpeedTitle": "प्लेबैक स्पीड: {{speed}}x",
+    "playbackSpeedHint": "इस क्लिप को तेज़ या धीमा करें।",
+    "stabilization": "स्टेबलाइज़ेशन",
+    "stabilizationTitle": "स्टेबलाइज़ेशन: {{value}}%",
+    "stabilizationHint": "कैमरे का हिलना कितना कम करना है।",
+    "volume": "वॉल्यूम",
+    "volumeTitle": "वॉल्यूम: {{value}}%",
+    "autoDucking": "ऑटो-डकिंग",
+    "autoDuckingHint": "कोई बोल रहा हो तो म्यूज़िक धीमा करें",
+    "autoDuckingToggle": "ऑटो-डकिंग चालू या बंद करें",
+    "positionAndSize": "जगह और साइज़",
+    "scale": "स्केल (%)",
+    "positionX": "X पोज़िशन",
+    "positionY": "Y पोज़िशन",
+    "rotation": "घुमाव (°)",
+    "animation": "एनिमेशन",
+    "keyframesCountOne": "1 कीफ़्रेम",
+    "keyframesCount": "{{count}} कीफ़्रेम",
+    "addKeyframe": "+ प्लेहेड पर कीफ़्रेम जोड़ें",
+    "prevKeyframe": "◁ पिछला",
+    "nextKeyframe": "अगला ▷",
+    "remove": "हटाएँ",
+    "curve": "कर्व",
+    "easing": {
+      "linear": "लीनियर",
+      "easeIn": "ईज़ इन",
+      "easeOut": "ईज़ आउट",
+      "easeInOut": "ईज़ इन और आउट",
+      "bounceOut": "बाउंस",
+      "elasticOut": "इलास्टिक",
+      "cubic": "स्मूद (तेज़)"
+    },
+    "brightness": "चमक",
+    "contrast": "कॉन्ट्रास्ट",
+    "saturation": "सैचुरेशन",
+    "temperature": "तापमान",
+    "clarity": "क्लैरिटी",
+    "dehaze": "धुंध हटाएँ",
+    "captionsOn": "कैप्शन दिखाएँ",
+    "captionsOnHint": "ट्रांसक्रिप्ट को कैप्शन के रूप में दिखाएँ",
+    "captionLayout": "कैप्शन की जगह",
+    "textOverlays": "टेक्स्ट ओवरले",
+    "noTextOverlays": "अभी कोई टेक्स्ट ओवरले नहीं",
+    "deleteTextOverlay": "टेक्स्ट ओवरले हटाएँ",
+    "synced": "सिंक हुआ",
+    "preset": {
+      "tiktok": {
+        "label": "TikTok",
+        "description": "बोल्ड, बीच में, ज़बरदस्त असर"
+      },
+      "reels": {
+        "label": "Reels",
+        "description": "साफ़ कैपिटल अक्षर, ट्रेंडी"
+      },
+      "podcast": {
+        "label": "पॉडकास्ट",
+        "description": "मिनिमल, लोअर थर्ड"
+      },
+      "cinematic": {
+        "label": "सिनेमैटिक",
+        "description": "फ़िल्मी सेरिफ़"
+      },
+      "documentary": {
+        "label": "डॉक्यूमेंट्री",
+        "description": "क्लासिक सबटाइटल बार"
+      },
+      "neon": {
+        "label": "नियॉन",
+        "description": "चमकदार, रात वाला माहौल"
+      },
+      "karaoke": {
+        "label": "कराओके",
+        "description": "बोल्ड कराओके स्टाइल"
+      },
+      "pill": {
+        "label": "पिल",
+        "description": "गोल पिल में शब्द"
+      },
+      "bubble": {
+        "label": "बबल",
+        "description": "स्पीच बबल स्टाइल"
+      },
+      "gradient": {
+        "label": "ग्रेडिएंट",
+        "description": "रंगीन ग्रेडिएंट टेक्स्ट"
+      },
+      "retro": {
+        "label": "रेट्रो",
+        "description": "गर्म विंटेज लुक"
+      },
+      "vintage": {
+        "label": "विंटेज",
+        "description": "सीपिया टाइपराइटर"
+      },
+      "pop": {
+        "label": "पॉप",
+        "description": "चटक और दमदार"
+      },
+      "high-contrast": {
+        "label": "सुलभ",
+        "description": "हाई कॉन्ट्रास्ट, आसानी से पढ़ने लायक"
+      },
+      "kinetic": {
+        "label": "काइनेटिक",
+        "description": "शब्द बीट पर उभरते हैं"
+      },
+      "slow-zoom": {
+        "label": "धीमा ज़ूम",
+        "description": "स्केल 100% → 110%"
+      },
+      "fly-in-left": {
+        "label": "बाईं ओर से आएँ",
+        "description": "स्क्रीन के बाईं ओर बाहर से आता है"
+      },
+      "fly-in-right": {
+        "label": "दाईं ओर से आएँ",
+        "description": "स्क्रीन के दाईं ओर बाहर से आता है"
+      },
+      "fly-in-top": {
+        "label": "ऊपर से आएँ",
+        "description": "स्क्रीन के ऊपर बाहर से आता है"
+      },
+      "fly-in-bottom": {
+        "label": "नीचे से आएँ",
+        "description": "स्क्रीन के नीचे बाहर से आता है"
+      },
+      "fade-in-out": {
+        "label": "फ़ेड इन और आउट",
+        "description": "अपारदर्शिता 0 → 1 → 0"
+      }
+    }
+  },
+  "basicEditor": {
+    "preset": {
+      "title": {
+        "label": "टाइटल"
+      },
+      "text": {
+        "yourTitleHere": "आपका टाइटल यहाँ",
+        "subscribeForMore": "और देखने के लिए सब्सक्राइब करें",
+        "likeSubscribe": "लाइक और सब्सक्राइब करें",
+        "watchMore": "और देखें →",
+        "commentBelow": "नीचे कमेंट करें",
+        "linkInBio": "लिंक बायो में",
+        "addYourCaption": "अपना कैप्शन जोड़ें",
+        "followForMore": "और देखने के लिए फ़ॉलो करें",
+        "newText": "नया टेक्स्ट",
+        "youNeedToSeeThis": "यह आपको ज़रूर देखना चाहिए",
+        "nameTitle": "नाम · पद",
+        "proTip": "प्रो टिप",
+        "tapToLearnMore": "ज़्यादा जानने के लिए टैप करें",
+        "waitForIt": "रुकिए ज़रा...",
+        "storyTime": "कहानी का समय",
+        "youWontBelieveWhatHappened": "यक़ीन नहीं होगा कि क्या हुआ",
+        "dayInMyLife": "मेरी ज़िंदगी का एक दिन",
+        "day1Of": "दिन 1...",
+        "getReadyForThis": "इसके लिए तैयार हो जाइए",
+        "watchTillTheEnd": "आख़िर तक देखें",
+        "noOneTalksAboutThis": "इसके बारे में कोई बात नहीं करता",
+        "theSecretTheyDontWantYouToKnow": "वो राज़ जो वे नहीं चाहते कि आप जानें",
+        "theSecretIs": "राज़ यह है",
+        "insane": "कमाल है!",
+        "actually": "असल में...",
+        "now": "अभी",
+        "zeroCost": "ज़ीरो खर्च",
+        "watch": "देखें",
+        "here": "यहाँ",
+        "swipeUp": "ऊपर स्वाइप करें",
+        "seeYouNextTime": "फिर मिलेंगे",
+        "unpopularOpinion": "अलग राय:",
+        "thisChangedEverything": "इसने सब कुछ बदल दिया",
+        "hotTake": "तीखी राय:",
+        "nobodyTalksAboutThis": "यह कोई नहीं बताता",
+        "povYouJustFoundTheBestTip": "POV: आपको अभी सबसे अच्छी टिप मिल गई",
+        "saveThisForLater": "इसे बाद के लिए सेव करें",
+        "commentYourAnswerBelow": "अपना जवाब नीचे कमेंट करें",
+        "dropAIfYouAgree": "सहमत हैं तो 👍 दें",
+        "part1": "भाग 1",
+        "chapter1": "चैप्टर 1",
+        "intro": "इंट्रो",
+        "outro": "आउट्रो",
+        "comingUpNext": "आगे आ रहा है...",
+        "quickRecap": "झटपट रीकैप"
+      },
+      "subscribe": {
+        "label": "सब्सक्राइब"
+      },
+      "likeSubscribe": {
+        "label": "लाइक और सब्सक्राइब"
+      },
+      "watchMore": {
+        "label": "और देखें"
+      },
+      "comment": {
+        "label": "कमेंट"
+      },
+      "linkInBio": {
+        "label": "लिंक बायो में"
+      },
+      "caption": {
+        "label": "कैप्शन"
+      },
+      "follow": {
+        "label": "फ़ॉलो करें"
+      },
+      "custom": {
+        "label": "कस्टम"
+      },
+      "hook": {
+        "label": "हुक"
+      },
+      "lowerThird": {
+        "label": "लोअर थर्ड"
+      },
+      "callout": {
+        "label": "कॉलआउट"
+      },
+      "timestamp": {
+        "label": "टाइमस्टैम्प"
+      },
+      "waitForIt": {
+        "label": "रुकिए ज़रा"
+      },
+      "storyTime": {
+        "label": "कहानी का समय"
+      },
+      "youWontBelieve": {
+        "label": "यक़ीन नहीं होगा"
+      },
+      "dayInMyLife": {
+        "label": "मेरी ज़िंदगी का एक दिन"
+      },
+      "dayXOf": {
+        "label": "दिन X"
+      },
+      "getReady": {
+        "label": "तैयार हो जाइए"
+      },
+      "watchTillEnd": {
+        "label": "आख़िर तक देखें"
+      },
+      "noOneTalksAbout": {
+        "label": "कोई बात नहीं करता"
+      },
+      "theSecret": {
+        "label": "राज़"
+      },
+      "hormoziBold": {
+        "label": "Hormozi बोल्ड"
+      },
+      "beastImpact": {
+        "label": "बीस्ट इम्पैक्ट"
+      },
+      "minimalNarrative": {
+        "label": "मिनिमल कहानी"
+      },
+      "subliminalQuick": {
+        "label": "तेज़ सबलिमिनल"
+      },
+      "punchyHighlight": {
+        "label": "दमदार हाइलाइट"
+      },
+      "arrowRight": {
+        "label": "तीर →"
+      },
+      "arrowLeft": {
+        "label": "तीर ←"
+      },
+      "proTip": {
+        "label": "प्रो टिप"
+      },
+      "watch": {
+        "label": "देखें"
+      },
+      "here": {
+        "label": "यहाँ"
+      },
+      "swipeUp": {
+        "label": "ऊपर स्वाइप करें"
+      },
+      "commentBelow": {
+        "label": "नीचे कमेंट करें"
+      },
+      "tapToLearnMore": {
+        "label": "ज़्यादा जानने के लिए टैप करें"
+      },
+      "seeYouNextTime": {
+        "label": "फिर मिलेंगे"
+      },
+      "unpopularOpinion": {
+        "label": "अलग राय"
+      },
+      "thisChangedEverything": {
+        "label": "इसने सब बदल दिया"
+      },
+      "hotTake": {
+        "label": "तीखी राय"
+      },
+      "nobodyTalksAbout": {
+        "label": "कोई नहीं बताता"
+      },
+      "saveThis": {
+        "label": "इसे सेव करें"
+      },
+      "commentYour": {
+        "label": "अपना जवाब कमेंट करें"
+      },
+      "dropA": {
+        "label": "एक … दें"
+      },
+      "part1": {
+        "label": "भाग 1"
+      },
+      "chapter": {
+        "label": "चैप्टर"
+      },
+      "intro": {
+        "label": "इंट्रो"
+      },
+      "outro": {
+        "label": "आउट्रो"
+      },
+      "next": {
+        "label": "आगे"
+      },
+      "recap": {
+        "label": "रीकैप"
+      }
+    },
+    "filter": {
+      "vibrant": {
+        "name": "वाइब्रेंट",
+        "desc": "दमदार रंग"
+      },
+      "mono": {
+        "name": "मोनो",
+        "desc": "B&W"
+      },
+      "cinematic": {
+        "name": "सिनेमैटिक",
+        "desc": "फ़िल्मी लुक"
+      },
+      "warm": {
+        "name": "वॉर्म",
+        "desc": "गोल्डन आवर"
+      },
+      "cool": {
+        "name": "कूल",
+        "desc": "नीले टोन"
+      },
+      "vintage": {
+        "name": "विंटेज",
+        "desc": "रेट्रो"
+      },
+      "moody": {
+        "name": "मूडी",
+        "desc": "गहरा और रिच"
+      },
+      "vivid": {
+        "name": "चटकीला",
+        "desc": "ज़्यादा चटक"
+      },
+      "noir": {
+        "name": "नॉयर",
+        "desc": "हाई कॉन्ट्रास्ट B&W"
+      },
+      "sunset": {
+        "name": "सूर्यास्त",
+        "desc": "गोल्डन आवर"
+      },
+      "breeze": {
+        "name": "हवा",
+        "desc": "ठंडा और साफ़"
+      },
+      "matte": {
+        "name": "मैट",
+        "desc": "फ़्लैट और सॉफ़्ट"
+      },
+      "neon": {
+        "name": "नियॉन",
+        "desc": "चटक रंग"
+      },
+      "autumn": {
+        "name": "पतझड़",
+        "desc": "गर्म मिट्टी जैसे रंग"
+      },
+      "winter": {
+        "name": "सर्दी",
+        "desc": "ठंडा और साफ़"
+      },
+      "dreamy": {
+        "name": "ड्रीमी",
+        "desc": "हल्के पेस्टल"
+      },
+      "reset": {
+        "name": "रीसेट",
+        "desc": "डिफ़ॉल्ट"
+      }
+    },
+    "style": {
+      "creatorBold": {
+        "label": "क्रिएटर बोल्ड",
+        "desc": "हाई-एनर्जी वायरल"
+      },
+      "softAesthetic": {
+        "label": "सॉफ़्ट एस्थेटिक",
+        "desc": "हल्का और ड्रीमी"
+      },
+      "corporateMinimal": {
+        "label": "कॉर्पोरेट मिनिमल",
+        "desc": "साफ़ और प्रोफ़ेशनल"
+      },
+      "darkMoody": {
+        "label": "डार्क मूडी",
+        "desc": "ड्रामेटिक परछाइयाँ"
+      },
+      "vibrantPop": {
+        "label": "वाइब्रेंट पॉप",
+        "desc": "रंगीन और दमदार"
+      },
+      "cinematicFilm": {
+        "label": "सिनेमैटिक फ़िल्म",
+        "desc": "मूवी ट्रेलर"
+      },
+      "noirDramatic": {
+        "label": "ड्रामेटिक नॉयर",
+        "desc": "B&W ड्रामेटिक"
+      },
+      "lifestyleWarm": {
+        "label": "वॉर्म लाइफ़स्टाइल",
+        "desc": "व्लॉग और ट्रैवल"
+      },
+      "podcastPro": {
+        "label": "पॉडकास्ट प्रो",
+        "desc": "साफ़ और प्रोफ़ेशनल"
+      },
+      "documentary": {
+        "label": "डॉक्यूमेंट्री",
+        "desc": "नैचुरल और इमर्सिव"
+      },
+      "fashionEditorial": {
+        "label": "फ़ैशन एडिटोरियल",
+        "desc": "हाई-फ़ैशन लुक"
+      },
+      "retroWarm": {
+        "label": "वॉर्म रेट्रो",
+        "desc": "विंटेज गर्माहट"
+      },
+      "cinematicDrama": {
+        "label": "सिनेमैटिक ड्रामा",
+        "desc": "गहरा और ड्रामेटिक"
+      },
+      "comedyBright": {
+        "label": "ब्राइट कॉमेडी",
+        "desc": "दमदार और मज़ेदार"
+      },
+      "sportsDynamic": {
+        "label": "डायनामिक स्पोर्ट्स",
+        "desc": "एक्शन के लिए तैयार"
+      },
+      "savedDesc": "सेव किया गया"
+    },
+    "platform": {
+      "tiktok": {
+        "desc": "9:16, दमदार"
+      },
+      "youtube": {
+        "desc": "9:16, संतुलित"
+      },
+      "feed": {
+        "label": "Instagram फ़ीड",
+        "desc": "1:1, चटक"
+      },
+      "portrait": {
+        "label": "Instagram पोर्ट्रेट",
+        "desc": "4:5, वॉर्म"
+      },
+      "landscape": {
+        "label": "YouTube / लैंडस्केप",
+        "desc": "16:9, साफ़"
+      },
+      "linkedin": {
+        "desc": "16:9, प्रोफ़ेशनल"
+      }
+    },
+    "filterCategory": {
+      "all": "सभी",
+      "mood": "मूड",
+      "creative": "क्रिएटिव",
+      "dramatic": "ड्रामेटिक",
+      "neutral": "रीसेट"
+    },
+    "shapePreset": {
+      "logoCorner": "कोने में लोगो",
+      "subscribeBadge": "सब्सक्राइब बैज",
+      "fullWidthBar": "पूरी चौड़ाई वाला बार",
+      "dividerLine": "डिवाइडर लाइन",
+      "highlightBox": "हाइलाइट बॉक्स",
+      "cornerAccent": "कोने का एक्सेंट"
+    },
+    "undo": "अनडू",
+    "redo": "रीडू",
+    "searchTools": "टूल खोजें...",
+    "clearSearch": "खोज साफ़ करें",
+    "layersCount": "{{count}} लेयर",
+    "reset": "रीसेट",
+    "add": "जोड़ें",
+    "save": "सेव करें",
+    "color": "रंग",
+    "toast": {
+      "undoApplied": "अनडू हो गया",
+      "redoApplied": "रीडू हो गया",
+      "fontUploading": "फ़ॉन्ट अपलोड हो रहा है…",
+      "fontAdded": "फ़ॉन्ट जोड़ा गया।",
+      "fontInvalid": "यह फ़ॉन्ट फ़ाइल सपोर्टेड नहीं है।",
+      "fontFailed": "फ़ॉन्ट अपलोड नहीं हो सका।",
+      "rectangleAdded": "आयत जोड़ा गया",
+      "circleAdded": "गोला जोड़ा गया",
+      "lineAdded": "लाइन जोड़ी गई",
+      "addedName": "{{name}} जोड़ा गया",
+      "addedQuoted": "\"{{name}}\" जोड़ा गया",
+      "addedAt": "\"{{name}}\" को {{time}}s पर जोड़ा गया",
+      "enterImageUrl": "इमेज URL डालें",
+      "imageAdded": "इमेज ओवरले जोड़ा गया",
+      "svgAddedFromFile": "फ़ाइल से SVG ओवरले जोड़ा गया — इफ़ेक्ट में कीफ़्रेम से एनिमेट करें",
+      "enterSvgUrl": "SVG URL डालें (जैसे https://… .svg या data:image/svg+xml,…)",
+      "svgAdded": "SVG ओवरले जोड़ा गया — इफ़ेक्ट में कीफ़्रेम से एनिमेट करें",
+      "compoundSaved": "\"{{name}}\" सेव हुआ — इसे कभी भी टाइमलाइन में जोड़ें",
+      "compoundRemoved": "कंपाउंड हटाया गया",
+      "renamed": "नाम बदलकर \"{{name}}\" किया गया",
+      "addTextHint": "टेक्स्ट जोड़ें — लिखें और जोड़ें दबाएँ या Ctrl+Enter",
+      "textAdded": "टेक्स्ट ओवरले जोड़ा गया",
+      "packApplied": "{{name}} पैक लागू हुआ",
+      "saved": "\"{{name}}\" सेव हुआ",
+      "filtersReset": "फ़िल्टर डिफ़ॉल्ट पर रीसेट हुए",
+      "nameYourStyle": "अपने स्टाइल को नाम दें और सेव करें पर क्लिक करें",
+      "applied": "{{name}} लागू हुआ",
+      "speed": "स्पीड: {{value}}×"
+    },
+    "compound": {
+      "untitled": "बिना नाम का कंपाउंड",
+      "title": "कंपाउंड के रूप में सेव करें",
+      "namePlaceholder": "कंपाउंड का नाम…",
+      "name": "कंपाउंड का नाम",
+      "durationAria": "कंपाउंड की अवधि सेकंड में",
+      "delete": "कंपाउंड \"{{name}}\" हटाएँ"
+    },
+    "search": {
+      "filterHit": "फ़िल्टर: {{name}}",
+      "styleHit": "स्टाइल: {{name}}",
+      "motionHit": "मोशन: {{name}}",
+      "textHit": "टेक्स्ट: {{name}}"
+    },
+    "caption": {
+      "noTranscript": "कोई ट्रांसक्रिप्ट नहीं मिला। नीचे दिए फ़ील्ड में अपनी स्क्रिप्ट पेस्ट करें, फिर कोशिश करें।",
+      "noneGenerated": "कोई कैप्शन नहीं बना — ट्रांसक्रिप्ट शायद बहुत छोटा है।",
+      "addedToast": "{{count}} कैप्शन जोड़े गए — {{style}} स्टाइल",
+      "generationFailed": "कैप्शन नहीं बन सके",
+      "failedToast": "ऑटो-कैप्शन नहीं बन सके",
+      "title": "AI ऑटो-कैप्शन",
+      "clearTitle": "अपने-आप बने कैप्शन हटाएँ",
+      "cleared": "ऑटो-कैप्शन हटा दिए गए",
+      "count": "{{count}} कैप्शन",
+      "ready": "तैयार",
+      "noScript": "कोई स्क्रिप्ट नहीं",
+      "pasteScript": "अपनी स्क्रिप्ट पेस्ट करें",
+      "pasteScriptTitle": "अपने वीडियो की स्क्रिप्ट यहाँ पेस्ट करें",
+      "pastePlaceholder": "अपने वीडियो में बोले गए शब्द पेस्ट करें या लिखें…",
+      "wordCount": "{{count}} शब्द",
+      "wordsPerLine": "शब्द/लाइन",
+      "position": "जगह",
+      "positionAt": {
+        "top": "कैप्शन ऊपर रखें",
+        "mid": "कैप्शन बीच में रखें",
+        "bottom": "कैप्शन नीचे रखें"
+      },
+      "colorTitle": "कैप्शन टेक्स्ट का रंग",
+      "setColor": "कैप्शन का रंग {{color}} करें",
+      "addedInStyle": "{{style}} स्टाइल में {{count}} कैप्शन जोड़े गए",
+      "generateAria": "ट्रांसक्रिप्ट से ऑटो-कैप्शन बनाएँ",
+      "generating": "{{count}} शब्दों वाले कैप्शन बन रहे हैं…",
+      "generate": "कैप्शन बनाएँ"
+    },
+    "captionStyle": {
+      "minimal": "मिनिमल",
+      "neon": "नियॉन",
+      "kinetic": "काइनेटिक",
+      "cyber": "साइबर",
+      "meme": "मीम",
+      "retro": "रेट्रो",
+      "quote": "कोट"
+    },
+    "translate": {
+      "noCaptions": "टाइमलाइन पर अनुवाद के लिए कोई कैप्शन नहीं है।",
+      "inProgress": "कैप्शन का अनुवाद हो रहा है (टाइमिंग वही रहेगी)…",
+      "done": "कैप्शन {{language}} में अनुवादित हुए",
+      "empty": "अनुवाद पूरा हुआ, पर कोई कैप्शन नहीं मिला।",
+      "failed": "कैप्शन का अनुवाद नहीं हो सका।",
+      "title": "कैप्शन का अनुवाद करें",
+      "languageTitle": "किस भाषा में अनुवाद करना है, चुनें",
+      "translating": "अनुवाद हो रहा है…",
+      "translate": "अनुवाद करें"
+    },
+    "emoji": {
+      "noTranscript": "इमोजी मिलाने के लिए ट्रांसक्रिप्ट में शब्द नहीं हैं। पहले ट्रांसक्रिप्ट बनाएँ।",
+      "inProgress": "आपके ट्रांसक्रिप्ट से इमोजी मिलाए जा रहे हैं…",
+      "noneFound": "ट्रांसक्रिप्ट से मेल खाता कोई इमोजी नहीं मिला।",
+      "added": "टाइमलाइन में {{count}} इमोजी जोड़े गए",
+      "failed": "इमोजी नहीं बन सके",
+      "title": "ऑटो इमोजी",
+      "clearTitle": "बने हुए इमोजी हटाएँ",
+      "cleared": "इमोजी हटा दिए गए",
+      "count": "{{count}} इमोजी",
+      "enter": "आने का ट्रांज़िशन",
+      "enterTitle": "चुनें कि इमोजी कैसे दिखें",
+      "exit": "जाने का ट्रांज़िशन",
+      "exitTitle": "चुनें कि इमोजी कैसे गायब हों",
+      "style": "स्टाइल",
+      "styleTitle": "इमोजी का स्टाइल चुनें",
+      "size": "इमोजी का साइज़",
+      "sizeTitle": "इमोजी का साइज़ चुनें",
+      "density": "कितनी बार",
+      "densityTitle": "चुनें कि इमोजी कितनी बार दिखें",
+      "placement": "जगह",
+      "placementTitle": "चुनें कि इमोजी कहाँ दिखें",
+      "inDuration": "आने की अवधि: {{value}}s",
+      "inDurationTitle": "आने वाले एनिमेशन की अवधि",
+      "outDuration": "जाने की अवधि: {{value}}s",
+      "outDurationTitle": "जाने वाले एनिमेशन की अवधि",
+      "generating": "इमोजी बन रहे हैं…",
+      "generate": "इमोजी बनाएँ"
+    },
+    "emojiOpt": {
+      "enter": {
+        "pop": "💥 पॉप इन",
+        "bounce": "🦘 उछलकर आएँ",
+        "slide": "➡️ स्लाइड इन",
+        "pulse": "💓 ज़ूम पल्स",
+        "shake": "⚡ कैमरा शेक",
+        "blur": "🌫️ ब्लर से आएँ"
+      },
+      "exit": {
+        "fade": "🌫️ स्मूद फ़ेड",
+        "pop": "💥 पॉप आउट",
+        "slideBottom": "⬇️ नीचे स्लाइड",
+        "bounceOut": "🦘 उछलकर जाएँ",
+        "scaleOut": "🔍 छोटा होकर जाएँ",
+        "zoomOut": "🔎 ज़ूम आउट",
+        "flipOut": "🔄 फ़्लिप आउट"
+      },
+      "style": {
+        "pop3d": "✨ 3D पॉप",
+        "neonGlow": "🏮 नियॉन ग्लो",
+        "flat": "📄 मिनिमल फ़्लैट"
+      },
+      "size": {
+        "n32": "🤏 छोटा (32px)",
+        "n48": "👌 मध्यम (48px)",
+        "n64": "💪 बड़ा (64px)",
+        "n80": "👑 विशाल (80px)"
+      },
+      "density": {
+        "n3": "🔥 ज़्यादा (हर 3 शब्द पर)",
+        "n6": "⚡ मध्यम (हर 6 शब्द पर)",
+        "n10": "🎯 कम (हर 10 शब्द पर)"
+      },
+      "place": {
+        "above": "⬆️ कैप्शन के ऊपर",
+        "below": "⬇️ कैप्शन के नीचे",
+        "head": "👱 सिर की ऊँचाई पर",
+        "customTop": "👑 फ़्रेम में सबसे ऊपर"
+      }
+    },
+    "lang": {
+      "en": "अंग्रेज़ी (English)",
+      "es": "स्पेनिश (Español)",
+      "fr": "फ़्रेंच (Français)",
+      "de": "जर्मन (Deutsch)",
+      "it": "इतालवी (Italiano)",
+      "pt": "पुर्तगाली (Português)",
+      "ru": "रूसी (Русский)",
+      "ja": "जापानी (日本語)",
+      "ko": "कोरियाई (한국어)",
+      "zh": "चीनी (中文)",
+      "ar": "अरबी (العربية)",
+      "hi": "हिन्दी",
+      "nl": "डच (Nederlands)",
+      "pl": "पोलिश (Polski)",
+      "tr": "तुर्की (Türkçe)"
+    },
+    "trim": {
+      "waveform": "वेवफ़ॉर्म",
+      "clickToSeek": "प्लेहेड खिसकाने के लिए क्लिक करें",
+      "speed": "स्पीड",
+      "playbackSpeedAria": "प्लेबैक स्पीड: {{value}} गुना",
+      "reverse": "रिवर्स",
+      "reverseSub": "चुना गया क्लिप उलटें",
+      "selectClipFirst": "पहले एक क्लिप चुनें",
+      "split": "प्लेहेड पर स्प्लिट करें",
+      "beatCut": "बीट कट",
+      "beatCutSub": "हर बीट पर क्लिप काटें",
+      "freeze": "फ़्रीज़ फ़्रेम",
+      "freezeSub": "{{time}}s पर 1s रोकें",
+      "trimToInOut": "इन/आउट तक ट्रिम करें",
+      "trimToInOutSub": "नीचे इन + आउट सेट करें",
+      "setBothFirst": "पहले इन और आउट दोनों पॉइंट सेट करें",
+      "jCut": "J-कट",
+      "jCutSub": "ऑडियो 0.5s पहले शुरू होता है",
+      "lCut": "L-कट",
+      "lCutSub": "ऑडियो कट के बाद 0.5s चलता है",
+      "comingSoonTitle": "{{label}} — जल्द आ रहा है",
+      "selectClipTitle": "{{label}} — पहले एक क्लिप चुनें",
+      "soon": "जल्द",
+      "markers": "इन / आउट मार्कर",
+      "inAt": "इन {{time}}s",
+      "noIn": "इन नहीं",
+      "outAt": "आउट {{time}}s",
+      "noOut": "आउट नहीं",
+      "inSet": "इन {{time}}s पर सेट",
+      "setIn": "इन सेट करें",
+      "outAfterIn": "आउट, इन के बाद होना चाहिए",
+      "outSet": "आउट {{time}}s पर सेट",
+      "setOut": "आउट सेट करें",
+      "clear": "साफ़ करें"
+    },
+    "layout": {
+      "auto": "ऑटो",
+      "standard": "स्टैंडर्ड",
+      "square": "स्क्वेयर",
+      "vertical": "वर्टिकल",
+      "portrait": "पोर्ट्रेट",
+      "cinematic": "सिनेमैटिक",
+      "classic": "क्लासिक"
+    },
+    "text": {
+      "editingOnCanvas": "कैनवस पर एडिट हो रहा है",
+      "doubleClickHint": "प्लेयर में सीधे लिखने के लिए टेक्स्ट पर डबल-क्लिक करें",
+      "deselect": "चयन हटाएँ",
+      "newText": "नया टेक्स्ट",
+      "typePlaceholder": "टेक्स्ट लिखें… (जोड़ने के लिए ⌘↵)",
+      "duration": "अवधि:",
+      "searchPresets": "प्रीसेट खोजें…",
+      "activeText": "वीडियो पर टेक्स्ट ({{count}})",
+      "deleteOverlayAria": "टेक्स्ट ओवरले \"{{text}}\" हटाएँ",
+      "deleteOverlay": "टेक्स्ट ओवरले हटाएँ",
+      "preview": "प्रीव्यू",
+      "livePreview": "लाइव प्रीव्यू",
+      "editing": "एडिट हो रहा है: {{text}}",
+      "contentAria": "ओवरले टेक्स्ट",
+      "contentPlaceholder": "ओवरले टेक्स्ट",
+      "fontSize": "फ़ॉन्ट साइज़",
+      "textColor": "टेक्स्ट का रंग",
+      "style": "स्टाइल",
+      "animateIn": "आने का एनिमेशन",
+      "animateOut": "जाने का एनिमेशन",
+      "font": "फ़ॉन्ट",
+      "start": "शुरुआत",
+      "startAria": "शुरुआत का समय सेकंड में",
+      "end": "अंत",
+      "endAria": "अंत का समय सेकंड में",
+      "uploadFont": "फ़ॉन्ट अपलोड करें",
+      "uploadFontAria": "कस्टम फ़ॉन्ट फ़ाइल अपलोड करें"
+    },
+    "textStyle": {
+      "none": "कोई नहीं",
+      "neon": "नियॉन",
+      "minimal": "मिनिमल",
+      "bold-kinetic": "बोल्ड काइनेटिक",
+      "outline": "आउटलाइन",
+      "shadow": "शैडो"
+    },
+    "anim": {
+      "none": "कोई नहीं",
+      "fade": "फ़ेड",
+      "slide-up": "ऊपर स्लाइड",
+      "slide-down": "नीचे स्लाइड",
+      "slide-left": "बाएँ स्लाइड",
+      "slide-right": "दाएँ स्लाइड",
+      "scale": "स्केल",
+      "bounce": "बाउंस"
+    },
+    "presetGroup": {
+      "viralHooks": "वायरल हुक",
+      "textPresets": "टेक्स्ट प्रीसेट",
+      "premiumCaptions": "प्रीमियम कैप्शन",
+      "reactionCallouts": "रिएक्शन / कॉलआउट",
+      "trending": "ट्रेंडिंग",
+      "endScreens": "एंड स्क्रीन",
+      "chapters": "चैप्टर"
+    },
+    "filters": {
+      "strengthAria": "फ़िल्टर की तीव्रता: {{value}} प्रतिशत",
+      "before": "⏪ पहले",
+      "after": "⏩ बाद में",
+      "split": "🌓 स्प्लिट",
+      "pinned": "पिन किए गए",
+      "pin": "{{name}} फ़िल्टर पिन करें",
+      "unpin": "{{name}} फ़िल्टर अनपिन करें"
+    },
+    "motion": {
+      "searchTemplates": "टेम्पलेट खोजें…",
+      "durationAria": "मोशन ग्राफ़िक की अवधि सेकंड में",
+      "recent": "हाल के"
+    },
+    "layers": {
+      "addShape": "शेप जोड़ें",
+      "addImage": "इमेज / लोगो जोड़ें",
+      "imageUrlPlaceholder": "इमेज URL पेस्ट करें…",
+      "imageUrl": "इमेज URL",
+      "addSvg": "SVG जोड़ें",
+      "svgUrlPlaceholder": "SVG URL या data URI…",
+      "svgUrl": "SVG URL",
+      "uploadSvg": "SVG फ़ाइल अपलोड करें",
+      "gradients": "ग्रेडिएंट ओवरले",
+      "allLayers": "सभी लेयर ({{count}})",
+      "hoverHint": "कंट्रोल देखने के लिए होवर करें",
+      "deleteTextAria": "टेक्स्ट लेयर \"{{text}}\" हटाएँ",
+      "deleteText": "टेक्स्ट लेयर हटाएँ",
+      "opacity": "अपारदर्शिता",
+      "opacityAria": "लेयर की अपारदर्शिता",
+      "deleteShape": "{{shape}} शेप हटाएँ",
+      "deleteImage": "इमेज लेयर हटाएँ",
+      "customSvg": "कस्टम SVG",
+      "deleteSvg": "SVG लेयर हटाएँ",
+      "gradientName": "{{region}} ग्रेडिएंट",
+      "deleteGradient": "ग्रेडिएंट लेयर हटाएँ",
+      "empty": "अभी कोई लेयर नहीं",
+      "emptyHint": "ऊपर से शेप, इमेज या SVG जोड़ें। टेक्स्ट ओवरले भी यहीं दिखते हैं।",
+      "addTextLayer": "+ टेक्स्ट लेयर जोड़ें"
+    },
+    "shape": {
+      "rect": "आयत",
+      "circle": "गोला",
+      "line": "लाइन"
+    },
+    "region": {
+      "full": "पूरा",
+      "lower-third": "लोअर थर्ड",
+      "top-bar": "ऊपरी बार",
+      "top-half": "ऊपरी आधा",
+      "bottom-half": "निचला आधा"
+    },
+    "gradient": {
+      "lowerThird": "लोअर थर्ड फ़ेड",
+      "fullDark": "पूरा गहरा करें",
+      "topBar": "ऊपरी बार",
+      "warmTint": "गर्म टिंट",
+      "coolTint": "ठंडा टिंट",
+      "bottomHalf": "निचले आधे हिस्से में फ़ेड",
+      "topHalf": "ऊपरी आधे हिस्से में फ़ेड",
+      "vignetteSoft": "हल्का विनेट"
+    },
+    "pack": {
+      "hookCta": {
+        "name": "हुक + CTA",
+        "desc": "प्लेहेड पर वायरल हुक, एंड-स्क्रीन पर CTA"
+      },
+      "lowerThirdSubscribe": {
+        "name": "लोअर थर्ड + सब्सक्राइब",
+        "desc": "नाम बार + सब्सक्राइब बैज"
+      },
+      "fullCtaBar": {
+        "name": "CTA + लोअर थर्ड फ़ेड",
+        "desc": "लाइक और सब्सक्राइब + ग्रेडिएंट बार"
+      },
+      "introOutro": {
+        "name": "इंट्रो + आउट्रो",
+        "desc": "प्लेहेड पर INTRO, आख़िर में \"फिर मिलेंगे\""
+      },
+      "trendingSave": {
+        "name": "ट्रेंडिंग + इसे सेव करें",
+        "desc": "अलग राय + बाद के लिए सेव करें"
+      }
+    },
+    "packs": {
+      "oneClick": "वन-क्लिक पैक",
+      "styleBundles": "स्टाइल बंडल",
+      "platform": "हर प्लेटफ़ॉर्म के लिए बना",
+      "saveMyStyle": "मेरा स्टाइल सेव करें",
+      "styleNamePlaceholder": "स्टाइल का नाम…",
+      "styleName": "कस्टम स्टाइल का नाम",
+      "saveStyle": "कस्टम स्टाइल सेव करें",
+      "goTo": "यहाँ जाएँ"
+    },
+    "nav": {
+      "shortClips": "छोटे क्लिप",
+      "assets": "म्यूज़िक और B-roll",
+      "timeline": "टाइमलाइन",
+      "effects": "इफ़ेक्ट",
+      "color": "रंग",
+      "aiEdit": "ट्रांसक्राइब और AI",
+      "export": "एक्सपोर्ट"
+    },
+    "insights": {
+      "comingSoon": "इनसाइट्स जल्द आ रहे हैं",
+      "comingSoonHint": "आपके वीडियो का विश्लेषण हो जाने के बाद रिटेंशन, हुक की ताकत और रफ़्तार के आँकड़े यहाँ दिखेंगे।",
+      "transcript": "ट्रांसक्रिप्ट"
+    }
   }
 }

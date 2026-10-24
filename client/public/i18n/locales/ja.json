@@ -846,11 +846,11 @@
     "title": "実績",
     "subtitle": "マイルストーンと進捗を確認できます。",
     "refreshRegistry": "更新",
-    "statTierLabel": "進化階層",
+    "statTierLabel": "レベル",
     "statTierSub": "次のレベルまで {{pct}}%",
-    "statMilestonesLabel": "復号化されたマイルストーン",
+    "statMilestonesLabel": "解除したマイルストーン",
     "statMilestonesSub": "これまでに達成",
-    "statStreakLabel": "コヒーレンス・ストリーク",
+    "statStreakLabel": "連続記録",
     "statStreakSub": "最高: {{peak}}",
     "statVolumeLabel": "作成したコンテンツ",
     "statVolumeSub": "作成した総数",
@@ -861,14 +861,14 @@
     "detailPayloads": "コンテンツ",
     "detailScripts": "台本",
     "recentBreakthroughs": "最近の進歩",
-    "decryptedOn": "復号化されました {{date}}",
+    "decryptedOn": "{{date}}に解除",
     "ascensionVerified": "達成済み",
     "nodeMatrix": "すべてのマイルストーン",
-    "decrypted": "暗号化された",
+    "decrypted": "解除済み",
     "logicGated": "ロック中",
     "milestones": {
       "first_video": {
-        "name": "ジェネシス・レンディション",
+        "name": "初めての動画",
         "description": "最初の動画を作りましょう。"
       },
       "first_content": {
@@ -900,11 +900,11 @@
         "description": "動画を50本完成させましょう。"
       },
       "streak_7": {
-        "name": "コヒーレンス 7",
+        "name": "7日連続",
         "description": "7日連続でアクティブに活動しましょう。"
       },
       "streak_30": {
-        "name": "コヒーレンス 30",
+        "name": "30日連続",
         "description": "30日連続でアクティブに活動しましょう。"
       },
       "streak_100": {
@@ -925,7 +925,7 @@
       },
       "early_adopter": {
         "name": "アーリーアダプター",
-        "description": "創成期に統合されました。"
+        "description": "早い段階でClickに参加しました。"
       },
       "power_user": {
         "name": "パワーユーザー",
@@ -993,7 +993,7 @@
     "authorize": "承認する",
     "dissent": "反対する",
     "historyTitle": "承認履歴",
-    "historySubtitle": "コンセンサス決定とノード承認の不変の記録。",
+    "historySubtitle": "過去の承認と却下の記録です。",
     "protocolLogsAnalyzed": "リクエスト {{count}} 件",
     "emptyTitle": "まだ何もありません",
     "emptyState": "承認リクエストはまだありません。",
@@ -1126,7 +1126,7 @@
     "purgeForgeBuffer": "パージフォージバッファ",
     "neuralHeuristics": "提案",
     "neuralHeuristicsDesc": "コンテンツを改善する方法。",
-    "decryptingHeuristics": "ヒューリスティックを解読中...",
+    "decryptingHeuristics": "分析中…",
     "predictiveTelemetry": "パフォーマンス予測",
     "predictiveTelemetryDesc": "コンテンツのパフォーマンス予測です。",
     "scanningTrajectories": "軌跡をスキャン中..."
@@ -1288,7 +1288,7 @@
     "refreshData": "会員データを更新する",
     "activeNodeUplink": "現在のプラン",
     "protocolId": "プランID:",
-    "rootGenesis": "根の起源",
+    "rootGenesis": "スターター",
     "genericAccess": "汎用アクセス",
     "lifecycleStatus": "ライフサイクルステータス:",
     "uninitialized": "初期化されていない",
@@ -1307,7 +1307,7 @@
     "coreMatrixUplink": "基本機能",
     "primeCommandUplink": "すべての機能を利用可能",
     "activeProtocol": "現在のプラン",
-    "ascending": "上昇...",
+    "ascending": "アップグレード中…",
     "genesisUplink": "始める",
     "escalateProtocol": "アップグレード"
   },
@@ -1825,7 +1825,7 @@
     "heroIntro": "SNSアカウントをClickに連携しましょう。連携すると使える機能:",
     "heroFeature1": "自動投稿",
     "heroFeature2": "エンゲージメントの追跡",
-    "heroFeature3": "合成視聴者分析",
+    "heroFeature3": "オーディエンスインサイト",
     "heroAnd": "そして",
     "statNeuralEncryption": "トークンの暗号化",
     "statUplinkLatency": "接続速度",
@@ -2375,7 +2375,7 @@
     "collaborationIntro1": "各チームには",
     "collaborationHighlight1": "共有アセット",
     "collaborationIntro2": "、",
-    "collaborationHighlight2": "非同期フィードバックループ",
+    "collaborationHighlight2": "コメントとフィードバック",
     "collaborationIntro3": "、そして統一された",
     "collaborationHighlight3": "生産キュー",
     "collaborationIntro4": "が用意されています。全員の作業を一か所で管理できます。",
@@ -3113,7 +3113,7 @@
     "neuralLine1": "コンテンツ",
     "neuralLine2": "中心",
     "autonomousPrefix": "自動モード:",
-    "dominating": "支配する",
+    "dominating": "実行中",
     "autonomousMid": "の",
     "autonomousSuffix": "キュー",
     "neuralActive": "自動モード オン",
@@ -3998,7 +3998,7 @@
     "latticeHealth": "ネットワークの状態",
     "aggregatedRevenue": "総収益",
     "victoryVectors": "今日の成果",
-    "encirclementTitle": "世界的包囲網",
+    "encirclementTitle": "成長の概要",
     "encirclementSubtitle": "Click全体で共有されたインサイト",
     "godModeSaturationActive": "ライブ",
     "decentralizedIntelligenceLedger": "アクティビティログ",
@@ -4018,7 +4018,7 @@
     "tabStability": "システムの健全性",
     "versionLabel": "Click",
     "overlordTerminalSynced": "接続済み",
-    "mainTitle": "「オーバーロードターミナル」をクリックします",
+    "mainTitle": "Clickコントロールセンター",
     "mainSubtitle": "収益化と自動化の設定です。"
   },
   "clickDebugPanel": {
@@ -5408,7 +5408,7 @@
     "presetVibrantPopName": "鮮やかなポップ",
     "presetVibrantPopDesc": "大胆で飽和した色",
     "presetSoftDreamyName": "ソフトドリーミー",
-    "presetSoftDreamyDesc": "優美で優しい表情",
+    "presetSoftDreamyDesc": "やわらかく穏やかな雰囲気",
     "presetElectricVibeName": "電気",
     "presetElectricVibeDesc": "高エネルギーの活気に満ちた外観",
     "presetRetroVintageName": "レトロヴィンテージ",
@@ -6232,7 +6232,20 @@
     "appliedStyleProfile": "{{name}} スタイルを適用しました",
     "packApplied": "{{name}} を適用しました: {{grade}} カラーグレードと対応する字幕スタイル",
     "packAppliedGradeOnly": "{{name}} を適用しました: {{grade}} カラーグレード。字幕スタイルを使うには字幕をオンにしてください。",
-    "packApplyFailed": "{{name}} を適用できませんでした: カラーグレードが見つかりません"
+    "packApplyFailed": "{{name}} を適用できませんでした: カラーグレードが見つかりません",
+    "beatRecut": "✦ {{count}}本のビートクリップに再カットしました（動画クリップ{{replaced}}本を置き換え）",
+    "beatCut": "✦ ビートに合わせて{{count}}本のクリップにカットしました",
+    "autoViralAnalysing": "✦ 自動バズ編集 — ビートと字幕を分析中…",
+    "autoViralNothingFound": "自動バズ編集には音楽のビートか使える文字起こしが必要ですが、どちらも見つかりませんでした。",
+    "autoViralNeedsTranscript": "自動バズ編集には、字幕用の文字起こしかカット用の音楽が必要です。先に文字起こしをしてから再試行してください。",
+    "autoViralCuts": "ビートクリップ{{clips}}本 · トランジション{{transitions}}件",
+    "autoViralCaptions": "カラオケ字幕{{count}}件",
+    "autoViralDone": "✦ 自動バズ編集：{{summary}}",
+    "autoViralFailed": "自動バズ編集に失敗しました — タイムラインは変更されていません。",
+    "resizeTimelineAria": "タイムラインのサイズを変更（上下にドラッグ）",
+    "resizeTimelineTitle": "ドラッグしてタイムラインのサイズを変更",
+    "timelineHeading": "タイムライン",
+    "cmdCategoryEditor": "エディター"
   },
   "nicheStrategyPanel": {
     "tabHooks": "フック",
@@ -6310,13 +6323,13 @@
     "featuresTitle": "エリート機能",
     "featuresDescription": "マルチプラットフォームのインテリジェンスと予測的な成長を実現します。",
     "completeTitle": "設定が完了しました",
-    "completeDescription": "これで、社会情勢を支配する準備が整いました。",
+    "completeDescription": "制作を始める準備ができました。",
     "eliteAccessGranted": "エリートアクセスの付与",
     "closeOnboarding": "オンボーディングを終了する",
     "back": "戻る",
-    "startDominating": "支配を開始する",
+    "startDominating": "はじめる",
     "nextIntelligence": "次のインテリジェンス",
-    "clickGenesis": "「ジェネシス」をクリックします",
+    "clickGenesis": "Clickへようこそ",
     "welcomeBodyBefore": "ただ書くだけではない唯一のプラットフォーム、それは",
     "welcomeBodyOperates": "動作します",
     "welcomeBodyAfter": "。ブランドを設定しましょう。",
@@ -6489,7 +6502,7 @@
     "syncing": "更新中...",
     "restart": "再起動",
     "dismissInstallPrompt": "インストールプロンプトを閉じる",
-    "installDescription": "より高速でオフライン対応のワークスペースに移行します。エリートコンテンツ運用向けに構築されています。",
+    "installDescription": "Clickをインストールすると、より速く、オフラインでも使えます。",
     "initializeInstallation": "インストールの初期化",
     "tagInstant": "インスタント",
     "tagEdge": "角",
@@ -6779,7 +6792,7 @@
     "navAeoMetadata": "AEOメタデータ",
     "navUgcRaw": "UGC生",
     "navZeroPartyData": "ゼロパーティデータ",
-    "headerPill": "フェーズ 8 — 市場の支配",
+    "headerPill": "フェーズ8 — 成長ツール",
     "headerTitle": "グロースツール",
     "headerSubtitle": "CLICK を可能にする 5 つのシステム"
   },
@@ -6850,14 +6863,14 @@
     "pcv": "PCV",
     "steerSwarmToThisOffer": "このオファーに集中",
     "s2sNetworkDown": "S2S ネットワークのダウン",
-    "globalEncirclementTitle": "世界的包囲網",
+    "globalEncirclementTitle": "成長の概要",
     "globalEncirclementSubtitle": "アカウント横断のインサイト",
     "godModeActiveBadge": "有効",
     "networkHealth": "ネットワークの健全性",
     "aggregatedRevenue": "総収益",
     "victoryVectors": "人気コンテンツ",
     "logInitializingTunnel": "[システム] S2S 暗号化トンネルを初期化しています...",
-    "logEncirclementActive": "[システム] 包囲活動中。 {{count}} の兄弟インスタンスが接続されています。",
+    "logEncirclementActive": "{{count}}個のワークスペースが接続中。",
     "logVectorReceived": "フック「{{hook}}」が {{cluster}} でトップです。",
     "logLocalSynthesis": "ローカルの結果を更新しました：勢いの重み付け +{{percent}}%。",
     "productionStabilityTitle": "生産の安定性",
@@ -6878,7 +6891,7 @@
     "navGlobalS2s": "グローバルS2S",
     "navSystemHealth": "システムの健全性",
     "headerPill": "高度なツール",
-    "headerTitle": "オーバーロードターミナル",
+    "headerTitle": "コントロールセンター",
     "headerSubtitle": "市場の拡大"
   },
   "quickActions": {
@@ -7098,7 +7111,31 @@
   "realTimeVideoPreview": {
     "overlayAlt": "かぶせる",
     "metadataError": "ビデオメタデータのロードに失敗しました。 CORS または URL の有効性を確認します。",
-    "bootingRenderEngine": "プレビューを読み込み中..."
+    "bootingRenderEngine": "プレビューを読み込み中...",
+    "videoFailed": "動画を読み込めませんでした",
+    "retry": "再試行",
+    "dragToCompare": "ドラッグしてビフォー／アフターを比較",
+    "before": "適用前",
+    "after": "適用後",
+    "rawUnfiltered": "元映像／フィルターなし",
+    "graded": "カラー補正済み",
+    "editCaptionInline": "字幕テキストをその場で編集",
+    "captionPlaceholder": "字幕テキストを入力...",
+    "opsReverse": "逆再生 {{count}}×",
+    "opsJCut": "Jカット {{count}}×",
+    "opsLCut": "Lカット {{count}}×",
+    "exportOnlyTitle": "これらの変更は書き出し時にのみ適用されます。プレビューではクリップを元の向きで、通常の音声同期のまま再生します。",
+    "exportOnly": "書き出し時のみ",
+    "imageLayer": "画像レイヤー",
+    "imageFailed": "画像を読み込めませんでした",
+    "svgLayer": "SVGレイヤー",
+    "preview": "プレビュー",
+    "latency": "遅延",
+    "pause": "一時停止",
+    "play": "再生",
+    "toggleBeforeAfter": "ビフォー／アフターを切り替え",
+    "beforeAfter": "ビフォー／アフター",
+    "aiStylingActive": "AIスタイリング適用中"
   },
   "realtimeCollaboration": {
     "failedToJoin": "コラボレーションセッションに参加できませんでした",
@@ -7172,7 +7209,137 @@
   },
   "resizableTimeline": {
     "restore": "タイムラインのサイズを復元する",
-    "maximize": "タイムラインを最大化する"
+    "maximize": "タイムラインを最大化する",
+    "snapKind": {
+      "word": "単語",
+      "silence": "間",
+      "beat": "ビート",
+      "marker": "マーカー",
+      "edge": "端",
+      "playhead": "再生ヘッド",
+      "boundary": "境界"
+    },
+    "realignedCountOne": "字幕1件を音声にスナップしました",
+    "realignedCount": "字幕{{count}}件を音声にスナップしました",
+    "alreadyAligned": "字幕はすでに揃っています",
+    "markerNamePrompt": "マーカー名（任意）：",
+    "unsoloTrack": "トラックのソロを解除",
+    "soloTrack": "トラックをソロ",
+    "soloShort": "S",
+    "unmuteTrack": "トラックのミュートを解除",
+    "muteTrack": "トラックをミュート",
+    "unlockTrack": "トラックのロックを解除",
+    "lockTrack": "トラックをロック",
+    "prevFrameTitle": "前のフレーム（←）",
+    "prevFrame": "前のフレーム",
+    "pauseTitle": "一時停止（Space）",
+    "playTitle": "再生（Space）",
+    "pause": "一時停止",
+    "play": "再生",
+    "nextFrameTitle": "次のフレーム（→）",
+    "nextFrame": "次のフレーム",
+    "goToTimeLabel": "時間へ移動（時間を入力してEnter）",
+    "goToTimeTitle": "時間（例：1:05.5）を入力してEnterでジャンプ",
+    "splitTitle": "再生ヘッド位置のクリップを分割（S）",
+    "split": "分割",
+    "deleteTitle": "選択範囲を削除（Delete）",
+    "delete": "削除",
+    "rippleOnTitle": "リップルオン：削除するとすべてのトラックで隙間を詰めます",
+    "rippleOffTitle": "リップルオフ：削除すると隙間が残ります",
+    "ripple": "リップル",
+    "ungroupTitle": "選択したクリップのグループを解除",
+    "ungroup": "グループ解除",
+    "groupTitle": "選択したクリップをグループ化して、一緒に移動・削除できるようにします",
+    "group": "グループ化",
+    "setInTitle": "再生ヘッドにイン点を設定（I）",
+    "in": "イン",
+    "setOutTitle": "再生ヘッドにアウト点を設定（O）",
+    "out": "アウト",
+    "clearInOutTitle": "イン／アウトをクリア（Alt+X）",
+    "clearInOutLabel": "イン点とアウト点をクリア",
+    "snapTitle": "クリップを端・再生ヘッド・マーカーにスナップ",
+    "snap": "スナップ",
+    "speechTitle": "クリップと字幕を話した言葉にスナップ",
+    "speechDisabledTitle": "音声スナップを使うには字幕を生成してください",
+    "speech": "音声",
+    "realignTitle": "すべての字幕を話した言葉にタイミングを合わせ直します",
+    "realign": "字幕を再調整",
+    "dragToPan": "ドラッグしてスクロール",
+    "showTracks": "トラックを表示",
+    "allTracks": "すべてのトラック",
+    "track": {
+      "captions": "字幕",
+      "mainVideo": "メイン動画",
+      "broll": "Bロール",
+      "audio": "オーディオ",
+      "effects": "エフェクト",
+      "captionsSub": "画面上のテキスト",
+      "mainVideoSub": "あなたの映像",
+      "brollSub": "カットアウェイと画像",
+      "audioSub": "音楽、声、効果音"
+    },
+    "viewGroup": "タイムライン表示",
+    "view": {
+      "clips": "クリップ",
+      "clipsTitle": "クリップのみ",
+      "hybrid": "クリップ + 台本",
+      "hybridTitle": "クリップの上に台本を表示",
+      "script": "台本",
+      "scriptTitle": "テキストで編集"
+    },
+    "zoomOut": "ズームアウト",
+    "zoomIn": "ズームイン",
+    "hideInsights": "AIインサイトレーンを隠す",
+    "showInsights": "AIインサイトレーンを表示",
+    "insights": "インサイト",
+    "inOutSpan": "イン／アウト：{{time}}",
+    "inPointTitle": "イン点：{{time}}（ドラッグで調整）",
+    "outPointTitle": "アウト点：{{time}}（ドラッグで調整）",
+    "beatLabel": "ビート（{{time}}秒）",
+    "markerTitle": "{{name}}：{{time}}（ドラッグで移動、クリックでジャンプ、右クリックで編集）",
+    "marker": "マーカー",
+    "markerTag": "{{name}}（{{time}}）",
+    "resolve": "解決",
+    "close": "閉じる",
+    "captionsCountOne": "字幕1件",
+    "captionsCount": "字幕{{count}}件",
+    "clipsCountOne": "1クリップ",
+    "clipsCount": "{{count}}クリップ",
+    "itemsCountOne": "1項目",
+    "itemsCount": "{{count}}項目",
+    "audienceRetention": "視聴者維持率",
+    "retentionTitle": "維持率：{{value}}%",
+    "audioWaveform": "音声波形",
+    "audioWaveformNoAudio": "音声波形（音声なし）",
+    "trimStart": "始点をトリム",
+    "trimEnd": "終点をトリム",
+    "jCut": "Jカット",
+    "lCut": "Lカット",
+    "trimmedStart": "始点をトリムしました",
+    "trimmedEnd": "終点をトリムしました",
+    "freeze": "フリーズ",
+    "reverseSpeed": "逆再生 {{speed}}×",
+    "keyframes": "キーフレーム",
+    "playheadTitle": "再生ヘッド：{{time}}（ドラッグでスクラブ）",
+    "scrubTitle": "スクラブ：{{time}}",
+    "dragPlayhead": "再生ヘッドをドラッグ",
+    "origin": "元の位置：{{time}}",
+    "moveDelta": "移動量：{{delta}}",
+    "trackNumber": "トラック{{number}}",
+    "clipsMoving": "{{count}}クリップを移動中",
+    "trimStartAt": "始点をトリム：{{time}}",
+    "trimEndAt": "終点をトリム：{{time}}",
+    "workAreaIn": "作業範囲の開始：{{time}}",
+    "workAreaOut": "作業範囲の終了：{{time}}",
+    "span": "範囲：{{time}}",
+    "menu": {
+      "splitAtPlayhead": "再生ヘッドで分割",
+      "duplicate": "クリップを複製",
+      "ungroup": "グループ解除",
+      "group": "クリップをグループ化",
+      "rippleDelete": "リップル削除"
+    },
+    "sceneChange": "シーン切り替え"
   },
   "revenueOracle": {
     "synchronizing": "収益データを読み込み中...",
@@ -7682,7 +7849,7 @@
     "neuralScheduling": "スマート予約",
     "neuralSchedulingDesc": "オーディエンスが最もアクティブな時間に投稿を予約します。",
     "evergreenSynthesis": "エバーグリーンの再利用",
-    "evergreenSynthesisDesc": "自己修復コンテンツのリサイクルを有効にして、無限のリポジトリ ROI を実現します。",
+    "evergreenSynthesisDesc": "成果の高いコンテンツを自動で再活用します。",
     "initiateSequence": "シーケンスの開始",
     "neuralProcessing": "処理中",
     "ecosystemCalibration": "設定中...",
@@ -7691,7 +7858,7 @@
     "synchronization": "パイプライン",
     "verified": "確認済み",
     "nodesPrimedPrefix": "投稿は",
-    "primed": "下塗りされた",
+    "primed": "準備完了",
     "nodesPrimedSuffix": "状態です。いつでも公開できます。",
     "estimatedYield": "推定収量",
     "neuralIntegrity": "品質チェック",
@@ -8517,5 +8684,1369 @@
     "shift1d": "+1日",
     "shift1w": "+1週間",
     "moveWarning": "投稿を移動すると、同じプラットフォームで同じ時刻に2件の投稿が重なることがあります。公開中または公開済みの投稿は移動されません。"
+  },
+  "editorSidebar": {
+    "cat": {
+      "aiEdit": {
+        "label": "AI自動編集",
+        "desc": "ワンクリックでAI編集"
+      },
+      "dub": {
+        "label": "吹き替え",
+        "desc": "あなたの声を10言語に翻訳"
+      },
+      "edit": {
+        "label": "編集",
+        "desc": "基本の編集ツール"
+      },
+      "assets": {
+        "label": "マイ素材",
+        "desc": "音楽・画像・Bロールクリップを追加"
+      },
+      "effects": {
+        "label": "エフェクト",
+        "desc": "フィルターと補正"
+      },
+      "color": {
+        "label": "カラー",
+        "desc": "プロ仕様のカラーグレーディング"
+      },
+      "chromakey": {
+        "label": "クロマキー",
+        "desc": "グリーンバック＆合成"
+      },
+      "timeline": {
+        "label": "タイムライン",
+        "desc": "高度な編集"
+      },
+      "export": {
+        "label": "書き出し",
+        "desc": "共有と書き出し"
+      },
+      "aiAssist": {
+        "label": "AIアシスト",
+        "desc": "スマートカット · 提案の確認 · 適用と取り消し"
+      },
+      "monetize": {
+        "label": "収益化",
+        "desc": "商品リンク · QR · AI収益化プラン"
+      },
+      "stockLibrary": {
+        "label": "ストックライブラリ",
+        "desc": "Bロール · 音楽 · GIF · ステッカー · トランジション · 効果音"
+      },
+      "textMotion": {
+        "label": "テキスト＆モーション",
+        "desc": "字幕 · アニメーション · モーション · フォント"
+      }
+    },
+    "group": {
+      "edit": {
+        "label": "編集",
+        "desc": "カット、カラー、合成 — 編集の中心となる機能。"
+      },
+      "media": {
+        "label": "メディア",
+        "desc": "素材、ストック、字幕、テキスト。"
+      },
+      "ai": {
+        "label": "AI",
+        "desc": "ワンクリックAI自動編集 + 多言語吹き替え。"
+      },
+      "export": {
+        "label": "書き出し",
+        "desc": "レンダリングと共有。"
+      }
+    },
+    "badge": {
+      "new": "NEW",
+      "agency": "Agency",
+      "pro": "PRO",
+      "beta": "BETA"
+    },
+    "title": "エディターツール",
+    "ready": "準備完了",
+    "expand": "サイドバーを展開",
+    "collapse": "サイドバーを折りたたむ",
+    "searchPlaceholder": "ツールを検索（⌘F）",
+    "clearSearch": "検索をクリア",
+    "all": "すべて",
+    "recent": "最近使用",
+    "noTools": "ツールが見つかりません",
+    "pinned": "ピン留め済み",
+    "allTools": "すべてのツール",
+    "unpin": "ピン留めを解除",
+    "pinToTop": "上部にピン留め",
+    "device": {
+      "desktop": "デスクトップ",
+      "tablet": "タブレット",
+      "mobile": "モバイル"
+    },
+    "shortcuts": "キーボードショートカット",
+    "closeShortcuts": "ショートカットを閉じる",
+    "searchTools": "ツールを検索"
+  },
+  "editorHUD": {
+    "section": {
+      "edit": "編集",
+      "color": "カラー",
+      "ai": "AIツール",
+      "effects": "エフェクト",
+      "timeline": "タイムライン",
+      "export": "書き出し",
+      "styleVault": "Style Vault",
+      "aiEdit": "AI編集",
+      "assets": "素材",
+      "growth": "アナリティクス",
+      "chromakey": "クロマキー",
+      "visualFx": "ビジュアルFX",
+      "aiAnalysis": "AI分析",
+      "collaborate": "共同作業",
+      "scripts": "台本",
+      "scheduling": "予約投稿",
+      "shortClips": "ショートクリップ",
+      "predict": "予測",
+      "distribution": "配信",
+      "spatial": "空間",
+      "agent": "AIエージェント",
+      "dub": "吹き替え"
+    },
+    "layout": {
+      "balanced": "バランス",
+      "balancedDesc": "プレビューとタイムラインを均等に分割",
+      "cinematic": "シネマ",
+      "cinematicDesc": "プレビューを大きく、再生に集中",
+      "timelineFocus": "タイムライン重視",
+      "timelineFocusDesc": "タイムラインの細かい編集に広いスペース"
+    },
+    "projectName": "プロジェクト名",
+    "savingEllipsis": "保存中…",
+    "saveFailed": "保存に失敗しました",
+    "allChangesSaved": "すべての変更を保存しました",
+    "saving": "保存中",
+    "saved": "保存済み",
+    "undoTitle": "元に戻す（⌘Z）",
+    "redoTitle": "やり直し（⌘Y）",
+    "undo": "元に戻す",
+    "redo": "やり直し",
+    "command": "検索またはコマンドを実行",
+    "commandTitle": "検索またはコマンドを実行（⌘K）",
+    "workspaceLayoutTitle": "ワークスペースのレイアウト（L）",
+    "workspaceLayout": "ワークスペースのレイアウト",
+    "gpu": "GPU：{{backend}}",
+    "agentRunning": "AIエージェント実行中",
+    "makeViralTitle": "ワンクリックのバズレシピを実行 — フック、カット、Bロール、ビート同期、CTA",
+    "working": "処理中…",
+    "makeViral": "バズらせる",
+    "focusMode": "集中モード",
+    "moreActions": "その他の操作",
+    "more": "その他",
+    "keyboardShortcuts": "キーボードショートカット",
+    "exportTitle": "書き出して公開",
+    "export": "書き出し"
+  },
+  "quickActionsBar": {
+    "variantsNeedBase": "バリエーションを生成するには、先にキャプションかフックを追加してください。",
+    "noVariants": "バリエーションが返されませんでした — もっと長いフックで試してください。",
+    "variantsGenerated": "バリエーションを{{count}}件生成しました — A/B選択画面を開いてプレビューしてください。",
+    "variantsFailed": "バリエーションの生成に失敗しました：{{error}}",
+    "unknownError": "不明なエラー",
+    "brollNeedsClip": "Bロールを提案するには、先にクリップを読み込んでください。",
+    "noBrollGaps": "Bロールを入れる隙間はありません — すでに映像が十分に詰まっています。",
+    "brollSuggested": "Bロールの挿入を{{count}}件提案しました。タイムラインを開いて確認してください。",
+    "brollFailed": "Bロールの提案に失敗しました：{{error}}",
+    "trendsWarmingUp": "トレンドフィードを準備中です — 1分後にもう一度お試しください。",
+    "trendsLoaded": "今のトレンド：サウンド{{sounds}}件 · ハッシュタグ{{hashtags}}件。選択画面を開いています。",
+    "trendsFailed": "トレンドを読み込めませんでした：{{error}}",
+    "styleApplied": "あなたのスタイルを適用しました：{{items}}",
+    "styleAppliedGeneric": "学習したスタイルを適用しました。",
+    "styleNeedsClips": "Clickがスタイルを学習できるよう、まずクリップを3本公開してください。",
+    "styleTimedOut": "スタイルのリクエストがタイムアウトしました。もう一度お試しください。",
+    "styleLoadFailed": "スタイルを読み込めませんでした。もう一度お試しください。",
+    "viralEdit": "バズ編集",
+    "viralEditLong": "自動バズ編集 — ワンタップでフル編集",
+    "applyStyle": "スタイルを適用",
+    "split": "分割",
+    "splitLong": "再生ヘッドで分割",
+    "captions": "字幕",
+    "grade": "カラー",
+    "effects": "エフェクト",
+    "aiTools": "AIツール",
+    "clean": "クリーン",
+    "cleanLong": "スマートクリーンアップ",
+    "variants": "バリエーション",
+    "variantsLong": "A/Bバリエーション",
+    "broll": "Bロール",
+    "brollLong": "Bロールを提案",
+    "trends": "トレンド",
+    "trendsLong": "今のトレンド",
+    "learnedFrom": "Clickはあなたの公開済みクリップ{{count}}本から学習しました",
+    "ariaLoading": "{{label}} — 読み込み中",
+    "ariaShortcut": "{{label}}（ショートカット {{key}}）"
+  },
+  "aiAutoEdit": {
+    "preset": {
+      "mrbeastEnergy": "MrBeastエナジー",
+      "mrbeastEnergyTagline": "大きな賭け · パターンブレイク",
+      "hormoziBold": "Hormozi Bold",
+      "hormoziBoldTagline": "強い数字 · 逆張りの視点",
+      "cinematicDoc": "シネマティックドキュメンタリー",
+      "cinematicDocTagline": "スローバーン · ささやくようなカット",
+      "educationalClean": "すっきり解説",
+      "educationalCleanTagline": "問いかけ · 事実を提示",
+      "newsAuthority": "ニュースの権威",
+      "newsAuthorityTagline": "見出し · 速報 · 専門家",
+      "casualVlog": "カジュアルVlog",
+      "casualVlogTagline": "日常 · 会話調",
+      "mysteryHook": "ミステリーフック",
+      "mysteryHookTagline": "好奇心ループ · ゆっくり明かす",
+      "gymGrit": "ジム根性",
+      "gymGritTagline": "高強度 · 愛のムチ",
+      "adhdOverload": "ADHDオーバーロード",
+      "adhdOverloadTagline": "カオス · ポップバースト · 過剰刺激",
+      "podcastGoldmine": "ポッドキャストの宝庫",
+      "podcastGoldmineTagline": "権威 · チャプター · 温かいドキュメンタリー",
+      "retentionMachine": "維持率マシン",
+      "retentionMachineTagline": "オープンループ · Bロール · チャプター"
+    },
+    "opt": {
+      "auto": "自動",
+      "vivid": "ビビッド",
+      "cinematic": "シネマティック",
+      "natural": "ナチュラル",
+      "cool": "クール",
+      "warm": "ウォーム",
+      "vintage": "ビンテージ",
+      "bw": "モノクロ",
+      "upbeatPop": "アップビートポップ",
+      "chill": "チル",
+      "darkAmbient": "ダークアンビエント",
+      "synthwave": "シンセウェイブ",
+      "phonk": "Phonk",
+      "lofi": "Lo-fi",
+      "question": "質問",
+      "stat": "数字",
+      "mystery": "ミステリー",
+      "story": "ストーリー",
+      "boldClaim": "大胆な主張",
+      "patternBreak": "パターンブレイク",
+      "fastCut": "ファストカット",
+      "crossfade": "クロスフェード",
+      "glitch": "グリッチ",
+      "whipPan": "ホイップパン",
+      "hardCut": "ハードカット",
+      "modern": "モダン",
+      "bold": "大胆",
+      "minimal": "ミニマル",
+      "neon": "ネオン",
+      "pill": "ピル",
+      "top": "上",
+      "middle": "中央",
+      "bottom": "下",
+      "lowerThird": "ローワーサード",
+      "energetic": "エネルギッシュ",
+      "calm": "穏やか",
+      "authoritative": "権威的",
+      "playful": "遊び心",
+      "serious": "真面目",
+      "urgency": "緊急性",
+      "value": "価値",
+      "curiosity": "好奇心",
+      "off": "オフ",
+      "sparse": "少なめ",
+      "balanced": "バランス",
+      "heavy": "多め",
+      "gentle": "ゆったり",
+      "medium": "普通",
+      "aggressive": "アグレッシブ",
+      "educational": "教育系",
+      "entertaining": "エンタメ",
+      "motivational": "モチベーション",
+      "promotional": "プロモーション"
+    },
+    "brief": {
+      "title": "マーケティングブリーフ",
+      "postingTimes": "おすすめの投稿時間",
+      "competitiveInsights": "競合インサイト"
+    },
+    "err": {
+      "videoNotFound": "レスポンスに動画データが見つかりません",
+      "loadFailed": "動画を読み込めませんでした。もう一度お試しください。",
+      "missingSource": "この動画の元ファイルがありません。再アップロードしてもう一度お試しください。",
+      "tooManyPresets": "1回の編集で組み合わせられるスタイルプリセットは3つまでです。",
+      "serviceError": "AIサービスでエラーが発生しました：{{error}}",
+      "serviceInternal": "AIサービスで内部エラーが発生しました。しばらくしてからお試しください。",
+      "sessionExpired": "セッションの有効期限が切れました。再度ログインしてお試しください。",
+      "rateLimited": "編集リクエストが多すぎます。少し待ってからもう一度お試しください。",
+      "rejected": "リクエストが拒否されました（{{status}}）。入力内容を確認して再試行してください。",
+      "timeout": "編集リクエストがタイムアウトしました。動画が大きすぎるか、サーバーの応答が遅い可能性があります。",
+      "network": "サーバーに接続できません。接続を確認してもう一度お試しください。",
+      "startFailed": "AI編集を開始できませんでした。もう一度お試しください。"
+    },
+    "badge": "AI自動編集",
+    "title": "AIルールを設定",
+    "untitled": "無題のプロジェクト",
+    "toggleTheme": "テーマを切り替え",
+    "analyze": "動画を分析",
+    "analyzing": "分析中...",
+    "backToVideos": "動画一覧に戻る",
+    "processingTitle": "動画を処理中",
+    "processingBody": "AIが動画を分析・カット・最適化しています...",
+    "initializing": "準備中",
+    "result": {
+      "title": "編集が完了しました",
+      "body": "エディターで開いて微調整するか、そのままダウンロードできます。",
+      "editsApplied": "適用した編集",
+      "openInEditor": "エディターで開く",
+      "downloadTitle": "編集した動画をダウンロード",
+      "download": "ダウンロード",
+      "viewClipsTitle": "生成されたクリップを見る",
+      "viewClips": "クリップを見る",
+      "dismissTitle": "この結果を閉じる",
+      "dismiss": "閉じる"
+    },
+    "diag": {
+      "title": "診断",
+      "complete": "分析完了",
+      "suggestedLength": "推奨の長さ"
+    },
+    "plan": {
+      "title": "編集プラン",
+      "subtitle": "右側の設定でAIが行う内容",
+      "opening": "冒頭",
+      "openingHook": "一番強い瞬間から始める",
+      "openingOriginal": "元の冒頭をそのまま使う",
+      "pacing": "テンポ",
+      "pacingGentle": "ゆったりしたカット",
+      "pacingFast": "速くタイトなカット",
+      "pacingBalanced": "バランスの取れたカット",
+      "deadAir": "無音部分",
+      "removed": "削除",
+      "kept": "残す",
+      "captions": "字幕",
+      "burnedIn": "焼き込み",
+      "off": "オフ",
+      "clips": "クリップ",
+      "under30s": "30秒未満",
+      "fullLength": "フルレングス",
+      "oneVideo": "編集済み動画1本",
+      "format": "フォーマット"
+    },
+    "director": {
+      "title": "AI Director",
+      "subtitle": "スタイルを3つまで選ぶか、各設定を細かく調整しましょう。",
+      "presetsOne": "{{count}}個のプリセット：{{names}}",
+      "presetsOther": "{{count}}個のプリセット：{{names}}"
+    },
+    "targetPlatform": "対象プラットフォーム",
+    "contentTone": "コンテンツのトーン",
+    "stylePreset": "スタイルプリセット",
+    "presetsSelected": "{{count}}/3 選択中 · もう一度クリックで解除",
+    "presetCap": "プリセットは3つまで — 入れ替えるには1つ外してください",
+    "presetSelectedTitle": "選択中 #{{n}} — クリックで解除",
+    "presetSelect": "スタイルを選択：{{name}}",
+    "presetSelectedAria": "選択したスタイル #{{n}}：{{name}}",
+    "aiTasks": "AIタスク",
+    "task": {
+      "removeSilence": "無音を削除",
+      "removeSilenceDesc": "無音部分や間を自動カット",
+      "optimizePacing": "テンポを最適化",
+      "optimizePacingDesc": "視聴維持のためのタイトなカット",
+      "enhanceAudio": "音声を補正",
+      "enhanceAudioDesc": "ノイズ除去 + 音量の均一化",
+      "generateClips": "ショートクリップを生成",
+      "generateClipsDesc": "バズりそうな瞬間を抽出",
+      "addCaptions": "字幕を焼き込む",
+      "addCaptionsDesc": "単語に同期した動的テキスト",
+      "enhanceColor": "カラー補正",
+      "enhanceColorDesc": "自動LUT + グレーディング"
+    },
+    "output": "出力",
+    "aspectRatio": "アスペクト比",
+    "clipsToGenerate": "生成するクリップ数",
+    "clipCountAria": "生成するクリップの数",
+    "targetLength": "目標の長さ",
+    "full": "フル",
+    "pacing": "テンポ",
+    "advanced": "詳細設定",
+    "advancedHint": "ムード、字幕、トランジション、音声、Bロール、CTA",
+    "sel": {
+      "colorGrade": "カラーグレード",
+      "musicGenre": "音楽ジャンル",
+      "hookStyle": "フックのスタイル",
+      "transitions": "トランジション",
+      "captionStyle": "字幕スタイル",
+      "subtitlePosition": "字幕の位置",
+      "voiceTone": "声のトーン",
+      "ctaStyle": "CTAスタイル",
+      "brollFrequency": "Bロールの頻度"
+    },
+    "speedRamping": "スピードランプ",
+    "speedRampingHint": "クリップの速度を緩急させて勢いを出します",
+    "toggleSpeedRamping": "スピードランプを切り替え",
+    "prioritizeHook": "フックを優先",
+    "prioritizeHookHint": "最初の3秒で視聴維持率を高めます",
+    "togglePrioritizeHook": "フック優先を切り替え",
+    "creativeDirection": "クリエイティブの方向性",
+    "creativeDirectionHint": "任意 · AIのデフォルトより優先",
+    "creativeDirectionPlaceholder": "例：映画のようにダークな雰囲気で、ジャンプカットなし、0:42の感情的な間を強調…",
+    "autoFit": "自動フィット",
+    "aiPlan": "AIプラン",
+    "preloadedStyle": "あなたのスタイルを読み込みました",
+    "planLine": {
+      "composeOne": "{{aspect}}のクリップを{{count}}本作成（目標 {{length}}）",
+      "composeOther": "{{aspect}}のクリップを{{count}}本作成（目標 {{length}}）",
+      "forPlatform": "{{platform}}向け",
+      "tone": "トーン：{{tone}}",
+      "acrossPresets": "{{presets}}で（{{count}}種類の切り口）",
+      "autoStyle": "{{auto}}スタイルで",
+      "autoDetected": "自動検出",
+      "grade": "カラーグレード：{{grade}}",
+      "hook": "フック：{{hook}}",
+      "pacing": "テンポ：{{pacing}}",
+      "speedRamping": "スピードランプ：オン",
+      "broll": "Bロール：{{broll}}"
+    },
+    "tasksOne": "{{count}}件のタスク",
+    "tasksOther": "{{count}}件のタスク",
+    "estimate": "約{{time}}",
+    "chip": {
+      "captions": "字幕",
+      "autoGrade": "自動カラー補正",
+      "speedRamp": "スピードランプ"
+    },
+    "composing": "編集を作成しています…",
+    "composeOne": "{{count}}本のクリップを作成",
+    "composeOther": "{{count}}本のクリップを作成",
+    "using": "{{names}}を使用",
+    "autoSelectPreset": "コンテンツに合わせてプリセットを自動選択",
+    "tasksOnOne": "{{count}}件のタスクがオン",
+    "tasksOnOther": "{{count}}件のタスクがオン",
+    "dismissError": "このエラーを閉じる",
+    "dismiss": "閉じる"
+  },
+  "propertiesPanel": {
+    "layout": {
+      "bottom": "下",
+      "bottomTitle": "下",
+      "lowerThird": "下寄り",
+      "lowerThirdTitle": "下3分の1",
+      "top": "上",
+      "topTitle": "上",
+      "fullWidth": "全幅",
+      "fullWidthTitle": "全幅バー"
+    },
+    "tab": {
+      "transform": "位置",
+      "color": "カラー",
+      "captions": "字幕",
+      "text": "テキスト",
+      "clip": "クリップ"
+    },
+    "reset": "リセット",
+    "title": "プロパティ",
+    "activeTab": "{{tab}}の設定",
+    "close": "プロパティを閉じる",
+    "clipProperties": "クリップのプロパティ",
+    "selectedClip": "選択中のクリップ",
+    "playbackSpeed": "再生速度",
+    "playbackSpeedTitle": "再生速度：{{speed}}x",
+    "playbackSpeedHint": "このクリップを速くしたり遅くしたりします。",
+    "stabilization": "手ぶれ補正",
+    "stabilizationTitle": "手ぶれ補正：{{value}}%",
+    "stabilizationHint": "カメラの揺れをどれだけ抑えるか。",
+    "volume": "音量",
+    "volumeTitle": "音量：{{value}}%",
+    "autoDucking": "オートダッキング",
+    "autoDuckingHint": "話している間は音楽の音量を下げます",
+    "autoDuckingToggle": "オートダッキングのオン／オフ",
+    "positionAndSize": "位置とサイズ",
+    "scale": "スケール（%）",
+    "positionX": "X位置",
+    "positionY": "Y位置",
+    "rotation": "回転（°）",
+    "animation": "アニメーション",
+    "keyframesCountOne": "キーフレーム1個",
+    "keyframesCount": "キーフレーム{{count}}個",
+    "addKeyframe": "+ 再生ヘッドにキーフレームを追加",
+    "prevKeyframe": "◁ 前へ",
+    "nextKeyframe": "次へ ▷",
+    "remove": "削除",
+    "curve": "カーブ",
+    "easing": {
+      "linear": "リニア",
+      "easeIn": "イーズイン",
+      "easeOut": "イーズアウト",
+      "easeInOut": "イーズインアウト",
+      "bounceOut": "バウンス",
+      "elasticOut": "弾性",
+      "cubic": "なめらか（強）"
+    },
+    "brightness": "明るさ",
+    "contrast": "コントラスト",
+    "saturation": "彩度",
+    "temperature": "色温度",
+    "clarity": "明瞭度",
+    "dehaze": "かすみの除去",
+    "captionsOn": "字幕を表示",
+    "captionsOnHint": "文字起こしを字幕として表示",
+    "captionLayout": "字幕の位置",
+    "textOverlays": "テキストオーバーレイ",
+    "noTextOverlays": "テキストオーバーレイはまだありません",
+    "deleteTextOverlay": "テキストオーバーレイを削除",
+    "synced": "同期済み",
+    "preset": {
+      "tiktok": {
+        "label": "TikTok",
+        "description": "太字・中央・インパクト大"
+      },
+      "reels": {
+        "label": "Reels",
+        "description": "すっきり大文字、トレンド感"
+      },
+      "podcast": {
+        "label": "ポッドキャスト",
+        "description": "ミニマル、下3分の1"
+      },
+      "cinematic": {
+        "label": "シネマティック",
+        "description": "映画風のセリフ体"
+      },
+      "documentary": {
+        "label": "ドキュメンタリー",
+        "description": "定番の字幕バー"
+      },
+      "neon": {
+        "label": "ネオン",
+        "description": "光る夜の雰囲気"
+      },
+      "karaoke": {
+        "label": "カラオケ",
+        "description": "太字のカラオケ風"
+      },
+      "pill": {
+        "label": "ピル",
+        "description": "角丸ピル型の単語"
+      },
+      "bubble": {
+        "label": "吹き出し",
+        "description": "吹き出しスタイル"
+      },
+      "gradient": {
+        "label": "グラデーション",
+        "description": "カラフルなグラデーション文字"
+      },
+      "retro": {
+        "label": "レトロ",
+        "description": "温かみのあるビンテージ風"
+      },
+      "vintage": {
+        "label": "ビンテージ",
+        "description": "セピアのタイプライター"
+      },
+      "pop": {
+        "label": "ポップ",
+        "description": "明るくパンチあり"
+      },
+      "high-contrast": {
+        "label": "見やすさ重視",
+        "description": "高コントラストで読みやすい"
+      },
+      "kinetic": {
+        "label": "キネティック",
+        "description": "ビートに合わせて単語がポップ"
+      },
+      "slow-zoom": {
+        "label": "スローズーム",
+        "description": "スケール 100% → 110%"
+      },
+      "fly-in-left": {
+        "label": "左からフライイン",
+        "description": "画面外の左から移動"
+      },
+      "fly-in-right": {
+        "label": "右からフライイン",
+        "description": "画面外の右から移動"
+      },
+      "fly-in-top": {
+        "label": "上からフライイン",
+        "description": "画面外の上から移動"
+      },
+      "fly-in-bottom": {
+        "label": "下からフライイン",
+        "description": "画面外の下から移動"
+      },
+      "fade-in-out": {
+        "label": "フェードイン＆アウト",
+        "description": "不透明度 0 → 1 → 0"
+      }
+    }
+  },
+  "basicEditor": {
+    "preset": {
+      "title": {
+        "label": "タイトル"
+      },
+      "text": {
+        "yourTitleHere": "ここにタイトル",
+        "subscribeForMore": "チャンネル登録よろしく",
+        "likeSubscribe": "高評価＆チャンネル登録",
+        "watchMore": "もっと見る →",
+        "commentBelow": "コメントしてね",
+        "linkInBio": "リンクはプロフに",
+        "addYourCaption": "キャプションを追加",
+        "followForMore": "フォローしてね",
+        "newText": "新しいテキスト",
+        "youNeedToSeeThis": "これは見るべき",
+        "nameTitle": "名前 · 肩書き",
+        "proTip": "プロのコツ",
+        "tapToLearnMore": "タップして詳しく",
+        "waitForIt": "最後まで見て...",
+        "storyTime": "ストーリータイム",
+        "youWontBelieveWhatHappened": "信じられないことが起きた",
+        "dayInMyLife": "ある日の過ごし方",
+        "day1Of": "1日目...",
+        "getReadyForThis": "準備はいい？",
+        "watchTillTheEnd": "最後まで見てね",
+        "noOneTalksAboutThis": "誰も言わないけど",
+        "theSecretTheyDontWantYouToKnow": "知られたくない秘密",
+        "theSecretIs": "秘密は",
+        "insane": "ヤバい！",
+        "actually": "実は...",
+        "now": "今",
+        "zeroCost": "完全無料",
+        "watch": "見て",
+        "here": "ここ",
+        "swipeUp": "上にスワイプ",
+        "seeYouNextTime": "また次回！",
+        "unpopularOpinion": "少数派の意見：",
+        "thisChangedEverything": "これで全部変わった",
+        "hotTake": "本音を言うと：",
+        "nobodyTalksAboutThis": "誰も話さないこと",
+        "povYouJustFoundTheBestTip": "POV：最高のコツを見つけた",
+        "saveThisForLater": "あとで見返せるように保存",
+        "commentYourAnswerBelow": "答えをコメントで教えてね",
+        "dropAIfYouAgree": "共感したら👍",
+        "part1": "パート1",
+        "chapter1": "チャプター1",
+        "intro": "INTRO",
+        "outro": "OUTRO",
+        "comingUpNext": "このあとは...",
+        "quickRecap": "ざっくりまとめ"
+      },
+      "subscribe": {
+        "label": "チャンネル登録"
+      },
+      "likeSubscribe": {
+        "label": "高評価＆チャンネル登録"
+      },
+      "watchMore": {
+        "label": "もっと見る"
+      },
+      "comment": {
+        "label": "コメント"
+      },
+      "linkInBio": {
+        "label": "リンクはプロフに"
+      },
+      "caption": {
+        "label": "キャプション"
+      },
+      "follow": {
+        "label": "フォロー"
+      },
+      "custom": {
+        "label": "カスタム"
+      },
+      "hook": {
+        "label": "フック"
+      },
+      "lowerThird": {
+        "label": "ローワーサード"
+      },
+      "callout": {
+        "label": "吹き出し"
+      },
+      "timestamp": {
+        "label": "タイムスタンプ"
+      },
+      "waitForIt": {
+        "label": "お楽しみに"
+      },
+      "storyTime": {
+        "label": "ストーリータイム"
+      },
+      "youWontBelieve": {
+        "label": "信じられない"
+      },
+      "dayInMyLife": {
+        "label": "ある日の過ごし方"
+      },
+      "dayXOf": {
+        "label": "〇日目"
+      },
+      "getReady": {
+        "label": "準備はいい？"
+      },
+      "watchTillEnd": {
+        "label": "最後まで見て"
+      },
+      "noOneTalksAbout": {
+        "label": "誰も言わない"
+      },
+      "theSecret": {
+        "label": "秘密"
+      },
+      "hormoziBold": {
+        "label": "Hormozi Bold"
+      },
+      "beastImpact": {
+        "label": "Beastインパクト"
+      },
+      "minimalNarrative": {
+        "label": "ミニマルナレーション"
+      },
+      "subliminalQuick": {
+        "label": "サブリミナル"
+      },
+      "punchyHighlight": {
+        "label": "インパクト強調"
+      },
+      "arrowRight": {
+        "label": "矢印 →"
+      },
+      "arrowLeft": {
+        "label": "矢印 ←"
+      },
+      "proTip": {
+        "label": "プロのコツ"
+      },
+      "watch": {
+        "label": "見て"
+      },
+      "here": {
+        "label": "ここ"
+      },
+      "swipeUp": {
+        "label": "上にスワイプ"
+      },
+      "commentBelow": {
+        "label": "コメントしてね"
+      },
+      "tapToLearnMore": {
+        "label": "タップして詳しく"
+      },
+      "seeYouNextTime": {
+        "label": "また次回"
+      },
+      "unpopularOpinion": {
+        "label": "少数派の意見"
+      },
+      "thisChangedEverything": {
+        "label": "全部変わった"
+      },
+      "hotTake": {
+        "label": "本音"
+      },
+      "nobodyTalksAbout": {
+        "label": "誰も話さない"
+      },
+      "saveThis": {
+        "label": "保存してね"
+      },
+      "commentYour": {
+        "label": "答えをコメント"
+      },
+      "dropA": {
+        "label": "👍で教えて"
+      },
+      "part1": {
+        "label": "パート1"
+      },
+      "chapter": {
+        "label": "チャプター"
+      },
+      "intro": {
+        "label": "イントロ"
+      },
+      "outro": {
+        "label": "アウトロ"
+      },
+      "next": {
+        "label": "次へ"
+      },
+      "recap": {
+        "label": "まとめ"
+      }
+    },
+    "filter": {
+      "vibrant": {
+        "name": "ビビッド",
+        "desc": "パンチのある色"
+      },
+      "mono": {
+        "name": "モノ",
+        "desc": "モノクロ"
+      },
+      "cinematic": {
+        "name": "シネマティック",
+        "desc": "映画風"
+      },
+      "warm": {
+        "name": "ウォーム",
+        "desc": "ゴールデンアワー"
+      },
+      "cool": {
+        "name": "クール",
+        "desc": "青系の色調"
+      },
+      "vintage": {
+        "name": "ビンテージ",
+        "desc": "レトロ"
+      },
+      "moody": {
+        "name": "ムーディー",
+        "desc": "暗く深みのある色"
+      },
+      "vivid": {
+        "name": "鮮やか",
+        "desc": "高彩度"
+      },
+      "noir": {
+        "name": "ノワール",
+        "desc": "高コントラストのモノクロ"
+      },
+      "sunset": {
+        "name": "夕焼け",
+        "desc": "ゴールデンアワー"
+      },
+      "breeze": {
+        "name": "そよ風",
+        "desc": "涼しくクリア"
+      },
+      "matte": {
+        "name": "マット",
+        "desc": "フラットでやわらか"
+      },
+      "neon": {
+        "name": "ネオン",
+        "desc": "鮮やかな色"
+      },
+      "autumn": {
+        "name": "秋",
+        "desc": "温かみのあるアースカラー"
+      },
+      "winter": {
+        "name": "冬",
+        "desc": "涼しくクリーン"
+      },
+      "dreamy": {
+        "name": "ドリーミー",
+        "desc": "やわらかパステル"
+      },
+      "reset": {
+        "name": "リセット",
+        "desc": "デフォルト"
+      }
+    },
+    "style": {
+      "creatorBold": {
+        "label": "クリエイターボールド",
+        "desc": "ハイテンションでバズる"
+      },
+      "softAesthetic": {
+        "label": "ソフトエステティック",
+        "desc": "やさしく幻想的"
+      },
+      "corporateMinimal": {
+        "label": "コーポレートミニマル",
+        "desc": "すっきりプロ仕様"
+      },
+      "darkMoody": {
+        "label": "ダーク＆ムーディー",
+        "desc": "ドラマチックな陰影"
+      },
+      "vibrantPop": {
+        "label": "ビビッドポップ",
+        "desc": "カラフルでパンチあり"
+      },
+      "cinematicFilm": {
+        "label": "シネマティックフィルム",
+        "desc": "映画予告編風"
+      },
+      "noirDramatic": {
+        "label": "ドラマチックノワール",
+        "desc": "ドラマチックなモノクロ"
+      },
+      "lifestyleWarm": {
+        "label": "ウォームライフスタイル",
+        "desc": "Vlog・旅行"
+      },
+      "podcastPro": {
+        "label": "ポッドキャストプロ",
+        "desc": "すっきりプロフェッショナル"
+      },
+      "documentary": {
+        "label": "ドキュメンタリー",
+        "desc": "自然で没入感のある映像"
+      },
+      "fashionEditorial": {
+        "label": "ファッションエディトリアル",
+        "desc": "ハイファッション風"
+      },
+      "retroWarm": {
+        "label": "ウォームレトロ",
+        "desc": "ビンテージの温かみ"
+      },
+      "cinematicDrama": {
+        "label": "シネマティックドラマ",
+        "desc": "深くドラマチック"
+      },
+      "comedyBright": {
+        "label": "明るいコメディ",
+        "desc": "パンチがあって楽しい"
+      },
+      "sportsDynamic": {
+        "label": "ダイナミックスポーツ",
+        "desc": "アクション向け"
+      },
+      "savedDesc": "保存済み"
+    },
+    "platform": {
+      "tiktok": {
+        "desc": "9:16、パンチあり"
+      },
+      "youtube": {
+        "desc": "9:16、バランス"
+      },
+      "feed": {
+        "label": "Instagramフィード",
+        "desc": "1:1、鮮やか"
+      },
+      "portrait": {
+        "label": "Instagram縦長",
+        "desc": "4:5、ウォーム"
+      },
+      "landscape": {
+        "label": "YouTube／横長",
+        "desc": "16:9、すっきり"
+      },
+      "linkedin": {
+        "desc": "16:9、プロ向け"
+      }
+    },
+    "filterCategory": {
+      "all": "すべて",
+      "mood": "ムード",
+      "creative": "クリエイティブ",
+      "dramatic": "ドラマチック",
+      "neutral": "リセット"
+    },
+    "shapePreset": {
+      "logoCorner": "ロゴコーナー",
+      "subscribeBadge": "登録バッジ",
+      "fullWidthBar": "全幅バー",
+      "dividerLine": "区切り線",
+      "highlightBox": "ハイライトボックス",
+      "cornerAccent": "コーナーアクセント"
+    },
+    "undo": "元に戻す",
+    "redo": "やり直し",
+    "searchTools": "ツールを検索...",
+    "clearSearch": "検索をクリア",
+    "layersCount": "{{count}}レイヤー",
+    "reset": "リセット",
+    "add": "追加",
+    "save": "保存",
+    "color": "色",
+    "toast": {
+      "undoApplied": "元に戻しました",
+      "redoApplied": "やり直しました",
+      "fontUploading": "フォントをアップロード中…",
+      "fontAdded": "フォントを追加しました。",
+      "fontInvalid": "このフォントファイルには対応していません。",
+      "fontFailed": "フォントをアップロードできませんでした。",
+      "rectangleAdded": "四角形を追加しました",
+      "circleAdded": "円を追加しました",
+      "lineAdded": "線を追加しました",
+      "addedName": "{{name}}を追加しました",
+      "addedQuoted": "「{{name}}」を追加しました",
+      "addedAt": "{{time}}秒に「{{name}}」を追加しました",
+      "enterImageUrl": "画像URLを入力してください",
+      "imageAdded": "画像オーバーレイを追加しました",
+      "svgAddedFromFile": "ファイルからSVGオーバーレイを追加しました — エフェクトのキーフレームでアニメーションできます",
+      "enterSvgUrl": "SVG URLを入力してください（例：https://… .svg または data:image/svg+xml,…）",
+      "svgAdded": "SVGオーバーレイを追加しました — エフェクトのキーフレームでアニメーションできます",
+      "compoundSaved": "「{{name}}」を保存しました — いつでもタイムラインに追加できます",
+      "compoundRemoved": "複合クリップを削除しました",
+      "renamed": "「{{name}}」に名前を変更しました",
+      "addTextHint": "テキストを追加 — 入力して「追加」かCtrl+Enterを押してください",
+      "textAdded": "テキストオーバーレイを追加しました",
+      "packApplied": "{{name}}パックを適用しました",
+      "saved": "「{{name}}」を保存しました",
+      "filtersReset": "フィルターをデフォルトに戻しました",
+      "nameYourStyle": "スタイル名を入力して「保存」をクリックしてください",
+      "applied": "{{name}}を適用しました",
+      "speed": "速度：{{value}}×"
+    },
+    "compound": {
+      "untitled": "無題の複合クリップ",
+      "title": "複合クリップとして保存",
+      "namePlaceholder": "複合クリップ名…",
+      "name": "複合クリップ名",
+      "durationAria": "複合クリップの長さ（秒）",
+      "delete": "複合クリップ「{{name}}」を削除"
+    },
+    "search": {
+      "filterHit": "フィルター：{{name}}",
+      "styleHit": "スタイル：{{name}}",
+      "motionHit": "モーション：{{name}}",
+      "textHit": "テキスト：{{name}}"
+    },
+    "caption": {
+      "noTranscript": "文字起こしが見つかりません。下の欄に台本を貼り付けて、もう一度お試しください。",
+      "noneGenerated": "字幕が生成されませんでした。文字起こしが短すぎる可能性があります。",
+      "addedToast": "字幕を{{count}}件追加しました — {{style}}スタイル",
+      "generationFailed": "字幕の生成に失敗しました",
+      "failedToast": "自動字幕に失敗しました",
+      "title": "AI自動字幕",
+      "clearTitle": "自動生成した字幕を消去",
+      "cleared": "自動字幕を消去しました",
+      "count": "字幕{{count}}件",
+      "ready": "準備完了",
+      "noScript": "台本なし",
+      "pasteScript": "台本を貼り付け",
+      "pasteScriptTitle": "ここに動画の台本を貼り付けてください",
+      "pastePlaceholder": "動画で話している言葉を貼り付けるか入力してください…",
+      "wordCount": "{{count}}語",
+      "wordsPerLine": "1行の語数",
+      "position": "位置",
+      "positionAt": {
+        "top": "字幕を上に配置",
+        "mid": "字幕を中央に配置",
+        "bottom": "字幕を下に配置"
+      },
+      "colorTitle": "字幕の文字色",
+      "setColor": "字幕の色を{{color}}に設定",
+      "addedInStyle": "{{style}}スタイルで字幕を{{count}}件追加しました",
+      "generateAria": "文字起こしから自動字幕を生成",
+      "generating": "{{count}}語ずつの字幕を生成中…",
+      "generate": "字幕を生成"
+    },
+    "captionStyle": {
+      "minimal": "ミニマル",
+      "neon": "ネオン",
+      "kinetic": "キネティック",
+      "cyber": "サイバー",
+      "meme": "ミーム",
+      "retro": "レトロ",
+      "quote": "引用"
+    },
+    "translate": {
+      "noCaptions": "タイムラインに翻訳する字幕がありません。",
+      "inProgress": "字幕を翻訳中（タイミングはそのまま）…",
+      "done": "字幕を{{language}}に翻訳しました",
+      "empty": "翻訳は完了しましたが、字幕が返されませんでした。",
+      "failed": "字幕を翻訳できませんでした。",
+      "title": "字幕を翻訳",
+      "languageTitle": "翻訳先の言語を選択",
+      "translating": "翻訳中…",
+      "translate": "翻訳"
+    },
+    "emoji": {
+      "noTranscript": "絵文字を合わせる文字起こしがありません。先に文字起こしを生成してください。",
+      "inProgress": "文字起こしに合う絵文字を選んでいます…",
+      "noneFound": "文字起こしに合う絵文字が見つかりませんでした。",
+      "added": "タイムラインに絵文字を{{count}}個追加しました",
+      "failed": "絵文字の生成に失敗しました",
+      "title": "自動絵文字",
+      "clearTitle": "生成した絵文字を消去",
+      "cleared": "絵文字を消去しました",
+      "count": "絵文字{{count}}個",
+      "enter": "登場トランジション",
+      "enterTitle": "絵文字の登場方法を選択",
+      "exit": "退場トランジション",
+      "exitTitle": "絵文字の消え方を選択",
+      "style": "スタイル",
+      "styleTitle": "絵文字のスタイルを選択",
+      "size": "絵文字のサイズ",
+      "sizeTitle": "絵文字のサイズを選択",
+      "density": "頻度",
+      "densityTitle": "絵文字を表示する頻度を選択",
+      "placement": "配置",
+      "placementTitle": "絵文字の配置場所を選択",
+      "inDuration": "イン時間：{{value}}秒",
+      "inDurationTitle": "登場アニメーションの長さ",
+      "outDuration": "アウト時間：{{value}}秒",
+      "outDurationTitle": "退場アニメーションの長さ",
+      "generating": "絵文字を生成中…",
+      "generate": "絵文字を生成"
+    },
+    "emojiOpt": {
+      "enter": {
+        "pop": "💥 ポップイン",
+        "bounce": "🦘 バウンスアップ",
+        "slide": "➡️ スライドイン",
+        "pulse": "💓 ズームパルス",
+        "shake": "⚡ カメラシェイク",
+        "blur": "🌫️ ぼかしイン"
+      },
+      "exit": {
+        "fade": "🌫️ スムーズフェード",
+        "pop": "💥 ポップアウト",
+        "slideBottom": "⬇️ 下へスライド",
+        "bounceOut": "🦘 バウンスアウト",
+        "scaleOut": "🔍 スケールアウト",
+        "zoomOut": "🔎 ズームアウト",
+        "flipOut": "🔄 フリップアウト"
+      },
+      "style": {
+        "pop3d": "✨ 3Dポップ",
+        "neonGlow": "🏮 ネオングロー",
+        "flat": "📄 ミニマルフラット"
+      },
+      "size": {
+        "n32": "🤏 小（32px）",
+        "n48": "👌 中（48px）",
+        "n64": "💪 大（64px）",
+        "n80": "👑 特大（80px）"
+      },
+      "density": {
+        "n3": "🔥 多め（3語ごと）",
+        "n6": "⚡ 普通（6語ごと）",
+        "n10": "🎯 少なめ（10語ごと）"
+      },
+      "place": {
+        "above": "⬆️ 字幕の上",
+        "below": "⬇️ 字幕の下",
+        "head": "👱 頭の高さ",
+        "customTop": "👑 画面の上部"
+      }
+    },
+    "lang": {
+      "en": "英語（English）",
+      "es": "スペイン語（Español）",
+      "fr": "フランス語（Français）",
+      "de": "ドイツ語（Deutsch）",
+      "it": "イタリア語（Italiano）",
+      "pt": "ポルトガル語（Português）",
+      "ru": "ロシア語（Русский）",
+      "ja": "日本語",
+      "ko": "韓国語（한국어）",
+      "zh": "中国語（中文）",
+      "ar": "アラビア語（العربية）",
+      "hi": "ヒンディー語（हिन्दी）",
+      "nl": "オランダ語（Nederlands）",
+      "pl": "ポーランド語（Polski）",
+      "tr": "トルコ語（Türkçe）"
+    },
+    "trim": {
+      "waveform": "波形",
+      "clickToSeek": "クリックして再生ヘッドを移動",
+      "speed": "速度",
+      "playbackSpeedAria": "再生速度：{{value}}倍",
+      "reverse": "逆再生",
+      "reverseSub": "選択したクリップを逆再生",
+      "selectClipFirst": "先にクリップを選択してください",
+      "split": "再生ヘッドで分割",
+      "beatCut": "ビートカット",
+      "beatCutSub": "ビートごとにクリップをカット",
+      "freeze": "フリーズフレーム",
+      "freezeSub": "{{time}}秒で1秒静止",
+      "trimToInOut": "イン／アウトでトリム",
+      "trimToInOutSub": "下でイン点とアウト点を設定",
+      "setBothFirst": "先にイン点とアウト点を設定してください",
+      "jCut": "Jカット",
+      "jCutSub": "音声が0.5秒早く始まる",
+      "lCut": "Lカット",
+      "lCutSub": "カット後も音声が0.5秒続く",
+      "comingSoonTitle": "{{label}} — 近日公開",
+      "selectClipTitle": "{{label}} — 先にクリップを選択してください",
+      "soon": "近日",
+      "markers": "イン／アウトマーカー",
+      "inAt": "イン {{time}}秒",
+      "noIn": "イン点なし",
+      "outAt": "アウト {{time}}秒",
+      "noOut": "アウト点なし",
+      "inSet": "イン点を設定 @ {{time}}秒",
+      "setIn": "イン点を設定",
+      "outAfterIn": "アウト点はイン点より後にしてください",
+      "outSet": "アウト点を設定 @ {{time}}秒",
+      "setOut": "アウト点を設定",
+      "clear": "クリア"
+    },
+    "layout": {
+      "auto": "自動",
+      "standard": "標準",
+      "square": "正方形",
+      "vertical": "縦型",
+      "portrait": "縦長",
+      "cinematic": "シネマ",
+      "classic": "クラシック"
+    },
+    "text": {
+      "editingOnCanvas": "キャンバスで編集中",
+      "doubleClickHint": "プレーヤー内のテキストをダブルクリックして直接入力",
+      "deselect": "選択解除",
+      "newText": "新しいテキスト",
+      "typePlaceholder": "テキストを入力…（⌘↵で追加）",
+      "duration": "長さ：",
+      "searchPresets": "プリセットを検索…",
+      "activeText": "動画上のテキスト（{{count}}）",
+      "deleteOverlayAria": "テキストオーバーレイ「{{text}}」を削除",
+      "deleteOverlay": "テキストオーバーレイを削除",
+      "preview": "プレビュー",
+      "livePreview": "ライブプレビュー",
+      "editing": "編集中：{{text}}",
+      "contentAria": "オーバーレイテキスト",
+      "contentPlaceholder": "オーバーレイテキスト",
+      "fontSize": "フォントサイズ",
+      "textColor": "文字色",
+      "style": "スタイル",
+      "animateIn": "登場アニメーション",
+      "animateOut": "退場アニメーション",
+      "font": "フォント",
+      "start": "開始",
+      "startAria": "開始時間（秒）",
+      "end": "終了",
+      "endAria": "終了時間（秒）",
+      "uploadFont": "フォントをアップロード",
+      "uploadFontAria": "カスタムフォントファイルをアップロード"
+    },
+    "textStyle": {
+      "none": "なし",
+      "neon": "ネオン",
+      "minimal": "ミニマル",
+      "bold-kinetic": "太字キネティック",
+      "outline": "縁取り",
+      "shadow": "影"
+    },
+    "anim": {
+      "none": "なし",
+      "fade": "フェード",
+      "slide-up": "上へスライド",
+      "slide-down": "下へスライド",
+      "slide-left": "左へスライド",
+      "slide-right": "右へスライド",
+      "scale": "スケール",
+      "bounce": "バウンス"
+    },
+    "presetGroup": {
+      "viralHooks": "バズるフック",
+      "textPresets": "テキストプリセット",
+      "premiumCaptions": "プレミアム字幕",
+      "reactionCallouts": "リアクション／吹き出し",
+      "trending": "トレンド",
+      "endScreens": "終了画面",
+      "chapters": "チャプター"
+    },
+    "filters": {
+      "strengthAria": "フィルターの強さ：{{value}}パーセント",
+      "before": "⏪ 適用前",
+      "after": "⏩ 適用後",
+      "split": "🌓 比較",
+      "pinned": "ピン留め済み",
+      "pin": "{{name}}フィルターをピン留め",
+      "unpin": "{{name}}フィルターのピン留めを解除"
+    },
+    "motion": {
+      "searchTemplates": "テンプレートを検索…",
+      "durationAria": "モーショングラフィックの長さ（秒）",
+      "recent": "最近使用"
+    },
+    "layers": {
+      "addShape": "図形を追加",
+      "addImage": "画像／ロゴを追加",
+      "imageUrlPlaceholder": "画像URLを貼り付け…",
+      "imageUrl": "画像URL",
+      "addSvg": "SVGを追加",
+      "svgUrlPlaceholder": "SVG URLまたはデータURI…",
+      "svgUrl": "SVG URL",
+      "uploadSvg": "SVGファイルをアップロード",
+      "gradients": "グラデーションオーバーレイ",
+      "allLayers": "すべてのレイヤー（{{count}}）",
+      "hoverHint": "カーソルを合わせると操作を表示",
+      "deleteTextAria": "テキストレイヤー「{{text}}」を削除",
+      "deleteText": "テキストレイヤーを削除",
+      "opacity": "不透明度",
+      "opacityAria": "レイヤーの不透明度",
+      "deleteShape": "{{shape}}の図形を削除",
+      "deleteImage": "画像レイヤーを削除",
+      "customSvg": "カスタムSVG",
+      "deleteSvg": "SVGレイヤーを削除",
+      "gradientName": "{{region}}のグラデーション",
+      "deleteGradient": "グラデーションレイヤーを削除",
+      "empty": "レイヤーはまだありません",
+      "emptyHint": "上から図形・画像・SVGを追加できます。テキストオーバーレイもここに表示されます。",
+      "addTextLayer": "+ テキストレイヤーを追加"
+    },
+    "shape": {
+      "rect": "四角形",
+      "circle": "円",
+      "line": "線"
+    },
+    "region": {
+      "full": "全体",
+      "lower-third": "下3分の1",
+      "top-bar": "上部バー",
+      "top-half": "上半分",
+      "bottom-half": "下半分"
+    },
+    "gradient": {
+      "lowerThird": "下3分の1フェード",
+      "fullDark": "全体を暗く",
+      "topBar": "上部バー",
+      "warmTint": "ウォームな色味",
+      "coolTint": "クールな色味",
+      "bottomHalf": "下半分フェード",
+      "topHalf": "上半分フェード",
+      "vignetteSoft": "ソフトビネット"
+    },
+    "pack": {
+      "hookCta": {
+        "name": "フック + CTA",
+        "desc": "再生ヘッドにバズるフック、終了画面にCTA"
+      },
+      "lowerThirdSubscribe": {
+        "name": "ローワーサード + 登録",
+        "desc": "名前バー + 登録バッジ"
+      },
+      "fullCtaBar": {
+        "name": "CTA + 下3分の1フェード",
+        "desc": "高評価＆チャンネル登録 + グラデーションバー"
+      },
+      "introOutro": {
+        "name": "イントロ + アウトロ",
+        "desc": "再生ヘッドにINTRO、最後に「また次回」"
+      },
+      "trendingSave": {
+        "name": "トレンド + 保存してね",
+        "desc": "少数派の意見 + あとで見返す用に保存"
+      }
+    },
+    "packs": {
+      "oneClick": "ワンクリックパック",
+      "styleBundles": "スタイルバンドル",
+      "platform": "プラットフォーム別",
+      "saveMyStyle": "マイスタイルを保存",
+      "styleNamePlaceholder": "スタイル名…",
+      "styleName": "カスタムスタイル名",
+      "saveStyle": "カスタムスタイルを保存",
+      "goTo": "移動"
+    },
+    "nav": {
+      "shortClips": "ショートクリップ",
+      "assets": "音楽＆Bロール",
+      "timeline": "タイムライン",
+      "effects": "エフェクト",
+      "color": "カラー",
+      "aiEdit": "文字起こし＆AI",
+      "export": "書き出し"
+    },
+    "insights": {
+      "comingSoon": "インサイトは近日公開",
+      "comingSoonHint": "動画の分析が終わると、視聴維持率・フックの強さ・テンポの分析がここに表示されます。",
+      "transcript": "文字起こし"
+    }
   }
 }

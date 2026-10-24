@@ -846,11 +846,11 @@
     "title": "Başarılar",
     "subtitle": "Başarılarını ve ilerlemeni takip et.",
     "refreshRegistry": "Yenile",
-    "statTierLabel": "Evrimsel Seviye",
+    "statTierLabel": "Seviye",
     "statTierSub": "Sonraki seviyeye %{{pct}}",
-    "statMilestonesLabel": "Şifresi Çözülmüş Kilometre Taşları",
+    "statMilestonesLabel": "Açılan kilometre taşları",
     "statMilestonesSub": "Şu ana kadar açılanlar",
-    "statStreakLabel": "Tutarlılık Çizgisi",
+    "statStreakLabel": "Aktif seri",
     "statStreakSub": "En iyi: {{peak}}",
     "statVolumeLabel": "Oluşturulan içerik",
     "statVolumeSub": "Toplam oluşturulan içerik",
@@ -861,14 +861,14 @@
     "detailPayloads": "İçerik",
     "detailScripts": "Senaryolar",
     "recentBreakthroughs": "Son Gelişmeler",
-    "decryptedOn": "ŞİFRESİ ÇÖZÜLDÜ {{date}}",
+    "decryptedOn": "Kilidi açıldı: {{date}}",
     "ascensionVerified": "Açıldı",
     "nodeMatrix": "Tüm başarılar",
-    "decrypted": "ŞİFRESİ ÇÖZÜLDÜ",
+    "decrypted": "Kilidi açıldı",
     "logicGated": "Kilitli",
     "milestones": {
       "first_video": {
-        "name": "Yaratılış Yorumu",
+        "name": "İlk video",
         "description": "İlk videonu yap."
       },
       "first_content": {
@@ -900,11 +900,11 @@
         "description": "50 video tamamla."
       },
       "streak_7": {
-        "name": "Tutarlılık 7",
+        "name": "7 günlük seri",
         "description": "Arka arkaya 7 gün aktif kal."
       },
       "streak_30": {
-        "name": "Tutarlılık 30",
+        "name": "30 günlük seri",
         "description": "Arka arkaya 30 gün aktif kal."
       },
       "streak_100": {
@@ -925,7 +925,7 @@
       },
       "early_adopter": {
         "name": "Erken Katılımcı",
-        "description": "Oluşum aşamasında entegre edilir."
+        "description": "Click'e erken katıldın."
       },
       "power_user": {
         "name": "Uzman kullanıcı",
@@ -993,7 +993,7 @@
     "authorize": "YETKİLENDİR",
     "dissent": "MUHALEFET",
     "historyTitle": "Onay geçmişi",
-    "historySubtitle": "Mutabakat kararlarının ve düğüm yetkilerinin değişmez kayıtları.",
+    "historySubtitle": "Geçmiş onay ve retlerin kaydı.",
     "protocolLogsAnalyzed": "{{count}} talep",
     "emptyTitle": "Burada henüz bir şey yok",
     "emptyState": "Henüz onay talebi yok.",
@@ -1126,7 +1126,7 @@
     "purgeForgeBuffer": "Forge Tamponunu Temizle",
     "neuralHeuristics": "Öneriler",
     "neuralHeuristicsDesc": "İçeriğini geliştirmenin yolları.",
-    "decryptingHeuristics": "Buluşsal Yöntemin şifresi çözülüyor...",
+    "decryptingHeuristics": "Analiz ediliyor…",
     "predictiveTelemetry": "Performans tahmini",
     "predictiveTelemetryDesc": "İçeriğinin nasıl performans gösterebileceğine dair tahminler.",
     "scanningTrajectories": "Yörüngeler Taranıyor..."
@@ -1288,7 +1288,7 @@
     "refreshData": "Üyelik verilerini yenile",
     "activeNodeUplink": "Mevcut plan",
     "protocolId": "Plan kimliği:",
-    "rootGenesis": "Kök oluşumu",
+    "rootGenesis": "Başlangıç",
     "genericAccess": "Genel erişim",
     "lifecycleStatus": "Yaşam Döngüsü Durumu:",
     "uninitialized": "Başlatılmamış",
@@ -1307,7 +1307,7 @@
     "coreMatrixUplink": "Temel özellikler",
     "primeCommandUplink": "Tüm özelliklere erişim",
     "activeProtocol": "Mevcut plan",
-    "ascending": "Yükseliyor...",
+    "ascending": "Yükseltiliyor…",
     "genesisUplink": "Başla",
     "escalateProtocol": "Yükselt"
   },
@@ -1825,7 +1825,7 @@
     "heroIntro": "Sosyal hesaplarını Click'e bağla. Her bağlantıyla şunlar mümkün olur:",
     "heroFeature1": "otomatik paylaşım",
     "heroFeature2": "etkileşim takibi",
-    "heroFeature3": "sentetik hedef kitle analizi",
+    "heroFeature3": "izleyici içgörüleri",
     "heroAnd": "Ve",
     "statNeuralEncryption": "Token şifreleme",
     "statUplinkLatency": "Bağlantı hızı",
@@ -2375,7 +2375,7 @@
     "collaborationIntro1": "Her ekipte şunlar var:",
     "collaborationHighlight1": "paylaşılan varlıklar",
     "collaborationIntro2": ",",
-    "collaborationHighlight2": "asenkron geri besleme döngüleri",
+    "collaborationHighlight2": "yorumlar ve geri bildirim",
     "collaborationIntro3": "ve birleşik bir",
     "collaborationHighlight3": "üretim kuyruğu",
     "collaborationIntro4": ". Herkesin işi tek bir yerde.",
@@ -3113,7 +3113,7 @@
     "neuralLine1": "İçerik",
     "neuralLine2": "MERKEZ",
     "autonomousPrefix": "Otomatik mod",
-    "dominating": "hakim",
+    "dominating": "çalışıyor",
     "autonomousMid": "the",
     "autonomousSuffix": "kuyruğu.",
     "neuralActive": "Otomatik mod açık",
@@ -3998,7 +3998,7 @@
     "latticeHealth": "Ağ durumu",
     "aggregatedRevenue": "Toplu Gelir",
     "victoryVectors": "Bugünkü başarılar",
-    "encirclementTitle": "Küresel Kuşatma",
+    "encirclementTitle": "Büyüme özeti",
     "encirclementSubtitle": "Click genelinde paylaşılan içgörüler",
     "godModeSaturationActive": "Canlı",
     "decentralizedIntelligenceLedger": "Etkinlik günlüğü",
@@ -4018,7 +4018,7 @@
     "tabStability": "Sistem Sağlığı",
     "versionLabel": "Click",
     "overlordTerminalSynced": "Bağlı",
-    "mainTitle": "Overlord Terminali'ne tıklayın",
+    "mainTitle": "Click kontrol merkezi",
     "mainSubtitle": "Para kazanma ve otomasyon kontrolleri."
   },
   "clickDebugPanel": {
@@ -5408,7 +5408,7 @@
     "presetVibrantPopName": "Canlı Pop",
     "presetVibrantPopDesc": "Koyu, doygun renkler",
     "presetSoftDreamyName": "Yumuşak Rüya Gibi",
-    "presetSoftDreamyDesc": "Ruhani, nazik görünüm",
+    "presetSoftDreamyDesc": "Yumuşak, nazik görünüm",
     "presetElectricVibeName": "Elektrik",
     "presetElectricVibeDesc": "Yüksek enerjili canlı görünüm",
     "presetRetroVintageName": "Retro Eski",
@@ -6232,7 +6232,20 @@
     "appliedStyleProfile": "{{name}} stili uygulandı",
     "packApplied": "{{name}} uygulandı: {{grade}} renk düzenlemesi ve altyazı stili",
     "packAppliedGradeOnly": "{{name}} uygulandı: {{grade}} renk düzenlemesi. Altyazı stilini kullanmak için altyazıları aç.",
-    "packApplyFailed": "{{name}} uygulanamadı: renk düzenlemesi bulunamadı"
+    "packApplyFailed": "{{name}} uygulanamadı: renk düzenlemesi bulunamadı",
+    "beatRecut": "✦ Yeniden {{count}} ritim klibine bölündü ({{replaced}} video klip değiştirildi)",
+    "beatCut": "✦ Ritme senkron {{count}} klibe bölündü",
+    "autoViralAnalysing": "✦ Otomatik Viral Düzenleme — ritimler ve altyazılar analiz ediliyor…",
+    "autoViralNothingFound": "Otomatik Viral Düzenleme müzik ritmi ya da kullanılabilir bir transkript gerektirir — ikisi de bulunamadı.",
+    "autoViralNeedsTranscript": "Otomatik Viral Düzenleme, altyazılar için transkripte ya da kesmeler için müziğe ihtiyaç duyar. Önce transkript oluştur, sonra tekrar dene.",
+    "autoViralCuts": "{{clips}} ritim klibi · {{transitions}} geçiş",
+    "autoViralCaptions": "{{count}} karaoke altyazı",
+    "autoViralDone": "✦ Otomatik Viral Düzenleme: {{summary}}",
+    "autoViralFailed": "Otomatik Viral Düzenleme başarısız — zaman çizelgen değişmedi.",
+    "resizeTimelineAria": "Zaman çizelgesini yeniden boyutlandır (yukarı veya aşağı sürükle)",
+    "resizeTimelineTitle": "Zaman çizelgesini boyutlandırmak için sürükle",
+    "timelineHeading": "Zaman çizelgesi",
+    "cmdCategoryEditor": "DÜZENLEYİCİ"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Kancalar",
@@ -6310,13 +6323,13 @@
     "featuresTitle": "Elit Özellikler",
     "featuresDescription": "Çoklu platform zekasının ve tahmine dayalı büyümenin kilidini açın.",
     "completeTitle": "Her şey hazır",
-    "completeDescription": "Artık sosyal manzaraya hükmetmeye hazırsınız.",
+    "completeDescription": "Üretmeye başlamaya hazırsın.",
     "eliteAccessGranted": "Elit Erişim Verildi",
     "closeOnboarding": "Katılımı kapat",
     "back": "Geri",
-    "startDominating": "Hakim Olmaya Başla",
+    "startDominating": "Başla",
     "nextIntelligence": "Sonraki Zeka",
-    "clickGenesis": "Genesis'i tıklayın",
+    "clickGenesis": "Click'e hoş geldin",
     "welcomeBodyBefore": "Sadece yazmayan tek platform;",
     "welcomeBodyOperates": "çalışır",
     "welcomeBodyAfter": ". Hadi markanı kuralım.",
@@ -6489,7 +6502,7 @@
     "syncing": "Güncelleniyor...",
     "restart": "Tekrar başlat",
     "dismissInstallPrompt": "Yükleme istemini reddet",
-    "installDescription": "Daha hızlı, çevrimdışı özellikli bir çalışma alanına yükselin. Seçkin içerik işlemleri için tasarlandı.",
+    "installDescription": "Daha hızlı ve çevrimdışı da çalışan bir uygulama için Click'i yükle.",
     "initializeInstallation": "Kurulumu Başlat",
     "tagInstant": "Ani",
     "tagEdge": "Kenar",
@@ -6779,7 +6792,7 @@
     "navAeoMetadata": "AEO Meta Verileri",
     "navUgcRaw": "UGC Ham",
     "navZeroPartyData": "Sıfır Taraf Verileri",
-    "headerPill": "Aşama 8 – Pazar Hakimiyeti",
+    "headerPill": "Aşama 8 — Büyüme araçları",
     "headerTitle": "Büyüme araçları",
     "headerSubtitle": "CLICK'i Tartışmasız Hale Getiren 5 Sistem"
   },
@@ -6850,14 +6863,14 @@
     "pcv": "PCV",
     "steerSwarmToThisOffer": "Bu teklife odaklan",
     "s2sNetworkDown": "S2S Ağı kapalı",
-    "globalEncirclementTitle": "Küresel Kuşatma",
+    "globalEncirclementTitle": "Büyüme özeti",
     "globalEncirclementSubtitle": "Hesaplar arası içgörüler",
     "godModeActiveBadge": "Aktif",
     "networkHealth": "Ağ Sağlığı",
     "aggregatedRevenue": "Toplu Gelir",
     "victoryVectors": "En iyi performanslar",
     "logInitializingTunnel": "[SİSTEM] S2S şifreli tünel başlatılıyor...",
-    "logEncirclementActive": "[SİSTEM] Kuşatma aktif. {{count}} kardeş örnekler bağlı.",
+    "logEncirclementActive": "{{count}} bağlı çalışma alanı.",
     "logVectorReceived": "\"{{hook}}\" hook'u {{cluster}} içinde önde.",
     "logLocalSynthesis": "Yerel sonuçlar güncellendi: ivme ağırlığı +%{{percent}}.",
     "productionStabilityTitle": "Üretim İstikrarı",
@@ -6878,7 +6891,7 @@
     "navGlobalS2s": "Küresel S2S",
     "navSystemHealth": "Sistem Sağlığı",
     "headerPill": "Gelişmiş araçlar",
-    "headerTitle": "Derebeyi Terminali",
+    "headerTitle": "Kontrol merkezi",
     "headerSubtitle": "Pazar genişlemesi"
   },
   "quickActions": {
@@ -6983,7 +6996,7 @@
     "razorTool": "Jilet Aracı (S)",
     "editMode": "Düzenleme modu",
     "modeNormal": "Normal",
-    "modeRipple": "Dalgalanma",
+    "modeRipple": "Ripple",
     "modeRoll": "Rulo",
     "modeSlip": "Kayma",
     "setInPoint": "Giriş Noktası (I)",
@@ -7098,7 +7111,31 @@
   "realTimeVideoPreview": {
     "overlayAlt": "Kaplama",
     "metadataError": "Video meta verileri yüklenemedi. CORS veya URL geçerliliğini kontrol edin.",
-    "bootingRenderEngine": "Önizleme yükleniyor..."
+    "bootingRenderEngine": "Önizleme yükleniyor...",
+    "videoFailed": "Video yüklenemedi",
+    "retry": "Tekrar dene",
+    "dragToCompare": "Önce / Sonra karşılaştırmak için sürükle",
+    "before": "Önce",
+    "after": "Sonra",
+    "rawUnfiltered": "Ham / Filtresiz",
+    "graded": "Renklendirilmiş",
+    "editCaptionInline": "Altyazı metnini yerinde düzenle",
+    "captionPlaceholder": "Altyazı metnini yaz...",
+    "opsReverse": "{{count}}× ters",
+    "opsJCut": "{{count}}× J-cut",
+    "opsLCut": "{{count}}× L-cut",
+    "exportOnlyTitle": "Bu değişiklikler yalnızca dışa aktarırken uygulanır — önizleme klipleri orijinal yönünde ve normal ses senkronuyla oynatır.",
+    "exportOnly": "Yalnızca dışa aktarımda",
+    "imageLayer": "Görsel Katmanı",
+    "imageFailed": "Görsel yüklenemedi",
+    "svgLayer": "SVG Katmanı",
+    "preview": "Önizleme",
+    "latency": "Gecikme",
+    "pause": "Duraklat",
+    "play": "Oynat",
+    "toggleBeforeAfter": "Önce/sonra arasında geçiş yap",
+    "beforeAfter": "Önce / sonra",
+    "aiStylingActive": "AI stillendirme aktif"
   },
   "realtimeCollaboration": {
     "failedToJoin": "İşbirliği oturumuna katılamadı",
@@ -7172,7 +7209,137 @@
   },
   "resizableTimeline": {
     "restore": "Zaman çizelgesi boyutunu geri yükle",
-    "maximize": "Zaman çizelgesini en üst düzeye çıkarın"
+    "maximize": "Zaman çizelgesini en üst düzeye çıkarın",
+    "snapKind": {
+      "word": "Kelime",
+      "silence": "Duraksama",
+      "beat": "Ritim",
+      "marker": "İşaretçi",
+      "edge": "Kenar",
+      "playhead": "Oynatma kafası",
+      "boundary": "Sınır"
+    },
+    "realignedCountOne": "1 altyazı konuşmaya hizalandı",
+    "realignedCount": "{{count}} altyazı konuşmaya hizalandı",
+    "alreadyAligned": "Altyazılar zaten hizalı",
+    "markerNamePrompt": "İşaretçi adı (isteğe bağlı):",
+    "unsoloTrack": "Parçanın solosunu kapat",
+    "soloTrack": "Parçayı solo yap",
+    "soloShort": "S",
+    "unmuteTrack": "Parçanın sesini aç",
+    "muteTrack": "Parçanın sesini kapat",
+    "unlockTrack": "Parçanın kilidini aç",
+    "lockTrack": "Parçayı kilitle",
+    "prevFrameTitle": "Önceki kare (←)",
+    "prevFrame": "Önceki kare",
+    "pauseTitle": "Duraklat (Boşluk)",
+    "playTitle": "Oynat (Boşluk)",
+    "pause": "Duraklat",
+    "play": "Oynat",
+    "nextFrameTitle": "Sonraki kare (→)",
+    "nextFrame": "Sonraki kare",
+    "goToTimeLabel": "Zamana git (bir zaman yaz, Enter'a bas)",
+    "goToTimeTitle": "Bir zaman yaz (ör. 1:05.5) ve oraya atlamak için Enter'a bas",
+    "splitTitle": "Oynatma kafasının altındaki klibi böl (S)",
+    "split": "Böl",
+    "deleteTitle": "Seçimi sil (Delete)",
+    "delete": "Sil",
+    "rippleOnTitle": "Ripple açık: silmek her parçadaki boşluğu kapatır",
+    "rippleOffTitle": "Ripple kapalı: silmek boşluk bırakır",
+    "ripple": "Ripple",
+    "ungroupTitle": "Seçili kliplerin grubunu çöz",
+    "ungroup": "Grubu çöz",
+    "groupTitle": "Seçili klipleri birlikte taşınıp silinmeleri için grupla",
+    "group": "Grupla",
+    "setInTitle": "Oynatma kafasında giriş noktası ayarla (I)",
+    "in": "Giriş",
+    "setOutTitle": "Oynatma kafasında çıkış noktası ayarla (O)",
+    "out": "Çıkış",
+    "clearInOutTitle": "Giriş/çıkışı temizle (Alt+X)",
+    "clearInOutLabel": "Giriş ve çıkış noktalarını temizle",
+    "snapTitle": "Klipleri kenarlara, oynatma kafasına ve işaretçilere yasla",
+    "snap": "Yasla",
+    "speechTitle": "Klipleri ve altyazıları konuşulan kelimelere yasla",
+    "speechDisabledTitle": "Konuşmaya yaslamayı açmak için altyazı oluştur",
+    "speech": "Konuşma",
+    "realignTitle": "Her altyazının zamanlamasını konuşulan kelimelere göre ayarla",
+    "realign": "Altyazıları yeniden hizala",
+    "dragToPan": "Kaydırmak için sürükle",
+    "showTracks": "Parçaları göster",
+    "allTracks": "Tüm parçalar",
+    "track": {
+      "captions": "Altyazılar",
+      "mainVideo": "Ana video",
+      "broll": "B-roll",
+      "audio": "Ses",
+      "effects": "Efektler",
+      "captionsSub": "Ekrandaki metin",
+      "mainVideoSub": "Senin çekimlerin",
+      "brollSub": "Ara planlar ve görseller",
+      "audioSub": "Müzik, ses ve SFX"
+    },
+    "viewGroup": "Zaman çizelgesi görünümü",
+    "view": {
+      "clips": "Klipler",
+      "clipsTitle": "Yalnızca klipler",
+      "hybrid": "Klipler + senaryo",
+      "hybridTitle": "Üstünde senaryo olan klipler",
+      "script": "Senaryo",
+      "scriptTitle": "Metinle düzenle"
+    },
+    "zoomOut": "Uzaklaştır",
+    "zoomIn": "Yakınlaştır",
+    "hideInsights": "AI içgörü şeritlerini gizle",
+    "showInsights": "AI içgörü şeritlerini göster",
+    "insights": "İçgörüler",
+    "inOutSpan": "Giriş/Çıkış: {{time}}",
+    "inPointTitle": "Giriş noktası: {{time}} (ayarlamak için sürükle)",
+    "outPointTitle": "Çıkış noktası: {{time}} (ayarlamak için sürükle)",
+    "beatLabel": "Ritim ({{time}} sn)",
+    "markerTitle": "{{name}}: {{time}} (taşımak için sürükle, gitmek için tıkla, düzenlemek için sağ tıkla)",
+    "marker": "İşaretçi",
+    "markerTag": "{{name}} ({{time}})",
+    "resolve": "Çöz",
+    "close": "Kapat",
+    "captionsCountOne": "1 altyazı",
+    "captionsCount": "{{count}} altyazı",
+    "clipsCountOne": "1 klip",
+    "clipsCount": "{{count}} klip",
+    "itemsCountOne": "1 öğe",
+    "itemsCount": "{{count}} öğe",
+    "audienceRetention": "İzleyici tutma",
+    "retentionTitle": "İzleyici tutma: %{{value}}",
+    "audioWaveform": "Ses dalga formu",
+    "audioWaveformNoAudio": "Ses dalga formu (ses yok)",
+    "trimStart": "Başı kırp",
+    "trimEnd": "Sonu kırp",
+    "jCut": "J-Cut",
+    "lCut": "L-Cut",
+    "trimmedStart": "Başı kırpıldı",
+    "trimmedEnd": "Sonu kırpıldı",
+    "freeze": "Dondur",
+    "reverseSpeed": "Ters {{speed}}×",
+    "keyframes": "Ana kareler",
+    "playheadTitle": "Oynatma kafası: {{time}} (gezinmek için sürükle)",
+    "scrubTitle": "Gezinme: {{time}}",
+    "dragPlayhead": "Oynatma kafasını sürükle",
+    "origin": "Başlangıç noktası: {{time}}",
+    "moveDelta": "Taşıma farkı: {{delta}}",
+    "trackNumber": "Parça {{number}}",
+    "clipsMoving": "{{count}} klip taşınıyor",
+    "trimStartAt": "Başı kırp: {{time}}",
+    "trimEndAt": "Sonu kırp: {{time}}",
+    "workAreaIn": "Çalışma alanı girişi: {{time}}",
+    "workAreaOut": "Çalışma alanı çıkışı: {{time}}",
+    "span": "Aralık: {{time}}",
+    "menu": {
+      "splitAtPlayhead": "Oynatma kafasından böl",
+      "duplicate": "Klibi çoğalt",
+      "ungroup": "Klip grubunu çöz",
+      "group": "Klipleri grupla",
+      "rippleDelete": "Boşluk bırakmadan sil"
+    },
+    "sceneChange": "Sahne değişimi"
   },
   "revenueOracle": {
     "synchronizing": "Gelir verileri yükleniyor...",
@@ -7682,7 +7849,7 @@
     "neuralScheduling": "Akıllı planlama",
     "neuralSchedulingDesc": "Gönderileri izleyicinin en aktif olduğu zamana planla.",
     "evergreenSynthesis": "Evergreen geri dönüşüm",
-    "evergreenSynthesisDesc": "Sonsuz depo yatırım getirisi için kendi kendini onaran içerik geri dönüşümünü etkinleştirin.",
+    "evergreenSynthesisDesc": "En iyi performans gösteren içeriğini otomatik olarak yeniden kullan.",
     "initiateSequence": "Sırayı Başlat",
     "neuralProcessing": "İşleniyor",
     "ecosystemCalibration": "Kuruluyor...",
@@ -7691,7 +7858,7 @@
     "synchronization": "İş hattı",
     "verified": "DOĞRULANDI",
     "nodesPrimedPrefix": "Gönderilerin",
-    "primed": "astarlanmış",
+    "primed": "hazır",
     "nodesPrimedSuffix": "yayınlanmaya.",
     "estimatedYield": "Tahmini Verim",
     "neuralIntegrity": "Kalite kontrolü",
@@ -8517,5 +8684,1369 @@
     "shift1d": "+1 gün",
     "shift1w": "+1 hafta",
     "moveWarning": "Gönderileri taşımak, aynı platformda aynı anda iki gönderi olmasına yol açabilir. Yayınlanmakta olan veya yayınlanmış gönderiler taşınmaz."
+  },
+  "editorSidebar": {
+    "cat": {
+      "aiEdit": {
+        "label": "AI Otomatik Düzenleme",
+        "desc": "Tek tıkla AI düzenleme"
+      },
+      "dub": {
+        "label": "Dublaj",
+        "desc": "Sesini 10 dile çevir"
+      },
+      "edit": {
+        "label": "Düzenle",
+        "desc": "Temel düzenleme araçları"
+      },
+      "assets": {
+        "label": "Varlıklarım",
+        "desc": "Müzik, görsel ve B-roll klipleri ekle"
+      },
+      "effects": {
+        "label": "Efektler",
+        "desc": "Filtreler ve iyileştirmeler"
+      },
+      "color": {
+        "label": "Renk",
+        "desc": "Profesyonel renk düzenleme"
+      },
+      "chromakey": {
+        "label": "Chroma Key",
+        "desc": "Yeşil ekran ve kompozit"
+      },
+      "timeline": {
+        "label": "Zaman çizelgesi",
+        "desc": "Gelişmiş düzenleme"
+      },
+      "export": {
+        "label": "Dışa aktar",
+        "desc": "Paylaş ve dışa aktar"
+      },
+      "aiAssist": {
+        "label": "AI Asistan",
+        "desc": "Akıllı kesmeler · öneri incelemesi · uygula ve geri al"
+      },
+      "monetize": {
+        "label": "Gelir elde et",
+        "desc": "Ürün linkleri · QR · AI gelir planı"
+      },
+      "stockLibrary": {
+        "label": "Stok Kütüphanesi",
+        "desc": "B-roll · müzik · GIF · çıkartma · geçiş · SFX"
+      },
+      "textMotion": {
+        "label": "Metin ve Hareket",
+        "desc": "Altyazılar · animasyonlar · hareket · yazı tipleri"
+      }
+    },
+    "group": {
+      "edit": {
+        "label": "Düzenle",
+        "desc": "Kes, renklendir, birleştir — temel düzenleme alanı."
+      },
+      "media": {
+        "label": "Medya",
+        "desc": "Varlıklar, stok, altyazılar ve metin."
+      },
+      "ai": {
+        "label": "AI",
+        "desc": "Tek tıkla AI otomatik düzenleme + çok dilli dublaj."
+      },
+      "export": {
+        "label": "Dışa aktar",
+        "desc": "Render al ve paylaş."
+      }
+    },
+    "badge": {
+      "new": "YENİ",
+      "agency": "Ajans",
+      "pro": "PRO",
+      "beta": "BETA"
+    },
+    "title": "Düzenleyici araçları",
+    "ready": "Hazır",
+    "expand": "Kenar çubuğunu genişlet",
+    "collapse": "Kenar çubuğunu daralt",
+    "searchPlaceholder": "Araç ara (⌘F)",
+    "clearSearch": "Aramayı temizle",
+    "all": "Tümü",
+    "recent": "Son kullanılanlar",
+    "noTools": "Araç bulunamadı",
+    "pinned": "Sabitlenenler",
+    "allTools": "Tüm araçlar",
+    "unpin": "Sabitlemeyi kaldır",
+    "pinToTop": "En üste sabitle",
+    "device": {
+      "desktop": "Masaüstü",
+      "tablet": "Tablet",
+      "mobile": "Mobil"
+    },
+    "shortcuts": "Klavye kısayolları",
+    "closeShortcuts": "Kısayolları kapat",
+    "searchTools": "Araç ara"
+  },
+  "editorHUD": {
+    "section": {
+      "edit": "Düzenleme",
+      "color": "Renk",
+      "ai": "AI Araçları",
+      "effects": "Efektler",
+      "timeline": "Zaman çizelgesi",
+      "export": "Dışa aktar",
+      "styleVault": "Style Vault",
+      "aiEdit": "AI Düzenleme",
+      "assets": "Varlıklar",
+      "growth": "Analitik",
+      "chromakey": "Chroma Key",
+      "visualFx": "Görsel efektler",
+      "aiAnalysis": "AI Analizi",
+      "collaborate": "İş birliği",
+      "scripts": "Senaryolar",
+      "scheduling": "Zamanlama",
+      "shortClips": "Kısa Klipler",
+      "predict": "Tahminler",
+      "distribution": "Dağıtım",
+      "spatial": "Uzamsal",
+      "agent": "AI Ajanı",
+      "dub": "Dublaj"
+    },
+    "layout": {
+      "balanced": "Dengeli",
+      "balancedDesc": "Önizleme ve zaman çizelgesi eşit bölünür",
+      "cinematic": "Sinematik",
+      "cinematicDesc": "Daha büyük önizleme, oynatmaya odak",
+      "timelineFocus": "Zaman çizelgesi odaklı",
+      "timelineFocusDesc": "Hassas zaman çizelgesi düzenlemeleri için daha fazla alan"
+    },
+    "projectName": "Proje adı",
+    "savingEllipsis": "Kaydediliyor…",
+    "saveFailed": "Kaydedilemedi",
+    "allChangesSaved": "Tüm değişiklikler kaydedildi",
+    "saving": "Kaydediliyor",
+    "saved": "Kaydedildi",
+    "undoTitle": "Geri al (⌘Z)",
+    "redoTitle": "Yinele (⌘Y)",
+    "undo": "Geri al",
+    "redo": "Yinele",
+    "command": "Ara veya komut çalıştır",
+    "commandTitle": "Ara veya komut çalıştır (⌘K)",
+    "workspaceLayoutTitle": "Çalışma alanı düzeni (L)",
+    "workspaceLayout": "Çalışma alanı düzeni",
+    "gpu": "GPU: {{backend}}",
+    "agentRunning": "AI ajanı çalışıyor",
+    "makeViralTitle": "Tek tıkla viral tarifini çalıştır — hook, kesmeler, B-roll, ritim senkronu, CTA",
+    "working": "Çalışıyor…",
+    "makeViral": "Viral yap",
+    "focusMode": "Odak modu",
+    "moreActions": "Diğer işlemler",
+    "more": "Daha fazla",
+    "keyboardShortcuts": "Klavye kısayolları",
+    "exportTitle": "Dışa aktar ve yayınla",
+    "export": "Dışa aktar"
+  },
+  "quickActionsBar": {
+    "variantsNeedBase": "Varyasyon oluşturucunun çalışabilmesi için önce bir altyazı veya hook ekle.",
+    "noVariants": "Varyasyon dönmedi — daha uzun bir temel hook dene.",
+    "variantsGenerated": "{{count}} varyasyon oluşturuldu — önizlemek için A/B seçiciyi aç.",
+    "variantsFailed": "Varyasyonlar oluşturulamadı: {{error}}",
+    "unknownError": "bilinmeyen hata",
+    "brollNeedsClip": "B-roll önermek için önce bir klip yükle.",
+    "noBrollGaps": "B-roll boşluğu bulunamadı — klibin zaten görsel olarak dolu.",
+    "brollSuggested": "{{count}} B-roll eklemesi önerildi. İncelemek için zaman çizelgesini aç.",
+    "brollFailed": "B-roll önerileri alınamadı: {{error}}",
+    "trendsWarmingUp": "Trend akışı hazırlanıyor — bir dakika sonra tekrar dene.",
+    "trendsLoaded": "Şu an trend: {{sounds}} ses · {{hashtags}} hashtag. Seçici açılıyor.",
+    "trendsFailed": "Trendler yüklenemedi: {{error}}",
+    "styleApplied": "Stilin uygulandı: {{items}}",
+    "styleAppliedGeneric": "Öğrenilen stilin uygulandı.",
+    "styleNeedsClips": "Click'in stilini öğrenebilmesi için önce 3 klip yayınla.",
+    "styleTimedOut": "Stil isteğin zaman aşımına uğradı. Tekrar dene.",
+    "styleLoadFailed": "Stilin yüklenemedi. Tekrar dene.",
+    "viralEdit": "Viral Düzenleme",
+    "viralEditLong": "Otomatik Viral Düzenleme — tek dokunuşla tam kurgu",
+    "applyStyle": "Stili uygula",
+    "split": "Böl",
+    "splitLong": "Oynatma kafasından böl",
+    "captions": "Altyazılar",
+    "grade": "Renk",
+    "effects": "Efektler",
+    "aiTools": "AI araçları",
+    "clean": "Temizle",
+    "cleanLong": "Akıllı temizlik",
+    "variants": "Varyasyonlar",
+    "variantsLong": "A/B varyasyonları",
+    "broll": "B-roll",
+    "brollLong": "B-roll öner",
+    "trends": "Trendler",
+    "trendsLong": "Şu an trend",
+    "learnedFrom": "Click, yayınladığın {{count}} klipten öğrendi",
+    "ariaLoading": "{{label}} — yükleniyor",
+    "ariaShortcut": "{{label}} (kısayol {{key}})"
+  },
+  "aiAutoEdit": {
+    "preset": {
+      "mrbeastEnergy": "MrBeast Enerjisi",
+      "mrbeastEnergyTagline": "Büyük riskler · kalıp kırma",
+      "hormoziBold": "Hormozi Bold",
+      "hormoziBoldTagline": "Sert veri · aykırı görüş",
+      "cinematicDoc": "Sinematik Belgesel",
+      "cinematicDocTagline": "Yavaş gerilim · fısıltı kesmeler",
+      "educationalClean": "Sade Eğitim",
+      "educationalCleanTagline": "Soruyla aç · net bilgi",
+      "newsAuthority": "Haber Otoritesi",
+      "newsAuthorityTagline": "Manşet · son dakika · uzman",
+      "casualVlog": "Rahat Vlog",
+      "casualVlogTagline": "Günlük yaşam · sohbet havası",
+      "mysteryHook": "Gizemli Hook",
+      "mysteryHookTagline": "Merak döngüsü · yavaş açılış",
+      "gymGrit": "Spor Salonu Azmi",
+      "gymGritTagline": "Yüksek tempo · sert motivasyon",
+      "adhdOverload": "ADHD Overload",
+      "adhdOverloadTagline": "Kaos · patlamalar · aşırı uyarım",
+      "podcastGoldmine": "Podcast Hazinesi",
+      "podcastGoldmineTagline": "Otorite · bölümler · sıcak belgesel",
+      "retentionMachine": "İzlenme Makinesi",
+      "retentionMachineTagline": "Açık döngüler · B-roll · bölümler"
+    },
+    "opt": {
+      "auto": "Otomatik",
+      "vivid": "Canlı",
+      "cinematic": "Sinematik",
+      "natural": "Doğal",
+      "cool": "Soğuk",
+      "warm": "Sıcak",
+      "vintage": "Vintage",
+      "bw": "Siyah beyaz",
+      "upbeatPop": "Neşeli pop",
+      "chill": "Chill",
+      "darkAmbient": "Dark ambient",
+      "synthwave": "Synthwave",
+      "phonk": "Phonk",
+      "lofi": "Lo-fi",
+      "question": "Soru",
+      "stat": "İstatistik",
+      "mystery": "Gizem",
+      "story": "Hikâye",
+      "boldClaim": "Cesur iddia",
+      "patternBreak": "Kalıp kırma",
+      "fastCut": "Hızlı kesme",
+      "crossfade": "Çapraz geçiş",
+      "glitch": "Glitch",
+      "whipPan": "Whip pan",
+      "hardCut": "Sert kesme",
+      "modern": "Modern",
+      "bold": "Cesur",
+      "minimal": "Minimal",
+      "neon": "Neon",
+      "pill": "Hap",
+      "top": "Üst",
+      "middle": "Orta",
+      "bottom": "Alt",
+      "lowerThird": "Alt bant",
+      "energetic": "Enerjik",
+      "calm": "Sakin",
+      "authoritative": "Otoriter",
+      "playful": "Oyuncu",
+      "serious": "Ciddi",
+      "urgency": "Aciliyet",
+      "value": "Değer",
+      "curiosity": "Merak",
+      "off": "Kapalı",
+      "sparse": "Seyrek",
+      "balanced": "Dengeli",
+      "heavy": "Yoğun",
+      "gentle": "Yumuşak",
+      "medium": "Orta",
+      "aggressive": "Agresif",
+      "educational": "Eğitici",
+      "entertaining": "Eğlenceli",
+      "motivational": "Motivasyonel",
+      "promotional": "Tanıtım"
+    },
+    "brief": {
+      "title": "Pazarlama Özeti",
+      "postingTimes": "En İyi Paylaşım Saatleri",
+      "competitiveInsights": "Rekabet İçgörüleri"
+    },
+    "err": {
+      "videoNotFound": "Yanıtta video verisi bulunamadı",
+      "loadFailed": "Video yüklenemedi. Lütfen tekrar dene.",
+      "missingSource": "Bu videonun kaynak dosyası eksik. Yeniden yükleyip tekrar dene.",
+      "tooManyPresets": "Bir düzenlemede en fazla 3 stil ön ayarını birleştirebilirsin.",
+      "serviceError": "AI hizmetinde bir hata oluştu: {{error}}",
+      "serviceInternal": "AI hizmetinde dahili bir hata oluştu. Birazdan tekrar dene.",
+      "sessionExpired": "Oturumunun süresi doldu. Tekrar giriş yapıp yeniden dene.",
+      "rateLimited": "Çok fazla düzenleme isteği. Biraz bekleyip tekrar dene.",
+      "rejected": "İstek reddedildi ({{status}}). Girdilerini kontrol edip tekrar dene.",
+      "timeout": "Düzenleme isteği zaman aşımına uğradı. Video çok büyük olabilir ya da sunucu yavaş yanıt veriyor.",
+      "network": "Sunucuya ulaşılamıyor. Bağlantını kontrol edip tekrar dene.",
+      "startFailed": "AI düzenlemesi başlatılamadı. Tekrar dene."
+    },
+    "badge": "AI Otomatik Düzenleme",
+    "title": "AI Kurallarını Yapılandır",
+    "untitled": "Adsız Proje",
+    "toggleTheme": "Temayı değiştir",
+    "analyze": "Videoyu analiz et",
+    "analyzing": "Analiz ediliyor...",
+    "backToVideos": "Videolara dön",
+    "processingTitle": "Video İşleniyor",
+    "processingBody": "AI videonu analiz ediyor, kesiyor ve optimize ediyor...",
+    "initializing": "Başlatılıyor",
+    "result": {
+      "title": "Düzenlemen hazır",
+      "body": "İnce ayar için düzenleyicide aç ya da olduğu gibi indir.",
+      "editsApplied": "Uygulanan düzenlemeler",
+      "openInEditor": "Düzenleyicide aç",
+      "downloadTitle": "Düzenlenmiş videoyu indir",
+      "download": "İndir",
+      "viewClipsTitle": "Oluşturulan klipleri gör",
+      "viewClips": "Klipleri gör",
+      "dismissTitle": "Bu sonucu kapat",
+      "dismiss": "Kapat"
+    },
+    "diag": {
+      "title": "Tanılama",
+      "complete": "Analiz Tamamlandı",
+      "suggestedLength": "Önerilen Uzunluk"
+    },
+    "plan": {
+      "title": "Düzenleme planın",
+      "subtitle": "AI'ın sağdaki ayarlarla yapacakları",
+      "opening": "Açılış",
+      "openingHook": "En güçlü anla başla",
+      "openingOriginal": "Orijinal başlangıcı koru",
+      "pacing": "Tempo",
+      "pacingGentle": "Yumuşak kesmeler",
+      "pacingFast": "Hızlı, sıkı kesmeler",
+      "pacingBalanced": "Dengeli kesmeler",
+      "deadAir": "Ölü anlar",
+      "removed": "Kaldırılan",
+      "kept": "Korunan",
+      "captions": "Altyazılar",
+      "burnedIn": "Videoya gömülü",
+      "off": "Kapalı",
+      "clips": "Klipler",
+      "under30s": "30 sn altı",
+      "fullLength": "tam uzunluk",
+      "oneVideo": "Tek düzenlenmiş video",
+      "format": "Format"
+    },
+    "director": {
+      "title": "AI Yönetmen",
+      "subtitle": "En fazla 3 stil seç ya da her ayarı ince ayarla.",
+      "presetsOne": "{{count}} ön ayar: {{names}}",
+      "presetsOther": "{{count}} ön ayar: {{names}}"
+    },
+    "targetPlatform": "Hedef platform",
+    "contentTone": "İçerik tonu",
+    "stylePreset": "Stil ön ayarı",
+    "presetsSelected": "{{count}}/3 seçildi · kaldırmak için tekrar tıkla",
+    "presetCap": "En fazla 3 ön ayar — değiştirmek için birini kaldır",
+    "presetSelectedTitle": "#{{n}} seçildi — kaldırmak için tıkla",
+    "presetSelect": "Stil seç: {{name}}",
+    "presetSelectedAria": "Seçilen stil #{{n}}: {{name}}",
+    "aiTasks": "AI görevleri",
+    "task": {
+      "removeSilence": "Sessizliği kaldır",
+      "removeSilenceDesc": "Ölü anları ve duraksamaları otomatik kes",
+      "optimizePacing": "Tempoyu optimize et",
+      "optimizePacingDesc": "İzleyiciyi tutan sıkı kesmeler",
+      "enhanceAudio": "Sesi iyileştir",
+      "enhanceAudioDesc": "Gürültü azaltma + seviye dengeleme",
+      "generateClips": "Kısa klipler oluştur",
+      "generateClipsDesc": "Viral anları çıkar",
+      "addCaptions": "Gömülü altyazılar",
+      "addCaptionsDesc": "Kelimeye senkron dinamik metin",
+      "enhanceColor": "Renk düzeltme",
+      "enhanceColorDesc": "Otomatik LUT + renk düzenleme"
+    },
+    "output": "Çıktı",
+    "aspectRatio": "En boy oranı",
+    "clipsToGenerate": "Oluşturulacak klipler",
+    "clipCountAria": "Oluşturulacak klip sayısı",
+    "targetLength": "Hedef uzunluk",
+    "full": "Tam",
+    "pacing": "Tempo",
+    "advanced": "Gelişmiş",
+    "advancedHint": "Ruh hâli, altyazılar, geçişler, ses, B-roll, CTA",
+    "sel": {
+      "colorGrade": "Renk düzenleme",
+      "musicGenre": "Müzik türü",
+      "hookStyle": "Hook stili",
+      "transitions": "Geçişler",
+      "captionStyle": "Altyazı stili",
+      "subtitlePosition": "Altyazı konumu",
+      "voiceTone": "Ses tonu",
+      "ctaStyle": "CTA stili",
+      "brollFrequency": "B-roll sıklığı"
+    },
+    "speedRamping": "Hız rampası",
+    "speedRampingHint": "Enerji için klipleri hızlandırıp yavaşlatır",
+    "toggleSpeedRamping": "Hız rampasını aç/kapat",
+    "prioritizeHook": "Hook'a öncelik ver",
+    "prioritizeHookHint": "İzleyiciyi tutmak için ilk 3 sn'yi değerlendir",
+    "togglePrioritizeHook": "Hook önceliğini aç/kapat",
+    "creativeDirection": "Yaratıcı Yön",
+    "creativeDirectionHint": "isteğe bağlı · AI varsayılanlarını geçersiz kılar",
+    "creativeDirectionPlaceholder": "ör. Sinematik ve karanlık hissettirsin, jump cut olmasın, 0:42'deki duygusal duraksamayı vurgula…",
+    "autoFit": "Otomatik sığdır",
+    "aiPlan": "AI Planı",
+    "preloadedStyle": "Stilin önceden yüklendi",
+    "planLine": {
+      "composeOne": "{{count}} adet {{aspect}} klip oluştur, hedef {{length}}",
+      "composeOther": "{{count}} adet {{aspect}} klip oluştur, hedef {{length}}",
+      "forPlatform": "platform: {{platform}}",
+      "tone": "ton: {{tone}}",
+      "acrossPresets": "{{presets}} genelinde ({{count}} varyasyon açısı)",
+      "autoStyle": "{{auto}} stiliyle",
+      "autoDetected": "otomatik algılandı",
+      "grade": "renk düzenleme: {{grade}}",
+      "hook": "hook: {{hook}}",
+      "pacing": "tempo: {{pacing}}",
+      "speedRamping": "hız rampası açık",
+      "broll": "B-roll: {{broll}}"
+    },
+    "tasksOne": "{{count}} görev",
+    "tasksOther": "{{count}} görev",
+    "estimate": "tahmini {{time}}",
+    "chip": {
+      "captions": "Altyazılar",
+      "autoGrade": "Otomatik renk",
+      "speedRamp": "Hız rampası"
+    },
+    "composing": "Kurgun hazırlanıyor…",
+    "composeOne": "{{count}} klip oluştur",
+    "composeOther": "{{count}} klip oluştur",
+    "using": "Kullanılan: {{names}}",
+    "autoSelectPreset": "İçeriğine göre ön ayarı otomatik seç",
+    "tasksOnOne": "{{count}} görev açık",
+    "tasksOnOther": "{{count}} görev açık",
+    "dismissError": "Bu hatayı kapat",
+    "dismiss": "Kapat"
+  },
+  "propertiesPanel": {
+    "layout": {
+      "bottom": "Alt",
+      "bottomTitle": "Alt",
+      "lowerThird": "Alt bant",
+      "lowerThirdTitle": "Alt bant",
+      "top": "Üst",
+      "topTitle": "Üst",
+      "fullWidth": "Tam genişlik",
+      "fullWidthTitle": "Tam genişlik bant"
+    },
+    "tab": {
+      "transform": "Konum",
+      "color": "Renk",
+      "captions": "Altyazılar",
+      "text": "Metin",
+      "clip": "Klip"
+    },
+    "reset": "Sıfırla",
+    "title": "Özellikler",
+    "activeTab": "{{tab}} ayarları",
+    "close": "Özellikleri kapat",
+    "clipProperties": "Klip özellikleri",
+    "selectedClip": "Seçili klip",
+    "playbackSpeed": "Oynatma hızı",
+    "playbackSpeedTitle": "Oynatma hızı: {{speed}}x",
+    "playbackSpeedHint": "Bu klibi hızlandır veya yavaşlat.",
+    "stabilization": "Sabitleme",
+    "stabilizationTitle": "Sabitleme: %{{value}}",
+    "stabilizationHint": "Kamera titremesinin ne kadar yumuşatılacağı.",
+    "volume": "Ses düzeyi",
+    "volumeTitle": "Ses düzeyi: %{{value}}",
+    "autoDucking": "Otomatik kısma",
+    "autoDuckingHint": "Biri konuşurken müziği kıs",
+    "autoDuckingToggle": "Otomatik kısmayı aç veya kapat",
+    "positionAndSize": "Konum ve boyut",
+    "scale": "Ölçek (%)",
+    "positionX": "X konumu",
+    "positionY": "Y konumu",
+    "rotation": "Döndürme (°)",
+    "animation": "Animasyon",
+    "keyframesCountOne": "1 ana kare",
+    "keyframesCount": "{{count}} ana kare",
+    "addKeyframe": "+ Oynatma kafasına ana kare ekle",
+    "prevKeyframe": "◁ Önceki",
+    "nextKeyframe": "Sonraki ▷",
+    "remove": "Kaldır",
+    "curve": "Eğri",
+    "easing": {
+      "linear": "Doğrusal",
+      "easeIn": "Yavaş başla",
+      "easeOut": "Yavaş bitir",
+      "easeInOut": "Yavaş başla ve bitir",
+      "bounceOut": "Zıplama",
+      "elasticOut": "Esnek",
+      "cubic": "Yumuşak (güçlü)"
+    },
+    "brightness": "Parlaklık",
+    "contrast": "Kontrast",
+    "saturation": "Doygunluk",
+    "temperature": "Sıcaklık",
+    "clarity": "Netlik",
+    "dehaze": "Pus giderme",
+    "captionsOn": "Altyazıları göster",
+    "captionsOnHint": "Transkripti altyazı olarak göster",
+    "captionLayout": "Altyazı konumu",
+    "textOverlays": "Metin katmanları",
+    "noTextOverlays": "Henüz metin katmanı yok",
+    "deleteTextOverlay": "Metin katmanını sil",
+    "synced": "Senkronize",
+    "preset": {
+      "tiktok": {
+        "label": "TikTok",
+        "description": "Kalın, ortada, yüksek etki"
+      },
+      "reels": {
+        "label": "Reels",
+        "description": "Sade büyük harf, trend"
+      },
+      "podcast": {
+        "label": "Podcast",
+        "description": "Minimal, alt bant"
+      },
+      "cinematic": {
+        "label": "Sinematik",
+        "description": "Film tarzı serif"
+      },
+      "documentary": {
+        "label": "Belgesel",
+        "description": "Klasik altyazı bandı"
+      },
+      "neon": {
+        "label": "Neon",
+        "description": "Parlayan, gece havası"
+      },
+      "karaoke": {
+        "label": "Karaoke",
+        "description": "Kalın karaoke stili"
+      },
+      "pill": {
+        "label": "Hap",
+        "description": "Yuvarlatılmış hap kelimeler"
+      },
+      "bubble": {
+        "label": "Balon",
+        "description": "Konuşma balonu stili"
+      },
+      "gradient": {
+        "label": "Gradyan",
+        "description": "Renkli gradyan metin"
+      },
+      "retro": {
+        "label": "Retro",
+        "description": "Sıcak vintage görünüm"
+      },
+      "vintage": {
+        "label": "Vintage",
+        "description": "Sepya daktilo"
+      },
+      "pop": {
+        "label": "Pop",
+        "description": "Parlak ve vurucu"
+      },
+      "high-contrast": {
+        "label": "Erişilebilir",
+        "description": "Yüksek kontrast, okunaklı"
+      },
+      "kinetic": {
+        "label": "Kinetik",
+        "description": "Kelimeler ritimle belirir"
+      },
+      "slow-zoom": {
+        "label": "Yavaş yakınlaştırma",
+        "description": "Ölçek %100 → %110"
+      },
+      "fly-in-left": {
+        "label": "Soldan uçarak gir",
+        "description": "Ekran dışından soldan konum"
+      },
+      "fly-in-right": {
+        "label": "Sağdan uçarak gir",
+        "description": "Ekran dışından sağdan konum"
+      },
+      "fly-in-top": {
+        "label": "Üstten uçarak gir",
+        "description": "Ekran dışından üstten konum"
+      },
+      "fly-in-bottom": {
+        "label": "Alttan uçarak gir",
+        "description": "Ekran dışından alttan konum"
+      },
+      "fade-in-out": {
+        "label": "Belir ve sol",
+        "description": "Opaklık 0 → 1 → 0"
+      }
+    }
+  },
+  "basicEditor": {
+    "preset": {
+      "title": {
+        "label": "Başlık"
+      },
+      "text": {
+        "yourTitleHere": "Başlığın Burada",
+        "subscribeForMore": "Daha fazlası için abone ol",
+        "likeSubscribe": "Beğen ve Abone Ol",
+        "watchMore": "Daha fazla izle →",
+        "commentBelow": "Aşağıya yorum yap",
+        "linkInBio": "Link biyografide",
+        "addYourCaption": "Altyazını ekle",
+        "followForMore": "Daha fazlası için takip et",
+        "newText": "YENİ METİN",
+        "youNeedToSeeThis": "BUNU GÖRMELİSİN",
+        "nameTitle": "İsim · Unvan",
+        "proTip": "PRO İPUCU",
+        "tapToLearnMore": "DAHA FAZLASI İÇİN DOKUN",
+        "waitForIt": "BEKLE...",
+        "storyTime": "HİKÂYE ZAMANI",
+        "youWontBelieveWhatHappened": "Ne olduğuna inanamayacaksın",
+        "dayInMyLife": "Hayatımdan bir gün",
+        "day1Of": "1. gün...",
+        "getReadyForThis": "Buna hazır ol",
+        "watchTillTheEnd": "Sonuna kadar izle",
+        "noOneTalksAboutThis": "Kimse bundan bahsetmiyor",
+        "theSecretTheyDontWantYouToKnow": "Bilmeni istemedikleri sır",
+        "theSecretIs": "SIR ŞU",
+        "insane": "İNANILMAZ!",
+        "actually": "aslında...",
+        "now": "şimdi",
+        "zeroCost": "SIFIR MALİYET",
+        "watch": "İZLE",
+        "here": "BURADA",
+        "swipeUp": "Yukarı kaydır",
+        "seeYouNextTime": "Bir dahaki sefere görüşürüz",
+        "unpopularOpinion": "Popüler olmayan görüş:",
+        "thisChangedEverything": "Bu her şeyi değiştirdi",
+        "hotTake": "Aykırı görüş:",
+        "nobodyTalksAboutThis": "Kimse bunu konuşmuyor",
+        "povYouJustFoundTheBestTip": "POV: En iyi ipucunu buldun",
+        "saveThisForLater": "Sonra için kaydet",
+        "commentYourAnswerBelow": "Cevabını yorumlara yaz",
+        "dropAIfYouAgree": "Katılıyorsan 👍 bırak",
+        "part1": "Bölüm 1",
+        "chapter1": "Bölüm 1",
+        "intro": "INTRO",
+        "outro": "OUTRO",
+        "comingUpNext": "Sırada...",
+        "quickRecap": "Kısa özet"
+      },
+      "subscribe": {
+        "label": "Abone ol"
+      },
+      "likeSubscribe": {
+        "label": "Beğen ve Abone Ol"
+      },
+      "watchMore": {
+        "label": "Daha fazla izle"
+      },
+      "comment": {
+        "label": "Yorum"
+      },
+      "linkInBio": {
+        "label": "Link biyografide"
+      },
+      "caption": {
+        "label": "Altyazı"
+      },
+      "follow": {
+        "label": "Takip et"
+      },
+      "custom": {
+        "label": "Özel"
+      },
+      "hook": {
+        "label": "Hook"
+      },
+      "lowerThird": {
+        "label": "Alt bant"
+      },
+      "callout": {
+        "label": "Vurgu"
+      },
+      "timestamp": {
+        "label": "Zaman damgası"
+      },
+      "waitForIt": {
+        "label": "Bekle"
+      },
+      "storyTime": {
+        "label": "Hikâye zamanı"
+      },
+      "youWontBelieve": {
+        "label": "İnanamayacaksın"
+      },
+      "dayInMyLife": {
+        "label": "Hayatımdan bir gün"
+      },
+      "dayXOf": {
+        "label": "X. gün"
+      },
+      "getReady": {
+        "label": "Hazır ol"
+      },
+      "watchTillEnd": {
+        "label": "Sonuna kadar izle"
+      },
+      "noOneTalksAbout": {
+        "label": "Kimse bahsetmiyor"
+      },
+      "theSecret": {
+        "label": "Sır"
+      },
+      "hormoziBold": {
+        "label": "Hormozi Bold"
+      },
+      "beastImpact": {
+        "label": "Beast Impact"
+      },
+      "minimalNarrative": {
+        "label": "Minimal Anlatım"
+      },
+      "subliminalQuick": {
+        "label": "Hızlı Bilinçaltı"
+      },
+      "punchyHighlight": {
+        "label": "Vurucu Vurgu"
+      },
+      "arrowRight": {
+        "label": "Ok →"
+      },
+      "arrowLeft": {
+        "label": "Ok ←"
+      },
+      "proTip": {
+        "label": "PRO İPUCU"
+      },
+      "watch": {
+        "label": "İZLE"
+      },
+      "here": {
+        "label": "BURADA"
+      },
+      "swipeUp": {
+        "label": "Yukarı kaydır"
+      },
+      "commentBelow": {
+        "label": "Aşağıya yorum yap"
+      },
+      "tapToLearnMore": {
+        "label": "Daha fazlası için dokun"
+      },
+      "seeYouNextTime": {
+        "label": "Görüşürüz"
+      },
+      "unpopularOpinion": {
+        "label": "Popüler olmayan görüş"
+      },
+      "thisChangedEverything": {
+        "label": "Bu her şeyi değiştirdi"
+      },
+      "hotTake": {
+        "label": "Aykırı görüş"
+      },
+      "nobodyTalksAbout": {
+        "label": "Kimse konuşmuyor"
+      },
+      "saveThis": {
+        "label": "Bunu kaydet"
+      },
+      "commentYour": {
+        "label": "Yorumlara yaz"
+      },
+      "dropA": {
+        "label": "Bırak"
+      },
+      "part1": {
+        "label": "Bölüm 1"
+      },
+      "chapter": {
+        "label": "Bölüm"
+      },
+      "intro": {
+        "label": "Intro"
+      },
+      "outro": {
+        "label": "Outro"
+      },
+      "next": {
+        "label": "Sıradaki"
+      },
+      "recap": {
+        "label": "Özet"
+      }
+    },
+    "filter": {
+      "vibrant": {
+        "name": "Canlı",
+        "desc": "Vurucu renkler"
+      },
+      "mono": {
+        "name": "Mono",
+        "desc": "S&B"
+      },
+      "cinematic": {
+        "name": "Sinematik",
+        "desc": "Film görünümü"
+      },
+      "warm": {
+        "name": "Sıcak",
+        "desc": "Altın saat"
+      },
+      "cool": {
+        "name": "Soğuk",
+        "desc": "Mavi tonlar"
+      },
+      "vintage": {
+        "name": "Vintage",
+        "desc": "Retro"
+      },
+      "moody": {
+        "name": "Duygusal",
+        "desc": "Koyu ve zengin"
+      },
+      "vivid": {
+        "name": "Parlak",
+        "desc": "Yüksek doygunluk"
+      },
+      "noir": {
+        "name": "Noir",
+        "desc": "Yüksek kontrastlı S&B"
+      },
+      "sunset": {
+        "name": "Gün batımı",
+        "desc": "Altın saat"
+      },
+      "breeze": {
+        "name": "Esinti",
+        "desc": "Serin ve canlı"
+      },
+      "matte": {
+        "name": "Mat",
+        "desc": "Düz ve yumuşak"
+      },
+      "neon": {
+        "name": "Neon",
+        "desc": "Canlı renkler"
+      },
+      "autumn": {
+        "name": "Sonbahar",
+        "desc": "Sıcak toprak tonları"
+      },
+      "winter": {
+        "name": "Kış",
+        "desc": "Serin ve temiz"
+      },
+      "dreamy": {
+        "name": "Rüya gibi",
+        "desc": "Yumuşak pastel"
+      },
+      "reset": {
+        "name": "Sıfırla",
+        "desc": "Varsayılan"
+      }
+    },
+    "style": {
+      "creatorBold": {
+        "label": "Cesur İçerik Üretici",
+        "desc": "Yüksek enerjili viral"
+      },
+      "softAesthetic": {
+        "label": "Yumuşak Estetik",
+        "desc": "Yumuşak ve rüya gibi"
+      },
+      "corporateMinimal": {
+        "label": "Kurumsal Minimal",
+        "desc": "Sade ve profesyonel"
+      },
+      "darkMoody": {
+        "label": "Karanlık Atmosfer",
+        "desc": "Dramatik gölgeler"
+      },
+      "vibrantPop": {
+        "label": "Canlı Pop",
+        "desc": "Renkli ve vurucu"
+      },
+      "cinematicFilm": {
+        "label": "Sinematik Film",
+        "desc": "Film fragmanı"
+      },
+      "noirDramatic": {
+        "label": "Dramatik Noir",
+        "desc": "Dramatik S&B"
+      },
+      "lifestyleWarm": {
+        "label": "Sıcak Yaşam Tarzı",
+        "desc": "Vlog ve seyahat"
+      },
+      "podcastPro": {
+        "label": "Podcast Pro",
+        "desc": "Sade ve profesyonel"
+      },
+      "documentary": {
+        "label": "Belgesel",
+        "desc": "Doğal ve sürükleyici"
+      },
+      "fashionEditorial": {
+        "label": "Moda Editoryal",
+        "desc": "Yüksek moda görünümü"
+      },
+      "retroWarm": {
+        "label": "Sıcak Retro",
+        "desc": "Vintage sıcaklığı"
+      },
+      "cinematicDrama": {
+        "label": "Sinematik Drama",
+        "desc": "Derin ve dramatik"
+      },
+      "comedyBright": {
+        "label": "Parlak Komedi",
+        "desc": "Vurucu ve eğlenceli"
+      },
+      "sportsDynamic": {
+        "label": "Dinamik Spor",
+        "desc": "Aksiyona hazır"
+      },
+      "savedDesc": "Kaydedildi"
+    },
+    "platform": {
+      "tiktok": {
+        "desc": "9:16, vurucu"
+      },
+      "youtube": {
+        "desc": "9:16, dengeli"
+      },
+      "feed": {
+        "label": "Instagram Akışı",
+        "desc": "1:1, canlı"
+      },
+      "portrait": {
+        "label": "Instagram Dikey",
+        "desc": "4:5, sıcak"
+      },
+      "landscape": {
+        "label": "YouTube / Yatay",
+        "desc": "16:9, sade"
+      },
+      "linkedin": {
+        "desc": "16:9, profesyonel"
+      }
+    },
+    "filterCategory": {
+      "all": "Tümü",
+      "mood": "Atmosfer",
+      "creative": "Yaratıcı",
+      "dramatic": "Dramatik",
+      "neutral": "Sıfırla"
+    },
+    "shapePreset": {
+      "logoCorner": "Köşe logosu",
+      "subscribeBadge": "Abone rozeti",
+      "fullWidthBar": "Tam genişlik bant",
+      "dividerLine": "Ayırıcı çizgi",
+      "highlightBox": "Vurgu kutusu",
+      "cornerAccent": "Köşe vurgusu"
+    },
+    "undo": "Geri al",
+    "redo": "Yinele",
+    "searchTools": "Araç ara...",
+    "clearSearch": "Aramayı temizle",
+    "layersCount": "{{count}} katman",
+    "reset": "Sıfırla",
+    "add": "Ekle",
+    "save": "Kaydet",
+    "color": "Renk",
+    "toast": {
+      "undoApplied": "Geri alındı",
+      "redoApplied": "Yinelendi",
+      "fontUploading": "Yazı tipi yükleniyor…",
+      "fontAdded": "Yazı tipi eklendi.",
+      "fontInvalid": "Bu yazı tipi dosyası desteklenmiyor.",
+      "fontFailed": "Yazı tipi yüklenemedi.",
+      "rectangleAdded": "Dikdörtgen eklendi",
+      "circleAdded": "Daire eklendi",
+      "lineAdded": "Çizgi eklendi",
+      "addedName": "{{name}} eklendi",
+      "addedQuoted": "\"{{name}}\" eklendi",
+      "addedAt": "\"{{name}}\" {{time}} sn konumuna eklendi",
+      "enterImageUrl": "Bir görsel URL'si gir",
+      "imageAdded": "Görsel katmanı eklendi",
+      "svgAddedFromFile": "SVG katmanı dosyadan eklendi — Efektler'de ana karelerle canlandır",
+      "enterSvgUrl": "Bir SVG URL'si gir (ör. https://… .svg veya data:image/svg+xml,…)",
+      "svgAdded": "SVG katmanı eklendi — Efektler'de ana karelerle canlandır",
+      "compoundSaved": "\"{{name}}\" kaydedildi — istediğin zaman zaman çizelgesine ekle",
+      "compoundRemoved": "Bileşik klip kaldırıldı",
+      "renamed": "Adı \"{{name}}\" olarak değiştirildi",
+      "addTextHint": "Metin ekle — yaz ve Ekle'ye bas ya da Ctrl+Enter kullan",
+      "textAdded": "Metin katmanı eklendi",
+      "packApplied": "{{name}} paketi uygulandı",
+      "saved": "\"{{name}}\" kaydedildi",
+      "filtersReset": "Filtreler varsayılana sıfırlandı",
+      "nameYourStyle": "Stiline bir ad ver ve Kaydet'e tıkla",
+      "applied": "{{name}} uygulandı",
+      "speed": "Hız: {{value}}×"
+    },
+    "compound": {
+      "untitled": "Adsız bileşik klip",
+      "title": "Bileşik klip olarak kaydet",
+      "namePlaceholder": "Bileşik klip adı…",
+      "name": "Bileşik klip adı",
+      "durationAria": "Saniye cinsinden bileşik klip süresi",
+      "delete": "\"{{name}}\" bileşik klibini sil"
+    },
+    "search": {
+      "filterHit": "Filtre: {{name}}",
+      "styleHit": "Stil: {{name}}",
+      "motionHit": "Hareket: {{name}}",
+      "textHit": "Metin: {{name}}"
+    },
+    "caption": {
+      "noTranscript": "Transkript bulunamadı. Senaryonu aşağıdaki alana yapıştırıp tekrar dene.",
+      "noneGenerated": "Altyazı oluşturulamadı — transkript çok kısa olabilir.",
+      "addedToast": "{{count}} altyazı eklendi — {{style}} stili",
+      "generationFailed": "Altyazı oluşturulamadı",
+      "failedToast": "Otomatik altyazı başarısız oldu",
+      "title": "AI otomatik altyazılar",
+      "clearTitle": "Otomatik altyazıları temizle",
+      "cleared": "Otomatik altyazılar temizlendi",
+      "count": "{{count}} altyazı",
+      "ready": "Hazır",
+      "noScript": "Senaryo yok",
+      "pasteScript": "Senaryonu yapıştır",
+      "pasteScriptTitle": "Video senaryonu buraya yapıştır",
+      "pastePlaceholder": "Videondaki konuşmaları yapıştır veya yaz…",
+      "wordCount": "{{count}} kelime",
+      "wordsPerLine": "Kelime/satır",
+      "position": "Konum",
+      "positionAt": {
+        "top": "Altyazıları üste yerleştir",
+        "mid": "Altyazıları ortaya yerleştir",
+        "bottom": "Altyazıları alta yerleştir"
+      },
+      "colorTitle": "Altyazı metin rengi",
+      "setColor": "Altyazı rengini {{color}} yap",
+      "addedInStyle": "{{style}} stilinde {{count}} altyazı eklendi",
+      "generateAria": "Transkriptten otomatik altyazı oluştur",
+      "generating": "{{count}} kelimelik altyazılar oluşturuluyor…",
+      "generate": "Altyazı oluştur"
+    },
+    "captionStyle": {
+      "minimal": "Minimal",
+      "neon": "Neon",
+      "kinetic": "Kinetik",
+      "cyber": "Siber",
+      "meme": "Meme",
+      "retro": "Retro",
+      "quote": "Alıntı"
+    },
+    "translate": {
+      "noCaptions": "Zaman çizelgesinde çevrilecek altyazı yok.",
+      "inProgress": "Altyazılar çevriliyor (zamanlamalar aynı kalır)…",
+      "done": "Altyazılar çevrildi: {{language}}",
+      "empty": "Çeviri bitti ama hiç altyazı dönmedi.",
+      "failed": "Altyazılar çevrilemedi.",
+      "title": "Altyazıları çevir",
+      "languageTitle": "Çevrilecek dili seç",
+      "translating": "Çevriliyor…",
+      "translate": "Çevir"
+    },
+    "emoji": {
+      "noTranscript": "Emojilerin eşleşeceği transkript kelimesi yok. Önce bir transkript oluştur.",
+      "inProgress": "Emojiler transkriptine eşleştiriliyor…",
+      "noneFound": "Transkriptte eşleşen emoji bulunamadı.",
+      "added": "Zaman çizelgesine {{count}} emoji eklendi",
+      "failed": "Emoji oluşturulamadı",
+      "title": "Otomatik emojiler",
+      "clearTitle": "Oluşturulan emojileri temizle",
+      "cleared": "Emojiler temizlendi",
+      "count": "{{count}} emoji",
+      "enter": "Giriş geçişi",
+      "enterTitle": "Emojilerin nasıl görüneceğini seç",
+      "exit": "Çıkış geçişi",
+      "exitTitle": "Emojilerin nasıl kaybolacağını seç",
+      "style": "Stil",
+      "styleTitle": "Emoji stilini seç",
+      "size": "Emoji boyutu",
+      "sizeTitle": "Emoji boyutunu seç",
+      "density": "Sıklık",
+      "densityTitle": "Emojilerin ne sıklıkla görüneceğini seç",
+      "placement": "Yerleşim",
+      "placementTitle": "Emojilerin nerede duracağını seç",
+      "inDuration": "Giriş süresi: {{value}} sn",
+      "inDurationTitle": "Giriş animasyonu süresi",
+      "outDuration": "Çıkış süresi: {{value}} sn",
+      "outDurationTitle": "Çıkış animasyonu süresi",
+      "generating": "Emojiler oluşturuluyor…",
+      "generate": "Emoji oluştur"
+    },
+    "emojiOpt": {
+      "enter": {
+        "pop": "💥 Patlayarak gir",
+        "bounce": "🦘 Zıplayarak gir",
+        "slide": "➡️ Kayarak gir",
+        "pulse": "💓 Yakınlaştırma nabzı",
+        "shake": "⚡ Kamera sarsıntısı",
+        "blur": "🌫️ Bulanıklıktan gir"
+      },
+      "exit": {
+        "fade": "🌫️ Yumuşak solma",
+        "pop": "💥 Patlayarak çık",
+        "slideBottom": "⬇️ Aşağı kay",
+        "bounceOut": "🦘 Zıplayarak çık",
+        "scaleOut": "🔍 Küçülerek çık",
+        "zoomOut": "🔎 Uzaklaş",
+        "flipOut": "🔄 Dönerek çık"
+      },
+      "style": {
+        "pop3d": "✨ 3D pop",
+        "neonGlow": "🏮 Neon parıltı",
+        "flat": "📄 Minimal düz"
+      },
+      "size": {
+        "n32": "🤏 Küçük (32px)",
+        "n48": "👌 Orta (48px)",
+        "n64": "💪 Büyük (64px)",
+        "n80": "👑 Dev (80px)"
+      },
+      "density": {
+        "n3": "🔥 Yüksek (her 3 kelimede)",
+        "n6": "⚡ Orta (her 6 kelimede)",
+        "n10": "🎯 Düşük (her 10 kelimede)"
+      },
+      "place": {
+        "above": "⬆️ Altyazıların üstünde",
+        "below": "⬇️ Altyazıların altında",
+        "head": "👱 Baş hizası",
+        "customTop": "👑 Kadrajın üstü"
+      }
+    },
+    "lang": {
+      "en": "İngilizce (English)",
+      "es": "İspanyolca (Español)",
+      "fr": "Fransızca (Français)",
+      "de": "Almanca (Deutsch)",
+      "it": "İtalyanca (Italiano)",
+      "pt": "Portekizce (Português)",
+      "ru": "Rusça (Русский)",
+      "ja": "Japonca (日本語)",
+      "ko": "Korece (한국어)",
+      "zh": "Çince (中文)",
+      "ar": "Arapça (العربية)",
+      "hi": "Hintçe (हिन्दी)",
+      "nl": "Felemenkçe (Nederlands)",
+      "pl": "Lehçe (Polski)",
+      "tr": "Türkçe"
+    },
+    "trim": {
+      "waveform": "Dalga formu",
+      "clickToSeek": "Oynatma kafasını taşımak için tıkla",
+      "speed": "Hız",
+      "playbackSpeedAria": "Oynatma hızı: {{value}} kat",
+      "reverse": "Ters çevir",
+      "reverseSub": "Seçili klibi tersten oynat",
+      "selectClipFirst": "Önce bir klip seç",
+      "split": "Oynatma kafasından böl",
+      "beatCut": "Ritme göre kes",
+      "beatCutSub": "Klibi her vuruşta kes",
+      "freeze": "Kare dondurma",
+      "freezeSub": "{{time}} sn'de 1 sn beklet",
+      "trimToInOut": "Giriş/Çıkışa kırp",
+      "trimToInOutSub": "Aşağıdan giriş ve çıkışı ayarla",
+      "setBothFirst": "Önce giriş ve çıkış noktalarını ayarla",
+      "jCut": "J-cut",
+      "jCutSub": "Ses 0,5 sn erken başlar",
+      "lCut": "L-cut",
+      "lCutSub": "Ses kesmeden sonra 0,5 sn devam eder",
+      "comingSoonTitle": "{{label}} — yakında",
+      "selectClipTitle": "{{label}} — önce bir klip seç",
+      "soon": "Yakında",
+      "markers": "Giriş / Çıkış işaretleri",
+      "inAt": "Giriş {{time}} sn",
+      "noIn": "Giriş yok",
+      "outAt": "Çıkış {{time}} sn",
+      "noOut": "Çıkış yok",
+      "inSet": "Giriş ayarlandı @ {{time}} sn",
+      "setIn": "Giriş ayarla",
+      "outAfterIn": "Çıkış, girişten sonra olmalı",
+      "outSet": "Çıkış ayarlandı @ {{time}} sn",
+      "setOut": "Çıkış ayarla",
+      "clear": "Temizle"
+    },
+    "layout": {
+      "auto": "Otomatik",
+      "standard": "Standart",
+      "square": "Kare",
+      "vertical": "Dikey",
+      "portrait": "Portre",
+      "cinematic": "Sinematik",
+      "classic": "Klasik"
+    },
+    "text": {
+      "editingOnCanvas": "Tuvalde düzenleniyor",
+      "doubleClickHint": "Doğrudan yazmak için oynatıcıdaki metne çift tıkla",
+      "deselect": "Seçimi kaldır",
+      "newText": "Yeni Metin",
+      "typePlaceholder": "Metin yaz… (eklemek için ⌘↵)",
+      "duration": "Süre:",
+      "searchPresets": "Ön ayar ara…",
+      "activeText": "Videodaki metin ({{count}})",
+      "deleteOverlayAria": "\"{{text}}\" metin katmanını sil",
+      "deleteOverlay": "Metin katmanını sil",
+      "preview": "Önizleme",
+      "livePreview": "Canlı önizleme",
+      "editing": "Düzenleniyor: {{text}}",
+      "contentAria": "Katman metni",
+      "contentPlaceholder": "Katman metni",
+      "fontSize": "Yazı boyutu",
+      "textColor": "Metin rengi",
+      "style": "Stil",
+      "animateIn": "Giriş animasyonu",
+      "animateOut": "Çıkış animasyonu",
+      "font": "Yazı tipi",
+      "start": "Başlangıç",
+      "startAria": "Saniye cinsinden başlangıç zamanı",
+      "end": "Bitiş",
+      "endAria": "Saniye cinsinden bitiş zamanı",
+      "uploadFont": "Yazı tipi yükle",
+      "uploadFontAria": "Özel yazı tipi dosyası yükle"
+    },
+    "textStyle": {
+      "none": "Yok",
+      "neon": "Neon",
+      "minimal": "Minimal",
+      "bold-kinetic": "Kalın kinetik",
+      "outline": "Dış çizgi",
+      "shadow": "Gölge"
+    },
+    "anim": {
+      "none": "Yok",
+      "fade": "Solma",
+      "slide-up": "Yukarı kaydır",
+      "slide-down": "Aşağı kaydır",
+      "slide-left": "Sola kaydır",
+      "slide-right": "Sağa kaydır",
+      "scale": "Ölçekleme",
+      "bounce": "Zıplama"
+    },
+    "presetGroup": {
+      "viralHooks": "Viral hook'lar",
+      "textPresets": "Metin ön ayarları",
+      "premiumCaptions": "Premium altyazılar",
+      "reactionCallouts": "Tepkiler / vurgular",
+      "trending": "Trend",
+      "endScreens": "Bitiş ekranları",
+      "chapters": "Bölümler"
+    },
+    "filters": {
+      "strengthAria": "Filtre gücü: yüzde {{value}}",
+      "before": "⏪ Önce",
+      "after": "⏩ Sonra",
+      "split": "🌓 Bölünmüş",
+      "pinned": "Sabitlendi",
+      "pin": "{{name}} filtresini sabitle",
+      "unpin": "{{name}} filtresinin sabitlemesini kaldır"
+    },
+    "motion": {
+      "searchTemplates": "Şablon ara…",
+      "durationAria": "Hareketli grafik süresi (saniye)",
+      "recent": "Son kullanılanlar"
+    },
+    "layers": {
+      "addShape": "Şekil ekle",
+      "addImage": "Görsel / logo ekle",
+      "imageUrlPlaceholder": "Görsel URL'sini yapıştır…",
+      "imageUrl": "Görsel URL'si",
+      "addSvg": "SVG ekle",
+      "svgUrlPlaceholder": "SVG URL'si veya data URI…",
+      "svgUrl": "SVG URL'si",
+      "uploadSvg": "SVG dosyası yükle",
+      "gradients": "Gradyan katmanları",
+      "allLayers": "Tüm katmanlar ({{count}})",
+      "hoverHint": "Kontrolleri görmek için üzerine gel",
+      "deleteTextAria": "\"{{text}}\" metin katmanını sil",
+      "deleteText": "Metin katmanını sil",
+      "opacity": "Opaklık",
+      "opacityAria": "Katman opaklığı",
+      "deleteShape": "{{shape}} şeklini sil",
+      "deleteImage": "Görsel katmanını sil",
+      "customSvg": "Özel SVG",
+      "deleteSvg": "SVG katmanını sil",
+      "gradientName": "{{region}} gradyanı",
+      "deleteGradient": "Gradyan katmanını sil",
+      "empty": "Henüz katman yok",
+      "emptyHint": "Yukarıdan şekil, görsel veya SVG ekle. Metin katmanları da burada görünür.",
+      "addTextLayer": "+ Metin katmanı ekle"
+    },
+    "shape": {
+      "rect": "Dikdörtgen",
+      "circle": "Daire",
+      "line": "Çizgi"
+    },
+    "region": {
+      "full": "Tam",
+      "lower-third": "Alt bant",
+      "top-bar": "Üst bant",
+      "top-half": "Üst yarı",
+      "bottom-half": "Alt yarı"
+    },
+    "gradient": {
+      "lowerThird": "Alt bant geçişi",
+      "fullDark": "Tam karartma",
+      "topBar": "Üst bant",
+      "warmTint": "Sıcak ton",
+      "coolTint": "Soğuk ton",
+      "bottomHalf": "Alt yarı geçişi",
+      "topHalf": "Üst yarı geçişi",
+      "vignetteSoft": "Yumuşak vinyet"
+    },
+    "pack": {
+      "hookCta": {
+        "name": "Hook + CTA",
+        "desc": "Oynatma kafasında viral hook, bitiş ekranında CTA"
+      },
+      "lowerThirdSubscribe": {
+        "name": "Alt bant + Abone ol",
+        "desc": "İsim bandı + abone rozeti"
+      },
+      "fullCtaBar": {
+        "name": "CTA + Alt bant geçişi",
+        "desc": "Beğen ve Abone Ol + gradyan bant"
+      },
+      "introOutro": {
+        "name": "Intro + Outro",
+        "desc": "Oynatma kafasında INTRO, sonda \"Bir dahaki sefere görüşürüz\""
+      },
+      "trendingSave": {
+        "name": "Trend + Bunu kaydet",
+        "desc": "Popüler olmayan görüş + Sonra için kaydet"
+      }
+    },
+    "packs": {
+      "oneClick": "Tek tıkla paketler",
+      "styleBundles": "Stil paketleri",
+      "platform": "Her platform için hazır",
+      "saveMyStyle": "Stilimi kaydet",
+      "styleNamePlaceholder": "Stil adı…",
+      "styleName": "Özel stil adı",
+      "saveStyle": "Özel stili kaydet",
+      "goTo": "Git"
+    },
+    "nav": {
+      "shortClips": "Kısa Klipler",
+      "assets": "Müzik ve B-roll",
+      "timeline": "Zaman çizelgesi",
+      "effects": "Efektler",
+      "color": "Renk",
+      "aiEdit": "Transkript ve AI",
+      "export": "Dışa aktar"
+    },
+    "insights": {
+      "comingSoon": "İçgörüler yakında",
+      "comingSoonHint": "Videon analiz edildiğinde izleyici tutma, hook gücü ve tempo analizleri burada görünecek.",
+      "transcript": "Transkript"
+    }
   }
 }

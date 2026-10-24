@@ -846,11 +846,11 @@
     "title": "Prestaties",
     "subtitle": "Volg je mijlpalen en voortgang.",
     "refreshRegistry": "Vernieuwen",
-    "statTierLabel": "Evolutionaire laag",
+    "statTierLabel": "Niveau",
     "statTierSub": "{{pct}}% tot volgend niveau",
-    "statMilestonesLabel": "Gedecodeerde mijlpalen",
+    "statMilestonesLabel": "Mijlpalen ontgrendeld",
     "statMilestonesSub": "Tot nu toe ontgrendeld",
-    "statStreakLabel": "Coherentiereeks",
+    "statStreakLabel": "Actieve reeks",
     "statStreakSub": "Beste: {{peak}}",
     "statVolumeLabel": "Content gemaakt",
     "statVolumeSub": "Totaal gemaakt",
@@ -861,14 +861,14 @@
     "detailPayloads": "Content",
     "detailScripts": "Scripts",
     "recentBreakthroughs": "Recente doorbraken",
-    "decryptedOn": "ONTDECRYPT {{date}}",
+    "decryptedOn": "Ontgrendeld op {{date}}",
     "ascensionVerified": "Ontgrendeld",
     "nodeMatrix": "Alle mijlpalen",
-    "decrypted": "GEDECRYPTEERD",
+    "decrypted": "Ontgrendeld",
     "logicGated": "Vergrendeld",
     "milestones": {
       "first_video": {
-        "name": "Genesis-weergave",
+        "name": "Eerste video",
         "description": "Maak je eerste video."
       },
       "first_content": {
@@ -900,11 +900,11 @@
         "description": "Maak 50 video's af."
       },
       "streak_7": {
-        "name": "Samenhang 7",
+        "name": "Reeks van 7 dagen",
         "description": "Wees 7 dagen op rij actief."
       },
       "streak_30": {
-        "name": "Samenhang 30",
+        "name": "Reeks van 30 dagen",
         "description": "Wees 30 dagen op rij actief."
       },
       "streak_100": {
@@ -925,7 +925,7 @@
       },
       "early_adopter": {
         "name": "Early adopter",
-        "description": "Geïntegreerd tijdens de ontstaansfase."
+        "description": "Was er vroeg bij met Click."
       },
       "power_user": {
         "name": "Power user",
@@ -993,7 +993,7 @@
     "authorize": "AUTORISEREN",
     "dissent": "ONENIGHEID",
     "historyTitle": "Goedkeuringsgeschiedenis",
-    "historySubtitle": "Onveranderlijke registraties van consensusbeslissingen en knoopautorisaties.",
+    "historySubtitle": "Een overzicht van eerdere goedkeuringen en afwijzingen.",
     "protocolLogsAnalyzed": "{{count}} verzoeken",
     "emptyTitle": "Hier is nog niets",
     "emptyState": "Nog geen goedkeuringsverzoeken.",
@@ -1126,7 +1126,7 @@
     "purgeForgeBuffer": "Forge-buffer leegmaken",
     "neuralHeuristics": "Suggesties",
     "neuralHeuristicsDesc": "Manieren om je content te verbeteren.",
-    "decryptingHeuristics": "Heuristieken ontcijferen...",
+    "decryptingHeuristics": "Analyseren…",
     "predictiveTelemetry": "Prestatieprognose",
     "predictiveTelemetryDesc": "Voorspellingen van hoe je content kan presteren.",
     "scanningTrajectories": "Trajecten scannen..."
@@ -1288,7 +1288,7 @@
     "refreshData": "Lidmaatschapsgegevens vernieuwen",
     "activeNodeUplink": "Huidig abonnement",
     "protocolId": "Abonnements-ID:",
-    "rootGenesis": "Wortelgenese",
+    "rootGenesis": "Starter",
     "genericAccess": "Algemene toegang",
     "lifecycleStatus": "Levenscyclusstatus:",
     "uninitialized": "Niet-geïnitialiseerd",
@@ -1307,7 +1307,7 @@
     "coreMatrixUplink": "Kernfuncties",
     "primeCommandUplink": "Toegang tot alle functies",
     "activeProtocol": "Huidig abonnement",
-    "ascending": "Oplopend...",
+    "ascending": "Upgraden…",
     "genesisUplink": "Aan de slag",
     "escalateProtocol": "Upgraden"
   },
@@ -1825,7 +1825,7 @@
     "heroIntro": "Koppel je sociale accounts aan Click. Met elke koppeling krijg je",
     "heroFeature1": "automatisch posten",
     "heroFeature2": "engagement bijhouden",
-    "heroFeature3": "synthetische publieksanalyse",
+    "heroFeature3": "publieksinzichten",
     "heroAnd": "En",
     "statNeuralEncryption": "Tokenversleuteling",
     "statUplinkLatency": "Verbindingssnelheid",
@@ -2375,7 +2375,7 @@
     "collaborationIntro1": "Elk team krijgt",
     "collaborationHighlight1": "gedeelde assets",
     "collaborationIntro2": ",",
-    "collaborationHighlight2": "asynchrone feedbacklussen",
+    "collaborationHighlight2": "reacties en feedback",
     "collaborationIntro3": "en een verenigd",
     "collaborationHighlight3": "productie wachtrij",
     "collaborationIntro4": ". Houd ieders werk op één plek.",
@@ -3113,7 +3113,7 @@
     "neuralLine1": "Content",
     "neuralLine2": "CENTRUM",
     "autonomousPrefix": "Automatische modus is",
-    "dominating": "domineert",
+    "dominating": "actief",
     "autonomousMid": "de",
     "autonomousSuffix": "wachtrij.",
     "neuralActive": "Automodus aan",
@@ -3998,7 +3998,7 @@
     "latticeHealth": "Netwerkstatus",
     "aggregatedRevenue": "Geaggregeerde inkomsten",
     "victoryVectors": "Successen vandaag",
-    "encirclementTitle": "Mondiale omsingeling",
+    "encirclementTitle": "Groeioverzicht",
     "encirclementSubtitle": "Inzichten gedeeld binnen Click",
     "godModeSaturationActive": "Live",
     "decentralizedIntelligenceLedger": "Activiteitenlog",
@@ -4018,7 +4018,7 @@
     "tabStability": "Systeemgezondheid",
     "versionLabel": "Click",
     "overlordTerminalSynced": "Verbonden",
-    "mainTitle": "Klik op Overlord Terminal",
+    "mainTitle": "Click-controlecentrum",
     "mainSubtitle": "Instellingen voor monetisatie en automatisering."
   },
   "clickDebugPanel": {
@@ -4103,7 +4103,7 @@
     "tabBasic": "Basis",
     "tabMotion": "Beweging",
     "tabAudio": "Audio",
-    "tabKeyframes": "Sleutelframes",
+    "tabKeyframes": "Keyframes",
     "speed": "Snelheid",
     "opacity": "Dekking",
     "positionX": "Positie X",
@@ -5408,7 +5408,7 @@
     "presetVibrantPopName": "Levendige pop",
     "presetVibrantPopDesc": "Felle, verzadigde kleuren",
     "presetSoftDreamyName": "Zacht dromerig",
-    "presetSoftDreamyDesc": "Etherische, zachte uitstraling",
+    "presetSoftDreamyDesc": "Zachte, subtiele look",
     "presetElectricVibeName": "Elektrisch",
     "presetElectricVibeDesc": "Energieke, levendige uitstraling",
     "presetRetroVintageName": "Retro-wijnoogst",
@@ -6232,7 +6232,20 @@
     "appliedStyleProfile": "Stijl {{name}} toegepast",
     "packApplied": "{{name}} toegepast: kleurgrading {{grade}} en bijbehorende ondertitelstijl",
     "packAppliedGradeOnly": "{{name}} toegepast: kleurgrading {{grade}}. Zet ondertitels aan om de bijbehorende ondertitelstijl te gebruiken.",
-    "packApplyFailed": "{{name}} kon niet worden toegepast: de kleurgrading is niet gevonden"
+    "packApplyFailed": "{{name}} kon niet worden toegepast: de kleurgrading is niet gevonden",
+    "beatRecut": "✦ Opnieuw geknipt in {{count}} beatclips ({{replaced}} videoclips vervangen)",
+    "beatCut": "✦ Geknipt in {{count}} clips op de beat",
+    "autoViralAnalysing": "✦ Auto Viral Edit — beats en ondertitels analyseren…",
+    "autoViralNothingFound": "Auto Viral Edit heeft muziekbeats of een bruikbaar transcript nodig — geen van beide gevonden.",
+    "autoViralNeedsTranscript": "Auto Viral Edit heeft een transcript nodig voor ondertitels of muziek voor cuts. Maak eerst een transcriptie en probeer het opnieuw.",
+    "autoViralCuts": "{{clips}} beatclips · {{transitions}} overgangen",
+    "autoViralCaptions": "{{count}} karaoke-ondertitels",
+    "autoViralDone": "✦ Auto Viral Edit: {{summary}}",
+    "autoViralFailed": "Auto Viral Edit mislukt — je tijdlijn is ongewijzigd.",
+    "resizeTimelineAria": "Tijdlijngrootte aanpassen (sleep omhoog of omlaag)",
+    "resizeTimelineTitle": "Sleep om de tijdlijngrootte aan te passen",
+    "timelineHeading": "Tijdlijn",
+    "cmdCategoryEditor": "EDITOR"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Haken",
@@ -6310,13 +6323,13 @@
     "featuresTitle": "Elite-functies",
     "featuresDescription": "Ontgrendel multi-platform intelligentie en voorspellende groei.",
     "completeTitle": "Je bent er helemaal klaar voor",
-    "completeDescription": "Je bent nu klaar om het sociale landschap te domineren.",
+    "completeDescription": "Je bent klaar om te beginnen met creëren.",
     "eliteAccessGranted": "Elite-toegang verleend",
     "closeOnboarding": "Sluit de onboarding af",
     "back": "Rug",
-    "startDominating": "Begin met domineren",
+    "startDominating": "Aan de slag",
     "nextIntelligence": "Volgende intelligentie",
-    "clickGenesis": "Klik op Genesis",
+    "clickGenesis": "Welkom bij Click",
     "welcomeBodyBefore": "Het enige platform dat niet alleen schrijft: het",
     "welcomeBodyOperates": "werkt",
     "welcomeBodyAfter": ". Laten we je merk instellen.",
@@ -6489,7 +6502,7 @@
     "syncing": "Bijwerken...",
     "restart": "Opnieuw opstarten",
     "dismissInstallPrompt": "Sluit de installatieprompt af",
-    "installDescription": "Ga naar een snellere, offline-geschikte werkruimte. Gebouwd voor elite-inhoudsbewerkingen.",
+    "installDescription": "Installeer Click voor een snellere app die ook offline werkt.",
     "initializeInstallation": "Initialiseer de installatie",
     "tagInstant": "Direct",
     "tagEdge": "Rand",
@@ -6779,7 +6792,7 @@
     "navAeoMetadata": "AEO-metagegevens",
     "navUgcRaw": "UGC Raw",
     "navZeroPartyData": "Zero-Party-gegevens",
-    "headerPill": "Fase 8 – Marktdominantie",
+    "headerPill": "Fase 8 — Groeitools",
     "headerTitle": "Groeitools",
     "headerSubtitle": "5 systemen die CLICK onbetwistbaar maken"
   },
@@ -6850,14 +6863,14 @@
     "pcv": "PCV",
     "steerSwarmToThisOffer": "Focus op dit aanbod",
     "s2sNetworkDown": "S2S-netwerk uitgeschakeld",
-    "globalEncirclementTitle": "Mondiale omsingeling",
+    "globalEncirclementTitle": "Groeioverzicht",
     "globalEncirclementSubtitle": "Inzichten over accounts heen",
     "godModeActiveBadge": "Actief",
     "networkHealth": "Netwerkgezondheid",
     "aggregatedRevenue": "Geaggregeerde inkomsten",
     "victoryVectors": "Toppers",
     "logInitializingTunnel": "[SYSTEEM] S2S-gecodeerde tunnel initialiseren...",
-    "logEncirclementActive": "[SYSTEEM] Omsingeling actief. {{count}} broer/zusinstanties verbonden.",
+    "logEncirclementActive": "{{count}} gekoppelde werkruimtes.",
     "logVectorReceived": "Hook \"{{hook}}\" ligt voor in {{cluster}}.",
     "logLocalSynthesis": "Lokale resultaten bijgewerkt: momentumweging +{{percent}}%.",
     "productionStabilityTitle": "Productiestabiliteit",
@@ -6878,7 +6891,7 @@
     "navGlobalS2s": "Mondiale S2S",
     "navSystemHealth": "Systeemgezondheid",
     "headerPill": "Geavanceerde tools",
-    "headerTitle": "De Overlord-terminal",
+    "headerTitle": "Controlecentrum",
     "headerSubtitle": "Marktuitbreiding"
   },
   "quickActions": {
@@ -6983,7 +6996,7 @@
     "razorTool": "Scheermesje (S)",
     "editMode": "Bewerkingsmodus",
     "modeNormal": "Normaal",
-    "modeRipple": "Rimpeling",
+    "modeRipple": "Ripple",
     "modeRoll": "Rollen",
     "modeSlip": "Uitglijden",
     "setInPoint": "Instelpunt (I)",
@@ -7098,7 +7111,31 @@
   "realTimeVideoPreview": {
     "overlayAlt": "Overlay",
     "metadataError": "Kan videometagegevens niet laden. Controleer de CORS- of URL-geldigheid.",
-    "bootingRenderEngine": "Preview laden..."
+    "bootingRenderEngine": "Preview laden...",
+    "videoFailed": "Video laden mislukt",
+    "retry": "Opnieuw proberen",
+    "dragToCompare": "Sleep om voor / na te vergelijken",
+    "before": "Voor",
+    "after": "Na",
+    "rawUnfiltered": "Origineel / ongefilterd",
+    "graded": "Kleurgecorrigeerd",
+    "editCaptionInline": "Ondertiteltekst direct bewerken",
+    "captionPlaceholder": "Typ ondertiteltekst...",
+    "opsReverse": "{{count}}× omgekeerd",
+    "opsJCut": "{{count}}× J-cut",
+    "opsLCut": "{{count}}× L-cut",
+    "exportOnlyTitle": "Deze wijzigingen worden alleen bij het exporteren toegepast — het voorbeeld speelt clips in hun oorspronkelijke richting af met normale audiosynchronisatie.",
+    "exportOnly": "Alleen bij export",
+    "imageLayer": "Afbeeldingslaag",
+    "imageFailed": "Afbeelding laden mislukt",
+    "svgLayer": "SVG-laag",
+    "preview": "Voorbeeld",
+    "latency": "Vertraging",
+    "pause": "Pauzeren",
+    "play": "Afspelen",
+    "toggleBeforeAfter": "Voor/na wisselen",
+    "beforeAfter": "Voor / na",
+    "aiStylingActive": "AI-styling actief"
   },
   "realtimeCollaboration": {
     "failedToJoin": "Kan niet deelnemen aan de samenwerkingssessie",
@@ -7172,7 +7209,137 @@
   },
   "resizableTimeline": {
     "restore": "Herstel de tijdlijngrootte",
-    "maximize": "Maximaliseer de tijdlijn"
+    "maximize": "Maximaliseer de tijdlijn",
+    "snapKind": {
+      "word": "Woord",
+      "silence": "Pauze",
+      "beat": "Beat",
+      "marker": "Markering",
+      "edge": "Rand",
+      "playhead": "Afspeelkop",
+      "boundary": "Grens"
+    },
+    "realignedCountOne": "1 ondertitel uitgelijnd op spraak",
+    "realignedCount": "{{count}} ondertitels uitgelijnd op spraak",
+    "alreadyAligned": "Ondertitels zijn al uitgelijnd",
+    "markerNamePrompt": "Naam markering (optioneel):",
+    "unsoloTrack": "Solo spoor opheffen",
+    "soloTrack": "Spoor solo",
+    "soloShort": "S",
+    "unmuteTrack": "Dempen spoor opheffen",
+    "muteTrack": "Spoor dempen",
+    "unlockTrack": "Spoor ontgrendelen",
+    "lockTrack": "Spoor vergrendelen",
+    "prevFrameTitle": "Vorig frame (←)",
+    "prevFrame": "Vorig frame",
+    "pauseTitle": "Pauzeren (spatie)",
+    "playTitle": "Afspelen (spatie)",
+    "pause": "Pauzeren",
+    "play": "Afspelen",
+    "nextFrameTitle": "Volgend frame (→)",
+    "nextFrame": "Volgend frame",
+    "goToTimeLabel": "Ga naar tijd (typ een tijd, druk op Enter)",
+    "goToTimeTitle": "Typ een tijd (bijv. 1:05.5) en druk op Enter om erheen te springen",
+    "splitTitle": "Clip onder de afspeelkop splitsen (S)",
+    "split": "Splitsen",
+    "deleteTitle": "Selectie verwijderen (Delete)",
+    "delete": "Verwijderen",
+    "rippleOnTitle": "Ripple aan: verwijderen sluit het gat op elk spoor",
+    "rippleOffTitle": "Ripple uit: verwijderen laat een gat achter",
+    "ripple": "Ripple",
+    "ungroupTitle": "Groepering van geselecteerde clips opheffen",
+    "ungroup": "Degroeperen",
+    "groupTitle": "Groepeer de geselecteerde clips zodat ze samen bewegen en verwijderd worden",
+    "group": "Groeperen",
+    "setInTitle": "Inpunt instellen bij de afspeelkop (I)",
+    "in": "In",
+    "setOutTitle": "Uitpunt instellen bij de afspeelkop (O)",
+    "out": "Uit",
+    "clearInOutTitle": "In/uit wissen (Alt+X)",
+    "clearInOutLabel": "In- en uitpunten wissen",
+    "snapTitle": "Clips uitlijnen op randen, de afspeelkop en markeringen",
+    "snap": "Uitlijnen",
+    "speechTitle": "Clips en ondertitels uitlijnen op gesproken woorden",
+    "speechDisabledTitle": "Maak ondertitels om uitlijnen op spraak in te schakelen",
+    "speech": "Spraak",
+    "realignTitle": "Elke ondertitel opnieuw timen op de gesproken woorden",
+    "realign": "Ondertitels opnieuw uitlijnen",
+    "dragToPan": "Sleep om te pannen",
+    "showTracks": "Sporen tonen",
+    "allTracks": "Alle sporen",
+    "track": {
+      "captions": "Ondertitels",
+      "mainVideo": "Hoofdvideo",
+      "broll": "B-roll",
+      "audio": "Audio",
+      "effects": "Effecten",
+      "captionsSub": "Tekst in beeld",
+      "mainVideoSub": "Je beeldmateriaal",
+      "brollSub": "Tussenshots en afbeeldingen",
+      "audioSub": "Muziek, stem en geluidseffecten"
+    },
+    "viewGroup": "Tijdlijnweergave",
+    "view": {
+      "clips": "Clips",
+      "clipsTitle": "Alleen clips",
+      "hybrid": "Clips + script",
+      "hybridTitle": "Clips met het script erboven",
+      "script": "Script",
+      "scriptTitle": "Bewerken via tekst"
+    },
+    "zoomOut": "Uitzoomen",
+    "zoomIn": "Inzoomen",
+    "hideInsights": "AI-inzichtbanen verbergen",
+    "showInsights": "AI-inzichtbanen tonen",
+    "insights": "Inzichten",
+    "inOutSpan": "In/uit: {{time}}",
+    "inPointTitle": "Inpunt: {{time}} (sleep om aan te passen)",
+    "outPointTitle": "Uitpunt: {{time}} (sleep om aan te passen)",
+    "beatLabel": "Beat ({{time}}s)",
+    "markerTitle": "{{name}}: {{time}} (sleep om te verplaatsen, klik om te zoeken, rechtsklik om te bewerken)",
+    "marker": "Markering",
+    "markerTag": "{{name}} ({{time}})",
+    "resolve": "Oplossen",
+    "close": "Sluiten",
+    "captionsCountOne": "1 ondertitel",
+    "captionsCount": "{{count}} ondertitels",
+    "clipsCountOne": "1 clip",
+    "clipsCount": "{{count}} clips",
+    "itemsCountOne": "1 item",
+    "itemsCount": "{{count}} items",
+    "audienceRetention": "Kijkersretentie",
+    "retentionTitle": "Retentie: {{value}}%",
+    "audioWaveform": "Audiogolfvorm",
+    "audioWaveformNoAudio": "Audiogolfvorm (geen audio)",
+    "trimStart": "Begin trimmen",
+    "trimEnd": "Einde trimmen",
+    "jCut": "J-cut",
+    "lCut": "L-cut",
+    "trimmedStart": "Begin getrimd",
+    "trimmedEnd": "Einde getrimd",
+    "freeze": "Bevriezen",
+    "reverseSpeed": "Omgekeerd {{speed}}×",
+    "keyframes": "Keyframes",
+    "playheadTitle": "Afspeelkop: {{time}} (sleep om te scrubben)",
+    "scrubTitle": "Scrubben: {{time}}",
+    "dragPlayhead": "Afspeelkop slepen",
+    "origin": "Oorsprong: {{time}}",
+    "moveDelta": "Verschuiving: {{delta}}",
+    "trackNumber": "Spoor {{number}}",
+    "clipsMoving": "{{count}} clips verplaatsen",
+    "trimStartAt": "Begin trimmen: {{time}}",
+    "trimEndAt": "Einde trimmen: {{time}}",
+    "workAreaIn": "Werkgebied in: {{time}}",
+    "workAreaOut": "Werkgebied uit: {{time}}",
+    "span": "Bereik: {{time}}",
+    "menu": {
+      "splitAtPlayhead": "Splitsen bij afspeelkop",
+      "duplicate": "Clip dupliceren",
+      "ungroup": "Groepering opheffen",
+      "group": "Clips groeperen",
+      "rippleDelete": "Ripple-verwijderen"
+    },
+    "sceneChange": "Scènewissel"
   },
   "revenueOracle": {
     "synchronizing": "Omzetgegevens laden...",
@@ -7682,7 +7849,7 @@
     "neuralScheduling": "Slim inplannen",
     "neuralSchedulingDesc": "Plan posts in voor wanneer je publiek het actiefst is.",
     "evergreenSynthesis": "Evergreen recyclen",
-    "evergreenSynthesisDesc": "Activeer zelfherstellende contentrecycling voor een oneindige ROI van de repository.",
+    "evergreenSynthesisDesc": "Hergebruik automatisch je best presterende content.",
     "initiateSequence": "Start een reeks",
     "neuralProcessing": "Verwerken",
     "ecosystemCalibration": "Instellen...",
@@ -7691,7 +7858,7 @@
     "synchronization": "Pipeline",
     "verified": "GEVERIFIEERD",
     "nodesPrimedPrefix": "Je posts zijn",
-    "primed": "klaargemaakt",
+    "primed": "klaar",
     "nodesPrimedSuffix": "om te publiceren.",
     "estimatedYield": "Geschatte opbrengst",
     "neuralIntegrity": "Kwaliteitscontrole",
@@ -8517,5 +8684,1369 @@
     "shift1d": "+1 dag",
     "shift1w": "+1 week",
     "moveWarning": "Door posts te verplaatsen kunnen er twee posts tegelijk op hetzelfde platform staan. Posts die al worden gepubliceerd of gepubliceerd zijn, worden niet verplaatst."
+  },
+  "editorSidebar": {
+    "cat": {
+      "aiEdit": {
+        "label": "AI Auto-Edit",
+        "desc": "AI-bewerking met één klik"
+      },
+      "dub": {
+        "label": "Nasynchronisatie",
+        "desc": "Vertaal je stem naar 10 talen"
+      },
+      "edit": {
+        "label": "Bewerken",
+        "desc": "Basisbewerkingstools"
+      },
+      "assets": {
+        "label": "Mijn media",
+        "desc": "Voeg muziek, afbeeldingen en B-roll-clips toe"
+      },
+      "effects": {
+        "label": "Effecten",
+        "desc": "Filters en verbeteringen"
+      },
+      "color": {
+        "label": "Kleur",
+        "desc": "Professionele kleurcorrectie"
+      },
+      "chromakey": {
+        "label": "Chroma key",
+        "desc": "Green screen en compositing"
+      },
+      "timeline": {
+        "label": "Tijdlijn",
+        "desc": "Geavanceerd bewerken"
+      },
+      "export": {
+        "label": "Exporteren",
+        "desc": "Delen en exporteren"
+      },
+      "aiAssist": {
+        "label": "AI-assistent",
+        "desc": "Slimme cuts · suggesties bekijken · toepassen en ongedaan maken"
+      },
+      "monetize": {
+        "label": "Monetiseren",
+        "desc": "Productlinks · QR · AI-plan voor inkomsten"
+      },
+      "stockLibrary": {
+        "label": "Stockbibliotheek",
+        "desc": "B-roll · muziek · GIF's · stickers · overgangen · geluidseffecten"
+      },
+      "textMotion": {
+        "label": "Tekst & beweging",
+        "desc": "Ondertitels · animaties · beweging · lettertypen"
+      }
+    },
+    "group": {
+      "edit": {
+        "label": "Bewerken",
+        "desc": "Knippen, kleurcorrectie, compositing — de kern van het bewerken."
+      },
+      "media": {
+        "label": "Media",
+        "desc": "Media, stock, ondertitels en tekst."
+      },
+      "ai": {
+        "label": "AI",
+        "desc": "AI-autobewerking met één klik + meertalige nasynchronisatie."
+      },
+      "export": {
+        "label": "Exporteren",
+        "desc": "Renderen en delen."
+      }
+    },
+    "badge": {
+      "new": "NIEUW",
+      "agency": "Agency",
+      "pro": "PRO",
+      "beta": "BÈTA"
+    },
+    "title": "Editortools",
+    "ready": "Klaar",
+    "expand": "Zijbalk uitklappen",
+    "collapse": "Zijbalk inklappen",
+    "searchPlaceholder": "Tools zoeken (⌘F)",
+    "clearSearch": "Zoekopdracht wissen",
+    "all": "Alle",
+    "recent": "Recent",
+    "noTools": "Geen tools gevonden",
+    "pinned": "Vastgezet",
+    "allTools": "Alle tools",
+    "unpin": "Losmaken",
+    "pinToTop": "Bovenaan vastzetten",
+    "device": {
+      "desktop": "Desktop",
+      "tablet": "Tablet",
+      "mobile": "Mobiel"
+    },
+    "shortcuts": "Sneltoetsen",
+    "closeShortcuts": "Sneltoetsen sluiten",
+    "searchTools": "Tools zoeken"
+  },
+  "editorHUD": {
+    "section": {
+      "edit": "Bewerken",
+      "color": "Kleur",
+      "ai": "AI-tools",
+      "effects": "Effecten",
+      "timeline": "Tijdlijn",
+      "export": "Exporteren",
+      "styleVault": "Style Vault",
+      "aiEdit": "AI-bewerking",
+      "assets": "Media",
+      "growth": "Statistieken",
+      "chromakey": "Chroma key",
+      "visualFx": "Visuele effecten",
+      "aiAnalysis": "AI-analyse",
+      "collaborate": "Samenwerken",
+      "scripts": "Scripts",
+      "scheduling": "Inplannen",
+      "shortClips": "Korte clips",
+      "predict": "Voorspellingen",
+      "distribution": "Distributie",
+      "spatial": "Ruimtelijk",
+      "agent": "AI-agent",
+      "dub": "Nasynchronisatie"
+    },
+    "layout": {
+      "balanced": "Gebalanceerd",
+      "balancedDesc": "Voorbeeld en tijdlijn gelijk verdeeld",
+      "cinematic": "Filmisch",
+      "cinematicDesc": "Groter voorbeeld, focus op afspelen",
+      "timelineFocus": "Focus op tijdlijn",
+      "timelineFocusDesc": "Meer ruimte voor precieze tijdlijnbewerkingen"
+    },
+    "projectName": "Projectnaam",
+    "savingEllipsis": "Opslaan…",
+    "saveFailed": "Opslaan mislukt",
+    "allChangesSaved": "Alle wijzigingen opgeslagen",
+    "saving": "Opslaan",
+    "saved": "Opgeslagen",
+    "undoTitle": "Ongedaan maken (⌘Z)",
+    "redoTitle": "Opnieuw (⌘Y)",
+    "undo": "Ongedaan maken",
+    "redo": "Opnieuw",
+    "command": "Zoek of voer een opdracht uit",
+    "commandTitle": "Zoek of voer een opdracht uit (⌘K)",
+    "workspaceLayoutTitle": "Werkruimte-indeling (L)",
+    "workspaceLayout": "Werkruimte-indeling",
+    "gpu": "GPU: {{backend}}",
+    "agentRunning": "AI-agent actief",
+    "makeViralTitle": "Voer het virale recept met één klik uit — hook, cuts, B-roll, beatsync, CTA",
+    "working": "Bezig…",
+    "makeViral": "Maak viraal",
+    "focusMode": "Focusmodus",
+    "moreActions": "Meer acties",
+    "more": "Meer",
+    "keyboardShortcuts": "Sneltoetsen",
+    "exportTitle": "Exporteren en publiceren",
+    "export": "Exporteren"
+  },
+  "quickActionsBar": {
+    "variantsNeedBase": "Voeg eerst een bijschrift of hook toe, zodat de variantgenerator iets heeft om mee te werken.",
+    "noVariants": "Geen varianten ontvangen — probeer een langere basishook.",
+    "variantsGenerated": "{{count}} varianten gemaakt — open de A/B-kiezer om ze te bekijken.",
+    "variantsFailed": "Varianten mislukt: {{error}}",
+    "unknownError": "onbekende fout",
+    "brollNeedsClip": "Laad eerst een clip om B-roll voor te stellen.",
+    "noBrollGaps": "Geen gaten voor B-roll gevonden — je clip is al visueel vol.",
+    "brollSuggested": "{{count}} B-roll-invoegingen voorgesteld. Open de tijdlijn om ze te bekijken.",
+    "brollFailed": "B-roll-suggesties mislukt: {{error}}",
+    "trendsWarmingUp": "De trendfeed wordt opgewarmd — probeer het over een minuut opnieuw.",
+    "trendsLoaded": "Nu trending: {{sounds}} geluiden · {{hashtags}} hashtags. Kiezer wordt geopend.",
+    "trendsFailed": "Kan trends niet laden: {{error}}",
+    "styleApplied": "Je stijl is toegepast: {{items}}",
+    "styleAppliedGeneric": "Je geleerde stijl is toegepast.",
+    "styleNeedsClips": "Publiceer eerst 3 clips zodat Click je stijl kan leren.",
+    "styleTimedOut": "Je stijlverzoek duurde te lang. Probeer het opnieuw.",
+    "styleLoadFailed": "Kan je stijl niet laden. Probeer het opnieuw.",
+    "viralEdit": "Virale edit",
+    "viralEditLong": "Auto Viral Edit — volledige bewerking met één tik",
+    "applyStyle": "Stijl toepassen",
+    "split": "Splitsen",
+    "splitLong": "Splitsen bij afspeelkop",
+    "captions": "Ondertitels",
+    "grade": "Kleur",
+    "effects": "Effecten",
+    "aiTools": "AI-tools",
+    "clean": "Opschonen",
+    "cleanLong": "Slim opschonen",
+    "variants": "Varianten",
+    "variantsLong": "A/B-varianten",
+    "broll": "B-roll",
+    "brollLong": "B-roll voorstellen",
+    "trends": "Trends",
+    "trendsLong": "Nu trending",
+    "learnedFrom": "Click leerde van {{count}} van je gepubliceerde clips",
+    "ariaLoading": "{{label}} — laden",
+    "ariaShortcut": "{{label}} (sneltoets {{key}})"
+  },
+  "aiAutoEdit": {
+    "preset": {
+      "mrbeastEnergy": "MrBeast-energie",
+      "mrbeastEnergyTagline": "Hoge inzet · patroondoorbreking",
+      "hormoziBold": "Hormozi Bold",
+      "hormoziBoldTagline": "Harde cijfers · tegendraadse mening",
+      "cinematicDoc": "Filmische docu",
+      "cinematicDocTagline": "Slow burn · fluistercut",
+      "educationalClean": "Educatief strak",
+      "educationalCleanTagline": "Vraag als kader · feitendrop",
+      "newsAuthority": "Nieuwsautoriteit",
+      "newsAuthorityTagline": "Kop · breaking · expert",
+      "casualVlog": "Casual vlog",
+      "casualVlogTagline": "Day-in-the-life · gemoedelijk",
+      "mysteryHook": "Mysterie-hook",
+      "mysteryHookTagline": "Nieuwsgierigheidslus · langzame onthulling",
+      "gymGrit": "Gym Grit",
+      "gymGritTagline": "Hoge intensiteit · tough love",
+      "adhdOverload": "ADHD-overload",
+      "adhdOverloadTagline": "Chaos · pop-bursts · overprikkeling",
+      "podcastGoldmine": "Podcastgoudmijn",
+      "podcastGoldmineTagline": "Autoriteit · hoofdstukken · warme docu",
+      "retentionMachine": "Retentiemachine",
+      "retentionMachineTagline": "Open loops · B-roll · hoofdstukken"
+    },
+    "opt": {
+      "auto": "Auto",
+      "vivid": "Levendig",
+      "cinematic": "Filmisch",
+      "natural": "Natuurlijk",
+      "cool": "Koel",
+      "warm": "Warm",
+      "vintage": "Vintage",
+      "bw": "Zwart-wit",
+      "upbeatPop": "Vrolijke pop",
+      "chill": "Chill",
+      "darkAmbient": "Dark ambient",
+      "synthwave": "Synthwave",
+      "phonk": "Phonk",
+      "lofi": "Lo-fi",
+      "question": "Vraag",
+      "stat": "Statistiek",
+      "mystery": "Mysterie",
+      "story": "Verhaal",
+      "boldClaim": "Gedurfde claim",
+      "patternBreak": "Patroondoorbreking",
+      "fastCut": "Snelle cut",
+      "crossfade": "Crossfade",
+      "glitch": "Glitch",
+      "whipPan": "Whip pan",
+      "hardCut": "Harde cut",
+      "modern": "Modern",
+      "bold": "Krachtig",
+      "minimal": "Minimaal",
+      "neon": "Neon",
+      "pill": "Pil",
+      "top": "Boven",
+      "middle": "Midden",
+      "bottom": "Onder",
+      "lowerThird": "Lower third",
+      "energetic": "Energiek",
+      "calm": "Rustig",
+      "authoritative": "Gezaghebbend",
+      "playful": "Speels",
+      "serious": "Serieus",
+      "urgency": "Urgentie",
+      "value": "Waarde",
+      "curiosity": "Nieuwsgierigheid",
+      "off": "Uit",
+      "sparse": "Spaarzaam",
+      "balanced": "Gebalanceerd",
+      "heavy": "Zwaar",
+      "gentle": "Zacht",
+      "medium": "Gemiddeld",
+      "aggressive": "Agressief",
+      "educational": "Educatief",
+      "entertaining": "Vermakelijk",
+      "motivational": "Motiverend",
+      "promotional": "Promotioneel"
+    },
+    "brief": {
+      "title": "Marketingbriefing",
+      "postingTimes": "Beste posttijden",
+      "competitiveInsights": "Inzichten over concurrenten"
+    },
+    "err": {
+      "videoNotFound": "Geen videogegevens gevonden in het antwoord",
+      "loadFailed": "Video laden mislukt. Probeer het opnieuw.",
+      "missingSource": "Het bronbestand van deze video ontbreekt. Upload opnieuw en probeer het nog eens.",
+      "tooManyPresets": "Je kunt maximaal 3 stijlpresets per bewerking combineren.",
+      "serviceError": "De AI-service gaf een fout: {{error}}",
+      "serviceInternal": "De AI-service had een interne fout. Probeer het zo opnieuw.",
+      "sessionExpired": "Je sessie is verlopen. Log opnieuw in en probeer het nog eens.",
+      "rateLimited": "Te veel bewerkingsverzoeken. Wacht even en probeer het opnieuw.",
+      "rejected": "Verzoek geweigerd ({{status}}). Controleer je invoer en probeer het opnieuw.",
+      "timeout": "Het bewerkingsverzoek duurde te lang. De video is misschien te groot of de server reageert traag.",
+      "network": "Kan de server niet bereiken. Controleer je verbinding en probeer het opnieuw.",
+      "startFailed": "Kan de AI-bewerking niet starten. Probeer het opnieuw."
+    },
+    "badge": "AI Auto Edit",
+    "title": "AI-regels instellen",
+    "untitled": "Naamloos project",
+    "toggleTheme": "Thema wisselen",
+    "analyze": "Video analyseren",
+    "analyzing": "Analyseren...",
+    "backToVideos": "Terug naar video's",
+    "processingTitle": "Video verwerken",
+    "processingBody": "De AI analyseert, knipt en optimaliseert je video...",
+    "initializing": "Voorbereiden",
+    "result": {
+      "title": "Je bewerking is klaar",
+      "body": "Open hem in de editor om bij te schaven, of download hem zoals hij is.",
+      "editsApplied": "Toegepaste bewerkingen",
+      "openInEditor": "Openen in editor",
+      "downloadTitle": "Bewerkte video downloaden",
+      "download": "Downloaden",
+      "viewClipsTitle": "Gemaakte clips bekijken",
+      "viewClips": "Clips bekijken",
+      "dismissTitle": "Dit resultaat sluiten",
+      "dismiss": "Sluiten"
+    },
+    "diag": {
+      "title": "Diagnose",
+      "complete": "Analyse voltooid",
+      "suggestedLength": "Voorgestelde lengte"
+    },
+    "plan": {
+      "title": "Je bewerkingsplan",
+      "subtitle": "Wat de AI doet met de instellingen rechts",
+      "opening": "Opening",
+      "openingHook": "Begin met het sterkste moment",
+      "openingOriginal": "Behoud het originele begin",
+      "pacing": "Tempo",
+      "pacingGentle": "Rustige cuts",
+      "pacingFast": "Snelle, strakke cuts",
+      "pacingBalanced": "Gebalanceerde cuts",
+      "deadAir": "Stiltes",
+      "removed": "Verwijderd",
+      "kept": "Behouden",
+      "captions": "Ondertitels",
+      "burnedIn": "Ingebrand",
+      "off": "Uit",
+      "clips": "Clips",
+      "under30s": "onder 30s",
+      "fullLength": "volledige lengte",
+      "oneVideo": "Eén bewerkte video",
+      "format": "Formaat"
+    },
+    "director": {
+      "title": "AI Director",
+      "subtitle": "Kies maximaal 3 stijlen of stel elke instelling zelf af.",
+      "presetsOne": "{{count}} preset: {{names}}",
+      "presetsOther": "{{count}} presets: {{names}}"
+    },
+    "targetPlatform": "Doelplatform",
+    "contentTone": "Toon van de content",
+    "stylePreset": "Stijlpreset",
+    "presetsSelected": "{{count}}/3 gekozen · klik nogmaals om te verwijderen",
+    "presetCap": "Maximaal 3 presets — verwijder er één om te wisselen",
+    "presetSelectedTitle": "Gekozen #{{n}} — klik om te verwijderen",
+    "presetSelect": "Stijl kiezen: {{name}}",
+    "presetSelectedAria": "Gekozen stijl #{{n}}: {{name}}",
+    "aiTasks": "AI-taken",
+    "task": {
+      "removeSilence": "Stiltes verwijderen",
+      "removeSilenceDesc": "Knipt stiltes en pauzes automatisch weg",
+      "optimizePacing": "Tempo optimaliseren",
+      "optimizePacingDesc": "Strakke cuts voor retentie",
+      "enhanceAudio": "Audio verbeteren",
+      "enhanceAudioDesc": "Ruisonderdrukking + volume-egalisatie",
+      "generateClips": "Korte clips maken",
+      "generateClipsDesc": "Virale momenten eruit halen",
+      "addCaptions": "Ondertitels inbranden",
+      "addCaptionsDesc": "Dynamische tekst, per woord gesynchroniseerd",
+      "enhanceColor": "Kleurcorrectie",
+      "enhanceColorDesc": "Automatische LUT + grading"
+    },
+    "output": "Uitvoer",
+    "aspectRatio": "Beeldverhouding",
+    "clipsToGenerate": "Aantal clips",
+    "clipCountAria": "Aantal clips om te maken",
+    "targetLength": "Doellengte",
+    "full": "Volledig",
+    "pacing": "Tempo",
+    "advanced": "Geavanceerd",
+    "advancedHint": "Sfeer, ondertitels, overgangen, stem, B-roll, CTA",
+    "sel": {
+      "colorGrade": "Kleurcorrectie",
+      "musicGenre": "Muziekgenre",
+      "hookStyle": "Hookstijl",
+      "transitions": "Overgangen",
+      "captionStyle": "Ondertitelstijl",
+      "subtitlePosition": "Positie ondertitels",
+      "voiceTone": "Stemtoon",
+      "ctaStyle": "CTA-stijl",
+      "brollFrequency": "B-roll-frequentie"
+    },
+    "speedRamping": "Speed ramping",
+    "speedRampingHint": "Versnelt en vertraagt clips voor meer energie",
+    "toggleSpeedRamping": "Speed ramping aan/uit",
+    "prioritizeHook": "Hook voorrang geven",
+    "prioritizeHookHint": "Laat de eerste 3s tellen voor retentie",
+    "togglePrioritizeHook": "Hook voorrang geven aan/uit",
+    "creativeDirection": "Creatieve richting",
+    "creativeDirectionHint": "optioneel · overschrijft AI-standaarden",
+    "creativeDirectionPlaceholder": "bijv. Maak het filmisch en donker, geen jump cuts, benadruk de emotionele pauze op 0:42…",
+    "autoFit": "Automatisch passend",
+    "aiPlan": "AI-plan",
+    "preloadedStyle": "Je stijl is vooraf geladen",
+    "planLine": {
+      "composeOne": "Maak {{count}} {{aspect}}-clip, doel {{length}}",
+      "composeOther": "Maak {{count}} {{aspect}}-clips, doel {{length}}",
+      "forPlatform": "voor {{platform}}",
+      "tone": "{{tone}} toon",
+      "acrossPresets": "verdeeld over {{presets}} ({{count}} invalshoeken)",
+      "autoStyle": "met {{auto}} stijl",
+      "autoDetected": "automatisch gedetecteerd",
+      "grade": "{{grade}} kleurcorrectie",
+      "hook": "{{hook}} hook",
+      "pacing": "{{pacing}} tempo",
+      "speedRamping": "speed ramping aan",
+      "broll": "{{broll}} B-roll"
+    },
+    "tasksOne": "{{count}} taak",
+    "tasksOther": "{{count}} taken",
+    "estimate": "ca. {{time}}",
+    "chip": {
+      "captions": "Ondertitels",
+      "autoGrade": "Auto-kleurcorrectie",
+      "speedRamp": "Speed ramp"
+    },
+    "composing": "Je bewerking wordt gemaakt…",
+    "composeOne": "{{count}} clip maken",
+    "composeOther": "{{count}} clips maken",
+    "using": "Met {{names}}",
+    "autoSelectPreset": "Kies automatisch een preset op basis van je content",
+    "tasksOnOne": "{{count}} taak aan",
+    "tasksOnOther": "{{count}} taken aan",
+    "dismissError": "Deze fout sluiten",
+    "dismiss": "Sluiten"
+  },
+  "propertiesPanel": {
+    "layout": {
+      "bottom": "Onder",
+      "bottomTitle": "Onder",
+      "lowerThird": "Laag",
+      "lowerThirdTitle": "Onderste derde",
+      "top": "Boven",
+      "topTitle": "Boven",
+      "fullWidth": "Volle breedte",
+      "fullWidthTitle": "Balk over volle breedte"
+    },
+    "tab": {
+      "transform": "Positie",
+      "color": "Kleur",
+      "captions": "Ondertitels",
+      "text": "Tekst",
+      "clip": "Clip"
+    },
+    "reset": "Resetten",
+    "title": "Eigenschappen",
+    "activeTab": "Instellingen {{tab}}",
+    "close": "Eigenschappen sluiten",
+    "clipProperties": "Clipeigenschappen",
+    "selectedClip": "Geselecteerde clip",
+    "playbackSpeed": "Afspeelsnelheid",
+    "playbackSpeedTitle": "Afspeelsnelheid: {{speed}}x",
+    "playbackSpeedHint": "Versnel of vertraag deze clip.",
+    "stabilization": "Stabilisatie",
+    "stabilizationTitle": "Stabilisatie: {{value}}%",
+    "stabilizationHint": "Hoeveel camerabewegingen worden gladgestreken.",
+    "volume": "Volume",
+    "volumeTitle": "Volume: {{value}}%",
+    "autoDucking": "Auto-ducking",
+    "autoDuckingHint": "Zet muziek zachter terwijl iemand praat",
+    "autoDuckingToggle": "Auto-ducking aan- of uitzetten",
+    "positionAndSize": "Positie en grootte",
+    "scale": "Schaal (%)",
+    "positionX": "X-positie",
+    "positionY": "Y-positie",
+    "rotation": "Rotatie (°)",
+    "animation": "Animatie",
+    "keyframesCountOne": "1 keyframe",
+    "keyframesCount": "{{count}} keyframes",
+    "addKeyframe": "+ Keyframe toevoegen bij afspeelkop",
+    "prevKeyframe": "◁ Vorige",
+    "nextKeyframe": "Volgende ▷",
+    "remove": "Verwijderen",
+    "curve": "Curve",
+    "easing": {
+      "linear": "Lineair",
+      "easeIn": "Ease-in",
+      "easeOut": "Ease-out",
+      "easeInOut": "Ease-in en -out",
+      "bounceOut": "Stuiteren",
+      "elasticOut": "Elastisch",
+      "cubic": "Vloeiend (sterk)"
+    },
+    "brightness": "Helderheid",
+    "contrast": "Contrast",
+    "saturation": "Verzadiging",
+    "temperature": "Temperatuur",
+    "clarity": "Helderheid details",
+    "dehaze": "Ontnevelen",
+    "captionsOn": "Ondertitels tonen",
+    "captionsOnHint": "Toon het transcript als ondertitels",
+    "captionLayout": "Positie ondertitels",
+    "textOverlays": "Tekstoverlays",
+    "noTextOverlays": "Nog geen tekstoverlays",
+    "deleteTextOverlay": "Tekstoverlay verwijderen",
+    "synced": "Gesynchroniseerd",
+    "preset": {
+      "tiktok": {
+        "label": "TikTok",
+        "description": "Vet, gecentreerd, veel impact"
+      },
+      "reels": {
+        "label": "Reels",
+        "description": "Strakke hoofdletters, trendy"
+      },
+      "podcast": {
+        "label": "Podcast",
+        "description": "Minimaal, onderste derde"
+      },
+      "cinematic": {
+        "label": "Filmisch",
+        "description": "Schreefletter in filmstijl"
+      },
+      "documentary": {
+        "label": "Documentaire",
+        "description": "Klassieke ondertitelbalk"
+      },
+      "neon": {
+        "label": "Neon",
+        "description": "Gloeiend, nachtsfeer"
+      },
+      "karaoke": {
+        "label": "Karaoke",
+        "description": "Krachtige karaokestijl"
+      },
+      "pill": {
+        "label": "Pil",
+        "description": "Woorden in afgeronde pillen"
+      },
+      "bubble": {
+        "label": "Ballon",
+        "description": "Tekstballonstijl"
+      },
+      "gradient": {
+        "label": "Verloop",
+        "description": "Kleurrijke verlooptekst"
+      },
+      "retro": {
+        "label": "Retro",
+        "description": "Warme vintage look"
+      },
+      "vintage": {
+        "label": "Vintage",
+        "description": "Sepia typemachine"
+      },
+      "pop": {
+        "label": "Pop",
+        "description": "Fel en krachtig"
+      },
+      "high-contrast": {
+        "label": "Toegankelijk",
+        "description": "Hoog contrast, goed leesbaar"
+      },
+      "kinetic": {
+        "label": "Kinetisch",
+        "description": "Woorden poppen op de beat"
+      },
+      "slow-zoom": {
+        "label": "Langzame zoom",
+        "description": "Schaal 100% → 110%"
+      },
+      "fly-in-left": {
+        "label": "Invliegen van links",
+        "description": "Positie vanaf buiten beeld links"
+      },
+      "fly-in-right": {
+        "label": "Invliegen van rechts",
+        "description": "Positie vanaf buiten beeld rechts"
+      },
+      "fly-in-top": {
+        "label": "Invliegen van boven",
+        "description": "Positie vanaf buiten beeld boven"
+      },
+      "fly-in-bottom": {
+        "label": "Invliegen van onder",
+        "description": "Positie vanaf buiten beeld onder"
+      },
+      "fade-in-out": {
+        "label": "In- en uitfaden",
+        "description": "Dekking 0 → 1 → 0"
+      }
+    }
+  },
+  "basicEditor": {
+    "preset": {
+      "title": {
+        "label": "Titel"
+      },
+      "text": {
+        "yourTitleHere": "Jouw titel hier",
+        "subscribeForMore": "Abonneer voor meer",
+        "likeSubscribe": "Like & abonneer",
+        "watchMore": "Kijk meer →",
+        "commentBelow": "Reageer hieronder",
+        "linkInBio": "Link in bio",
+        "addYourCaption": "Voeg je bijschrift toe",
+        "followForMore": "Volg voor meer",
+        "newText": "NIEUWE TEKST",
+        "youNeedToSeeThis": "DIT MOET JE ZIEN",
+        "nameTitle": "Naam · Functie",
+        "proTip": "PROTIP",
+        "tapToLearnMore": "TIK VOOR MEER INFO",
+        "waitForIt": "WACHT MAAR AF...",
+        "storyTime": "STORY TIME",
+        "youWontBelieveWhatHappened": "Je gelooft nooit wat er gebeurde",
+        "dayInMyLife": "Dag uit mijn leven",
+        "day1Of": "Dag 1 van...",
+        "getReadyForThis": "Maak je klaar hiervoor",
+        "watchTillTheEnd": "Kijk tot het einde",
+        "noOneTalksAboutThis": "Niemand heeft het hierover",
+        "theSecretTheyDontWantYouToKnow": "Het geheim dat ze je niet willen vertellen",
+        "theSecretIs": "HET GEHEIM IS",
+        "insane": "NIET NORMAAL!",
+        "actually": "eigenlijk...",
+        "now": "nu",
+        "zeroCost": "GRATIS",
+        "watch": "KIJK",
+        "here": "HIER",
+        "swipeUp": "Swipe omhoog",
+        "seeYouNextTime": "Tot de volgende keer",
+        "unpopularOpinion": "Impopulaire mening:",
+        "thisChangedEverything": "Dit veranderde alles",
+        "hotTake": "Hot take:",
+        "nobodyTalksAboutThis": "Niemand praat hierover",
+        "povYouJustFoundTheBestTip": "POV: je hebt net de beste tip gevonden",
+        "saveThisForLater": "Bewaar dit voor later",
+        "commentYourAnswerBelow": "Zet je antwoord in de reacties",
+        "dropAIfYouAgree": "Laat een 👍 achter als je het eens bent",
+        "part1": "Deel 1",
+        "chapter1": "Hoofdstuk 1",
+        "intro": "INTRO",
+        "outro": "OUTRO",
+        "comingUpNext": "Hierna...",
+        "quickRecap": "Even samenvatten"
+      },
+      "subscribe": {
+        "label": "Abonneren"
+      },
+      "likeSubscribe": {
+        "label": "Like & abonneer"
+      },
+      "watchMore": {
+        "label": "Kijk meer"
+      },
+      "comment": {
+        "label": "Reageer"
+      },
+      "linkInBio": {
+        "label": "Link in bio"
+      },
+      "caption": {
+        "label": "Bijschrift"
+      },
+      "follow": {
+        "label": "Volg"
+      },
+      "custom": {
+        "label": "Eigen"
+      },
+      "hook": {
+        "label": "Hook"
+      },
+      "lowerThird": {
+        "label": "Lower third"
+      },
+      "callout": {
+        "label": "Callout"
+      },
+      "timestamp": {
+        "label": "Tijdstempel"
+      },
+      "waitForIt": {
+        "label": "Wacht maar af"
+      },
+      "storyTime": {
+        "label": "Story time"
+      },
+      "youWontBelieve": {
+        "label": "Je gelooft nooit"
+      },
+      "dayInMyLife": {
+        "label": "Dag uit mijn leven"
+      },
+      "dayXOf": {
+        "label": "Dag X van"
+      },
+      "getReady": {
+        "label": "Maak je klaar"
+      },
+      "watchTillEnd": {
+        "label": "Kijk tot het einde"
+      },
+      "noOneTalksAbout": {
+        "label": "Niemand heeft het over"
+      },
+      "theSecret": {
+        "label": "Het geheim"
+      },
+      "hormoziBold": {
+        "label": "Hormozi Bold"
+      },
+      "beastImpact": {
+        "label": "Beast Impact"
+      },
+      "minimalNarrative": {
+        "label": "Minimaal verhaal"
+      },
+      "subliminalQuick": {
+        "label": "Subliminaal snel"
+      },
+      "punchyHighlight": {
+        "label": "Krachtig accent"
+      },
+      "arrowRight": {
+        "label": "Pijl →"
+      },
+      "arrowLeft": {
+        "label": "Pijl ←"
+      },
+      "proTip": {
+        "label": "PROTIP"
+      },
+      "watch": {
+        "label": "KIJK"
+      },
+      "here": {
+        "label": "HIER"
+      },
+      "swipeUp": {
+        "label": "Swipe omhoog"
+      },
+      "commentBelow": {
+        "label": "Reageer hieronder"
+      },
+      "tapToLearnMore": {
+        "label": "Tik voor meer info"
+      },
+      "seeYouNextTime": {
+        "label": "Tot de volgende keer"
+      },
+      "unpopularOpinion": {
+        "label": "Impopulaire mening"
+      },
+      "thisChangedEverything": {
+        "label": "Dit veranderde alles"
+      },
+      "hotTake": {
+        "label": "Hot take"
+      },
+      "nobodyTalksAbout": {
+        "label": "Niemand praat over"
+      },
+      "saveThis": {
+        "label": "Bewaar dit"
+      },
+      "commentYour": {
+        "label": "Zet je antwoord"
+      },
+      "dropA": {
+        "label": "Laat een"
+      },
+      "part1": {
+        "label": "Deel 1"
+      },
+      "chapter": {
+        "label": "Hoofdstuk"
+      },
+      "intro": {
+        "label": "Intro"
+      },
+      "outro": {
+        "label": "Outro"
+      },
+      "next": {
+        "label": "Volgende"
+      },
+      "recap": {
+        "label": "Samenvatting"
+      }
+    },
+    "filter": {
+      "vibrant": {
+        "name": "Levendig",
+        "desc": "Krachtige kleuren"
+      },
+      "mono": {
+        "name": "Mono",
+        "desc": "Z/W"
+      },
+      "cinematic": {
+        "name": "Filmisch",
+        "desc": "Filmlook"
+      },
+      "warm": {
+        "name": "Warm",
+        "desc": "Gouden uur"
+      },
+      "cool": {
+        "name": "Koel",
+        "desc": "Blauwe tinten"
+      },
+      "vintage": {
+        "name": "Vintage",
+        "desc": "Retro"
+      },
+      "moody": {
+        "name": "Moody",
+        "desc": "Donker en vol"
+      },
+      "vivid": {
+        "name": "Fel",
+        "desc": "Extra pop"
+      },
+      "noir": {
+        "name": "Noir",
+        "desc": "Z/W met hoog contrast"
+      },
+      "sunset": {
+        "name": "Zonsondergang",
+        "desc": "Gouden uur"
+      },
+      "breeze": {
+        "name": "Bries",
+        "desc": "Koel en fris"
+      },
+      "matte": {
+        "name": "Mat",
+        "desc": "Vlak en zacht"
+      },
+      "neon": {
+        "name": "Neon",
+        "desc": "Felle kleuren"
+      },
+      "autumn": {
+        "name": "Herfst",
+        "desc": "Warme aardetinten"
+      },
+      "winter": {
+        "name": "Winter",
+        "desc": "Koel en helder"
+      },
+      "dreamy": {
+        "name": "Dromerig",
+        "desc": "Zacht pastel"
+      },
+      "reset": {
+        "name": "Resetten",
+        "desc": "Standaard"
+      }
+    },
+    "style": {
+      "creatorBold": {
+        "label": "Creator Bold",
+        "desc": "Viraal met veel energie"
+      },
+      "softAesthetic": {
+        "label": "Zachte esthetiek",
+        "desc": "Zacht en dromerig"
+      },
+      "corporateMinimal": {
+        "label": "Zakelijk minimaal",
+        "desc": "Strak en professioneel"
+      },
+      "darkMoody": {
+        "label": "Donker en moody",
+        "desc": "Dramatische schaduwen"
+      },
+      "vibrantPop": {
+        "label": "Levendige pop",
+        "desc": "Kleurrijk en krachtig"
+      },
+      "cinematicFilm": {
+        "label": "Bioscoopfilm",
+        "desc": "Filmtrailer"
+      },
+      "noirDramatic": {
+        "label": "Dramatische noir",
+        "desc": "Dramatisch zwart-wit"
+      },
+      "lifestyleWarm": {
+        "label": "Warme lifestyle",
+        "desc": "Vlog en reizen"
+      },
+      "podcastPro": {
+        "label": "Podcast Pro",
+        "desc": "Strak en professioneel"
+      },
+      "documentary": {
+        "label": "Documentaire",
+        "desc": "Natuurlijk en meeslepend"
+      },
+      "fashionEditorial": {
+        "label": "Fashion editorial",
+        "desc": "High-fashion-look"
+      },
+      "retroWarm": {
+        "label": "Warme retro",
+        "desc": "Vintage warmte"
+      },
+      "cinematicDrama": {
+        "label": "Filmisch drama",
+        "desc": "Diep en dramatisch"
+      },
+      "comedyBright": {
+        "label": "Vrolijke komedie",
+        "desc": "Krachtig en grappig"
+      },
+      "sportsDynamic": {
+        "label": "Dynamische sport",
+        "desc": "Klaar voor actie"
+      },
+      "savedDesc": "Opgeslagen"
+    },
+    "platform": {
+      "tiktok": {
+        "desc": "9:16, krachtig"
+      },
+      "youtube": {
+        "desc": "9:16, gebalanceerd"
+      },
+      "feed": {
+        "label": "Instagram-feed",
+        "desc": "1:1, levendig"
+      },
+      "portrait": {
+        "label": "Instagram staand",
+        "desc": "4:5, warm"
+      },
+      "landscape": {
+        "label": "YouTube / liggend",
+        "desc": "16:9, strak"
+      },
+      "linkedin": {
+        "desc": "16:9, professioneel"
+      }
+    },
+    "filterCategory": {
+      "all": "Alle",
+      "mood": "Sfeer",
+      "creative": "Creatief",
+      "dramatic": "Dramatisch",
+      "neutral": "Resetten"
+    },
+    "shapePreset": {
+      "logoCorner": "Logohoek",
+      "subscribeBadge": "Abonneerbadge",
+      "fullWidthBar": "Balk over volle breedte",
+      "dividerLine": "Scheidingslijn",
+      "highlightBox": "Markeringsvak",
+      "cornerAccent": "Hoekaccent"
+    },
+    "undo": "Ongedaan maken",
+    "redo": "Opnieuw",
+    "searchTools": "Tools zoeken...",
+    "clearSearch": "Zoekopdracht wissen",
+    "layersCount": "{{count}} lagen",
+    "reset": "Resetten",
+    "add": "Toevoegen",
+    "save": "Opslaan",
+    "color": "Kleur",
+    "toast": {
+      "undoApplied": "Ongedaan gemaakt",
+      "redoApplied": "Opnieuw uitgevoerd",
+      "fontUploading": "Lettertype uploaden…",
+      "fontAdded": "Lettertype toegevoegd.",
+      "fontInvalid": "Dit lettertypebestand wordt niet ondersteund.",
+      "fontFailed": "Kan het lettertype niet uploaden.",
+      "rectangleAdded": "Rechthoek toegevoegd",
+      "circleAdded": "Cirkel toegevoegd",
+      "lineAdded": "Lijn toegevoegd",
+      "addedName": "{{name}} toegevoegd",
+      "addedQuoted": "\"{{name}}\" toegevoegd",
+      "addedAt": "\"{{name}}\" toegevoegd op {{time}}s",
+      "enterImageUrl": "Voer een afbeeldings-URL in",
+      "imageAdded": "Afbeeldingsoverlay toegevoegd",
+      "svgAddedFromFile": "SVG-overlay uit bestand toegevoegd — animeer hem met keyframes in Effecten",
+      "enterSvgUrl": "Voer een SVG-URL in (bijv. https://… .svg of data:image/svg+xml,…)",
+      "svgAdded": "SVG-overlay toegevoegd — animeer hem met keyframes in Effecten",
+      "compoundSaved": "\"{{name}}\" opgeslagen — voeg hem wanneer je wilt toe aan de tijdlijn",
+      "compoundRemoved": "Samengestelde clip verwijderd",
+      "renamed": "Hernoemd naar \"{{name}}\"",
+      "addTextHint": "Tekst toevoegen — typ en druk op Toevoegen of Ctrl+Enter",
+      "textAdded": "Tekstoverlay toegevoegd",
+      "packApplied": "Pakket {{name}} toegepast",
+      "saved": "\"{{name}}\" opgeslagen",
+      "filtersReset": "Filters teruggezet naar standaard",
+      "nameYourStyle": "Geef je stijl een naam en klik op Opslaan",
+      "applied": "{{name}} toegepast",
+      "speed": "Snelheid: {{value}}×"
+    },
+    "compound": {
+      "untitled": "Naamloze samengestelde clip",
+      "title": "Opslaan als samengestelde clip",
+      "namePlaceholder": "Naam samengestelde clip…",
+      "name": "Naam samengestelde clip",
+      "durationAria": "Duur van samengestelde clip in seconden",
+      "delete": "Samengestelde clip \"{{name}}\" verwijderen"
+    },
+    "search": {
+      "filterHit": "Filter: {{name}}",
+      "styleHit": "Stijl: {{name}}",
+      "motionHit": "Beweging: {{name}}",
+      "textHit": "Tekst: {{name}}"
+    },
+    "caption": {
+      "noTranscript": "Geen transcript gevonden. Plak je script in het veld hieronder en probeer het opnieuw.",
+      "noneGenerated": "Geen ondertitels gemaakt — het transcript is misschien te kort.",
+      "addedToast": "{{count}} ondertitels toegevoegd — {{style}}-stijl",
+      "generationFailed": "Ondertitels maken mislukt",
+      "failedToast": "Automatisch ondertitelen mislukt",
+      "title": "Automatische AI-ondertitels",
+      "clearTitle": "Automatische ondertitels wissen",
+      "cleared": "Automatische ondertitels gewist",
+      "count": "{{count}} ondertitels",
+      "ready": "Klaar",
+      "noScript": "Geen script",
+      "pasteScript": "Plak je script",
+      "pasteScriptTitle": "Plak hier je videoscript",
+      "pastePlaceholder": "Plak of typ de gesproken tekst uit je video…",
+      "wordCount": "{{count}} woorden",
+      "wordsPerLine": "Woorden/regel",
+      "position": "Positie",
+      "positionAt": {
+        "top": "Ondertitels bovenaan plaatsen",
+        "mid": "Ondertitels in het midden plaatsen",
+        "bottom": "Ondertitels onderaan plaatsen"
+      },
+      "colorTitle": "Tekstkleur ondertitels",
+      "setColor": "Ondertitelkleur instellen op {{color}}",
+      "addedInStyle": "{{count}} ondertitels toegevoegd in {{style}}-stijl",
+      "generateAria": "Automatische ondertitels maken uit het transcript",
+      "generating": "Ondertitels van {{count}} woorden maken…",
+      "generate": "Ondertitels maken"
+    },
+    "captionStyle": {
+      "minimal": "Minimaal",
+      "neon": "Neon",
+      "kinetic": "Kinetisch",
+      "cyber": "Cyber",
+      "meme": "Meme",
+      "retro": "Retro",
+      "quote": "Citaat"
+    },
+    "translate": {
+      "noCaptions": "Geen ondertitels op de tijdlijn om te vertalen.",
+      "inProgress": "Ondertitels vertalen (timing blijft gelijk)…",
+      "done": "Ondertitels vertaald naar {{language}}",
+      "empty": "Vertaling voltooid, maar er kwamen geen ondertitels terug.",
+      "failed": "Kan de ondertitels niet vertalen.",
+      "title": "Ondertitels vertalen",
+      "languageTitle": "Kies de taal om naar te vertalen",
+      "translating": "Vertalen…",
+      "translate": "Vertalen"
+    },
+    "emoji": {
+      "noTranscript": "Geen transcriptwoorden om emoji's aan te koppelen. Maak eerst een transcript.",
+      "inProgress": "Emoji's koppelen aan je transcript…",
+      "noneFound": "Geen passende emoji's gevonden in het transcript.",
+      "added": "{{count}} emoji's toegevoegd aan de tijdlijn",
+      "failed": "Emoji's maken mislukt",
+      "title": "Automatische emoji's",
+      "clearTitle": "Gemaakte emoji's wissen",
+      "cleared": "Emoji's gewist",
+      "count": "{{count}} emoji's",
+      "enter": "Inkomende overgang",
+      "enterTitle": "Kies hoe emoji's verschijnen",
+      "exit": "Uitgaande overgang",
+      "exitTitle": "Kies hoe emoji's verdwijnen",
+      "style": "Stijl",
+      "styleTitle": "Kies de emojistijl",
+      "size": "Emojigrootte",
+      "sizeTitle": "Kies de emojigrootte",
+      "density": "Hoe vaak",
+      "densityTitle": "Kies hoe vaak emoji's verschijnen",
+      "placement": "Plaatsing",
+      "placementTitle": "Kies waar emoji's staan",
+      "inDuration": "Duur in: {{value}}s",
+      "inDurationTitle": "Duur van inkomende animatie",
+      "outDuration": "Duur uit: {{value}}s",
+      "outDurationTitle": "Duur van uitgaande animatie",
+      "generating": "Emoji's maken…",
+      "generate": "Emoji's maken"
+    },
+    "emojiOpt": {
+      "enter": {
+        "pop": "💥 Inpoppen",
+        "bounce": "🦘 Omhoog stuiteren",
+        "slide": "➡️ Inschuiven",
+        "pulse": "💓 Zoompuls",
+        "shake": "⚡ Camerashake",
+        "blur": "🌫️ Vervaagd in"
+      },
+      "exit": {
+        "fade": "🌫️ Zacht vervagen",
+        "pop": "💥 Wegpoppen",
+        "slideBottom": "⬇️ Omlaag schuiven",
+        "bounceOut": "🦘 Wegstuiteren",
+        "scaleOut": "🔍 Wegschalen",
+        "zoomOut": "🔎 Uitzoomen",
+        "flipOut": "🔄 Wegflippen"
+      },
+      "style": {
+        "pop3d": "✨ 3D-pop",
+        "neonGlow": "🏮 Neongloed",
+        "flat": "📄 Minimaal plat"
+      },
+      "size": {
+        "n32": "🤏 Klein (32px)",
+        "n48": "👌 Gemiddeld (48px)",
+        "n64": "💪 Groot (64px)",
+        "n80": "👑 Enorm (80px)"
+      },
+      "density": {
+        "n3": "🔥 Hoog (elke 3 woorden)",
+        "n6": "⚡ Gemiddeld (elke 6 woorden)",
+        "n10": "🎯 Laag (elke 10 woorden)"
+      },
+      "place": {
+        "above": "⬆️ Boven ondertitels",
+        "below": "⬇️ Onder ondertitels",
+        "head": "👱 Op hoofdhoogte",
+        "customTop": "👑 Bovenaan het beeld"
+      }
+    },
+    "lang": {
+      "en": "Engels (English)",
+      "es": "Spaans (Español)",
+      "fr": "Frans (Français)",
+      "de": "Duits (Deutsch)",
+      "it": "Italiaans (Italiano)",
+      "pt": "Portugees (Português)",
+      "ru": "Russisch (Русский)",
+      "ja": "Japans (日本語)",
+      "ko": "Koreaans (한국어)",
+      "zh": "Chinees (中文)",
+      "ar": "Arabisch (العربية)",
+      "hi": "Hindi (हिन्दी)",
+      "nl": "Nederlands",
+      "pl": "Pools (Polski)",
+      "tr": "Turks (Türkçe)"
+    },
+    "trim": {
+      "waveform": "Golfvorm",
+      "clickToSeek": "Klik om de afspeelkop te verplaatsen",
+      "speed": "Snelheid",
+      "playbackSpeedAria": "Afspeelsnelheid: {{value}} keer",
+      "reverse": "Omkeren",
+      "reverseSub": "Geselecteerde clip omkeren",
+      "selectClipFirst": "Selecteer eerst een clip",
+      "split": "Splitsen bij afspeelkop",
+      "beatCut": "Beat-cut",
+      "beatCutSub": "Knip de clip op elke beat",
+      "freeze": "Freeze frame",
+      "freezeSub": "1s vasthouden @ {{time}}s",
+      "trimToInOut": "Trimmen tot in/uit",
+      "trimToInOutSub": "Stel hieronder in + uit in",
+      "setBothFirst": "Stel eerst zowel het in- als het uitpunt in",
+      "jCut": "J-cut",
+      "jCutSub": "Audio begint 0,5s eerder",
+      "lCut": "L-cut",
+      "lCutSub": "Audio loopt 0,5s door na de cut",
+      "comingSoonTitle": "{{label}} — binnenkort",
+      "selectClipTitle": "{{label}} — selecteer eerst een clip",
+      "soon": "Binnenkort",
+      "markers": "In-/uitmarkeringen",
+      "inAt": "In {{time}}s",
+      "noIn": "Geen in",
+      "outAt": "Uit {{time}}s",
+      "noOut": "Geen uit",
+      "inSet": "In ingesteld @ {{time}}s",
+      "setIn": "In instellen",
+      "outAfterIn": "Uit moet na In komen",
+      "outSet": "Uit ingesteld @ {{time}}s",
+      "setOut": "Uit instellen",
+      "clear": "Wissen"
+    },
+    "layout": {
+      "auto": "Auto",
+      "standard": "Standaard",
+      "square": "Vierkant",
+      "vertical": "Verticaal",
+      "portrait": "Portret",
+      "cinematic": "Filmisch",
+      "classic": "Klassiek"
+    },
+    "text": {
+      "editingOnCanvas": "Bewerken op canvas",
+      "doubleClickHint": "Dubbelklik op tekst in de speler om direct te typen",
+      "deselect": "Deselecteren",
+      "newText": "Nieuwe tekst",
+      "typePlaceholder": "Typ tekst… (⌘↵ om toe te voegen)",
+      "duration": "Duur:",
+      "searchPresets": "Presets zoeken…",
+      "activeText": "Tekst op video ({{count}})",
+      "deleteOverlayAria": "Tekstoverlay \"{{text}}\" verwijderen",
+      "deleteOverlay": "Tekstoverlay verwijderen",
+      "preview": "Voorbeeld",
+      "livePreview": "Livevoorbeeld",
+      "editing": "Bewerken: {{text}}",
+      "contentAria": "Overlaytekst",
+      "contentPlaceholder": "Overlaytekst",
+      "fontSize": "Lettergrootte",
+      "textColor": "Tekstkleur",
+      "style": "Stijl",
+      "animateIn": "Animatie in",
+      "animateOut": "Animatie uit",
+      "font": "Lettertype",
+      "start": "Begin",
+      "startAria": "Begintijd in seconden",
+      "end": "Einde",
+      "endAria": "Eindtijd in seconden",
+      "uploadFont": "Lettertype uploaden",
+      "uploadFontAria": "Eigen lettertypebestand uploaden"
+    },
+    "textStyle": {
+      "none": "Geen",
+      "neon": "Neon",
+      "minimal": "Minimaal",
+      "bold-kinetic": "Vet kinetisch",
+      "outline": "Omlijning",
+      "shadow": "Schaduw"
+    },
+    "anim": {
+      "none": "Geen",
+      "fade": "Vervagen",
+      "slide-up": "Omhoog schuiven",
+      "slide-down": "Omlaag schuiven",
+      "slide-left": "Naar links schuiven",
+      "slide-right": "Naar rechts schuiven",
+      "scale": "Schalen",
+      "bounce": "Stuiteren"
+    },
+    "presetGroup": {
+      "viralHooks": "Virale hooks",
+      "textPresets": "Tekstpresets",
+      "premiumCaptions": "Premium bijschriften",
+      "reactionCallouts": "Reacties / callouts",
+      "trending": "Trending",
+      "endScreens": "Eindschermen",
+      "chapters": "Hoofdstukken"
+    },
+    "filters": {
+      "strengthAria": "Filtersterkte: {{value}} procent",
+      "before": "⏪ Voor",
+      "after": "⏩ Na",
+      "split": "🌓 Gesplitst",
+      "pinned": "Vastgezet",
+      "pin": "Filter {{name}} vastzetten",
+      "unpin": "Filter {{name}} losmaken"
+    },
+    "motion": {
+      "searchTemplates": "Sjablonen zoeken…",
+      "durationAria": "Duur van motion graphic in seconden",
+      "recent": "Recent"
+    },
+    "layers": {
+      "addShape": "Vorm toevoegen",
+      "addImage": "Afbeelding / logo toevoegen",
+      "imageUrlPlaceholder": "Plak afbeeldings-URL…",
+      "imageUrl": "Afbeeldings-URL",
+      "addSvg": "SVG toevoegen",
+      "svgUrlPlaceholder": "SVG-URL of data-URI…",
+      "svgUrl": "SVG-URL",
+      "uploadSvg": "SVG-bestand uploaden",
+      "gradients": "Verloopoverlays",
+      "allLayers": "Alle lagen ({{count}})",
+      "hoverHint": "Beweeg erover om bediening te tonen",
+      "deleteTextAria": "Tekstlaag \"{{text}}\" verwijderen",
+      "deleteText": "Tekstlaag verwijderen",
+      "opacity": "Dekking",
+      "opacityAria": "Laagdekking",
+      "deleteShape": "Vorm {{shape}} verwijderen",
+      "deleteImage": "Afbeeldingslaag verwijderen",
+      "customSvg": "Eigen SVG",
+      "deleteSvg": "SVG-laag verwijderen",
+      "gradientName": "Verloop {{region}}",
+      "deleteGradient": "Verlooplaag verwijderen",
+      "empty": "Nog geen lagen",
+      "emptyHint": "Voeg hierboven vormen, afbeeldingen of SVG's toe. Tekstoverlays verschijnen hier ook.",
+      "addTextLayer": "+ Tekstlaag toevoegen"
+    },
+    "shape": {
+      "rect": "Rechthoek",
+      "circle": "Cirkel",
+      "line": "Lijn"
+    },
+    "region": {
+      "full": "Volledig",
+      "lower-third": "Onderste derde",
+      "top-bar": "Bovenbalk",
+      "top-half": "Bovenste helft",
+      "bottom-half": "Onderste helft"
+    },
+    "gradient": {
+      "lowerThird": "Vervaging onderste derde",
+      "fullDark": "Volledig verdonkeren",
+      "topBar": "Bovenbalk",
+      "warmTint": "Warme tint",
+      "coolTint": "Koele tint",
+      "bottomHalf": "Vervaging onderste helft",
+      "topHalf": "Vervaging bovenste helft",
+      "vignetteSoft": "Zachte vignet"
+    },
+    "pack": {
+      "hookCta": {
+        "name": "Hook + CTA",
+        "desc": "Virale hook bij de afspeelkop, CTA op het eindscherm"
+      },
+      "lowerThirdSubscribe": {
+        "name": "Lower third + abonneren",
+        "desc": "Naambalk + abonneerbadge"
+      },
+      "fullCtaBar": {
+        "name": "CTA + vervaging onderste derde",
+        "desc": "Like & abonneer + verloopbalk"
+      },
+      "introOutro": {
+        "name": "Intro + outro",
+        "desc": "INTRO bij de afspeelkop, \"Tot de volgende keer\" aan het eind"
+      },
+      "trendingSave": {
+        "name": "Trending + bewaar dit",
+        "desc": "Impopulaire mening + bewaar voor later"
+      }
+    },
+    "packs": {
+      "oneClick": "Pakketten met één klik",
+      "styleBundles": "Stijlbundels",
+      "platform": "Gemaakt voor elk platform",
+      "saveMyStyle": "Mijn stijl opslaan",
+      "styleNamePlaceholder": "Stijlnaam…",
+      "styleName": "Naam eigen stijl",
+      "saveStyle": "Eigen stijl opslaan",
+      "goTo": "Ga naar"
+    },
+    "nav": {
+      "shortClips": "Korte clips",
+      "assets": "Muziek & B-roll",
+      "timeline": "Tijdlijn",
+      "effects": "Effecten",
+      "color": "Kleur",
+      "aiEdit": "Transcriptie & AI",
+      "export": "Exporteren"
+    },
+    "insights": {
+      "comingSoon": "Inzichten komen binnenkort",
+      "comingSoonHint": "Analyses van retentie, hookkracht en tempo verschijnen hier zodra je video is geanalyseerd.",
+      "transcript": "Transcript"
+    }
   }
 }

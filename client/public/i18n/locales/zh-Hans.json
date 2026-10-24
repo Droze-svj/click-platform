@@ -846,11 +846,11 @@
     "title": "成就",
     "subtitle": "追踪你的里程碑和进度。",
     "refreshRegistry": "刷新",
-    "statTierLabel": "进化层",
+    "statTierLabel": "等级",
     "statTierSub": "距下一级还差 {{pct}}%",
-    "statMilestonesLabel": "解密里程碑",
+    "statMilestonesLabel": "已解锁里程碑",
     "statMilestonesSub": "目前已解锁",
-    "statStreakLabel": "连贯性条纹",
+    "statStreakLabel": "当前连续天数",
     "statStreakSub": "最佳：{{peak}}",
     "statVolumeLabel": "已创作内容",
     "statVolumeSub": "累计创作数量",
@@ -861,14 +861,14 @@
     "detailPayloads": "内容",
     "detailScripts": "脚本",
     "recentBreakthroughs": "最近的突破",
-    "decryptedOn": "已解密 {{date}}",
+    "decryptedOn": "{{date}} 解锁",
     "ascensionVerified": "已解锁",
     "nodeMatrix": "全部里程碑",
-    "decrypted": "已解密",
+    "decrypted": "已解锁",
     "logicGated": "未解锁",
     "milestones": {
       "first_video": {
-        "name": "创世纪演绎",
+        "name": "第一个视频",
         "description": "制作你的第一个视频。"
       },
       "first_content": {
@@ -900,11 +900,11 @@
         "description": "完成 50 个视频。"
       },
       "streak_7": {
-        "name": "连贯性7",
+        "name": "连续 7 天",
         "description": "连续 7 天保持活跃。"
       },
       "streak_30": {
-        "name": "连贯性 30",
+        "name": "连续 30 天",
         "description": "连续 30 天保持活跃。"
       },
       "streak_100": {
@@ -925,7 +925,7 @@
       },
       "early_adopter": {
         "name": "尝鲜先锋",
-        "description": "在创世阶段整合。"
+        "description": "很早就加入了 Click。"
       },
       "power_user": {
         "name": "资深用户",
@@ -993,7 +993,7 @@
     "authorize": "授权",
     "dissent": "异议",
     "historyTitle": "批准历史",
-    "historySubtitle": "共识决策和节点授权的不可变记录。",
+    "historySubtitle": "过往通过和驳回的记录。",
     "protocolLogsAnalyzed": "{{count}} 个请求",
     "emptyTitle": "这里还没有内容",
     "emptyState": "暂无审批请求。",
@@ -1126,7 +1126,7 @@
     "purgeForgeBuffer": "清除锻造缓冲器",
     "neuralHeuristics": "建议",
     "neuralHeuristicsDesc": "改进内容的方法。",
-    "decryptingHeuristics": "解密启发式...",
+    "decryptingHeuristics": "分析中…",
     "predictiveTelemetry": "表现预测",
     "predictiveTelemetryDesc": "预测你的内容可能的表现。",
     "scanningTrajectories": "扫描轨迹..."
@@ -1288,7 +1288,7 @@
     "refreshData": "刷新会员数据",
     "activeNodeUplink": "当前套餐",
     "protocolId": "套餐 ID：",
-    "rootGenesis": "根起源",
+    "rootGenesis": "入门版",
     "genericAccess": "通用访问",
     "lifecycleStatus": "生命周期状态：",
     "uninitialized": "未初始化",
@@ -1307,7 +1307,7 @@
     "coreMatrixUplink": "核心功能",
     "primeCommandUplink": "全部功能权限",
     "activeProtocol": "当前套餐",
-    "ascending": "上升...",
+    "ascending": "升级中…",
     "genesisUplink": "开始使用",
     "escalateProtocol": "升级"
   },
@@ -1825,7 +1825,7 @@
     "heroIntro": "将你的社交账号连接到 Click。每个连接都可启用",
     "heroFeature1": "自动发布",
     "heroFeature2": "互动跟踪",
-    "heroFeature3": "综合受众分析",
+    "heroFeature3": "受众洞察",
     "heroAnd": "和",
     "statNeuralEncryption": "令牌加密",
     "statUplinkLatency": "连接速度",
@@ -2375,7 +2375,7 @@
     "collaborationIntro1": "每个团队都有",
     "collaborationHighlight1": "共享素材",
     "collaborationIntro2": ",",
-    "collaborationHighlight2": "异步反馈循环",
+    "collaborationHighlight2": "评论与反馈",
     "collaborationIntro3": "，以及统一的",
     "collaborationHighlight3": "生产队列",
     "collaborationIntro4": "。所有人的工作集中在一处。",
@@ -3113,7 +3113,7 @@
     "neuralLine1": "内容",
     "neuralLine2": "中心",
     "autonomousPrefix": "自动模式正在",
-    "dominating": "占主导地位",
+    "dominating": "运行中",
     "autonomousMid": "这",
     "autonomousSuffix": "队列。",
     "neuralActive": "自动模式已开启",
@@ -3998,7 +3998,7 @@
     "latticeHealth": "网络健康",
     "aggregatedRevenue": "总收入",
     "victoryVectors": "今日成果",
-    "encirclementTitle": "全球包围圈",
+    "encirclementTitle": "增长概览",
     "encirclementSubtitle": "Click 全平台共享的洞察",
     "godModeSaturationActive": "实时",
     "decentralizedIntelligenceLedger": "活动日志",
@@ -4018,7 +4018,7 @@
     "tabStability": "系统健康状况",
     "versionLabel": "Click",
     "overlordTerminalSynced": "已连接",
-    "mainTitle": "点击霸王终端",
+    "mainTitle": "Click 控制中心",
     "mainSubtitle": "变现与自动化控制。"
   },
   "clickDebugPanel": {
@@ -5408,7 +5408,7 @@
     "presetVibrantPopName": "充满活力的流行音乐",
     "presetVibrantPopDesc": "大胆、饱和的色彩",
     "presetSoftDreamyName": "软梦幻",
-    "presetSoftDreamyDesc": "外观空灵、温柔",
+    "presetSoftDreamyDesc": "柔和细腻的效果",
     "presetElectricVibeName": "电的",
     "presetElectricVibeDesc": "充满活力的高能量外观",
     "presetRetroVintageName": "复古复古",
@@ -6232,7 +6232,20 @@
     "appliedStyleProfile": "已应用 {{name}} 风格",
     "packApplied": "已应用 {{name}}：{{grade}} 调色及其字幕样式",
     "packAppliedGradeOnly": "已应用 {{name}}：{{grade}} 调色。开启字幕即可使用其字幕样式。",
-    "packApplyFailed": "无法应用 {{name}}：找不到其调色"
+    "packApplyFailed": "无法应用 {{name}}：找不到其调色",
+    "beatRecut": "✦ 已重新剪成 {{count}} 个踩点片段（替换了 {{replaced}} 个视频片段）",
+    "beatCut": "✦ 已剪成 {{count}} 个踩点片段",
+    "autoViralAnalysing": "✦ 自动爆款剪辑——正在分析节拍和字幕…",
+    "autoViralNothingFound": "自动爆款剪辑需要音乐节拍或可用的转录稿——两者都未找到。",
+    "autoViralNeedsTranscript": "自动爆款剪辑需要转录稿来生成字幕，或需要音乐来剪切。请先转录，然后重试。",
+    "autoViralCuts": "{{clips}} 个踩点片段 · {{transitions}} 个转场",
+    "autoViralCaptions": "{{count}} 条卡拉 OK 字幕",
+    "autoViralDone": "✦ 自动爆款剪辑：{{summary}}",
+    "autoViralFailed": "自动爆款剪辑失败——时间线未做任何更改。",
+    "resizeTimelineAria": "调整时间线大小（上下拖动）",
+    "resizeTimelineTitle": "拖动以调整时间线大小",
+    "timelineHeading": "时间线",
+    "cmdCategoryEditor": "编辑器"
   },
   "nicheStrategyPanel": {
     "tabHooks": "挂钩",
@@ -6310,13 +6323,13 @@
     "featuresTitle": "精英特色",
     "featuresDescription": "解锁多平台智能和预测性增长。",
     "completeTitle": "设置完成",
-    "completeDescription": "你现在已经准备好主宰社会格局了。",
+    "completeDescription": "一切就绪，开始创作吧。",
     "eliteAccessGranted": "授予精英访问权限",
     "closeOnboarding": "关闭入职流程",
     "back": "后退",
-    "startDominating": "开始统治",
+    "startDominating": "开始使用",
     "nextIntelligence": "下一步情报",
-    "clickGenesis": "单击创世纪",
+    "clickGenesis": "欢迎使用 Click",
     "welcomeBodyBefore": "唯一不只是写作的平台",
     "welcomeBodyOperates": "运作",
     "welcomeBodyAfter": "。我们来设置你的品牌吧。",
@@ -6489,7 +6502,7 @@
     "syncing": "正在更新...",
     "restart": "重新启动",
     "dismissInstallPrompt": "关闭安装提示",
-    "installDescription": "提升到更快、支持离线的工作空间。专为精英内容运营而打造。",
+    "installDescription": "安装 Click，获得更快且可离线使用的应用。",
     "initializeInstallation": "初始化安装",
     "tagInstant": "立即的",
     "tagEdge": "边缘",
@@ -6779,7 +6792,7 @@
     "navAeoMetadata": "AEO 元数据",
     "navUgcRaw": "用户生成内容原始",
     "navZeroPartyData": "零方数据",
-    "headerPill": "第八阶段——市场统治",
+    "headerPill": "第 8 阶段——增长工具",
     "headerTitle": "增长工具",
     "headerSubtitle": "使 CLICK 无可争议的 5 个系统"
   },
@@ -6850,14 +6863,14 @@
     "pcv": "聚氯乙烯",
     "steerSwarmToThisOffer": "主推这个优惠",
     "s2sNetworkDown": "S2S网络瘫痪",
-    "globalEncirclementTitle": "全球包围圈",
+    "globalEncirclementTitle": "增长概览",
     "globalEncirclementSubtitle": "跨账号洞察",
     "godModeActiveBadge": "已启用",
     "networkHealth": "网络健康",
     "aggregatedRevenue": "总收入",
     "victoryVectors": "最佳表现",
     "logInitializingTunnel": "[SYSTEM]正在初始化S2S加密隧道...",
-    "logEncirclementActive": "[系统] 包围圈激活。 {{count}} 连接同级实例。",
+    "logEncirclementActive": "已连接 {{count}} 个工作区。",
     "logVectorReceived": "钩子“{{hook}}”在 {{cluster}} 中领先。",
     "logLocalSynthesis": "本地结果已更新：势头权重 +{{percent}}%。",
     "productionStabilityTitle": "生产稳定性",
@@ -6878,7 +6891,7 @@
     "navGlobalS2s": "全球S2S",
     "navSystemHealth": "系统健康状况",
     "headerPill": "高级工具",
-    "headerTitle": "霸王码头",
+    "headerTitle": "控制中心",
     "headerSubtitle": "市场拓展"
   },
   "quickActions": {
@@ -7098,7 +7111,31 @@
   "realTimeVideoPreview": {
     "overlayAlt": "覆盖",
     "metadataError": "无法加载视频元数据。检查 CORS 或 URL 有效性。",
-    "bootingRenderEngine": "正在加载预览..."
+    "bootingRenderEngine": "正在加载预览...",
+    "videoFailed": "视频加载失败",
+    "retry": "重试",
+    "dragToCompare": "拖动以对比前后效果",
+    "before": "之前",
+    "after": "之后",
+    "rawUnfiltered": "原片 / 无滤镜",
+    "graded": "已调色",
+    "editCaptionInline": "直接编辑字幕文字",
+    "captionPlaceholder": "输入字幕文字…",
+    "opsReverse": "{{count}}× 倒放",
+    "opsJCut": "{{count}}× J 剪辑",
+    "opsLCut": "{{count}}× L 剪辑",
+    "exportOnlyTitle": "这些更改仅在导出时应用——预览中片段按原方向播放，音频同步正常。",
+    "exportOnly": "仅导出时生效",
+    "imageLayer": "图片图层",
+    "imageFailed": "图片加载失败",
+    "svgLayer": "SVG 图层",
+    "preview": "预览",
+    "latency": "延迟",
+    "pause": "暂停",
+    "play": "播放",
+    "toggleBeforeAfter": "切换前后对比",
+    "beforeAfter": "前后对比",
+    "aiStylingActive": "AI 风格已启用"
   },
   "realtimeCollaboration": {
     "failedToJoin": "无法加入协作会话",
@@ -7172,7 +7209,137 @@
   },
   "resizableTimeline": {
     "restore": "恢复时间线大小",
-    "maximize": "最大化时间线"
+    "maximize": "最大化时间线",
+    "snapKind": {
+      "word": "词",
+      "silence": "停顿",
+      "beat": "节拍",
+      "marker": "标记",
+      "edge": "边缘",
+      "playhead": "播放头",
+      "boundary": "边界"
+    },
+    "realignedCountOne": "已将 1 条字幕吸附到语音",
+    "realignedCount": "已将 {{count}} 条字幕吸附到语音",
+    "alreadyAligned": "字幕已对齐",
+    "markerNamePrompt": "标记名称（可选）：",
+    "unsoloTrack": "取消独奏",
+    "soloTrack": "独奏轨道",
+    "soloShort": "S",
+    "unmuteTrack": "取消静音",
+    "muteTrack": "静音轨道",
+    "unlockTrack": "解锁轨道",
+    "lockTrack": "锁定轨道",
+    "prevFrameTitle": "上一帧（←）",
+    "prevFrame": "上一帧",
+    "pauseTitle": "暂停（空格）",
+    "playTitle": "播放（空格）",
+    "pause": "暂停",
+    "play": "播放",
+    "nextFrameTitle": "下一帧（→）",
+    "nextFrame": "下一帧",
+    "goToTimeLabel": "跳转到时间（输入时间后按 Enter）",
+    "goToTimeTitle": "输入时间（例如 1:05.5）并按 Enter 跳转",
+    "splitTitle": "分割播放头下的片段（S）",
+    "split": "分割",
+    "deleteTitle": "删除所选内容（Delete）",
+    "delete": "删除",
+    "rippleOnTitle": "波纹开启：删除后所有轨道自动补齐空隙",
+    "rippleOffTitle": "波纹关闭：删除后保留空隙",
+    "ripple": "波纹",
+    "ungroupTitle": "取消所选片段的编组",
+    "ungroup": "取消编组",
+    "groupTitle": "将所选片段编组，一起移动和删除",
+    "group": "编组",
+    "setInTitle": "在播放头处设置入点（I）",
+    "in": "入点",
+    "setOutTitle": "在播放头处设置出点（O）",
+    "out": "出点",
+    "clearInOutTitle": "清除入/出点（Alt+X）",
+    "clearInOutLabel": "清除入点和出点",
+    "snapTitle": "将片段吸附到边缘、播放头和标记",
+    "snap": "吸附",
+    "speechTitle": "将片段和字幕吸附到口播词句",
+    "speechDisabledTitle": "生成字幕后即可启用语音吸附",
+    "speech": "语音",
+    "realignTitle": "按口播内容重新校准每条字幕的时间",
+    "realign": "重新对齐字幕",
+    "dragToPan": "拖动以平移",
+    "showTracks": "显示轨道",
+    "allTracks": "所有轨道",
+    "track": {
+      "captions": "字幕",
+      "mainVideo": "主视频",
+      "broll": "B-roll",
+      "audio": "音频",
+      "effects": "特效",
+      "captionsSub": "屏幕文字",
+      "mainVideoSub": "你的素材",
+      "brollSub": "插入镜头和图片",
+      "audioSub": "音乐、人声和音效"
+    },
+    "viewGroup": "时间线视图",
+    "view": {
+      "clips": "片段",
+      "clipsTitle": "仅显示片段",
+      "hybrid": "片段 + 脚本",
+      "hybridTitle": "片段上方显示脚本",
+      "script": "脚本",
+      "scriptTitle": "按文字剪辑"
+    },
+    "zoomOut": "缩小",
+    "zoomIn": "放大",
+    "hideInsights": "隐藏 AI 洞察轨道",
+    "showInsights": "显示 AI 洞察轨道",
+    "insights": "洞察",
+    "inOutSpan": "入/出点：{{time}}",
+    "inPointTitle": "入点：{{time}}（拖动调整）",
+    "outPointTitle": "出点：{{time}}（拖动调整）",
+    "beatLabel": "节拍（{{time}} 秒）",
+    "markerTitle": "{{name}}：{{time}}（拖动移动，点击跳转，右键编辑）",
+    "marker": "标记",
+    "markerTag": "{{name}}（{{time}}）",
+    "resolve": "解决",
+    "close": "关闭",
+    "captionsCountOne": "1 条字幕",
+    "captionsCount": "{{count}} 条字幕",
+    "clipsCountOne": "1 个片段",
+    "clipsCount": "{{count}} 个片段",
+    "itemsCountOne": "1 项",
+    "itemsCount": "{{count}} 项",
+    "audienceRetention": "观众留存",
+    "retentionTitle": "留存：{{value}}%",
+    "audioWaveform": "音频波形",
+    "audioWaveformNoAudio": "音频波形（无音频）",
+    "trimStart": "裁剪开头",
+    "trimEnd": "裁剪结尾",
+    "jCut": "J 剪辑",
+    "lCut": "L 剪辑",
+    "trimmedStart": "已裁剪开头",
+    "trimmedEnd": "已裁剪结尾",
+    "freeze": "定格",
+    "reverseSpeed": "倒放 {{speed}}×",
+    "keyframes": "关键帧",
+    "playheadTitle": "播放头：{{time}}（拖动浏览）",
+    "scrubTitle": "浏览：{{time}}",
+    "dragPlayhead": "拖动播放头",
+    "origin": "原位置：{{time}}",
+    "moveDelta": "移动偏移：{{delta}}",
+    "trackNumber": "轨道 {{number}}",
+    "clipsMoving": "正在移动 {{count}} 个片段",
+    "trimStartAt": "裁剪开头：{{time}}",
+    "trimEndAt": "裁剪结尾：{{time}}",
+    "workAreaIn": "工作区起点：{{time}}",
+    "workAreaOut": "工作区终点：{{time}}",
+    "span": "时长：{{time}}",
+    "menu": {
+      "splitAtPlayhead": "在播放头处分割",
+      "duplicate": "复制片段",
+      "ungroup": "取消编组",
+      "group": "编组片段",
+      "rippleDelete": "波纹删除"
+    },
+    "sceneChange": "场景切换"
   },
   "revenueOracle": {
     "synchronizing": "正在加载收入数据...",
@@ -7682,7 +7849,7 @@
     "neuralScheduling": "智能排期",
     "neuralSchedulingDesc": "在受众最活跃的时段排期发布。",
     "evergreenSynthesis": "常青内容循环",
-    "evergreenSynthesisDesc": "激活自我修复内容回收以获得无限的存储库投资回报率。",
+    "evergreenSynthesisDesc": "自动复用表现最好的内容。",
     "initiateSequence": "启动序列",
     "neuralProcessing": "处理",
     "ecosystemCalibration": "正在设置...",
@@ -7691,7 +7858,7 @@
     "synchronization": "流程",
     "verified": "已验证",
     "nodesPrimedPrefix": "你的帖子已",
-    "primed": "已涂底漆",
+    "primed": "就绪",
     "nodesPrimedSuffix": "等待发布。",
     "estimatedYield": "预计产量",
     "neuralIntegrity": "质量检查",
@@ -8517,5 +8684,1369 @@
     "shift1d": "+1 天",
     "shift1w": "+1 周",
     "moveWarning": "移动帖子可能会导致同一平台在同一时间有两个帖子。正在发布或已发布的帖子不会被移动。"
+  },
+  "editorSidebar": {
+    "cat": {
+      "aiEdit": {
+        "label": "AI 自动剪辑",
+        "desc": "一键 AI 剪辑"
+      },
+      "dub": {
+        "label": "配音",
+        "desc": "把你的声音翻译成 10 种语言"
+      },
+      "edit": {
+        "label": "剪辑",
+        "desc": "基础剪辑工具"
+      },
+      "assets": {
+        "label": "我的素材",
+        "desc": "添加音乐、图片和 B-roll 片段"
+      },
+      "effects": {
+        "label": "特效",
+        "desc": "滤镜与增强"
+      },
+      "color": {
+        "label": "调色",
+        "desc": "专业调色"
+      },
+      "chromakey": {
+        "label": "色度抠像",
+        "desc": "绿幕与合成"
+      },
+      "timeline": {
+        "label": "时间线",
+        "desc": "高级剪辑"
+      },
+      "export": {
+        "label": "导出",
+        "desc": "分享与导出"
+      },
+      "aiAssist": {
+        "label": "AI 助理",
+        "desc": "智能剪切 · 审阅建议 · 应用与撤销"
+      },
+      "monetize": {
+        "label": "变现",
+        "desc": "商品链接 · 二维码 · AI 变现方案"
+      },
+      "stockLibrary": {
+        "label": "素材库",
+        "desc": "B-roll · 音乐 · GIF · 贴纸 · 转场 · 音效"
+      },
+      "textMotion": {
+        "label": "文字与动效",
+        "desc": "字幕 · 动画 · 动效 · 字体"
+      }
+    },
+    "group": {
+      "edit": {
+        "label": "剪辑",
+        "desc": "剪切、调色、合成——核心剪辑区。"
+      },
+      "media": {
+        "label": "媒体",
+        "desc": "素材、素材库、字幕与文字。"
+      },
+      "ai": {
+        "label": "AI",
+        "desc": "一键 AI 自动剪辑 + 多语种配音。"
+      },
+      "export": {
+        "label": "导出",
+        "desc": "渲染与分享。"
+      }
+    },
+    "badge": {
+      "new": "新",
+      "agency": "机构版",
+      "pro": "PRO",
+      "beta": "测试版"
+    },
+    "title": "编辑器工具",
+    "ready": "就绪",
+    "expand": "展开侧边栏",
+    "collapse": "收起侧边栏",
+    "searchPlaceholder": "搜索工具（⌘F）",
+    "clearSearch": "清除搜索",
+    "all": "全部",
+    "recent": "最近使用",
+    "noTools": "未找到工具",
+    "pinned": "已置顶",
+    "allTools": "全部工具",
+    "unpin": "取消置顶",
+    "pinToTop": "置顶",
+    "device": {
+      "desktop": "桌面",
+      "tablet": "平板",
+      "mobile": "手机"
+    },
+    "shortcuts": "键盘快捷键",
+    "closeShortcuts": "关闭快捷键",
+    "searchTools": "搜索工具"
+  },
+  "editorHUD": {
+    "section": {
+      "edit": "剪辑",
+      "color": "调色",
+      "ai": "AI 工具",
+      "effects": "特效",
+      "timeline": "时间线",
+      "export": "导出",
+      "styleVault": "Style Vault",
+      "aiEdit": "AI 剪辑",
+      "assets": "素材",
+      "growth": "数据分析",
+      "chromakey": "色度抠像",
+      "visualFx": "视觉特效",
+      "aiAnalysis": "AI 分析",
+      "collaborate": "协作",
+      "scripts": "脚本",
+      "scheduling": "排期",
+      "shortClips": "短片段",
+      "predict": "预测",
+      "distribution": "分发",
+      "spatial": "空间",
+      "agent": "AI 助手",
+      "dub": "配音"
+    },
+    "layout": {
+      "balanced": "均衡",
+      "balancedDesc": "预览与时间线平分空间",
+      "cinematic": "影院",
+      "cinematicDesc": "更大预览，专注播放",
+      "timelineFocus": "时间线优先",
+      "timelineFocusDesc": "为精细的时间线编辑留出更多空间"
+    },
+    "projectName": "项目名称",
+    "savingEllipsis": "保存中…",
+    "saveFailed": "保存失败",
+    "allChangesSaved": "所有更改已保存",
+    "saving": "保存中",
+    "saved": "已保存",
+    "undoTitle": "撤销（⌘Z）",
+    "redoTitle": "重做（⌘Y）",
+    "undo": "撤销",
+    "redo": "重做",
+    "command": "搜索或运行命令",
+    "commandTitle": "搜索或运行命令（⌘K）",
+    "workspaceLayoutTitle": "工作区布局（L）",
+    "workspaceLayout": "工作区布局",
+    "gpu": "GPU：{{backend}}",
+    "agentRunning": "AI 助手运行中",
+    "makeViralTitle": "运行一键爆款方案——钩子、剪切、B-roll、踩点、CTA",
+    "working": "处理中…",
+    "makeViral": "一键爆款",
+    "focusMode": "专注模式",
+    "moreActions": "更多操作",
+    "more": "更多",
+    "keyboardShortcuts": "键盘快捷键",
+    "exportTitle": "导出并发布",
+    "export": "导出"
+  },
+  "quickActionsBar": {
+    "variantsNeedBase": "请先添加字幕或钩子，让变体生成器有内容可用。",
+    "noVariants": "未返回任何变体——试试更长的基础钩子。",
+    "variantsGenerated": "已生成 {{count}} 个变体——打开 A/B 选择器预览。",
+    "variantsFailed": "生成变体失败：{{error}}",
+    "unknownError": "未知错误",
+    "brollNeedsClip": "请先加载片段，再推荐 B-roll。",
+    "noBrollGaps": "未发现需要 B-roll 的空隙——你的片段画面已经很丰富。",
+    "brollSuggested": "已推荐 {{count}} 处 B-roll 插入。打开时间线查看。",
+    "brollFailed": "B-roll 建议失败：{{error}}",
+    "trendsWarmingUp": "趋势数据准备中——请一分钟后再试。",
+    "trendsLoaded": "当前热门：{{sounds}} 个音频 · {{hashtags}} 个话题标签。正在打开选择器。",
+    "trendsFailed": "无法加载趋势：{{error}}",
+    "styleApplied": "已应用你的风格：{{items}}",
+    "styleAppliedGeneric": "已应用学习到的风格。",
+    "styleNeedsClips": "请先发布 3 个片段，让 Click 学习你的风格。",
+    "styleTimedOut": "风格请求超时，请重试。",
+    "styleLoadFailed": "无法加载你的风格，请重试。",
+    "viralEdit": "爆款剪辑",
+    "viralEditLong": "自动爆款剪辑——一键完成整套剪辑",
+    "applyStyle": "应用风格",
+    "split": "分割",
+    "splitLong": "在播放头处分割",
+    "captions": "字幕",
+    "grade": "调色",
+    "effects": "特效",
+    "aiTools": "AI 工具",
+    "clean": "清理",
+    "cleanLong": "智能清理",
+    "variants": "变体",
+    "variantsLong": "A/B 变体",
+    "broll": "B-roll",
+    "brollLong": "推荐 B-roll",
+    "trends": "趋势",
+    "trendsLong": "当前热门",
+    "learnedFrom": "Click 已从你发布的 {{count}} 个片段中学习",
+    "ariaLoading": "{{label}}——加载中",
+    "ariaShortcut": "{{label}}（快捷键 {{key}}）"
+  },
+  "aiAutoEdit": {
+    "preset": {
+      "mrbeastEnergy": "MrBeast 能量",
+      "mrbeastEnergyTagline": "高赌注 · 节奏打破",
+      "hormoziBold": "Hormozi 硬核风",
+      "hormoziBoldTagline": "硬核数据 · 反常识观点",
+      "cinematicDoc": "电影感纪录片",
+      "cinematicDocTagline": "慢热 · 低语式剪切",
+      "educationalClean": "简洁科普",
+      "educationalCleanTagline": "提问开场 · 干货输出",
+      "newsAuthority": "新闻权威",
+      "newsAuthorityTagline": "头条 · 突发 · 专家",
+      "casualVlog": "日常 Vlog",
+      "casualVlogTagline": "生活记录 · 聊天感",
+      "mysteryHook": "悬念钩子",
+      "mysteryHookTagline": "好奇循环 · 慢慢揭晓",
+      "gymGrit": "健身硬核",
+      "gymGritTagline": "高强度 · 严厉激励",
+      "adhdOverload": "多动爆炸",
+      "adhdOverloadTagline": "混乱 · 爆闪特效 · 强刺激",
+      "podcastGoldmine": "播客金矿",
+      "podcastGoldmineTagline": "权威 · 章节 · 温暖纪实",
+      "retentionMachine": "留存机器",
+      "retentionMachineTagline": "开放式悬念 · B-roll · 章节"
+    },
+    "opt": {
+      "auto": "自动",
+      "vivid": "鲜艳",
+      "cinematic": "电影感",
+      "natural": "自然",
+      "cool": "冷色",
+      "warm": "暖色",
+      "vintage": "复古",
+      "bw": "黑白",
+      "upbeatPop": "欢快流行",
+      "chill": "轻松",
+      "darkAmbient": "暗黑氛围",
+      "synthwave": "Synthwave",
+      "phonk": "Phonk",
+      "lofi": "Lo-fi",
+      "question": "提问",
+      "stat": "数据",
+      "mystery": "悬念",
+      "story": "故事",
+      "boldClaim": "大胆论断",
+      "patternBreak": "节奏打破",
+      "fastCut": "快剪",
+      "crossfade": "交叉淡化",
+      "glitch": "故障风",
+      "whipPan": "甩镜",
+      "hardCut": "硬切",
+      "modern": "现代",
+      "bold": "大胆",
+      "minimal": "极简",
+      "neon": "霓虹",
+      "pill": "胶囊",
+      "top": "顶部",
+      "middle": "中间",
+      "bottom": "底部",
+      "lowerThird": "下方字幕条",
+      "energetic": "活力",
+      "calm": "平静",
+      "authoritative": "权威",
+      "playful": "俏皮",
+      "serious": "严肃",
+      "urgency": "紧迫感",
+      "value": "价值",
+      "curiosity": "好奇",
+      "off": "关闭",
+      "sparse": "少量",
+      "balanced": "均衡",
+      "heavy": "密集",
+      "gentle": "柔和",
+      "medium": "中等",
+      "aggressive": "激进",
+      "educational": "教育",
+      "entertaining": "娱乐",
+      "motivational": "励志",
+      "promotional": "推广"
+    },
+    "brief": {
+      "title": "营销简报",
+      "postingTimes": "最佳发布时间",
+      "competitiveInsights": "竞品洞察"
+    },
+    "err": {
+      "videoNotFound": "响应中未找到视频数据",
+      "loadFailed": "视频加载失败，请重试。",
+      "missingSource": "此视频缺少源文件。请重新上传后再试。",
+      "tooManyPresets": "每次剪辑最多可组合 3 个风格预设。",
+      "serviceError": "AI 服务出错：{{error}}",
+      "serviceInternal": "AI 服务发生内部错误，请稍后再试。",
+      "sessionExpired": "登录已过期，请重新登录后重试。",
+      "rateLimited": "剪辑请求过多，请稍等片刻再试。",
+      "rejected": "请求被拒绝（{{status}}）。请检查输入后重试。",
+      "timeout": "剪辑请求超时。可能是视频过大，或服务器响应较慢。",
+      "network": "无法连接服务器。请检查网络后重试。",
+      "startFailed": "无法启动 AI 剪辑，请重试。"
+    },
+    "badge": "AI 自动剪辑",
+    "title": "配置 AI 规则",
+    "untitled": "未命名项目",
+    "toggleTheme": "切换主题",
+    "analyze": "分析视频",
+    "analyzing": "分析中…",
+    "backToVideos": "返回视频",
+    "processingTitle": "正在处理视频",
+    "processingBody": "AI 正在分析、剪切并优化你的视频…",
+    "initializing": "初始化中",
+    "result": {
+      "title": "你的剪辑已完成",
+      "body": "在编辑器中打开进行微调，或直接下载。",
+      "editsApplied": "已应用的编辑",
+      "openInEditor": "在编辑器中打开",
+      "downloadTitle": "下载剪辑好的视频",
+      "download": "下载",
+      "viewClipsTitle": "查看生成的片段",
+      "viewClips": "查看片段",
+      "dismissTitle": "关闭此结果",
+      "dismiss": "关闭"
+    },
+    "diag": {
+      "title": "诊断",
+      "complete": "分析完成",
+      "suggestedLength": "建议时长"
+    },
+    "plan": {
+      "title": "你的剪辑方案",
+      "subtitle": "AI 将按右侧设置执行的操作",
+      "opening": "开头",
+      "openingHook": "以最精彩的时刻开场",
+      "openingOriginal": "保留原始开头",
+      "pacing": "节奏",
+      "pacingGentle": "舒缓剪切",
+      "pacingFast": "快速紧凑剪切",
+      "pacingBalanced": "均衡剪切",
+      "deadAir": "空白停顿",
+      "removed": "移除",
+      "kept": "保留",
+      "captions": "字幕",
+      "burnedIn": "已压制",
+      "off": "关闭",
+      "clips": "片段",
+      "under30s": "30 秒以内",
+      "fullLength": "完整时长",
+      "oneVideo": "一个剪辑好的视频",
+      "format": "格式"
+    },
+    "director": {
+      "title": "AI 导演",
+      "subtitle": "最多选 3 种风格，或逐项微调设置。",
+      "presetsOne": "{{count}} 个预设：{{names}}",
+      "presetsOther": "{{count}} 个预设：{{names}}"
+    },
+    "targetPlatform": "目标平台",
+    "contentTone": "内容基调",
+    "stylePreset": "风格预设",
+    "presetsSelected": "已选 {{count}}/3 · 再次点击可移除",
+    "presetCap": "最多 3 个预设——移除一个再更换",
+    "presetSelectedTitle": "已选 #{{n}}——点击移除",
+    "presetSelect": "选择风格：{{name}}",
+    "presetSelectedAria": "已选风格 #{{n}}：{{name}}",
+    "aiTasks": "AI 任务",
+    "task": {
+      "removeSilence": "去除静音",
+      "removeSilenceDesc": "自动剪掉空白和停顿",
+      "optimizePacing": "优化节奏",
+      "optimizePacingDesc": "紧凑剪切，提升留存",
+      "enhanceAudio": "增强音频",
+      "enhanceAudioDesc": "降噪 + 响度均衡",
+      "generateClips": "生成短片段",
+      "generateClipsDesc": "提取爆款片段",
+      "addCaptions": "压制字幕",
+      "addCaptionsDesc": "逐字同步的动态文字",
+      "enhanceColor": "色彩校正",
+      "enhanceColorDesc": "自动 LUT + 调色"
+    },
+    "output": "输出",
+    "aspectRatio": "画面比例",
+    "clipsToGenerate": "生成片段数",
+    "clipCountAria": "要生成的片段数量",
+    "targetLength": "目标时长",
+    "full": "完整",
+    "pacing": "节奏",
+    "advanced": "高级",
+    "advancedHint": "氛围、字幕、转场、配音、B-roll、CTA",
+    "sel": {
+      "colorGrade": "调色",
+      "musicGenre": "音乐类型",
+      "hookStyle": "钩子风格",
+      "transitions": "转场",
+      "captionStyle": "字幕样式",
+      "subtitlePosition": "字幕位置",
+      "voiceTone": "配音语气",
+      "ctaStyle": "CTA 样式",
+      "brollFrequency": "B-roll 频率"
+    },
+    "speedRamping": "曲线变速",
+    "speedRampingHint": "让片段忽快忽慢，增强动感",
+    "toggleSpeedRamping": "切换曲线变速",
+    "prioritizeHook": "优先开场钩子",
+    "prioritizeHookHint": "抓住前 3 秒，提升留存",
+    "togglePrioritizeHook": "切换优先开场钩子",
+    "creativeDirection": "创意方向",
+    "creativeDirectionHint": "可选 · 覆盖 AI 默认设置",
+    "creativeDirectionPlaceholder": "例如：要有电影感、偏暗，不要跳剪，突出 0:42 处的情绪停顿…",
+    "autoFit": "自动适配",
+    "aiPlan": "AI 方案",
+    "preloadedStyle": "已预载你的风格",
+    "planLine": {
+      "composeOne": "生成 {{count}} 个 {{aspect}} 片段，目标时长 {{length}}",
+      "composeOther": "生成 {{count}} 个 {{aspect}} 片段，目标时长 {{length}}",
+      "forPlatform": "适用于 {{platform}}",
+      "tone": "{{tone}} 基调",
+      "acrossPresets": "覆盖 {{presets}}（{{count}} 种变体角度）",
+      "autoStyle": "使用 {{auto}} 风格",
+      "autoDetected": "自动识别",
+      "grade": "{{grade}} 调色",
+      "hook": "{{hook}} 开场钩子",
+      "pacing": "{{pacing}} 节奏",
+      "speedRamping": "开启曲线变速",
+      "broll": "{{broll}} B-roll"
+    },
+    "tasksOne": "{{count}} 项任务",
+    "tasksOther": "{{count}} 项任务",
+    "estimate": "约 {{time}}",
+    "chip": {
+      "captions": "字幕",
+      "autoGrade": "自动调色",
+      "speedRamp": "曲线变速"
+    },
+    "composing": "正在生成剪辑…",
+    "composeOne": "生成 {{count}} 个片段",
+    "composeOther": "生成 {{count}} 个片段",
+    "using": "使用 {{names}}",
+    "autoSelectPreset": "根据内容自动选择预设",
+    "tasksOnOne": "已开启 {{count}} 项任务",
+    "tasksOnOther": "已开启 {{count}} 项任务",
+    "dismissError": "关闭此错误",
+    "dismiss": "关闭"
+  },
+  "propertiesPanel": {
+    "layout": {
+      "bottom": "底部",
+      "bottomTitle": "底部",
+      "lowerThird": "下方",
+      "lowerThirdTitle": "下三分之一",
+      "top": "顶部",
+      "topTitle": "顶部",
+      "fullWidth": "通栏",
+      "fullWidthTitle": "通栏条"
+    },
+    "tab": {
+      "transform": "位置",
+      "color": "调色",
+      "captions": "字幕",
+      "text": "文字",
+      "clip": "片段"
+    },
+    "reset": "重置",
+    "title": "属性",
+    "activeTab": "{{tab}}设置",
+    "close": "关闭属性",
+    "clipProperties": "片段属性",
+    "selectedClip": "所选片段",
+    "playbackSpeed": "播放速度",
+    "playbackSpeedTitle": "播放速度：{{speed}}x",
+    "playbackSpeedHint": "加快或放慢此片段。",
+    "stabilization": "防抖",
+    "stabilizationTitle": "防抖：{{value}}%",
+    "stabilizationHint": "镜头抖动的平滑程度。",
+    "volume": "音量",
+    "volumeTitle": "音量：{{value}}%",
+    "autoDucking": "自动闪避",
+    "autoDuckingHint": "有人说话时自动调低音乐",
+    "autoDuckingToggle": "开启或关闭自动闪避",
+    "positionAndSize": "位置和大小",
+    "scale": "缩放（%）",
+    "positionX": "X 位置",
+    "positionY": "Y 位置",
+    "rotation": "旋转（°）",
+    "animation": "动画",
+    "keyframesCountOne": "1 个关键帧",
+    "keyframesCount": "{{count}} 个关键帧",
+    "addKeyframe": "+ 在播放头处添加关键帧",
+    "prevKeyframe": "◁ 上一个",
+    "nextKeyframe": "下一个 ▷",
+    "remove": "移除",
+    "curve": "曲线",
+    "easing": {
+      "linear": "线性",
+      "easeIn": "缓入",
+      "easeOut": "缓出",
+      "easeInOut": "缓入缓出",
+      "bounceOut": "弹跳",
+      "elasticOut": "弹性",
+      "cubic": "平滑（强）"
+    },
+    "brightness": "亮度",
+    "contrast": "对比度",
+    "saturation": "饱和度",
+    "temperature": "色温",
+    "clarity": "清晰度",
+    "dehaze": "去雾",
+    "captionsOn": "显示字幕",
+    "captionsOnHint": "将转录稿显示为字幕",
+    "captionLayout": "字幕位置",
+    "textOverlays": "叠加文字",
+    "noTextOverlays": "暂无叠加文字",
+    "deleteTextOverlay": "删除叠加文字",
+    "synced": "已同步",
+    "preset": {
+      "tiktok": {
+        "label": "TikTok",
+        "description": "粗体，居中，冲击力强"
+      },
+      "reels": {
+        "label": "Reels",
+        "description": "简洁大写，潮流感"
+      },
+      "podcast": {
+        "label": "播客",
+        "description": "极简，下三分之一"
+      },
+      "cinematic": {
+        "label": "电影感",
+        "description": "电影风衬线体"
+      },
+      "documentary": {
+        "label": "纪录片",
+        "description": "经典字幕条"
+      },
+      "neon": {
+        "label": "霓虹",
+        "description": "发光，夜晚氛围"
+      },
+      "karaoke": {
+        "label": "卡拉 OK",
+        "description": "粗体卡拉 OK 样式"
+      },
+      "pill": {
+        "label": "胶囊",
+        "description": "圆角胶囊文字"
+      },
+      "bubble": {
+        "label": "气泡",
+        "description": "对话气泡样式"
+      },
+      "gradient": {
+        "label": "渐变",
+        "description": "多彩渐变文字"
+      },
+      "retro": {
+        "label": "复古",
+        "description": "温暖复古风"
+      },
+      "vintage": {
+        "label": "怀旧",
+        "description": "棕褐色打字机"
+      },
+      "pop": {
+        "label": "流行",
+        "description": "明亮醒目"
+      },
+      "high-contrast": {
+        "label": "无障碍",
+        "description": "高对比度，易读"
+      },
+      "kinetic": {
+        "label": "动感",
+        "description": "文字随节拍弹出"
+      },
+      "slow-zoom": {
+        "label": "缓慢推近",
+        "description": "缩放 100% → 110%"
+      },
+      "fly-in-left": {
+        "label": "从左侧飞入",
+        "description": "从画面外左侧移入"
+      },
+      "fly-in-right": {
+        "label": "从右侧飞入",
+        "description": "从画面外右侧移入"
+      },
+      "fly-in-top": {
+        "label": "从顶部飞入",
+        "description": "从画面外顶部移入"
+      },
+      "fly-in-bottom": {
+        "label": "从底部飞入",
+        "description": "从画面外底部移入"
+      },
+      "fade-in-out": {
+        "label": "淡入淡出",
+        "description": "不透明度 0 → 1 → 0"
+      }
+    }
+  },
+  "basicEditor": {
+    "preset": {
+      "title": {
+        "label": "标题"
+      },
+      "text": {
+        "yourTitleHere": "在此输入标题",
+        "subscribeForMore": "订阅看更多",
+        "likeSubscribe": "点赞关注",
+        "watchMore": "看更多 →",
+        "commentBelow": "评论区告诉我",
+        "linkInBio": "链接在简介",
+        "addYourCaption": "添加你的文字",
+        "followForMore": "关注我看更多",
+        "newText": "新文字",
+        "youNeedToSeeThis": "你一定要看看这个",
+        "nameTitle": "姓名 · 头衔",
+        "proTip": "专业技巧",
+        "tapToLearnMore": "点击了解更多",
+        "waitForIt": "等着看……",
+        "storyTime": "讲个故事",
+        "youWontBelieveWhatHappened": "你绝对想不到发生了什么",
+        "dayInMyLife": "我的一天",
+        "day1Of": "第 1 天……",
+        "getReadyForThis": "准备好了吗",
+        "watchTillTheEnd": "一定要看到最后",
+        "noOneTalksAboutThis": "没人提过这个",
+        "theSecretTheyDontWantYouToKnow": "他们不想让你知道的秘密",
+        "theSecretIs": "秘诀就是",
+        "insane": "太疯狂了！",
+        "actually": "其实……",
+        "now": "现在",
+        "zeroCost": "零成本",
+        "watch": "看",
+        "here": "看这里",
+        "swipeUp": "上滑",
+        "seeYouNextTime": "下期见",
+        "unpopularOpinion": "冷门观点：",
+        "thisChangedEverything": "这改变了一切",
+        "hotTake": "犀利观点：",
+        "nobodyTalksAboutThis": "没人说过这件事",
+        "povYouJustFoundTheBestTip": "POV：你刚发现了最好用的技巧",
+        "saveThisForLater": "先收藏，以后用",
+        "commentYourAnswerBelow": "在评论区写下你的答案",
+        "dropAIfYouAgree": "同意的扣个 👍",
+        "part1": "第 1 部分",
+        "chapter1": "第 1 章",
+        "intro": "INTRO",
+        "outro": "OUTRO",
+        "comingUpNext": "接下来……",
+        "quickRecap": "快速回顾"
+      },
+      "subscribe": {
+        "label": "订阅"
+      },
+      "likeSubscribe": {
+        "label": "点赞关注"
+      },
+      "watchMore": {
+        "label": "看更多"
+      },
+      "comment": {
+        "label": "评论"
+      },
+      "linkInBio": {
+        "label": "链接在简介"
+      },
+      "caption": {
+        "label": "说明文字"
+      },
+      "follow": {
+        "label": "关注"
+      },
+      "custom": {
+        "label": "自定义"
+      },
+      "hook": {
+        "label": "钩子"
+      },
+      "lowerThird": {
+        "label": "下方字幕条"
+      },
+      "callout": {
+        "label": "标注"
+      },
+      "timestamp": {
+        "label": "时间戳"
+      },
+      "waitForIt": {
+        "label": "等着看"
+      },
+      "storyTime": {
+        "label": "讲个故事"
+      },
+      "youWontBelieve": {
+        "label": "你绝对想不到"
+      },
+      "dayInMyLife": {
+        "label": "我的一天"
+      },
+      "dayXOf": {
+        "label": "第 X 天"
+      },
+      "getReady": {
+        "label": "准备好"
+      },
+      "watchTillEnd": {
+        "label": "看到最后"
+      },
+      "noOneTalksAbout": {
+        "label": "没人提过"
+      },
+      "theSecret": {
+        "label": "秘诀"
+      },
+      "hormoziBold": {
+        "label": "Hormozi 硬核风"
+      },
+      "beastImpact": {
+        "label": "Beast 冲击"
+      },
+      "minimalNarrative": {
+        "label": "极简叙事"
+      },
+      "subliminalQuick": {
+        "label": "潜意识快闪"
+      },
+      "punchyHighlight": {
+        "label": "醒目高亮"
+      },
+      "arrowRight": {
+        "label": "箭头 →"
+      },
+      "arrowLeft": {
+        "label": "箭头 ←"
+      },
+      "proTip": {
+        "label": "专业技巧"
+      },
+      "watch": {
+        "label": "看"
+      },
+      "here": {
+        "label": "看这里"
+      },
+      "swipeUp": {
+        "label": "上滑"
+      },
+      "commentBelow": {
+        "label": "评论区见"
+      },
+      "tapToLearnMore": {
+        "label": "点击了解更多"
+      },
+      "seeYouNextTime": {
+        "label": "下期见"
+      },
+      "unpopularOpinion": {
+        "label": "冷门观点"
+      },
+      "thisChangedEverything": {
+        "label": "这改变了一切"
+      },
+      "hotTake": {
+        "label": "犀利观点"
+      },
+      "nobodyTalksAbout": {
+        "label": "没人说过"
+      },
+      "saveThis": {
+        "label": "收藏这个"
+      },
+      "commentYour": {
+        "label": "评论你的答案"
+      },
+      "dropA": {
+        "label": "点个赞"
+      },
+      "part1": {
+        "label": "第 1 部分"
+      },
+      "chapter": {
+        "label": "章节"
+      },
+      "intro": {
+        "label": "片头"
+      },
+      "outro": {
+        "label": "片尾"
+      },
+      "next": {
+        "label": "下一个"
+      },
+      "recap": {
+        "label": "回顾"
+      }
+    },
+    "filter": {
+      "vibrant": {
+        "name": "鲜活",
+        "desc": "浓烈色彩"
+      },
+      "mono": {
+        "name": "单色",
+        "desc": "黑白"
+      },
+      "cinematic": {
+        "name": "电影感",
+        "desc": "胶片质感"
+      },
+      "warm": {
+        "name": "暖调",
+        "desc": "黄金时刻"
+      },
+      "cool": {
+        "name": "冷调",
+        "desc": "蓝色调"
+      },
+      "vintage": {
+        "name": "怀旧",
+        "desc": "复古"
+      },
+      "moody": {
+        "name": "情绪",
+        "desc": "暗调浓郁"
+      },
+      "vivid": {
+        "name": "鲜艳",
+        "desc": "高饱和"
+      },
+      "noir": {
+        "name": "黑色电影",
+        "desc": "高对比黑白"
+      },
+      "sunset": {
+        "name": "日落",
+        "desc": "黄金时刻"
+      },
+      "breeze": {
+        "name": "微风",
+        "desc": "清凉通透"
+      },
+      "matte": {
+        "name": "哑光",
+        "desc": "低对比柔和"
+      },
+      "neon": {
+        "name": "霓虹",
+        "desc": "流行色彩"
+      },
+      "autumn": {
+        "name": "秋日",
+        "desc": "温暖大地色"
+      },
+      "winter": {
+        "name": "冬日",
+        "desc": "清冷干净"
+      },
+      "dreamy": {
+        "name": "梦幻",
+        "desc": "柔和粉彩"
+      },
+      "reset": {
+        "name": "重置",
+        "desc": "默认"
+      }
+    },
+    "style": {
+      "creatorBold": {
+        "label": "创作者大胆风",
+        "desc": "高能爆款"
+      },
+      "softAesthetic": {
+        "label": "柔和美学",
+        "desc": "柔和梦幻"
+      },
+      "corporateMinimal": {
+        "label": "商务极简",
+        "desc": "简洁专业"
+      },
+      "darkMoody": {
+        "label": "暗黑情绪",
+        "desc": "戏剧化阴影"
+      },
+      "vibrantPop": {
+        "label": "缤纷流行",
+        "desc": "多彩醒目"
+      },
+      "cinematicFilm": {
+        "label": "电影胶片",
+        "desc": "电影预告片"
+      },
+      "noirDramatic": {
+        "label": "黑色戏剧",
+        "desc": "戏剧化黑白"
+      },
+      "lifestyleWarm": {
+        "label": "温暖生活",
+        "desc": "Vlog 与旅行"
+      },
+      "podcastPro": {
+        "label": "专业播客",
+        "desc": "简洁专业"
+      },
+      "documentary": {
+        "label": "纪录片",
+        "desc": "自然沉浸"
+      },
+      "fashionEditorial": {
+        "label": "时尚大片",
+        "desc": "高级时装感"
+      },
+      "retroWarm": {
+        "label": "暖调复古",
+        "desc": "复古暖调"
+      },
+      "cinematicDrama": {
+        "label": "电影戏剧",
+        "desc": "深沉而戏剧化"
+      },
+      "comedyBright": {
+        "label": "明亮喜剧",
+        "desc": "有梗又好玩"
+      },
+      "sportsDynamic": {
+        "label": "运动动感",
+        "desc": "适合动作场面"
+      },
+      "savedDesc": "已保存"
+    },
+    "platform": {
+      "tiktok": {
+        "desc": "9:16，有冲击力"
+      },
+      "youtube": {
+        "desc": "9:16，均衡"
+      },
+      "feed": {
+        "label": "Instagram 动态",
+        "desc": "1:1，鲜艳"
+      },
+      "portrait": {
+        "label": "Instagram 竖幅",
+        "desc": "4:5，温暖"
+      },
+      "landscape": {
+        "label": "YouTube / 横屏",
+        "desc": "16:9，简洁"
+      },
+      "linkedin": {
+        "desc": "16:9，专业"
+      }
+    },
+    "filterCategory": {
+      "all": "全部",
+      "mood": "氛围",
+      "creative": "创意",
+      "dramatic": "戏剧",
+      "neutral": "重置"
+    },
+    "shapePreset": {
+      "logoCorner": "角落标志",
+      "subscribeBadge": "订阅徽章",
+      "fullWidthBar": "通栏条",
+      "dividerLine": "分隔线",
+      "highlightBox": "高亮框",
+      "cornerAccent": "角落装饰"
+    },
+    "undo": "撤销",
+    "redo": "重做",
+    "searchTools": "搜索工具…",
+    "clearSearch": "清除搜索",
+    "layersCount": "{{count}} 个图层",
+    "reset": "重置",
+    "add": "添加",
+    "save": "保存",
+    "color": "颜色",
+    "toast": {
+      "undoApplied": "已撤销",
+      "redoApplied": "已重做",
+      "fontUploading": "正在上传字体…",
+      "fontAdded": "已添加字体。",
+      "fontInvalid": "不支持该字体文件。",
+      "fontFailed": "字体上传失败。",
+      "rectangleAdded": "已添加矩形",
+      "circleAdded": "已添加圆形",
+      "lineAdded": "已添加线条",
+      "addedName": "已添加 {{name}}",
+      "addedQuoted": "已添加“{{name}}”",
+      "addedAt": "已在 {{time}} 秒处添加“{{name}}”",
+      "enterImageUrl": "请输入图片 URL",
+      "imageAdded": "已添加图片叠加",
+      "svgAddedFromFile": "已从文件添加 SVG 叠加——可在“特效”中用关键帧制作动画",
+      "enterSvgUrl": "请输入 SVG URL（例如 https://… .svg 或 data:image/svg+xml,…）",
+      "svgAdded": "已添加 SVG 叠加——可在“特效”中用关键帧制作动画",
+      "compoundSaved": "已保存“{{name}}”——随时可添加到时间线",
+      "compoundRemoved": "已移除复合片段",
+      "renamed": "已重命名为“{{name}}”",
+      "addTextHint": "添加文字——输入后点击“添加”或按 Ctrl+Enter",
+      "textAdded": "已添加叠加文字",
+      "packApplied": "已应用 {{name}} 套装",
+      "saved": "已保存“{{name}}”",
+      "filtersReset": "滤镜已恢复默认",
+      "nameYourStyle": "为风格命名后点击“保存”",
+      "applied": "已应用 {{name}}",
+      "speed": "速度：{{value}}×"
+    },
+    "compound": {
+      "untitled": "未命名复合片段",
+      "title": "存为复合片段",
+      "namePlaceholder": "复合片段名称…",
+      "name": "复合片段名称",
+      "durationAria": "复合片段时长（秒）",
+      "delete": "删除复合片段“{{name}}”"
+    },
+    "search": {
+      "filterHit": "滤镜：{{name}}",
+      "styleHit": "风格：{{name}}",
+      "motionHit": "动效：{{name}}",
+      "textHit": "文字：{{name}}"
+    },
+    "caption": {
+      "noTranscript": "未找到转录稿。请将脚本粘贴到下方输入框，然后重试。",
+      "noneGenerated": "未生成字幕——转录稿可能太短。",
+      "addedToast": "已添加 {{count}} 条字幕——{{style}}风格",
+      "generationFailed": "字幕生成失败",
+      "failedToast": "自动字幕失败",
+      "title": "AI 自动字幕",
+      "clearTitle": "清除自动生成的字幕",
+      "cleared": "已清除自动字幕",
+      "count": "{{count}} 条字幕",
+      "ready": "就绪",
+      "noScript": "无脚本",
+      "pasteScript": "粘贴脚本",
+      "pasteScriptTitle": "在此粘贴视频脚本",
+      "pastePlaceholder": "粘贴或输入视频中的口播内容…",
+      "wordCount": "{{count}} 个词",
+      "wordsPerLine": "每行词数",
+      "position": "位置",
+      "positionAt": {
+        "top": "字幕放在顶部",
+        "mid": "字幕放在中间",
+        "bottom": "字幕放在底部"
+      },
+      "colorTitle": "字幕文字颜色",
+      "setColor": "将字幕颜色设为 {{color}}",
+      "addedInStyle": "已添加 {{count}} 条{{style}}风格字幕",
+      "generateAria": "根据转录稿自动生成字幕",
+      "generating": "正在生成每条 {{count}} 词的字幕…",
+      "generate": "生成字幕"
+    },
+    "captionStyle": {
+      "minimal": "极简",
+      "neon": "霓虹",
+      "kinetic": "动感",
+      "cyber": "赛博",
+      "meme": "梗图",
+      "retro": "复古",
+      "quote": "引言"
+    },
+    "translate": {
+      "noCaptions": "时间线上没有可翻译的字幕。",
+      "inProgress": "正在翻译字幕（时间轴保持不变）…",
+      "done": "字幕已翻译为{{language}}",
+      "empty": "翻译已完成，但未返回任何字幕。",
+      "failed": "字幕翻译失败。",
+      "title": "翻译字幕",
+      "languageTitle": "选择目标语言",
+      "translating": "翻译中…",
+      "translate": "翻译"
+    },
+    "emoji": {
+      "noTranscript": "没有可匹配表情的转录文字。请先生成转录稿。",
+      "inProgress": "正在根据转录稿匹配表情…",
+      "noneFound": "转录稿中未找到匹配的表情。",
+      "added": "已向时间线添加 {{count}} 个表情",
+      "failed": "表情生成失败",
+      "title": "自动表情",
+      "clearTitle": "清除生成的表情",
+      "cleared": "已清除表情",
+      "count": "{{count}} 个表情",
+      "enter": "入场转场",
+      "enterTitle": "选择表情的出现方式",
+      "exit": "出场转场",
+      "exitTitle": "选择表情的消失方式",
+      "style": "样式",
+      "styleTitle": "选择表情样式",
+      "size": "表情大小",
+      "sizeTitle": "选择表情大小",
+      "density": "出现频率",
+      "densityTitle": "选择表情出现的频率",
+      "placement": "位置",
+      "placementTitle": "选择表情的位置",
+      "inDuration": "入场时长：{{value}} 秒",
+      "inDurationTitle": "入场动画时长",
+      "outDuration": "出场时长：{{value}} 秒",
+      "outDurationTitle": "出场动画时长",
+      "generating": "正在生成表情…",
+      "generate": "生成表情"
+    },
+    "emojiOpt": {
+      "enter": {
+        "pop": "💥 弹出",
+        "bounce": "🦘 向上弹跳",
+        "slide": "➡️ 滑入",
+        "pulse": "💓 缩放脉冲",
+        "shake": "⚡ 镜头抖动",
+        "blur": "🌫️ 模糊进入"
+      },
+      "exit": {
+        "fade": "🌫️ 平滑淡出",
+        "pop": "💥 弹出消失",
+        "slideBottom": "⬇️ 向下滑出",
+        "bounceOut": "🦘 弹跳退出",
+        "scaleOut": "🔍 缩小退出",
+        "zoomOut": "🔎 拉远",
+        "flipOut": "🔄 翻转退出"
+      },
+      "style": {
+        "pop3d": "✨ 3D 立体",
+        "neonGlow": "🏮 霓虹发光",
+        "flat": "📄 极简扁平"
+      },
+      "size": {
+        "n32": "🤏 小（32px）",
+        "n48": "👌 中（48px）",
+        "n64": "💪 大（64px）",
+        "n80": "👑 超大（80px）"
+      },
+      "density": {
+        "n3": "🔥 高（每 3 个词）",
+        "n6": "⚡ 中（每 6 个词）",
+        "n10": "🎯 低（每 10 个词）"
+      },
+      "place": {
+        "above": "⬆️ 字幕上方",
+        "below": "⬇️ 字幕下方",
+        "head": "👱 头部高度",
+        "customTop": "👑 画面顶部"
+      }
+    },
+    "lang": {
+      "en": "英语（English）",
+      "es": "西班牙语（Español）",
+      "fr": "法语（Français）",
+      "de": "德语（Deutsch）",
+      "it": "意大利语（Italiano）",
+      "pt": "葡萄牙语（Português）",
+      "ru": "俄语（Русский）",
+      "ja": "日语（日本語）",
+      "ko": "韩语（한국어）",
+      "zh": "中文",
+      "ar": "阿拉伯语（العربية）",
+      "hi": "印地语（हिन्दी）",
+      "nl": "荷兰语（Nederlands）",
+      "pl": "波兰语（Polski）",
+      "tr": "土耳其语（Türkçe）"
+    },
+    "trim": {
+      "waveform": "波形",
+      "clickToSeek": "点击移动播放头",
+      "speed": "速度",
+      "playbackSpeedAria": "播放速度：{{value}} 倍",
+      "reverse": "倒放",
+      "reverseSub": "倒放所选片段",
+      "selectClipFirst": "请先选择一个片段",
+      "split": "在播放头处分割",
+      "beatCut": "踩点剪切",
+      "beatCutSub": "在每个节拍处剪开片段",
+      "freeze": "定格",
+      "freezeSub": "在 {{time}} 秒处定格 1 秒",
+      "trimToInOut": "裁剪到入/出点",
+      "trimToInOutSub": "在下方设置入点和出点",
+      "setBothFirst": "请先设置入点和出点",
+      "jCut": "J 剪辑",
+      "jCutSub": "音频提前 0.5 秒开始",
+      "lCut": "L 剪辑",
+      "lCutSub": "音频在剪切点后延续 0.5 秒",
+      "comingSoonTitle": "{{label}}——即将推出",
+      "selectClipTitle": "{{label}}——请先选择一个片段",
+      "soon": "即将推出",
+      "markers": "入点 / 出点标记",
+      "inAt": "入点 {{time}} 秒",
+      "noIn": "无入点",
+      "outAt": "出点 {{time}} 秒",
+      "noOut": "无出点",
+      "inSet": "入点已设在 {{time}} 秒",
+      "setIn": "设置入点",
+      "outAfterIn": "出点必须在入点之后",
+      "outSet": "出点已设在 {{time}} 秒",
+      "setOut": "设置出点",
+      "clear": "清除"
+    },
+    "layout": {
+      "auto": "自动",
+      "standard": "标准",
+      "square": "方形",
+      "vertical": "竖屏",
+      "portrait": "竖幅",
+      "cinematic": "电影",
+      "classic": "经典"
+    },
+    "text": {
+      "editingOnCanvas": "正在画布上编辑",
+      "doubleClickHint": "在播放器中双击文字即可直接输入",
+      "deselect": "取消选择",
+      "newText": "新文字",
+      "typePlaceholder": "输入文字…（⌘↵ 添加）",
+      "duration": "时长：",
+      "searchPresets": "搜索预设…",
+      "activeText": "视频上的文字（{{count}}）",
+      "deleteOverlayAria": "删除叠加文字“{{text}}”",
+      "deleteOverlay": "删除叠加文字",
+      "preview": "预览",
+      "livePreview": "实时预览",
+      "editing": "正在编辑：{{text}}",
+      "contentAria": "叠加文字",
+      "contentPlaceholder": "叠加文字",
+      "fontSize": "字号",
+      "textColor": "文字颜色",
+      "style": "样式",
+      "animateIn": "入场动画",
+      "animateOut": "出场动画",
+      "font": "字体",
+      "start": "开始",
+      "startAria": "开始时间（秒）",
+      "end": "结束",
+      "endAria": "结束时间（秒）",
+      "uploadFont": "上传字体",
+      "uploadFontAria": "上传自定义字体文件"
+    },
+    "textStyle": {
+      "none": "无",
+      "neon": "霓虹",
+      "minimal": "极简",
+      "bold-kinetic": "粗体动感",
+      "outline": "描边",
+      "shadow": "阴影"
+    },
+    "anim": {
+      "none": "无",
+      "fade": "淡入淡出",
+      "slide-up": "向上滑动",
+      "slide-down": "向下滑动",
+      "slide-left": "向左滑动",
+      "slide-right": "向右滑动",
+      "scale": "缩放",
+      "bounce": "弹跳"
+    },
+    "presetGroup": {
+      "viralHooks": "爆款钩子",
+      "textPresets": "文字预设",
+      "premiumCaptions": "高级字幕",
+      "reactionCallouts": "反应 / 标注",
+      "trending": "热门",
+      "endScreens": "片尾画面",
+      "chapters": "章节"
+    },
+    "filters": {
+      "strengthAria": "滤镜强度：{{value}}%",
+      "before": "⏪ 之前",
+      "after": "⏩ 之后",
+      "split": "🌓 对比",
+      "pinned": "已固定",
+      "pin": "固定“{{name}}”滤镜",
+      "unpin": "取消固定“{{name}}”滤镜"
+    },
+    "motion": {
+      "searchTemplates": "搜索模板…",
+      "durationAria": "动态图形时长（秒）",
+      "recent": "最近使用"
+    },
+    "layers": {
+      "addShape": "添加形状",
+      "addImage": "添加图片 / 标志",
+      "imageUrlPlaceholder": "粘贴图片 URL…",
+      "imageUrl": "图片 URL",
+      "addSvg": "添加 SVG",
+      "svgUrlPlaceholder": "SVG URL 或 data URI…",
+      "svgUrl": "SVG URL",
+      "uploadSvg": "上传 SVG 文件",
+      "gradients": "渐变叠加",
+      "allLayers": "全部图层（{{count}}）",
+      "hoverHint": "悬停以显示控件",
+      "deleteTextAria": "删除文字图层“{{text}}”",
+      "deleteText": "删除文字图层",
+      "opacity": "不透明度",
+      "opacityAria": "图层不透明度",
+      "deleteShape": "删除{{shape}}形状",
+      "deleteImage": "删除图片图层",
+      "customSvg": "自定义 SVG",
+      "deleteSvg": "删除 SVG 图层",
+      "gradientName": "{{region}}渐变",
+      "deleteGradient": "删除渐变图层",
+      "empty": "暂无图层",
+      "emptyHint": "在上方添加形状、图片或 SVG。叠加文字也会显示在这里。",
+      "addTextLayer": "+ 添加文字图层"
+    },
+    "shape": {
+      "rect": "矩形",
+      "circle": "圆形",
+      "line": "线条"
+    },
+    "region": {
+      "full": "全屏",
+      "lower-third": "下三分之一",
+      "top-bar": "顶部条",
+      "top-half": "上半部",
+      "bottom-half": "下半部"
+    },
+    "gradient": {
+      "lowerThird": "下三分之一渐变",
+      "fullDark": "整体压暗",
+      "topBar": "顶部条",
+      "warmTint": "暖色调",
+      "coolTint": "冷色调",
+      "bottomHalf": "下半部渐变",
+      "topHalf": "上半部渐变",
+      "vignetteSoft": "柔和暗角"
+    },
+    "pack": {
+      "hookCta": {
+        "name": "钩子 + CTA",
+        "desc": "播放头处放爆款钩子，片尾放 CTA"
+      },
+      "lowerThirdSubscribe": {
+        "name": "下方字幕条 + 订阅",
+        "desc": "姓名条 + 订阅徽章"
+      },
+      "fullCtaBar": {
+        "name": "CTA + 下三分之一渐变",
+        "desc": "点赞关注 + 渐变条"
+      },
+      "introOutro": {
+        "name": "片头 + 片尾",
+        "desc": "播放头处放 INTRO，结尾放“下期见”"
+      },
+      "trendingSave": {
+        "name": "热门 + 收藏",
+        "desc": "冷门观点 + 先收藏"
+      }
+    },
+    "packs": {
+      "oneClick": "一键套装",
+      "styleBundles": "风格套装",
+      "platform": "为各平台定制",
+      "saveMyStyle": "保存我的风格",
+      "styleNamePlaceholder": "风格名称…",
+      "styleName": "自定义风格名称",
+      "saveStyle": "保存自定义风格",
+      "goTo": "前往"
+    },
+    "nav": {
+      "shortClips": "短片段",
+      "assets": "音乐与 B-roll",
+      "timeline": "时间线",
+      "effects": "特效",
+      "color": "调色",
+      "aiEdit": "转录与 AI",
+      "export": "导出"
+    },
+    "insights": {
+      "comingSoon": "洞察即将上线",
+      "comingSoonHint": "视频分析完成后，留存、钩子强度和节奏分析将显示在这里。",
+      "transcript": "转录稿"
+    }
   }
 }

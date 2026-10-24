@@ -846,11 +846,11 @@
     "title": "ความสำเร็จ",
     "subtitle": "ติดตามความสำเร็จและความคืบหน้าของคุณ",
     "refreshRegistry": "รีเฟรช",
-    "statTierLabel": "ระดับวิวัฒนาการ",
+    "statTierLabel": "ระดับ",
     "statTierSub": "อีก {{pct}}% ถึงเลเวลถัดไป",
-    "statMilestonesLabel": "เหตุการณ์สำคัญที่ถอดรหัส",
+    "statMilestonesLabel": "ความสำเร็จที่ปลดล็อก",
     "statMilestonesSub": "ปลดล็อกแล้วจนถึงตอนนี้",
-    "statStreakLabel": "แนวการเชื่อมโยงกัน",
+    "statStreakLabel": "สถิติต่อเนื่อง",
     "statStreakSub": "สูงสุด: {{peak}}",
     "statVolumeLabel": "คอนเทนต์ที่สร้าง",
     "statVolumeSub": "จำนวนชิ้นงานที่สร้างทั้งหมด",
@@ -861,14 +861,14 @@
     "detailPayloads": "คอนเทนต์",
     "detailScripts": "สคริปต์",
     "recentBreakthroughs": "ความก้าวหน้าล่าสุด",
-    "decryptedOn": "ถอดรหัสแล้ว {{date}}",
+    "decryptedOn": "ปลดล็อกเมื่อ {{date}}",
     "ascensionVerified": "ปลดล็อกแล้ว",
     "nodeMatrix": "ความสำเร็จทั้งหมด",
-    "decrypted": "ถอดรหัสแล้ว",
+    "decrypted": "ปลดล็อกแล้ว",
     "logicGated": "ล็อกอยู่",
     "milestones": {
       "first_video": {
-        "name": "การเรนเดอร์ปฐมกาล",
+        "name": "วิดีโอแรก",
         "description": "สร้างวิดีโอแรกของคุณ"
       },
       "first_content": {
@@ -900,11 +900,11 @@
         "description": "ทำวิดีโอให้เสร็จ 50 รายการ"
       },
       "streak_7": {
-        "name": "การเชื่อมโยงกัน 7",
+        "name": "ต่อเนื่อง 7 วัน",
         "description": "ใช้งานต่อเนื่อง 7 วันติดกัน"
       },
       "streak_30": {
-        "name": "การเชื่อมโยงกัน 30",
+        "name": "ต่อเนื่อง 30 วัน",
         "description": "ใช้งานต่อเนื่อง 30 วันติดกัน"
       },
       "streak_100": {
@@ -925,7 +925,7 @@
       },
       "early_adopter": {
         "name": "ผู้ใช้รุ่นแรก",
-        "description": "บูรณาการในช่วงกำเนิด"
+        "description": "เข้าร่วม Click ตั้งแต่เนิ่นๆ"
       },
       "power_user": {
         "name": "ผู้ใช้ตัวจริง",
@@ -993,7 +993,7 @@
     "authorize": "อนุญาต",
     "dissent": "ความขัดแย้ง",
     "historyTitle": "ประวัติการอนุมัติ",
-    "historySubtitle": "บันทึกที่ไม่เปลี่ยนแปลงของการตัดสินใจที่เป็นเอกฉันท์และการอนุญาตที่สำคัญ",
+    "historySubtitle": "บันทึกการอนุมัติและการปฏิเสธที่ผ่านมา",
     "protocolLogsAnalyzed": "{{count}} คำขอ",
     "emptyTitle": "ยังไม่มีอะไรที่นี่",
     "emptyState": "ยังไม่มีคำขออนุมัติ",
@@ -1126,7 +1126,7 @@
     "purgeForgeBuffer": "ล้างบัฟเฟอร์ฟอร์จ",
     "neuralHeuristics": "คำแนะนำ",
     "neuralHeuristicsDesc": "วิธีทำให้คอนเทนต์ของคุณดีขึ้น",
-    "decryptingHeuristics": "กำลังถอดรหัสฮิวริสติก...",
+    "decryptingHeuristics": "กำลังวิเคราะห์…",
     "predictiveTelemetry": "การคาดการณ์ผลงาน",
     "predictiveTelemetryDesc": "การคาดการณ์ว่าคอนเทนต์ของคุณอาจทำผลงานได้อย่างไร",
     "scanningTrajectories": "กำลังสแกนวิถี..."
@@ -1288,7 +1288,7 @@
     "refreshData": "รีเฟรชข้อมูลสมาชิก",
     "activeNodeUplink": "แพ็กเกจปัจจุบัน",
     "protocolId": "ID แพ็กเกจ:",
-    "rootGenesis": "การกำเนิดราก",
+    "rootGenesis": "เริ่มต้น",
     "genericAccess": "การเข้าถึงทั่วไป",
     "lifecycleStatus": "สถานะวงจรชีวิต:",
     "uninitialized": "ไม่ได้เตรียมใช้งาน",
@@ -1307,7 +1307,7 @@
     "coreMatrixUplink": "ฟีเจอร์หลัก",
     "primeCommandUplink": "เข้าถึงฟีเจอร์ทั้งหมด",
     "activeProtocol": "แพ็กเกจปัจจุบัน",
-    "ascending": "กำลังขึ้น...",
+    "ascending": "กำลังอัปเกรด…",
     "genesisUplink": "เริ่มต้นใช้งาน",
     "escalateProtocol": "อัปเกรด"
   },
@@ -1825,7 +1825,7 @@
     "heroIntro": "เชื่อมต่อบัญชีโซเชียลของคุณกับ Click แต่ละการเชื่อมต่อจะเปิดใช้",
     "heroFeature1": "การโพสต์อัตโนมัติ",
     "heroFeature2": "การติดตามการมีส่วนร่วม",
-    "heroFeature3": "การวิเคราะห์ผู้ชมสังเคราะห์",
+    "heroFeature3": "ข้อมูลเชิงลึกผู้ชม",
     "heroAnd": "และ",
     "statNeuralEncryption": "การเข้ารหัสโทเค็น",
     "statUplinkLatency": "ความเร็วการเชื่อมต่อ",
@@ -2375,7 +2375,7 @@
     "collaborationIntro1": "ทุกทีมจะได้รับ",
     "collaborationHighlight1": "แอสเซ็ตที่แชร์ร่วมกัน",
     "collaborationIntro2": ",",
-    "collaborationHighlight2": "ลูปป้อนกลับแบบอะซิงโครนัส",
+    "collaborationHighlight2": "คอมเมนต์และฟีดแบ็ก",
     "collaborationIntro3": "และเป็นอันหนึ่งอันเดียวกัน",
     "collaborationHighlight3": "คิวการผลิต",
     "collaborationIntro4": " เก็บงานของทุกคนไว้ในที่เดียว",
@@ -3113,7 +3113,7 @@
     "neuralLine1": "คอนเทนต์",
     "neuralLine2": "ศูนย์",
     "autonomousPrefix": "โหมดอัตโนมัติ",
-    "dominating": "มีอำนาจเหนือกว่า",
+    "dominating": "กำลังทำงาน",
     "autonomousMid": "ที่",
     "autonomousSuffix": "คิว",
     "neuralActive": "เปิดโหมดอัตโนมัติ",
@@ -3998,7 +3998,7 @@
     "latticeHealth": "สถานะเครือข่าย",
     "aggregatedRevenue": "รายได้รวม",
     "victoryVectors": "ผลสำเร็จวันนี้",
-    "encirclementTitle": "การล้อมรอบโลก",
+    "encirclementTitle": "ภาพรวมการเติบโต",
     "encirclementSubtitle": "อินไซต์ที่แชร์ทั่วทั้ง Click",
     "godModeSaturationActive": "สด",
     "decentralizedIntelligenceLedger": "บันทึกกิจกรรม",
@@ -4018,7 +4018,7 @@
     "tabStability": "สุขภาพของระบบ",
     "versionLabel": "Click",
     "overlordTerminalSynced": "เชื่อมต่อแล้ว",
-    "mainTitle": "คลิกเทอร์มินัลโอเวอร์ลอร์ด",
+    "mainTitle": "ศูนย์ควบคุม Click",
     "mainSubtitle": "การควบคุมการสร้างรายได้และระบบอัตโนมัติ"
   },
   "clickDebugPanel": {
@@ -5408,7 +5408,7 @@
     "presetVibrantPopName": "ป๊อปสดใส",
     "presetVibrantPopDesc": "สีหนาและอิ่มตัว",
     "presetSoftDreamyName": "นุ่มชวนฝัน",
-    "presetSoftDreamyDesc": "ไม่มีตัวตนดูอ่อนโยน",
+    "presetSoftDreamyDesc": "ลุคนุ่มนวลละมุน",
     "presetElectricVibeName": "ไฟฟ้า",
     "presetElectricVibeDesc": "ดูมีชีวิตชีวามีพลังงานสูง",
     "presetRetroVintageName": "เรโทรวินเทจ",
@@ -6232,7 +6232,20 @@
     "appliedStyleProfile": "ใช้สไตล์ {{name}} แล้ว",
     "packApplied": "ใช้ {{name}} แล้ว: เกรดสี {{grade}} พร้อมสไตล์แคปชันของแพ็ก",
     "packAppliedGradeOnly": "ใช้ {{name}} แล้ว: เกรดสี {{grade}} เปิดแคปชันเพื่อใช้สไตล์แคปชันของแพ็ก",
-    "packApplyFailed": "ใช้ {{name}} ไม่ได้: ไม่พบเกรดสีของแพ็กนี้"
+    "packApplyFailed": "ใช้ {{name}} ไม่ได้: ไม่พบเกรดสีของแพ็กนี้",
+    "beatRecut": "✦ ตัดใหม่เป็น {{count}} คลิปตามบีต (แทนที่คลิปวิดีโอ {{replaced}} คลิป)",
+    "beatCut": "✦ ตัดเป็น {{count}} คลิปที่ซิงก์กับบีต",
+    "autoViralAnalysing": "✦ ตัดต่อไวรัลอัตโนมัติ — กำลังวิเคราะห์บีตและแคปชัน…",
+    "autoViralNothingFound": "ตัดต่อไวรัลอัตโนมัติต้องใช้บีตเพลงหรือทรานสคริปต์ที่ใช้ได้ — ไม่พบทั้งสองอย่าง",
+    "autoViralNeedsTranscript": "ตัดต่อไวรัลอัตโนมัติต้องใช้ทรานสคริปต์สำหรับแคปชันหรือเพลงสำหรับการตัด ถอดเสียงก่อนแล้วลองใหม่",
+    "autoViralCuts": "คลิปตามบีต {{clips}} คลิป · ทรานสิชัน {{transitions}} รายการ",
+    "autoViralCaptions": "แคปชันคาราโอเกะ {{count}} รายการ",
+    "autoViralDone": "✦ ตัดต่อไวรัลอัตโนมัติ: {{summary}}",
+    "autoViralFailed": "ตัดต่อไวรัลอัตโนมัติไม่สำเร็จ — ไทม์ไลน์ของคุณไม่เปลี่ยนแปลง",
+    "resizeTimelineAria": "ปรับขนาดไทม์ไลน์ (ลากขึ้นหรือลง)",
+    "resizeTimelineTitle": "ลากเพื่อปรับขนาดไทม์ไลน์",
+    "timelineHeading": "ไทม์ไลน์",
+    "cmdCategoryEditor": "เอดิเตอร์"
   },
   "nicheStrategyPanel": {
     "tabHooks": "ตะขอ",
@@ -6310,13 +6323,13 @@
     "featuresTitle": "คุณสมบัติชั้นยอด",
     "featuresDescription": "ปลดล็อกความชาญฉลาดหลายแพลตฟอร์มและการเติบโตเชิงคาดการณ์",
     "completeTitle": "เรียบร้อยแล้ว",
-    "completeDescription": "ตอนนี้คุณพร้อมที่จะครองภูมิทัศน์ทางสังคมแล้ว",
+    "completeDescription": "คุณพร้อมเริ่มสร้างสรรค์แล้ว",
     "eliteAccessGranted": "ได้รับสิทธิ์การเข้าถึงระดับ Elite แล้ว",
     "closeOnboarding": "ปิดการเริ่มต้นใช้งาน",
     "back": "กลับ",
-    "startDominating": "เริ่มการครอบงำ",
+    "startDominating": "เริ่มต้นใช้งาน",
     "nextIntelligence": "หน่วยสืบราชการลับต่อไป",
-    "clickGenesis": "คลิกปฐมกาล",
+    "clickGenesis": "ยินดีต้อนรับสู่ Click",
     "welcomeBodyBefore": "แพลตฟอร์มเดียวที่ไม่เพียงแค่เขียน—มัน",
     "welcomeBodyOperates": "ดำเนินการ",
     "welcomeBodyAfter": " มาตั้งค่าแบรนด์ของคุณกัน",
@@ -6489,7 +6502,7 @@
     "syncing": "กำลังอัปเดต...",
     "restart": "รีสตาร์ท",
     "dismissInstallPrompt": "ยกเลิกพร้อมท์การติดตั้ง",
-    "installDescription": "ก้าวไปสู่พื้นที่ทำงานแบบออฟไลน์ที่รวดเร็วยิ่งขึ้น สร้างขึ้นเพื่อการดำเนินการด้านเนื้อหาชั้นยอด",
+    "installDescription": "ติดตั้ง Click เพื่อใช้แอปที่เร็วขึ้นและใช้งานออฟไลน์ได้",
     "initializeInstallation": "เริ่มต้นการติดตั้ง",
     "tagInstant": "ทันที",
     "tagEdge": "ขอบ",
@@ -6779,7 +6792,7 @@
     "navAeoMetadata": "ข้อมูลเมตาของ AEO",
     "navUgcRaw": "UGC ดิบ",
     "navZeroPartyData": "ข้อมูล Zero-Party",
-    "headerPill": "ระยะที่ 8 — การครอบงำตลาด",
+    "headerPill": "เฟส 8 — เครื่องมือการเติบโต",
     "headerTitle": "เครื่องมือการเติบโต",
     "headerSubtitle": "5 ระบบที่ทำให้ CLICK ไม่มีปัญหา"
   },
@@ -6850,14 +6863,14 @@
     "pcv": "พีซีวี",
     "steerSwarmToThisOffer": "โฟกัสที่ข้อเสนอนี้",
     "s2sNetworkDown": "เครือข่าย S2S ล่ม",
-    "globalEncirclementTitle": "การล้อมรอบโลก",
+    "globalEncirclementTitle": "ภาพรวมการเติบโต",
     "globalEncirclementSubtitle": "อินไซต์ข้ามบัญชี",
     "godModeActiveBadge": "ใช้งานอยู่",
     "networkHealth": "สุขภาพเครือข่าย",
     "aggregatedRevenue": "รายได้รวม",
     "victoryVectors": "ผลงานยอดนิยม",
     "logInitializingTunnel": "[ระบบ] กำลังเริ่มต้นอุโมงค์ที่เข้ารหัส S2S...",
-    "logEncirclementActive": "[ระบบ] วงเวียนทำงานอยู่ {{count}} เชื่อมต่ออินสแตนซ์พี่น้องแล้ว",
+    "logEncirclementActive": "เชื่อมต่อพื้นที่ทำงานแล้ว {{count}} แห่ง",
     "logVectorReceived": "ฮุก \"{{hook}}\" กำลังนำใน {{cluster}}",
     "logLocalSynthesis": "อัปเดตผลลัพธ์ในเครื่องแล้ว: น้ำหนักโมเมนตัม +{{percent}}%",
     "productionStabilityTitle": "เสถียรภาพการผลิต",
@@ -6878,7 +6891,7 @@
     "navGlobalS2s": "S2S ระดับโลก",
     "navSystemHealth": "สุขภาพของระบบ",
     "headerPill": "เครื่องมือขั้นสูง",
-    "headerTitle": "สถานีโอเวอร์ลอร์ด",
+    "headerTitle": "ศูนย์ควบคุม",
     "headerSubtitle": "การขยายตลาด"
   },
   "quickActions": {
@@ -6983,7 +6996,7 @@
     "razorTool": "เครื่องมือมีดโกน (S)",
     "editMode": "โหมดแก้ไข",
     "modeNormal": "ปกติ",
-    "modeRipple": "ระลอกคลื่น",
+    "modeRipple": "Ripple",
     "modeRoll": "ม้วน",
     "modeSlip": "ลื่น",
     "setInPoint": "ตั้งในจุด (I)",
@@ -7098,7 +7111,31 @@
   "realTimeVideoPreview": {
     "overlayAlt": "โอเวอร์เลย์",
     "metadataError": "ไม่สามารถโหลดข้อมูลเมตาของวิดีโอ ตรวจสอบความถูกต้องของ CORS หรือ URL",
-    "bootingRenderEngine": "กำลังโหลดพรีวิว..."
+    "bootingRenderEngine": "กำลังโหลดพรีวิว...",
+    "videoFailed": "โหลดวิดีโอไม่สำเร็จ",
+    "retry": "ลองอีกครั้ง",
+    "dragToCompare": "ลากเพื่อเทียบก่อน / หลัง",
+    "before": "ก่อน",
+    "after": "หลัง",
+    "rawUnfiltered": "ต้นฉบับ / ไม่มีฟิลเตอร์",
+    "graded": "ปรับสีแล้ว",
+    "editCaptionInline": "แก้ไขข้อความแคปชันตรงนี้",
+    "captionPlaceholder": "พิมพ์ข้อความแคปชัน...",
+    "opsReverse": "เล่นย้อนกลับ {{count}}×",
+    "opsJCut": "J-cut {{count}}×",
+    "opsLCut": "L-cut {{count}}×",
+    "exportOnlyTitle": "การเปลี่ยนแปลงเหล่านี้มีผลเฉพาะตอนส่งออก — ตัวอย่างจะเล่นคลิปตามทิศทางเดิมพร้อมเสียงซิงก์ปกติ",
+    "exportOnly": "เฉพาะตอนส่งออก",
+    "imageLayer": "เลเยอร์รูปภาพ",
+    "imageFailed": "โหลดรูปภาพไม่สำเร็จ",
+    "svgLayer": "เลเยอร์ SVG",
+    "preview": "ตัวอย่าง",
+    "latency": "เวลาแฝง",
+    "pause": "หยุดชั่วคราว",
+    "play": "เล่น",
+    "toggleBeforeAfter": "สลับก่อน/หลัง",
+    "beforeAfter": "ก่อน / หลัง",
+    "aiStylingActive": "เปิดสไตล์ AI อยู่"
   },
   "realtimeCollaboration": {
     "failedToJoin": "ไม่สามารถเข้าร่วมเซสชันการทำงานร่วมกัน",
@@ -7172,7 +7209,137 @@
   },
   "resizableTimeline": {
     "restore": "คืนค่าขนาดไทม์ไลน์",
-    "maximize": "เพิ่มไทม์ไลน์ให้สูงสุด"
+    "maximize": "เพิ่มไทม์ไลน์ให้สูงสุด",
+    "snapKind": {
+      "word": "คำ",
+      "silence": "ช่วงหยุด",
+      "beat": "บีต",
+      "marker": "มาร์กเกอร์",
+      "edge": "ขอบ",
+      "playhead": "หัวเล่น",
+      "boundary": "ขอบเขต"
+    },
+    "realignedCountOne": "จัดแคปชัน 1 รายการให้ตรงกับเสียงพูดแล้ว",
+    "realignedCount": "จัดแคปชัน {{count}} รายการให้ตรงกับเสียงพูดแล้ว",
+    "alreadyAligned": "แคปชันตรงกันอยู่แล้ว",
+    "markerNamePrompt": "ชื่อมาร์กเกอร์ (ไม่บังคับ):",
+    "unsoloTrack": "เลิกโซโลแทร็ก",
+    "soloTrack": "โซโลแทร็ก",
+    "soloShort": "S",
+    "unmuteTrack": "เปิดเสียงแทร็ก",
+    "muteTrack": "ปิดเสียงแทร็ก",
+    "unlockTrack": "ปลดล็อกแทร็ก",
+    "lockTrack": "ล็อกแทร็ก",
+    "prevFrameTitle": "เฟรมก่อนหน้า (←)",
+    "prevFrame": "เฟรมก่อนหน้า",
+    "pauseTitle": "หยุดชั่วคราว (Space)",
+    "playTitle": "เล่น (Space)",
+    "pause": "หยุดชั่วคราว",
+    "play": "เล่น",
+    "nextFrameTitle": "เฟรมถัดไป (→)",
+    "nextFrame": "เฟรมถัดไป",
+    "goToTimeLabel": "ไปที่เวลา (พิมพ์เวลาแล้วกด Enter)",
+    "goToTimeTitle": "พิมพ์เวลา (เช่น 1:05.5) แล้วกด Enter เพื่อข้ามไป",
+    "splitTitle": "แยกคลิปที่อยู่ใต้หัวเล่น (S)",
+    "split": "แยก",
+    "deleteTitle": "ลบรายการที่เลือก (Delete)",
+    "delete": "ลบ",
+    "rippleOnTitle": "เปิด Ripple: ลบแล้วจะปิดช่องว่างในทุกแทร็ก",
+    "rippleOffTitle": "ปิด Ripple: ลบแล้วจะเหลือช่องว่าง",
+    "ripple": "Ripple",
+    "ungroupTitle": "เลิกจัดกลุ่มคลิปที่เลือก",
+    "ungroup": "เลิกจัดกลุ่ม",
+    "groupTitle": "จัดกลุ่มคลิปที่เลือกให้ย้ายและลบไปพร้อมกัน",
+    "group": "จัดกลุ่ม",
+    "setInTitle": "ตั้งจุดเข้าที่หัวเล่น (I)",
+    "in": "เข้า",
+    "setOutTitle": "ตั้งจุดออกที่หัวเล่น (O)",
+    "out": "ออก",
+    "clearInOutTitle": "ล้างจุดเข้า/ออก (Alt+X)",
+    "clearInOutLabel": "ล้างจุดเข้าและจุดออก",
+    "snapTitle": "สแนปคลิปเข้ากับขอบ หัวเล่น และมาร์กเกอร์",
+    "snap": "สแนป",
+    "speechTitle": "สแนปคลิปและแคปชันเข้ากับคำพูด",
+    "speechDisabledTitle": "สร้างแคปชันเพื่อเปิดการสแนปตามเสียงพูด",
+    "speech": "เสียงพูด",
+    "realignTitle": "ปรับเวลาทุกแคปชันให้ตรงกับคำพูด",
+    "realign": "จัดแคปชันใหม่",
+    "dragToPan": "ลากเพื่อเลื่อน",
+    "showTracks": "แสดงแทร็ก",
+    "allTracks": "ทุกแทร็ก",
+    "track": {
+      "captions": "แคปชัน",
+      "mainVideo": "วิดีโอหลัก",
+      "broll": "B-roll",
+      "audio": "เสียง",
+      "effects": "เอฟเฟกต์",
+      "captionsSub": "ข้อความบนจอ",
+      "mainVideoSub": "ฟุตเทจของคุณ",
+      "brollSub": "ภาพแทรกและรูปภาพ",
+      "audioSub": "เพลง เสียงพูด และ SFX"
+    },
+    "viewGroup": "มุมมองไทม์ไลน์",
+    "view": {
+      "clips": "คลิป",
+      "clipsTitle": "เฉพาะคลิป",
+      "hybrid": "คลิป + สคริปต์",
+      "hybridTitle": "คลิปพร้อมสคริปต์ด้านบน",
+      "script": "สคริปต์",
+      "scriptTitle": "ตัดต่อด้วยข้อความ"
+    },
+    "zoomOut": "ซูมออก",
+    "zoomIn": "ซูมเข้า",
+    "hideInsights": "ซ่อนแถบข้อมูลเชิงลึก AI",
+    "showInsights": "แสดงแถบข้อมูลเชิงลึก AI",
+    "insights": "ข้อมูลเชิงลึก",
+    "inOutSpan": "เข้า/ออก: {{time}}",
+    "inPointTitle": "จุดเข้า: {{time}} (ลากเพื่อปรับ)",
+    "outPointTitle": "จุดออก: {{time}} (ลากเพื่อปรับ)",
+    "beatLabel": "บีต ({{time}} วิ)",
+    "markerTitle": "{{name}}: {{time}} (ลากเพื่อย้าย คลิกเพื่อข้ามไป คลิกขวาเพื่อแก้ไข)",
+    "marker": "มาร์กเกอร์",
+    "markerTag": "{{name}} ({{time}})",
+    "resolve": "แก้ไข",
+    "close": "ปิด",
+    "captionsCountOne": "1 แคปชัน",
+    "captionsCount": "{{count}} แคปชัน",
+    "clipsCountOne": "1 คลิป",
+    "clipsCount": "{{count}} คลิป",
+    "itemsCountOne": "1 รายการ",
+    "itemsCount": "{{count}} รายการ",
+    "audienceRetention": "การรักษาผู้ชม",
+    "retentionTitle": "การรักษายอดดู: {{value}}%",
+    "audioWaveform": "รูปคลื่นเสียง",
+    "audioWaveformNoAudio": "รูปคลื่นเสียง (ไม่มีเสียง)",
+    "trimStart": "ตัดต้น",
+    "trimEnd": "ตัดท้าย",
+    "jCut": "J-Cut",
+    "lCut": "L-Cut",
+    "trimmedStart": "ตัดต้นแล้ว",
+    "trimmedEnd": "ตัดท้ายแล้ว",
+    "freeze": "หยุดภาพ",
+    "reverseSpeed": "ย้อนกลับ {{speed}}×",
+    "keyframes": "คีย์เฟรม",
+    "playheadTitle": "หัวเล่น: {{time}} (ลากเพื่อเลื่อนดู)",
+    "scrubTitle": "เลื่อนดู: {{time}}",
+    "dragPlayhead": "ลากหัวเล่น",
+    "origin": "จุดเดิม: {{time}}",
+    "moveDelta": "ระยะที่ย้าย: {{delta}}",
+    "trackNumber": "แทร็ก {{number}}",
+    "clipsMoving": "กำลังย้าย {{count}} คลิป",
+    "trimStartAt": "ตัดต้น: {{time}}",
+    "trimEndAt": "ตัดท้าย: {{time}}",
+    "workAreaIn": "จุดเริ่มพื้นที่ทำงาน: {{time}}",
+    "workAreaOut": "จุดสิ้นสุดพื้นที่ทำงาน: {{time}}",
+    "span": "ช่วง: {{time}}",
+    "menu": {
+      "splitAtPlayhead": "แยกที่หัวเล่น",
+      "duplicate": "ทำสำเนาคลิป",
+      "ungroup": "เลิกจัดกลุ่มคลิป",
+      "group": "จัดกลุ่มคลิป",
+      "rippleDelete": "ลบแบบ Ripple"
+    },
+    "sceneChange": "เปลี่ยนฉาก"
   },
   "revenueOracle": {
     "synchronizing": "กำลังโหลดข้อมูลรายได้...",
@@ -7682,7 +7849,7 @@
     "neuralScheduling": "ตั้งเวลาอัจฉริยะ",
     "neuralSchedulingDesc": "ตั้งเวลาโพสต์ให้ตรงกับช่วงที่ผู้ชมของคุณออนไลน์มากที่สุด",
     "evergreenSynthesis": "นำคอนเทนต์ Evergreen กลับมาใช้ใหม่",
-    "evergreenSynthesisDesc": "เปิดใช้งานการรีไซเคิลเนื้อหาที่สามารถซ่อมแซมตัวเองได้เพื่อ ROI ของพื้นที่เก็บข้อมูลที่ไม่มีที่สิ้นสุด",
+    "evergreenSynthesisDesc": "นำคอนเทนต์ที่ทำผลงานได้ดีที่สุดกลับมาใช้ใหม่โดยอัตโนมัติ",
     "initiateSequence": "เริ่มต้นลำดับ",
     "neuralProcessing": "กำลังประมวลผล",
     "ecosystemCalibration": "กำลังตั้งค่า...",
@@ -7691,7 +7858,7 @@
     "synchronization": "ไปป์ไลน์",
     "verified": "ยืนยันแล้ว",
     "nodesPrimedPrefix": "โพสต์ของคุณ",
-    "primed": "ลงสีพื้นแล้ว",
+    "primed": "พร้อม",
     "nodesPrimedSuffix": "ที่จะเผยแพร่",
     "estimatedYield": "ผลผลิตโดยประมาณ",
     "neuralIntegrity": "ตรวจคุณภาพ",
@@ -8517,5 +8684,1369 @@
     "shift1d": "+1 วัน",
     "shift1w": "+1 สัปดาห์",
     "moveWarning": "การย้ายโพสต์อาจทำให้มีสองโพสต์บนแพลตฟอร์มเดียวกันในเวลาเดียวกัน โพสต์ที่กำลังเผยแพร่หรือเผยแพร่แล้วจะไม่ถูกย้าย"
+  },
+  "editorSidebar": {
+    "cat": {
+      "aiEdit": {
+        "label": "ตัดต่ออัตโนมัติด้วย AI",
+        "desc": "ตัดต่อด้วย AI คลิกเดียว"
+      },
+      "dub": {
+        "label": "พากย์เสียง",
+        "desc": "แปลเสียงของคุณเป็น 10 ภาษา"
+      },
+      "edit": {
+        "label": "ตัดต่อ",
+        "desc": "เครื่องมือตัดต่อพื้นฐาน"
+      },
+      "assets": {
+        "label": "แอสเซ็ตของฉัน",
+        "desc": "เพิ่มเพลง รูปภาพ และคลิป B-roll"
+      },
+      "effects": {
+        "label": "เอฟเฟกต์",
+        "desc": "ฟิลเตอร์และการปรับแต่ง"
+      },
+      "color": {
+        "label": "สี",
+        "desc": "ปรับสีระดับมืออาชีพ"
+      },
+      "chromakey": {
+        "label": "โครมาคีย์",
+        "desc": "กรีนสกรีนและการซ้อนภาพ"
+      },
+      "timeline": {
+        "label": "ไทม์ไลน์",
+        "desc": "ตัดต่อขั้นสูง"
+      },
+      "export": {
+        "label": "ส่งออก",
+        "desc": "แชร์และส่งออก"
+      },
+      "aiAssist": {
+        "label": "ผู้ช่วย AI",
+        "desc": "ตัดอัจฉริยะ · ตรวจคำแนะนำ · ใช้และเลิกทำ"
+      },
+      "monetize": {
+        "label": "สร้างรายได้",
+        "desc": "ลิงก์สินค้า · QR · แผนสร้างรายได้ด้วย AI"
+      },
+      "stockLibrary": {
+        "label": "คลังสต็อก",
+        "desc": "B-roll · เพลง · GIF · สติกเกอร์ · ทรานสิชัน · SFX"
+      },
+      "textMotion": {
+        "label": "ข้อความและโมชัน",
+        "desc": "แคปชัน · แอนิเมชัน · โมชัน · ฟอนต์"
+      }
+    },
+    "group": {
+      "edit": {
+        "label": "ตัดต่อ",
+        "desc": "ตัด ปรับสี ซ้อนภาพ — พื้นที่ตัดต่อหลัก"
+      },
+      "media": {
+        "label": "สื่อ",
+        "desc": "แอสเซ็ต สต็อก แคปชัน และข้อความ"
+      },
+      "ai": {
+        "label": "AI",
+        "desc": "ตัดต่ออัตโนมัติด้วย AI คลิกเดียว + พากย์หลายภาษา"
+      },
+      "export": {
+        "label": "ส่งออก",
+        "desc": "เรนเดอร์และแชร์"
+      }
+    },
+    "badge": {
+      "new": "ใหม่",
+      "agency": "เอเจนซี",
+      "pro": "PRO",
+      "beta": "BETA"
+    },
+    "title": "เครื่องมือเอดิเตอร์",
+    "ready": "พร้อม",
+    "expand": "ขยายแถบด้านข้าง",
+    "collapse": "ยุบแถบด้านข้าง",
+    "searchPlaceholder": "ค้นหาเครื่องมือ (⌘F)",
+    "clearSearch": "ล้างการค้นหา",
+    "all": "ทั้งหมด",
+    "recent": "ล่าสุด",
+    "noTools": "ไม่พบเครื่องมือ",
+    "pinned": "ปักหมุดแล้ว",
+    "allTools": "เครื่องมือทั้งหมด",
+    "unpin": "เลิกปักหมุด",
+    "pinToTop": "ปักหมุดไว้บนสุด",
+    "device": {
+      "desktop": "เดสก์ท็อป",
+      "tablet": "แท็บเล็ต",
+      "mobile": "มือถือ"
+    },
+    "shortcuts": "แป้นพิมพ์ลัด",
+    "closeShortcuts": "ปิดแป้นพิมพ์ลัด",
+    "searchTools": "ค้นหาเครื่องมือ"
+  },
+  "editorHUD": {
+    "section": {
+      "edit": "ตัดต่อ",
+      "color": "สี",
+      "ai": "เครื่องมือ AI",
+      "effects": "เอฟเฟกต์",
+      "timeline": "ไทม์ไลน์",
+      "export": "ส่งออก",
+      "styleVault": "Style Vault",
+      "aiEdit": "ตัดต่อด้วย AI",
+      "assets": "แอสเซ็ต",
+      "growth": "การวิเคราะห์",
+      "chromakey": "โครมาคีย์",
+      "visualFx": "เอฟเฟกต์ภาพ",
+      "aiAnalysis": "การวิเคราะห์ด้วย AI",
+      "collaborate": "ทำงานร่วมกัน",
+      "scripts": "สคริปต์",
+      "scheduling": "ตั้งเวลา",
+      "shortClips": "คลิปสั้น",
+      "predict": "การคาดการณ์",
+      "distribution": "การเผยแพร่",
+      "spatial": "เชิงพื้นที่",
+      "agent": "เอเจนต์ AI",
+      "dub": "พากย์เสียง"
+    },
+    "layout": {
+      "balanced": "สมดุล",
+      "balancedDesc": "แบ่งพื้นที่ตัวอย่างและไทม์ไลน์เท่าๆ กัน",
+      "cinematic": "ภาพยนตร์",
+      "cinematicDesc": "ตัวอย่างใหญ่ขึ้น เน้นการเล่น",
+      "timelineFocus": "เน้นไทม์ไลน์",
+      "timelineFocusDesc": "พื้นที่มากขึ้นสำหรับแก้ไขไทม์ไลน์อย่างละเอียด"
+    },
+    "projectName": "ชื่อโปรเจกต์",
+    "savingEllipsis": "กำลังบันทึก…",
+    "saveFailed": "บันทึกไม่สำเร็จ",
+    "allChangesSaved": "บันทึกการเปลี่ยนแปลงทั้งหมดแล้ว",
+    "saving": "กำลังบันทึก",
+    "saved": "บันทึกแล้ว",
+    "undoTitle": "เลิกทำ (⌘Z)",
+    "redoTitle": "ทำซ้ำ (⌘Y)",
+    "undo": "เลิกทำ",
+    "redo": "ทำซ้ำ",
+    "command": "ค้นหาหรือเรียกใช้คำสั่ง",
+    "commandTitle": "ค้นหาหรือเรียกใช้คำสั่ง (⌘K)",
+    "workspaceLayoutTitle": "เลย์เอาต์พื้นที่ทำงาน (L)",
+    "workspaceLayout": "เลย์เอาต์พื้นที่ทำงาน",
+    "gpu": "GPU: {{backend}}",
+    "agentRunning": "เอเจนต์ AI กำลังทำงาน",
+    "makeViralTitle": "ใช้สูตรไวรัลคลิกเดียว — ฮุก การตัด B-roll ซิงก์บีต CTA",
+    "working": "กำลังทำงาน…",
+    "makeViral": "ทำให้ไวรัล",
+    "focusMode": "โหมดโฟกัส",
+    "moreActions": "การดำเนินการเพิ่มเติม",
+    "more": "เพิ่มเติม",
+    "keyboardShortcuts": "แป้นพิมพ์ลัด",
+    "exportTitle": "ส่งออกและเผยแพร่",
+    "export": "ส่งออก"
+  },
+  "quickActionsBar": {
+    "variantsNeedBase": "เพิ่มแคปชันหรือฮุกก่อน เพื่อให้ตัวสร้างตัวเลือกมีข้อมูลตั้งต้น",
+    "noVariants": "ไม่มีตัวเลือกกลับมา — ลองใช้ฮุกตั้งต้นที่ยาวขึ้น",
+    "variantsGenerated": "สร้างตัวเลือกแล้ว {{count}} แบบ — เปิดตัวเลือก A/B เพื่อดูตัวอย่าง",
+    "variantsFailed": "สร้างตัวเลือกไม่สำเร็จ: {{error}}",
+    "unknownError": "ข้อผิดพลาดที่ไม่ทราบสาเหตุ",
+    "brollNeedsClip": "โหลดคลิปก่อนเพื่อรับคำแนะนำ B-roll",
+    "noBrollGaps": "ไม่พบช่องว่างสำหรับ B-roll — คลิปของคุณมีภาพแน่นอยู่แล้ว",
+    "brollSuggested": "แนะนำการแทรก B-roll {{count}} จุด เปิดไทม์ไลน์เพื่อตรวจดู",
+    "brollFailed": "แนะนำ B-roll ไม่สำเร็จ: {{error}}",
+    "trendsWarmingUp": "ฟีดเทรนด์กำลังเตรียมพร้อม — ลองอีกครั้งในอีกสักครู่",
+    "trendsLoaded": "มาแรงตอนนี้: เสียง {{sounds}} รายการ · แฮชแท็ก {{hashtags}} รายการ กำลังเปิดตัวเลือก",
+    "trendsFailed": "โหลดเทรนด์ไม่ได้: {{error}}",
+    "styleApplied": "ใช้สไตล์ของคุณแล้ว: {{items}}",
+    "styleAppliedGeneric": "ใช้สไตล์ที่เรียนรู้แล้ว",
+    "styleNeedsClips": "เผยแพร่ 3 คลิปก่อน เพื่อให้ Click เรียนรู้สไตล์ของคุณ",
+    "styleTimedOut": "คำขอสไตล์หมดเวลา ลองอีกครั้ง",
+    "styleLoadFailed": "โหลดสไตล์ของคุณไม่ได้ ลองอีกครั้ง",
+    "viralEdit": "ตัดต่อไวรัล",
+    "viralEditLong": "ตัดต่อไวรัลอัตโนมัติ — ตัดต่อครบในแตะเดียว",
+    "applyStyle": "ใช้สไตล์",
+    "split": "แยก",
+    "splitLong": "แยกที่หัวเล่น",
+    "captions": "แคปชัน",
+    "grade": "ปรับสี",
+    "effects": "เอฟเฟกต์",
+    "aiTools": "เครื่องมือ AI",
+    "clean": "เก็บงาน",
+    "cleanLong": "เก็บงานอัจฉริยะ",
+    "variants": "ตัวเลือก",
+    "variantsLong": "ตัวเลือก A/B",
+    "broll": "B-roll",
+    "brollLong": "แนะนำ B-roll",
+    "trends": "เทรนด์",
+    "trendsLong": "มาแรงตอนนี้",
+    "learnedFrom": "Click เรียนรู้จากคลิปที่คุณเผยแพร่แล้ว {{count}} คลิป",
+    "ariaLoading": "{{label}} — กำลังโหลด",
+    "ariaShortcut": "{{label}} (ปุ่มลัด {{key}})"
+  },
+  "aiAutoEdit": {
+    "preset": {
+      "mrbeastEnergy": "พลังแบบ MrBeast",
+      "mrbeastEnergyTagline": "เดิมพันสูง · pattern break",
+      "hormoziBold": "Hormozi Bold",
+      "hormoziBoldTagline": "สถิติหนักแน่น · มุมมองสวนกระแส",
+      "cinematicDoc": "สารคดีแบบภาพยนตร์",
+      "cinematicDocTagline": "ค่อยๆ เข้มข้น · ตัดแผ่วเบา",
+      "educationalClean": "ให้ความรู้แบบเรียบง่าย",
+      "educationalCleanTagline": "ตั้งคำถาม · ปล่อยข้อเท็จจริง",
+      "newsAuthority": "สไตล์ข่าว",
+      "newsAuthorityTagline": "พาดหัว · ข่าวด่วน · ผู้เชี่ยวชาญ",
+      "casualVlog": "วล็อกสบายๆ",
+      "casualVlogTagline": "ชีวิตประจำวัน · คุยเป็นกันเอง",
+      "mysteryHook": "ฮุกลึกลับ",
+      "mysteryHookTagline": "วนความสงสัย · ค่อยๆ เฉลย",
+      "gymGrit": "Gym Grit",
+      "gymGritTagline": "เข้มข้นสูง · ดุแต่หวังดี",
+      "adhdOverload": "ADHD Overload",
+      "adhdOverloadTagline": "วุ่นวาย · ป๊อประเบิด · กระตุ้นสุดๆ",
+      "podcastGoldmine": "ขุมทองพอดแคสต์",
+      "podcastGoldmineTagline": "น่าเชื่อถือ · แบ่งตอน · สารคดีอบอุ่น",
+      "retentionMachine": "เครื่องจักรรักษายอดดู",
+      "retentionMachineTagline": "Open loop · B-roll · แบ่งตอน"
+    },
+    "opt": {
+      "auto": "อัตโนมัติ",
+      "vivid": "สีสด",
+      "cinematic": "แบบภาพยนตร์",
+      "natural": "ธรรมชาติ",
+      "cool": "โทนเย็น",
+      "warm": "โทนอุ่น",
+      "vintage": "วินเทจ",
+      "bw": "ขาวดำ",
+      "upbeatPop": "ป๊อปสดใส",
+      "chill": "ชิลๆ",
+      "darkAmbient": "Dark ambient",
+      "synthwave": "Synthwave",
+      "phonk": "Phonk",
+      "lofi": "Lo-fi",
+      "question": "คำถาม",
+      "stat": "สถิติ",
+      "mystery": "ลึกลับ",
+      "story": "เรื่องเล่า",
+      "boldClaim": "คำกล่าวท้าทาย",
+      "patternBreak": "Pattern break",
+      "fastCut": "ตัดเร็ว",
+      "crossfade": "Crossfade",
+      "glitch": "Glitch",
+      "whipPan": "Whip pan",
+      "hardCut": "ตัดฉับ",
+      "modern": "โมเดิร์น",
+      "bold": "เด่นชัด",
+      "minimal": "มินิมอล",
+      "neon": "นีออน",
+      "pill": "แคปซูล",
+      "top": "ด้านบน",
+      "middle": "ตรงกลาง",
+      "bottom": "ด้านล่าง",
+      "lowerThird": "Lower third",
+      "energetic": "มีพลัง",
+      "calm": "สงบ",
+      "authoritative": "น่าเชื่อถือ",
+      "playful": "ขี้เล่น",
+      "serious": "จริงจัง",
+      "urgency": "เร่งด่วน",
+      "value": "คุณค่า",
+      "curiosity": "ความสงสัย",
+      "off": "ปิด",
+      "sparse": "น้อย",
+      "balanced": "สมดุล",
+      "heavy": "หนัก",
+      "gentle": "นุ่มนวล",
+      "medium": "ปานกลาง",
+      "aggressive": "ดุดัน",
+      "educational": "ให้ความรู้",
+      "entertaining": "สนุกสนาน",
+      "motivational": "สร้างแรงบันดาลใจ",
+      "promotional": "โปรโมต"
+    },
+    "brief": {
+      "title": "สรุปการตลาด",
+      "postingTimes": "เวลาโพสต์ที่ดีที่สุด",
+      "competitiveInsights": "ข้อมูลเชิงลึกคู่แข่ง"
+    },
+    "err": {
+      "videoNotFound": "ไม่พบข้อมูลวิดีโอในการตอบกลับ",
+      "loadFailed": "โหลดวิดีโอไม่สำเร็จ โปรดลองอีกครั้ง",
+      "missingSource": "วิดีโอนี้ไม่มีไฟล์ต้นฉบับ อัปโหลดใหม่แล้วลองอีกครั้ง",
+      "tooManyPresets": "ผสมพรีเซ็ตสไตล์ได้สูงสุด 3 แบบต่อการตัดต่อ",
+      "serviceError": "บริการ AI เกิดข้อผิดพลาด: {{error}}",
+      "serviceInternal": "บริการ AI เกิดข้อผิดพลาดภายใน ลองอีกครั้งในอีกสักครู่",
+      "sessionExpired": "เซสชันของคุณหมดอายุ เข้าสู่ระบบอีกครั้งแล้วลองใหม่",
+      "rateLimited": "ส่งคำขอตัดต่อมากเกินไป รอสักครู่แล้วลองอีกครั้ง",
+      "rejected": "คำขอถูกปฏิเสธ ({{status}}) ตรวจสอบข้อมูลแล้วลองใหม่",
+      "timeout": "คำขอตัดต่อหมดเวลา วิดีโออาจใหญ่เกินไปหรือเซิร์ฟเวอร์ตอบสนองช้า",
+      "network": "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง",
+      "startFailed": "เริ่มการตัดต่อด้วย AI ไม่ได้ ลองอีกครั้ง"
+    },
+    "badge": "ตัดต่ออัตโนมัติด้วย AI",
+    "title": "ตั้งค่ากฎของ AI",
+    "untitled": "โปรเจกต์ไม่มีชื่อ",
+    "toggleTheme": "สลับธีม",
+    "analyze": "วิเคราะห์วิดีโอ",
+    "analyzing": "กำลังวิเคราะห์...",
+    "backToVideos": "กลับไปที่วิดีโอ",
+    "processingTitle": "กำลังประมวลผลวิดีโอ",
+    "processingBody": "AI กำลังวิเคราะห์ ตัด และปรับแต่งวิดีโอของคุณ...",
+    "initializing": "กำลังเริ่มต้น",
+    "result": {
+      "title": "งานตัดต่อของคุณพร้อมแล้ว",
+      "body": "เปิดในเอดิเตอร์เพื่อปรับแต่ง หรือดาวน์โหลดตามที่เป็นอยู่",
+      "editsApplied": "ใช้การแก้ไขแล้ว",
+      "openInEditor": "เปิดในเอดิเตอร์",
+      "downloadTitle": "ดาวน์โหลดวิดีโอที่ตัดต่อแล้ว",
+      "download": "ดาวน์โหลด",
+      "viewClipsTitle": "ดูคลิปที่สร้างขึ้น",
+      "viewClips": "ดูคลิป",
+      "dismissTitle": "ปิดผลลัพธ์นี้",
+      "dismiss": "ปิด"
+    },
+    "diag": {
+      "title": "การวินิจฉัย",
+      "complete": "วิเคราะห์เสร็จแล้ว",
+      "suggestedLength": "ความยาวที่แนะนำ"
+    },
+    "plan": {
+      "title": "แผนการตัดต่อของคุณ",
+      "subtitle": "สิ่งที่ AI จะทำตามการตั้งค่าทางขวา",
+      "opening": "ช่วงเปิด",
+      "openingHook": "เปิดด้วยช่วงที่แรงที่สุด",
+      "openingOriginal": "คงจุดเริ่มต้นเดิมไว้",
+      "pacing": "จังหวะ",
+      "pacingGentle": "ตัดแบบนุ่มนวล",
+      "pacingFast": "ตัดเร็วและกระชับ",
+      "pacingBalanced": "ตัดแบบสมดุล",
+      "deadAir": "ช่วงเงียบ",
+      "removed": "ลบออก",
+      "kept": "เก็บไว้",
+      "captions": "แคปชัน",
+      "burnedIn": "ฝังในวิดีโอ",
+      "off": "ปิด",
+      "clips": "คลิป",
+      "under30s": "ไม่ถึง 30 วิ",
+      "fullLength": "ความยาวเต็ม",
+      "oneVideo": "วิดีโอที่ตัดต่อแล้ว 1 รายการ",
+      "format": "รูปแบบ"
+    },
+    "director": {
+      "title": "AI Director",
+      "subtitle": "เลือกได้สูงสุด 3 สไตล์ หรือปรับแต่งทุกการตั้งค่า",
+      "presetsOne": "{{count}} พรีเซ็ต: {{names}}",
+      "presetsOther": "{{count}} พรีเซ็ต: {{names}}"
+    },
+    "targetPlatform": "แพลตฟอร์มเป้าหมาย",
+    "contentTone": "โทนคอนเทนต์",
+    "stylePreset": "พรีเซ็ตสไตล์",
+    "presetsSelected": "เลือกแล้ว {{count}}/3 · คลิกอีกครั้งเพื่อลบ",
+    "presetCap": "สูงสุด 3 พรีเซ็ต — ลบหนึ่งรายการเพื่อสลับ",
+    "presetSelectedTitle": "เลือกแล้ว #{{n}} — คลิกเพื่อลบ",
+    "presetSelect": "เลือกสไตล์: {{name}}",
+    "presetSelectedAria": "สไตล์ที่เลือก #{{n}}: {{name}}",
+    "aiTasks": "งานของ AI",
+    "task": {
+      "removeSilence": "ลบช่วงเงียบ",
+      "removeSilenceDesc": "ตัดช่วงเงียบและช่วงหยุดอัตโนมัติ",
+      "optimizePacing": "ปรับจังหวะให้เหมาะสม",
+      "optimizePacingDesc": "ตัดกระชับเพื่อรักษายอดดู",
+      "enhanceAudio": "ปรับปรุงเสียง",
+      "enhanceAudioDesc": "ลดเสียงรบกวน + ปรับระดับเสียง",
+      "generateClips": "สร้างคลิปสั้น",
+      "generateClipsDesc": "ดึงช่วงที่มีโอกาสไวรัล",
+      "addCaptions": "ฝังแคปชัน",
+      "addCaptionsDesc": "ข้อความไดนามิกที่ซิงก์ทีละคำ",
+      "enhanceColor": "แก้สี",
+      "enhanceColorDesc": "LUT + ปรับสีอัตโนมัติ"
+    },
+    "output": "เอาต์พุต",
+    "aspectRatio": "อัตราส่วนภาพ",
+    "clipsToGenerate": "คลิปที่จะสร้าง",
+    "clipCountAria": "จำนวนคลิปที่จะสร้าง",
+    "targetLength": "ความยาวเป้าหมาย",
+    "full": "เต็ม",
+    "pacing": "จังหวะ",
+    "advanced": "ขั้นสูง",
+    "advancedHint": "อารมณ์ แคปชัน ทรานสิชัน เสียง B-roll CTA",
+    "sel": {
+      "colorGrade": "การปรับสี",
+      "musicGenre": "แนวเพลง",
+      "hookStyle": "สไตล์ฮุก",
+      "transitions": "ทรานสิชัน",
+      "captionStyle": "สไตล์แคปชัน",
+      "subtitlePosition": "ตำแหน่งซับไตเติล",
+      "voiceTone": "โทนเสียง",
+      "ctaStyle": "สไตล์ CTA",
+      "brollFrequency": "ความถี่ B-roll"
+    },
+    "speedRamping": "Speed ramp",
+    "speedRampingHint": "เร่งและชะลอคลิปเพื่อเพิ่มพลัง",
+    "toggleSpeedRamping": "เปิด/ปิด speed ramp",
+    "prioritizeHook": "เน้นฮุก",
+    "prioritizeHookHint": "ทำให้ 3 วินาทีแรกดึงคนดูไว้ได้",
+    "togglePrioritizeHook": "เปิด/ปิดการเน้นฮุก",
+    "creativeDirection": "แนวทางสร้างสรรค์",
+    "creativeDirectionHint": "ไม่บังคับ · แทนที่ค่าเริ่มต้นของ AI",
+    "creativeDirectionPlaceholder": "เช่น ให้ดูเป็นภาพยนตร์และมืดหม่น ไม่มี jump cut เน้นช่วงเงียบที่สะเทือนใจตอน 0:42…",
+    "autoFit": "พอดีอัตโนมัติ",
+    "aiPlan": "แผนของ AI",
+    "preloadedStyle": "โหลดสไตล์ของคุณไว้แล้ว",
+    "planLine": {
+      "composeOne": "สร้าง {{count}} คลิป {{aspect}} เป้าหมาย {{length}}",
+      "composeOther": "สร้าง {{count}} คลิป {{aspect}} เป้าหมาย {{length}}",
+      "forPlatform": "สำหรับ {{platform}}",
+      "tone": "โทน {{tone}}",
+      "acrossPresets": "จาก {{presets}} ({{count}} มุมที่ต่างกัน)",
+      "autoStyle": "ด้วยสไตล์ {{auto}}",
+      "autoDetected": "ตรวจจับอัตโนมัติ",
+      "grade": "ปรับสีแบบ {{grade}}",
+      "hook": "ฮุกแบบ {{hook}}",
+      "pacing": "จังหวะ {{pacing}}",
+      "speedRamping": "เปิด speed ramp",
+      "broll": "B-roll {{broll}}"
+    },
+    "tasksOne": "{{count}} งาน",
+    "tasksOther": "{{count}} งาน",
+    "estimate": "ประมาณ {{time}}",
+    "chip": {
+      "captions": "แคปชัน",
+      "autoGrade": "ปรับสีอัตโนมัติ",
+      "speedRamp": "Speed ramp"
+    },
+    "composing": "กำลังประกอบงานตัดต่อของคุณ…",
+    "composeOne": "สร้าง {{count}} คลิป",
+    "composeOther": "สร้าง {{count}} คลิป",
+    "using": "ใช้ {{names}}",
+    "autoSelectPreset": "เลือกพรีเซ็ตอัตโนมัติตามคอนเทนต์ของคุณ",
+    "tasksOnOne": "เปิด {{count}} งาน",
+    "tasksOnOther": "เปิด {{count}} งาน",
+    "dismissError": "ปิดข้อผิดพลาดนี้",
+    "dismiss": "ปิด"
+  },
+  "propertiesPanel": {
+    "layout": {
+      "bottom": "ล่าง",
+      "bottomTitle": "ด้านล่าง",
+      "lowerThird": "ค่อนล่าง",
+      "lowerThirdTitle": "Lower third",
+      "top": "บน",
+      "topTitle": "ด้านบน",
+      "fullWidth": "เต็มความกว้าง",
+      "fullWidthTitle": "แถบเต็มความกว้าง"
+    },
+    "tab": {
+      "transform": "ตำแหน่ง",
+      "color": "สี",
+      "captions": "แคปชัน",
+      "text": "ข้อความ",
+      "clip": "คลิป"
+    },
+    "reset": "รีเซ็ต",
+    "title": "คุณสมบัติ",
+    "activeTab": "การตั้งค่า{{tab}}",
+    "close": "ปิดคุณสมบัติ",
+    "clipProperties": "คุณสมบัติคลิป",
+    "selectedClip": "คลิปที่เลือก",
+    "playbackSpeed": "ความเร็วการเล่น",
+    "playbackSpeedTitle": "ความเร็วการเล่น: {{speed}}x",
+    "playbackSpeedHint": "เร่งหรือชะลอคลิปนี้",
+    "stabilization": "กันสั่น",
+    "stabilizationTitle": "กันสั่น: {{value}}%",
+    "stabilizationHint": "ระดับการลดอาการกล้องสั่น",
+    "volume": "ระดับเสียง",
+    "volumeTitle": "ระดับเสียง: {{value}}%",
+    "autoDucking": "ลดเสียงเพลงอัตโนมัติ",
+    "autoDuckingHint": "ลดเสียงเพลงลงขณะมีคนพูด",
+    "autoDuckingToggle": "เปิดหรือปิดการลดเสียงเพลงอัตโนมัติ",
+    "positionAndSize": "ตำแหน่งและขนาด",
+    "scale": "ขนาด (%)",
+    "positionX": "ตำแหน่ง X",
+    "positionY": "ตำแหน่ง Y",
+    "rotation": "การหมุน (°)",
+    "animation": "แอนิเมชัน",
+    "keyframesCountOne": "1 คีย์เฟรม",
+    "keyframesCount": "{{count}} คีย์เฟรม",
+    "addKeyframe": "+ เพิ่มคีย์เฟรมที่หัวเล่น",
+    "prevKeyframe": "◁ ก่อนหน้า",
+    "nextKeyframe": "ถัดไป ▷",
+    "remove": "ลบ",
+    "curve": "เคิร์ฟ",
+    "easing": {
+      "linear": "เชิงเส้น",
+      "easeIn": "Ease in",
+      "easeOut": "Ease out",
+      "easeInOut": "Ease in และ out",
+      "bounceOut": "เด้ง",
+      "elasticOut": "ยืดหยุ่น",
+      "cubic": "นุ่มนวล (มาก)"
+    },
+    "brightness": "ความสว่าง",
+    "contrast": "คอนทราสต์",
+    "saturation": "ความอิ่มสี",
+    "temperature": "อุณหภูมิสี",
+    "clarity": "ความคมชัด",
+    "dehaze": "ลดหมอก",
+    "captionsOn": "แสดงแคปชัน",
+    "captionsOnHint": "แสดงทรานสคริปต์เป็นแคปชัน",
+    "captionLayout": "ตำแหน่งแคปชัน",
+    "textOverlays": "ข้อความซ้อนทับ",
+    "noTextOverlays": "ยังไม่มีข้อความซ้อนทับ",
+    "deleteTextOverlay": "ลบข้อความซ้อนทับ",
+    "synced": "ซิงก์แล้ว",
+    "preset": {
+      "tiktok": {
+        "label": "TikTok",
+        "description": "ตัวหนา กลางจอ โดดเด่น"
+      },
+      "reels": {
+        "label": "Reels",
+        "description": "ตัวพิมพ์ใหญ่สะอาดตา ทันสมัย"
+      },
+      "podcast": {
+        "label": "พอดแคสต์",
+        "description": "มินิมอล แบบ Lower third"
+      },
+      "cinematic": {
+        "label": "ภาพยนตร์",
+        "description": "ฟอนต์เซริฟแบบภาพยนตร์"
+      },
+      "documentary": {
+        "label": "สารคดี",
+        "description": "แถบซับไตเติลแบบคลาสสิก"
+      },
+      "neon": {
+        "label": "นีออน",
+        "description": "เรืองแสง บรรยากาศยามค่ำ"
+      },
+      "karaoke": {
+        "label": "คาราโอเกะ",
+        "description": "สไตล์คาราโอเกะตัวหนา"
+      },
+      "pill": {
+        "label": "แคปซูล",
+        "description": "คำในกรอบแคปซูลมน"
+      },
+      "bubble": {
+        "label": "บอลลูน",
+        "description": "สไตล์บอลลูนคำพูด"
+      },
+      "gradient": {
+        "label": "ไล่สี",
+        "description": "ข้อความไล่สีสีสันสดใส"
+      },
+      "retro": {
+        "label": "เรโทร",
+        "description": "ลุควินเทจโทนอุ่น"
+      },
+      "vintage": {
+        "label": "วินเทจ",
+        "description": "พิมพ์ดีดโทนซีเปีย"
+      },
+      "pop": {
+        "label": "ป๊อป",
+        "description": "สดใสและจัดจ้าน"
+      },
+      "high-contrast": {
+        "label": "อ่านง่าย",
+        "description": "คอนทราสต์สูง อ่านง่าย"
+      },
+      "kinetic": {
+        "label": "Kinetic",
+        "description": "คำเด้งตามบีต"
+      },
+      "slow-zoom": {
+        "label": "ซูมช้า",
+        "description": "ขนาด 100% → 110%"
+      },
+      "fly-in-left": {
+        "label": "ลอยเข้าจากซ้าย",
+        "description": "เข้าจากนอกจอด้านซ้าย"
+      },
+      "fly-in-right": {
+        "label": "ลอยเข้าจากขวา",
+        "description": "เข้าจากนอกจอด้านขวา"
+      },
+      "fly-in-top": {
+        "label": "ลอยเข้าจากบน",
+        "description": "เข้าจากนอกจอด้านบน"
+      },
+      "fly-in-bottom": {
+        "label": "ลอยเข้าจากล่าง",
+        "description": "เข้าจากนอกจอด้านล่าง"
+      },
+      "fade-in-out": {
+        "label": "จางเข้าและออก",
+        "description": "ความทึบ 0 → 1 → 0"
+      }
+    }
+  },
+  "basicEditor": {
+    "preset": {
+      "title": {
+        "label": "ชื่อเรื่อง"
+      },
+      "text": {
+        "yourTitleHere": "ชื่อเรื่องของคุณ",
+        "subscribeForMore": "กดติดตามเพื่อดูเพิ่ม",
+        "likeSubscribe": "กดไลก์และติดตาม",
+        "watchMore": "ดูเพิ่ม →",
+        "commentBelow": "คอมเมนต์ด้านล่าง",
+        "linkInBio": "ลิงก์ในไบโอ",
+        "addYourCaption": "ใส่แคปชันของคุณ",
+        "followForMore": "ติดตามเพื่อดูเพิ่ม",
+        "newText": "ข้อความใหม่",
+        "youNeedToSeeThis": "ต้องดูสิ่งนี้",
+        "nameTitle": "ชื่อ · ตำแหน่ง",
+        "proTip": "เคล็ดลับโปร",
+        "tapToLearnMore": "แตะเพื่อดูเพิ่ม",
+        "waitForIt": "รอแป๊บ...",
+        "storyTime": "ได้เวลาเล่าเรื่อง",
+        "youWontBelieveWhatHappened": "คุณจะไม่เชื่อว่าเกิดอะไรขึ้น",
+        "dayInMyLife": "หนึ่งวันของฉัน",
+        "day1Of": "วันที่ 1 ของ...",
+        "getReadyForThis": "เตรียมตัวให้พร้อม",
+        "watchTillTheEnd": "ดูให้จบ",
+        "noOneTalksAboutThis": "ไม่มีใครพูดถึงเรื่องนี้",
+        "theSecretTheyDontWantYouToKnow": "ความลับที่พวกเขาไม่อยากให้คุณรู้",
+        "theSecretIs": "เคล็ดลับคือ",
+        "insane": "สุดยอด!",
+        "actually": "จริงๆ แล้ว...",
+        "now": "ตอนนี้",
+        "zeroCost": "ไม่มีค่าใช้จ่าย",
+        "watch": "ดู",
+        "here": "ตรงนี้",
+        "swipeUp": "ปัดขึ้น",
+        "seeYouNextTime": "แล้วพบกันใหม่",
+        "unpopularOpinion": "ความเห็นที่ไม่ค่อยมีใครพูด:",
+        "thisChangedEverything": "สิ่งนี้เปลี่ยนทุกอย่าง",
+        "hotTake": "ความเห็นแรง:",
+        "nobodyTalksAboutThis": "ไม่ค่อยมีใครพูดถึงเรื่องนี้",
+        "povYouJustFoundTheBestTip": "POV: คุณเพิ่งเจอเคล็ดลับที่ดีที่สุด",
+        "saveThisForLater": "เซฟไว้ดูทีหลัง",
+        "commentYourAnswerBelow": "คอมเมนต์คำตอบของคุณด้านล่าง",
+        "dropAIfYouAgree": "กด 👍 ถ้าเห็นด้วย",
+        "part1": "ตอนที่ 1",
+        "chapter1": "บทที่ 1",
+        "intro": "INTRO",
+        "outro": "OUTRO",
+        "comingUpNext": "ต่อไป...",
+        "quickRecap": "สรุปสั้นๆ"
+      },
+      "subscribe": {
+        "label": "กดติดตาม"
+      },
+      "likeSubscribe": {
+        "label": "กดไลก์และติดตาม"
+      },
+      "watchMore": {
+        "label": "ดูเพิ่ม"
+      },
+      "comment": {
+        "label": "คอมเมนต์"
+      },
+      "linkInBio": {
+        "label": "ลิงก์ในไบโอ"
+      },
+      "caption": {
+        "label": "แคปชัน"
+      },
+      "follow": {
+        "label": "ติดตาม"
+      },
+      "custom": {
+        "label": "กำหนดเอง"
+      },
+      "hook": {
+        "label": "ฮุก"
+      },
+      "lowerThird": {
+        "label": "Lower third"
+      },
+      "callout": {
+        "label": "คอลเอาต์"
+      },
+      "timestamp": {
+        "label": "เวลา"
+      },
+      "waitForIt": {
+        "label": "รอแป๊บ"
+      },
+      "storyTime": {
+        "label": "ได้เวลาเล่าเรื่อง"
+      },
+      "youWontBelieve": {
+        "label": "คุณจะไม่เชื่อ"
+      },
+      "dayInMyLife": {
+        "label": "หนึ่งวันของฉัน"
+      },
+      "dayXOf": {
+        "label": "วันที่ X ของ"
+      },
+      "getReady": {
+        "label": "เตรียมตัว"
+      },
+      "watchTillEnd": {
+        "label": "ดูให้จบ"
+      },
+      "noOneTalksAbout": {
+        "label": "ไม่มีใครพูดถึง"
+      },
+      "theSecret": {
+        "label": "ความลับ"
+      },
+      "hormoziBold": {
+        "label": "Hormozi Bold"
+      },
+      "beastImpact": {
+        "label": "Beast Impact"
+      },
+      "minimalNarrative": {
+        "label": "เล่าเรื่องแบบมินิมอล"
+      },
+      "subliminalQuick": {
+        "label": "Subliminal แบบเร็ว"
+      },
+      "punchyHighlight": {
+        "label": "ไฮไลต์จัดเต็ม"
+      },
+      "arrowRight": {
+        "label": "ลูกศร →"
+      },
+      "arrowLeft": {
+        "label": "ลูกศร ←"
+      },
+      "proTip": {
+        "label": "เคล็ดลับโปร"
+      },
+      "watch": {
+        "label": "ดู"
+      },
+      "here": {
+        "label": "ตรงนี้"
+      },
+      "swipeUp": {
+        "label": "ปัดขึ้น"
+      },
+      "commentBelow": {
+        "label": "คอมเมนต์ด้านล่าง"
+      },
+      "tapToLearnMore": {
+        "label": "แตะเพื่อดูเพิ่ม"
+      },
+      "seeYouNextTime": {
+        "label": "แล้วพบกันใหม่"
+      },
+      "unpopularOpinion": {
+        "label": "ความเห็นที่ไม่ค่อยมีใครพูด"
+      },
+      "thisChangedEverything": {
+        "label": "สิ่งนี้เปลี่ยนทุกอย่าง"
+      },
+      "hotTake": {
+        "label": "ความเห็นแรง"
+      },
+      "nobodyTalksAbout": {
+        "label": "ไม่ค่อยมีใครพูดถึง"
+      },
+      "saveThis": {
+        "label": "เซฟไว้"
+      },
+      "commentYour": {
+        "label": "คอมเมนต์คำตอบ"
+      },
+      "dropA": {
+        "label": "กด 👍"
+      },
+      "part1": {
+        "label": "ตอนที่ 1"
+      },
+      "chapter": {
+        "label": "บท"
+      },
+      "intro": {
+        "label": "อินโทร"
+      },
+      "outro": {
+        "label": "เอาท์โทร"
+      },
+      "next": {
+        "label": "ถัดไป"
+      },
+      "recap": {
+        "label": "สรุป"
+      }
+    },
+    "filter": {
+      "vibrant": {
+        "name": "สดใส",
+        "desc": "สีสดจัด"
+      },
+      "mono": {
+        "name": "โมโน",
+        "desc": "ขาวดำ"
+      },
+      "cinematic": {
+        "name": "ภาพยนตร์",
+        "desc": "ลุคภาพยนตร์"
+      },
+      "warm": {
+        "name": "โทนอุ่น",
+        "desc": "แสงยามเย็น"
+      },
+      "cool": {
+        "name": "โทนเย็น",
+        "desc": "โทนฟ้า"
+      },
+      "vintage": {
+        "name": "วินเทจ",
+        "desc": "เรโทร"
+      },
+      "moody": {
+        "name": "มู้ดดี้",
+        "desc": "มืดและเข้ม"
+      },
+      "vivid": {
+        "name": "สีสด",
+        "desc": "สีเด่นสุดๆ"
+      },
+      "noir": {
+        "name": "นัวร์",
+        "desc": "ขาวดำคอนทราสต์สูง"
+      },
+      "sunset": {
+        "name": "พระอาทิตย์ตก",
+        "desc": "แสงยามเย็น"
+      },
+      "breeze": {
+        "name": "สายลม",
+        "desc": "เย็นและใส"
+      },
+      "matte": {
+        "name": "แมตต์",
+        "desc": "แบนและนุ่ม"
+      },
+      "neon": {
+        "name": "นีออน",
+        "desc": "สีสันจัดจ้าน"
+      },
+      "autumn": {
+        "name": "ฤดูใบไม้ร่วง",
+        "desc": "โทนดินอบอุ่น"
+      },
+      "winter": {
+        "name": "ฤดูหนาว",
+        "desc": "เย็นและสะอาดตา"
+      },
+      "dreamy": {
+        "name": "ฝันละมุน",
+        "desc": "พาสเทลนุ่ม"
+      },
+      "reset": {
+        "name": "รีเซ็ต",
+        "desc": "ค่าเริ่มต้น"
+      }
+    },
+    "style": {
+      "creatorBold": {
+        "label": "ครีเอเตอร์จัดเต็ม",
+        "desc": "ไวรัลพลังสูง"
+      },
+      "softAesthetic": {
+        "label": "สุนทรีย์นุ่มนวล",
+        "desc": "นุ่มนวลและละมุน"
+      },
+      "corporateMinimal": {
+        "label": "องค์กรมินิมอล",
+        "desc": "สะอาดตาและมืออาชีพ"
+      },
+      "darkMoody": {
+        "label": "มืดมู้ดดี้",
+        "desc": "เงาดราม่า"
+      },
+      "vibrantPop": {
+        "label": "ป๊อปสดใส",
+        "desc": "สีสันจัดจ้าน"
+      },
+      "cinematicFilm": {
+        "label": "ฟิล์มภาพยนตร์",
+        "desc": "ตัวอย่างหนัง"
+      },
+      "noirDramatic": {
+        "label": "นัวร์ดราม่า",
+        "desc": "ขาวดำดราม่า"
+      },
+      "lifestyleWarm": {
+        "label": "ไลฟ์สไตล์โทนอุ่น",
+        "desc": "วล็อกและท่องเที่ยว"
+      },
+      "podcastPro": {
+        "label": "พอดแคสต์โปร",
+        "desc": "สะอาดตาและมืออาชีพ"
+      },
+      "documentary": {
+        "label": "สารคดี",
+        "desc": "เป็นธรรมชาติและสมจริง"
+      },
+      "fashionEditorial": {
+        "label": "แฟชั่นเอดิทอเรียล",
+        "desc": "ลุคไฮแฟชั่น"
+      },
+      "retroWarm": {
+        "label": "เรโทรโทนอุ่น",
+        "desc": "ความอบอุ่นแบบวินเทจ"
+      },
+      "cinematicDrama": {
+        "label": "ดราม่าแบบภาพยนตร์",
+        "desc": "ลึกและดราม่า"
+      },
+      "comedyBright": {
+        "label": "คอมเมดี้สดใส",
+        "desc": "จัดจ้านและสนุก"
+      },
+      "sportsDynamic": {
+        "label": "กีฬาเร้าใจ",
+        "desc": "พร้อมสำหรับฉากแอ็กชัน"
+      },
+      "savedDesc": "บันทึกแล้ว"
+    },
+    "platform": {
+      "tiktok": {
+        "desc": "9:16 จัดจ้าน"
+      },
+      "youtube": {
+        "desc": "9:16 สมดุล"
+      },
+      "feed": {
+        "label": "ฟีด Instagram",
+        "desc": "1:1 สีสด"
+      },
+      "portrait": {
+        "label": "Instagram แนวตั้ง",
+        "desc": "4:5 โทนอุ่น"
+      },
+      "landscape": {
+        "label": "YouTube / แนวนอน",
+        "desc": "16:9 สะอาดตา"
+      },
+      "linkedin": {
+        "desc": "16:9 มืออาชีพ"
+      }
+    },
+    "filterCategory": {
+      "all": "ทั้งหมด",
+      "mood": "อารมณ์",
+      "creative": "สร้างสรรค์",
+      "dramatic": "ดราม่า",
+      "neutral": "รีเซ็ต"
+    },
+    "shapePreset": {
+      "logoCorner": "โลโก้มุมจอ",
+      "subscribeBadge": "ป้ายกดติดตาม",
+      "fullWidthBar": "แถบเต็มความกว้าง",
+      "dividerLine": "เส้นแบ่ง",
+      "highlightBox": "กล่องไฮไลต์",
+      "cornerAccent": "ตกแต่งมุม"
+    },
+    "undo": "เลิกทำ",
+    "redo": "ทำซ้ำ",
+    "searchTools": "ค้นหาเครื่องมือ...",
+    "clearSearch": "ล้างการค้นหา",
+    "layersCount": "{{count}} เลเยอร์",
+    "reset": "รีเซ็ต",
+    "add": "เพิ่ม",
+    "save": "บันทึก",
+    "color": "สี",
+    "toast": {
+      "undoApplied": "เลิกทำแล้ว",
+      "redoApplied": "ทำซ้ำแล้ว",
+      "fontUploading": "กำลังอัปโหลดฟอนต์…",
+      "fontAdded": "เพิ่มฟอนต์แล้ว",
+      "fontInvalid": "ไม่รองรับไฟล์ฟอนต์นี้",
+      "fontFailed": "อัปโหลดฟอนต์ไม่ได้",
+      "rectangleAdded": "เพิ่มสี่เหลี่ยมแล้ว",
+      "circleAdded": "เพิ่มวงกลมแล้ว",
+      "lineAdded": "เพิ่มเส้นแล้ว",
+      "addedName": "เพิ่ม {{name}} แล้ว",
+      "addedQuoted": "เพิ่ม \"{{name}}\" แล้ว",
+      "addedAt": "เพิ่ม \"{{name}}\" ที่ {{time}} วิ",
+      "enterImageUrl": "ใส่ URL รูปภาพ",
+      "imageAdded": "เพิ่มรูปภาพซ้อนทับแล้ว",
+      "svgAddedFromFile": "เพิ่ม SVG ซ้อนทับจากไฟล์แล้ว — ทำแอนิเมชันด้วยคีย์เฟรมในเอฟเฟกต์",
+      "enterSvgUrl": "ใส่ URL ของ SVG (เช่น https://… .svg หรือ data:image/svg+xml,…)",
+      "svgAdded": "เพิ่ม SVG ซ้อนทับแล้ว — ทำแอนิเมชันด้วยคีย์เฟรมในเอฟเฟกต์",
+      "compoundSaved": "บันทึก \"{{name}}\" แล้ว — เพิ่มลงไทม์ไลน์ได้ทุกเมื่อ",
+      "compoundRemoved": "ลบคอมพาวด์แล้ว",
+      "renamed": "เปลี่ยนชื่อเป็น \"{{name}}\" แล้ว",
+      "addTextHint": "เพิ่มข้อความ — พิมพ์แล้วกดเพิ่มหรือ Ctrl+Enter",
+      "textAdded": "เพิ่มข้อความซ้อนทับแล้ว",
+      "packApplied": "ใช้แพ็ก {{name}} แล้ว",
+      "saved": "บันทึก \"{{name}}\" แล้ว",
+      "filtersReset": "รีเซ็ตฟิลเตอร์เป็นค่าเริ่มต้นแล้ว",
+      "nameYourStyle": "ตั้งชื่อสไตล์ของคุณแล้วคลิกบันทึก",
+      "applied": "ใช้ {{name}} แล้ว",
+      "speed": "ความเร็ว: {{value}}×"
+    },
+    "compound": {
+      "untitled": "คอมพาวด์ไม่มีชื่อ",
+      "title": "บันทึกเป็นคอมพาวด์",
+      "namePlaceholder": "ชื่อคอมพาวด์…",
+      "name": "ชื่อคอมพาวด์",
+      "durationAria": "ความยาวคอมพาวด์เป็นวินาที",
+      "delete": "ลบคอมพาวด์ \"{{name}}\""
+    },
+    "search": {
+      "filterHit": "ฟิลเตอร์: {{name}}",
+      "styleHit": "สไตล์: {{name}}",
+      "motionHit": "โมชัน: {{name}}",
+      "textHit": "ข้อความ: {{name}}"
+    },
+    "caption": {
+      "noTranscript": "ไม่พบทรานสคริปต์ วางสคริปต์ของคุณในช่องด้านล่างแล้วลองอีกครั้ง",
+      "noneGenerated": "ไม่มีแคปชันถูกสร้าง — ทรานสคริปต์อาจสั้นเกินไป",
+      "addedToast": "เพิ่มแคปชัน {{count}} รายการ — สไตล์ {{style}}",
+      "generationFailed": "สร้างแคปชันไม่สำเร็จ",
+      "failedToast": "สร้างแคปชันอัตโนมัติไม่สำเร็จ",
+      "title": "แคปชันอัตโนมัติด้วย AI",
+      "clearTitle": "ล้างแคปชันที่สร้างอัตโนมัติ",
+      "cleared": "ล้างแคปชันอัตโนมัติแล้ว",
+      "count": "{{count}} แคปชัน",
+      "ready": "พร้อม",
+      "noScript": "ไม่มีสคริปต์",
+      "pasteScript": "วางสคริปต์ของคุณ",
+      "pasteScriptTitle": "วางสคริปต์วิดีโอของคุณที่นี่",
+      "pastePlaceholder": "วางหรือพิมพ์คำพูดในวิดีโอของคุณ…",
+      "wordCount": "{{count}} คำ",
+      "wordsPerLine": "คำ/บรรทัด",
+      "position": "ตำแหน่ง",
+      "positionAt": {
+        "top": "วางแคปชันด้านบน",
+        "mid": "วางแคปชันตรงกลาง",
+        "bottom": "วางแคปชันด้านล่าง"
+      },
+      "colorTitle": "สีข้อความแคปชัน",
+      "setColor": "ตั้งสีแคปชันเป็น {{color}}",
+      "addedInStyle": "เพิ่มแคปชัน {{count}} รายการในสไตล์ {{style}}",
+      "generateAria": "สร้างแคปชันอัตโนมัติจากทรานสคริปต์",
+      "generating": "กำลังสร้างแคปชัน {{count}} คำ…",
+      "generate": "สร้างแคปชัน"
+    },
+    "captionStyle": {
+      "minimal": "มินิมอล",
+      "neon": "นีออน",
+      "kinetic": "Kinetic",
+      "cyber": "ไซเบอร์",
+      "meme": "มีม",
+      "retro": "เรโทร",
+      "quote": "คำคม"
+    },
+    "translate": {
+      "noCaptions": "ไม่มีแคปชันบนไทม์ไลน์ให้แปล",
+      "inProgress": "กำลังแปลแคปชัน (เวลาเหมือนเดิม)…",
+      "done": "แปลแคปชันเป็น{{language}}แล้ว",
+      "empty": "แปลเสร็จแล้วแต่ไม่ได้แคปชันกลับมา",
+      "failed": "แปลแคปชันไม่ได้",
+      "title": "แปลแคปชัน",
+      "languageTitle": "เลือกภาษาที่จะแปล",
+      "translating": "กำลังแปล…",
+      "translate": "แปล"
+    },
+    "emoji": {
+      "noTranscript": "ไม่มีคำในทรานสคริปต์ให้จับคู่อีโมจิ สร้างทรานสคริปต์ก่อน",
+      "inProgress": "กำลังจับคู่อีโมจิกับทรานสคริปต์ของคุณ…",
+      "noneFound": "ไม่พบอีโมจิที่ตรงกับทรานสคริปต์",
+      "added": "เพิ่มอีโมจิ {{count}} รายการลงในไทม์ไลน์แล้ว",
+      "failed": "สร้างอีโมจิไม่สำเร็จ",
+      "title": "อีโมจิอัตโนมัติ",
+      "clearTitle": "ล้างอีโมจิที่สร้างขึ้น",
+      "cleared": "ล้างอีโมจิแล้ว",
+      "count": "{{count}} อีโมจิ",
+      "enter": "ทรานสิชันเข้า",
+      "enterTitle": "เลือกวิธีที่อีโมจิปรากฏ",
+      "exit": "ทรานสิชันออก",
+      "exitTitle": "เลือกวิธีที่อีโมจิหายไป",
+      "style": "สไตล์",
+      "styleTitle": "เลือกสไตล์อีโมจิ",
+      "size": "ขนาดอีโมจิ",
+      "sizeTitle": "เลือกขนาดอีโมจิ",
+      "density": "ความถี่",
+      "densityTitle": "เลือกความถี่ที่อีโมจิจะปรากฏ",
+      "placement": "ตำแหน่ง",
+      "placementTitle": "เลือกตำแหน่งของอีโมจิ",
+      "inDuration": "ระยะเวลาเข้า: {{value}} วิ",
+      "inDurationTitle": "ระยะเวลาแอนิเมชันเข้า",
+      "outDuration": "ระยะเวลาออก: {{value}} วิ",
+      "outDurationTitle": "ระยะเวลาแอนิเมชันออก",
+      "generating": "กำลังสร้างอีโมจิ…",
+      "generate": "สร้างอีโมจิ"
+    },
+    "emojiOpt": {
+      "enter": {
+        "pop": "💥 ป๊อปเข้า",
+        "bounce": "🦘 เด้งขึ้น",
+        "slide": "➡️ เลื่อนเข้า",
+        "pulse": "💓 ซูมเป็นจังหวะ",
+        "shake": "⚡ กล้องสั่น",
+        "blur": "🌫️ เบลอเข้า"
+      },
+      "exit": {
+        "fade": "🌫️ จางหายนุ่มนวล",
+        "pop": "💥 ป๊อปออก",
+        "slideBottom": "⬇️ เลื่อนลง",
+        "bounceOut": "🦘 เด้งออก",
+        "scaleOut": "🔍 ย่อหาย",
+        "zoomOut": "🔎 ซูมออก",
+        "flipOut": "🔄 พลิกออก"
+      },
+      "style": {
+        "pop3d": "✨ ป๊อป 3D",
+        "neonGlow": "🏮 เรืองแสงนีออน",
+        "flat": "📄 แบนมินิมอล"
+      },
+      "size": {
+        "n32": "🤏 เล็ก (32px)",
+        "n48": "👌 กลาง (48px)",
+        "n64": "💪 ใหญ่ (64px)",
+        "n80": "👑 ใหญ่พิเศษ (80px)"
+      },
+      "density": {
+        "n3": "🔥 มาก (ทุก 3 คำ)",
+        "n6": "⚡ ปานกลาง (ทุก 6 คำ)",
+        "n10": "🎯 น้อย (ทุก 10 คำ)"
+      },
+      "place": {
+        "above": "⬆️ เหนือแคปชัน",
+        "below": "⬇️ ใต้แคปชัน",
+        "head": "👱 ระดับศีรษะ",
+        "customTop": "👑 บนสุดของเฟรม"
+      }
+    },
+    "lang": {
+      "en": "อังกฤษ (English)",
+      "es": "สเปน (Español)",
+      "fr": "ฝรั่งเศส (Français)",
+      "de": "เยอรมัน (Deutsch)",
+      "it": "อิตาลี (Italiano)",
+      "pt": "โปรตุเกส (Português)",
+      "ru": "รัสเซีย (Русский)",
+      "ja": "ญี่ปุ่น (日本語)",
+      "ko": "เกาหลี (한국어)",
+      "zh": "จีน (中文)",
+      "ar": "อาหรับ (العربية)",
+      "hi": "ฮินดี (हिन्दी)",
+      "nl": "ดัตช์ (Nederlands)",
+      "pl": "โปแลนด์ (Polski)",
+      "tr": "ตุรกี (Türkçe)"
+    },
+    "trim": {
+      "waveform": "รูปคลื่นเสียง",
+      "clickToSeek": "คลิกเพื่อย้ายหัวเล่น",
+      "speed": "ความเร็ว",
+      "playbackSpeedAria": "ความเร็วการเล่น: {{value}} เท่า",
+      "reverse": "เล่นย้อนกลับ",
+      "reverseSub": "กลับทิศคลิปที่เลือก",
+      "selectClipFirst": "เลือกคลิปก่อน",
+      "split": "แยกที่หัวเล่น",
+      "beatCut": "ตัดตามบีต",
+      "beatCutSub": "ตัดคลิปทุกบีต",
+      "freeze": "หยุดภาพนิ่ง",
+      "freezeSub": "ค้าง 1 วิ @ {{time}} วิ",
+      "trimToInOut": "ตัดตามจุดเข้า/ออก",
+      "trimToInOutSub": "ตั้งจุดเข้า + ออกด้านล่าง",
+      "setBothFirst": "ตั้งจุดเข้าและจุดออกก่อน",
+      "jCut": "J-cut",
+      "jCutSub": "เสียงเริ่มก่อน 0.5 วิ",
+      "lCut": "L-cut",
+      "lCutSub": "เสียงต่อเลยจุดตัด 0.5 วิ",
+      "comingSoonTitle": "{{label}} — เร็วๆ นี้",
+      "selectClipTitle": "{{label}} — เลือกคลิปก่อน",
+      "soon": "เร็วๆ นี้",
+      "markers": "มาร์กเกอร์จุดเข้า / จุดออก",
+      "inAt": "จุดเข้า {{time}} วิ",
+      "noIn": "ไม่มีจุดเข้า",
+      "outAt": "จุดออก {{time}} วิ",
+      "noOut": "ไม่มีจุดออก",
+      "inSet": "ตั้งจุดเข้า @ {{time}} วิ",
+      "setIn": "ตั้งจุดเข้า",
+      "outAfterIn": "จุดออกต้องอยู่หลังจุดเข้า",
+      "outSet": "ตั้งจุดออก @ {{time}} วิ",
+      "setOut": "ตั้งจุดออก",
+      "clear": "ล้าง"
+    },
+    "layout": {
+      "auto": "อัตโนมัติ",
+      "standard": "มาตรฐาน",
+      "square": "จัตุรัส",
+      "vertical": "แนวดิ่ง",
+      "portrait": "แนวตั้ง",
+      "cinematic": "ภาพยนตร์",
+      "classic": "คลาสสิก"
+    },
+    "text": {
+      "editingOnCanvas": "กำลังแก้ไขบนแคนวาส",
+      "doubleClickHint": "ดับเบิลคลิกข้อความในเพลเยอร์เพื่อพิมพ์ตรงนั้น",
+      "deselect": "ยกเลิกการเลือก",
+      "newText": "ข้อความใหม่",
+      "typePlaceholder": "พิมพ์ข้อความ… (⌘↵ เพื่อเพิ่ม)",
+      "duration": "ระยะเวลา:",
+      "searchPresets": "ค้นหาพรีเซ็ต…",
+      "activeText": "ข้อความบนวิดีโอ ({{count}})",
+      "deleteOverlayAria": "ลบข้อความซ้อนทับ \"{{text}}\"",
+      "deleteOverlay": "ลบข้อความซ้อนทับ",
+      "preview": "ตัวอย่าง",
+      "livePreview": "ตัวอย่างสด",
+      "editing": "กำลังแก้ไข: {{text}}",
+      "contentAria": "ข้อความซ้อนทับ",
+      "contentPlaceholder": "ข้อความซ้อนทับ",
+      "fontSize": "ขนาดฟอนต์",
+      "textColor": "สีข้อความ",
+      "style": "สไตล์",
+      "animateIn": "แอนิเมชันเข้า",
+      "animateOut": "แอนิเมชันออก",
+      "font": "ฟอนต์",
+      "start": "เริ่ม",
+      "startAria": "เวลาเริ่มเป็นวินาที",
+      "end": "สิ้นสุด",
+      "endAria": "เวลาสิ้นสุดเป็นวินาที",
+      "uploadFont": "อัปโหลดฟอนต์",
+      "uploadFontAria": "อัปโหลดไฟล์ฟอนต์ของคุณเอง"
+    },
+    "textStyle": {
+      "none": "ไม่มี",
+      "neon": "นีออน",
+      "minimal": "มินิมอล",
+      "bold-kinetic": "Kinetic ตัวหนา",
+      "outline": "เส้นขอบ",
+      "shadow": "เงา"
+    },
+    "anim": {
+      "none": "ไม่มี",
+      "fade": "จางเข้า",
+      "slide-up": "เลื่อนขึ้น",
+      "slide-down": "เลื่อนลง",
+      "slide-left": "เลื่อนซ้าย",
+      "slide-right": "เลื่อนขวา",
+      "scale": "ย่อ/ขยาย",
+      "bounce": "เด้ง"
+    },
+    "presetGroup": {
+      "viralHooks": "ฮุกไวรัล",
+      "textPresets": "พรีเซ็ตข้อความ",
+      "premiumCaptions": "แคปชันพรีเมียม",
+      "reactionCallouts": "รีแอกชัน / คอลเอาต์",
+      "trending": "มาแรง",
+      "endScreens": "หน้าจอท้าย",
+      "chapters": "บท"
+    },
+    "filters": {
+      "strengthAria": "ความเข้มฟิลเตอร์: {{value}} เปอร์เซ็นต์",
+      "before": "⏪ ก่อน",
+      "after": "⏩ หลัง",
+      "split": "🌓 เทียบ",
+      "pinned": "ปักหมุดแล้ว",
+      "pin": "ปักหมุดฟิลเตอร์ {{name}}",
+      "unpin": "เลิกปักหมุดฟิลเตอร์ {{name}}"
+    },
+    "motion": {
+      "searchTemplates": "ค้นหาเทมเพลต…",
+      "durationAria": "ความยาวโมชันกราฟิกเป็นวินาที",
+      "recent": "ล่าสุด"
+    },
+    "layers": {
+      "addShape": "เพิ่มรูปทรง",
+      "addImage": "เพิ่มรูปภาพ / โลโก้",
+      "imageUrlPlaceholder": "วาง URL รูปภาพ…",
+      "imageUrl": "URL รูปภาพ",
+      "addSvg": "เพิ่ม SVG",
+      "svgUrlPlaceholder": "URL ของ SVG หรือ data URI…",
+      "svgUrl": "URL ของ SVG",
+      "uploadSvg": "อัปโหลดไฟล์ SVG",
+      "gradients": "เลเยอร์ไล่สี",
+      "allLayers": "เลเยอร์ทั้งหมด ({{count}})",
+      "hoverHint": "วางเมาส์เพื่อแสดงตัวควบคุม",
+      "deleteTextAria": "ลบเลเยอร์ข้อความ \"{{text}}\"",
+      "deleteText": "ลบเลเยอร์ข้อความ",
+      "opacity": "ความทึบ",
+      "opacityAria": "ความทึบของเลเยอร์",
+      "deleteShape": "ลบรูปทรง {{shape}}",
+      "deleteImage": "ลบเลเยอร์รูปภาพ",
+      "customSvg": "SVG กำหนดเอง",
+      "deleteSvg": "ลบเลเยอร์ SVG",
+      "gradientName": "ไล่สี {{region}}",
+      "deleteGradient": "ลบเลเยอร์ไล่สี",
+      "empty": "ยังไม่มีเลเยอร์",
+      "emptyHint": "เพิ่มรูปทรง รูปภาพ หรือ SVG ด้านบน ข้อความซ้อนทับจะแสดงที่นี่ด้วย",
+      "addTextLayer": "+ เพิ่มเลเยอร์ข้อความ"
+    },
+    "shape": {
+      "rect": "สี่เหลี่ยม",
+      "circle": "วงกลม",
+      "line": "เส้น"
+    },
+    "region": {
+      "full": "เต็มภาพ",
+      "lower-third": "Lower third",
+      "top-bar": "แถบบน",
+      "top-half": "ครึ่งบน",
+      "bottom-half": "ครึ่งล่าง"
+    },
+    "gradient": {
+      "lowerThird": "ไล่จาง Lower third",
+      "fullDark": "มืดทั้งภาพ",
+      "topBar": "แถบบน",
+      "warmTint": "ฉาบโทนอุ่น",
+      "coolTint": "ฉาบโทนเย็น",
+      "bottomHalf": "ไล่จางครึ่งล่าง",
+      "topHalf": "ไล่จางครึ่งบน",
+      "vignetteSoft": "ขอบมืดแบบนุ่ม"
+    },
+    "pack": {
+      "hookCta": {
+        "name": "ฮุก + CTA",
+        "desc": "ฮุกไวรัลที่หัวเล่น CTA ที่หน้าจอท้าย"
+      },
+      "lowerThirdSubscribe": {
+        "name": "Lower third + กดติดตาม",
+        "desc": "แถบชื่อ + ป้ายกดติดตาม"
+      },
+      "fullCtaBar": {
+        "name": "CTA + ไล่จาง Lower third",
+        "desc": "กดไลก์และติดตาม + แถบไล่สี"
+      },
+      "introOutro": {
+        "name": "อินโทร + เอาท์โทร",
+        "desc": "INTRO ที่หัวเล่น \"แล้วพบกันใหม่\" ตอนท้าย"
+      },
+      "trendingSave": {
+        "name": "มาแรง + เซฟไว้",
+        "desc": "ความเห็นที่ไม่ค่อยมีใครพูด + เซฟไว้ดูทีหลัง"
+      }
+    },
+    "packs": {
+      "oneClick": "แพ็กคลิกเดียว",
+      "styleBundles": "ชุดสไตล์",
+      "platform": "ทำมาเพื่อแต่ละแพลตฟอร์ม",
+      "saveMyStyle": "บันทึกสไตล์ของฉัน",
+      "styleNamePlaceholder": "ชื่อสไตล์…",
+      "styleName": "ชื่อสไตล์ที่กำหนดเอง",
+      "saveStyle": "บันทึกสไตล์ที่กำหนดเอง",
+      "goTo": "ไปที่"
+    },
+    "nav": {
+      "shortClips": "คลิปสั้น",
+      "assets": "เพลงและ B-Roll",
+      "timeline": "ไทม์ไลน์",
+      "effects": "เอฟเฟกต์",
+      "color": "สี",
+      "aiEdit": "ถอดเสียงและ AI",
+      "export": "ส่งออก"
+    },
+    "insights": {
+      "comingSoon": "ข้อมูลเชิงลึกเร็วๆ นี้",
+      "comingSoonHint": "ข้อมูลการรักษายอดดู ความแรงของฮุก และจังหวะจะแสดงที่นี่เมื่อวิเคราะห์วิดีโอของคุณแล้ว",
+      "transcript": "ทรานสคริปต์"
+    }
   }
 }

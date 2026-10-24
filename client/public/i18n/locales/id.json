@@ -846,11 +846,11 @@
     "title": "Pencapaian",
     "subtitle": "Pantau pencapaian dan progresmu.",
     "refreshRegistry": "Muat ulang",
-    "statTierLabel": "Tingkat Evolusioner",
+    "statTierLabel": "Level",
     "statTierSub": "{{pct}}% menuju level berikutnya",
-    "statMilestonesLabel": "Tonggak Pencapaian yang Didekripsi",
+    "statMilestonesLabel": "Pencapaian terbuka",
     "statMilestonesSub": "Terbuka sejauh ini",
-    "statStreakLabel": "Garis Koherensi",
+    "statStreakLabel": "Streak aktif",
     "statStreakSub": "Terbaik: {{peak}}",
     "statVolumeLabel": "Konten dibuat",
     "statVolumeSub": "Total konten dibuat",
@@ -861,14 +861,14 @@
     "detailPayloads": "Konten",
     "detailScripts": "Skrip",
     "recentBreakthroughs": "Terobosan Terkini",
-    "decryptedOn": "DEKRIPSI {{date}}",
+    "decryptedOn": "Terbuka {{date}}",
     "ascensionVerified": "Terbuka",
     "nodeMatrix": "Semua pencapaian",
-    "decrypted": "DEKRIPSI",
+    "decrypted": "Terbuka",
     "logicGated": "Terkunci",
     "milestones": {
       "first_video": {
-        "name": "Rendisi Kejadian",
+        "name": "Video pertama",
         "description": "Buat video pertamamu."
       },
       "first_content": {
@@ -900,11 +900,11 @@
         "description": "Selesaikan 50 video."
       },
       "streak_7": {
-        "name": "Koherensi 7",
+        "name": "Streak 7 hari",
         "description": "Tetap aktif 7 hari berturut-turut."
       },
       "streak_30": {
-        "name": "Koherensi 30",
+        "name": "Streak 30 hari",
         "description": "Tetap aktif 30 hari berturut-turut."
       },
       "streak_100": {
@@ -925,7 +925,7 @@
       },
       "early_adopter": {
         "name": "Pengguna Awal",
-        "description": "Terintegrasi selama fase genesis."
+        "description": "Bergabung dengan Click lebih awal."
       },
       "power_user": {
         "name": "Pengguna andal",
@@ -993,7 +993,7 @@
     "authorize": "MENGIZINKAN",
     "dissent": "PERBEDAAN PENDAPAT",
     "historyTitle": "Sejarah persetujuan",
-    "historySubtitle": "Catatan keputusan konsensus dan otorisasi nodal yang tidak dapat diubah.",
+    "historySubtitle": "Catatan persetujuan dan penolakan sebelumnya.",
     "protocolLogsAnalyzed": "{{count}} permintaan",
     "emptyTitle": "Belum ada apa-apa",
     "emptyState": "Belum ada permintaan persetujuan.",
@@ -1126,7 +1126,7 @@
     "purgeForgeBuffer": "Bersihkan Buffer Penempaan",
     "neuralHeuristics": "Saran",
     "neuralHeuristicsDesc": "Cara meningkatkan kontenmu.",
-    "decryptingHeuristics": "Mendekripsi Heuristik...",
+    "decryptingHeuristics": "Menganalisis…",
     "predictiveTelemetry": "Prakiraan performa",
     "predictiveTelemetryDesc": "Prakiraan performa kontenmu.",
     "scanningTrajectories": "Memindai Lintasan..."
@@ -1288,7 +1288,7 @@
     "refreshData": "Segarkan data keanggotaan",
     "activeNodeUplink": "Paket saat ini",
     "protocolId": "ID paket:",
-    "rootGenesis": "Asal usul akar",
+    "rootGenesis": "Starter",
     "genericAccess": "Akses umum",
     "lifecycleStatus": "Status Siklus Hidup:",
     "uninitialized": "Tidak diinisialisasi",
@@ -1307,7 +1307,7 @@
     "coreMatrixUplink": "Fitur inti",
     "primeCommandUplink": "Akses semua fitur",
     "activeProtocol": "Paket saat ini",
-    "ascending": "Naik...",
+    "ascending": "Meng-upgrade…",
     "genesisUplink": "Mulai",
     "escalateProtocol": "Upgrade"
   },
@@ -1825,7 +1825,7 @@
     "heroIntro": "Hubungkan akun media sosialmu ke Click. Setiap koneksi mengaktifkan",
     "heroFeature1": "posting otomatis",
     "heroFeature2": "pelacakan engagement",
-    "heroFeature3": "analisis audiens sintetis",
+    "heroFeature3": "insight audiens",
     "heroAnd": "Dan",
     "statNeuralEncryption": "Enkripsi token",
     "statUplinkLatency": "Kecepatan koneksi",
@@ -2375,7 +2375,7 @@
     "collaborationIntro1": "Setiap tim mendapat",
     "collaborationHighlight1": "aset bersama",
     "collaborationIntro2": ",",
-    "collaborationHighlight2": "loop umpan balik asinkron",
+    "collaborationHighlight2": "komentar dan masukan",
     "collaborationIntro3": ", dan terpadu",
     "collaborationHighlight3": "antrian produksi",
     "collaborationIntro4": ". Simpan pekerjaan semua orang di satu tempat.",
@@ -3113,7 +3113,7 @@
     "neuralLine1": "Konten",
     "neuralLine2": "TENGAH",
     "autonomousPrefix": "Mode otomatis",
-    "dominating": "mendominasi",
+    "dominating": "berjalan",
     "autonomousMid": "itu",
     "autonomousSuffix": "antrean.",
     "neuralActive": "Mode otomatis aktif",
@@ -3998,7 +3998,7 @@
     "latticeHealth": "Kesehatan jaringan",
     "aggregatedRevenue": "Pendapatan Agregat",
     "victoryVectors": "Kemenangan hari ini",
-    "encirclementTitle": "Pengepungan Global",
+    "encirclementTitle": "Ringkasan pertumbuhan",
     "encirclementSubtitle": "Insight yang dibagikan di seluruh Click",
     "godModeSaturationActive": "Live",
     "decentralizedIntelligenceLedger": "Log aktivitas",
@@ -4018,7 +4018,7 @@
     "tabStability": "Kesehatan Sistem",
     "versionLabel": "Click",
     "overlordTerminalSynced": "Terhubung",
-    "mainTitle": "Klik Terminal Tuan",
+    "mainTitle": "Pusat kendali Click",
     "mainSubtitle": "Kontrol monetisasi dan otomatisasi."
   },
   "clickDebugPanel": {
@@ -5408,7 +5408,7 @@
     "presetVibrantPopName": "Pop yang bersemangat",
     "presetVibrantPopDesc": "Warna-warna berani dan jenuh",
     "presetSoftDreamyName": "Lembut Melamun",
-    "presetSoftDreamyDesc": "Tampilan yang halus dan lembut",
+    "presetSoftDreamyDesc": "Tampilan lembut dan halus",
     "presetElectricVibeName": "Listrik",
     "presetElectricVibeDesc": "Tampilan bersemangat berenergi tinggi",
     "presetRetroVintageName": "Retro Jadul",
@@ -6232,7 +6232,20 @@
     "appliedStyleProfile": "Gaya {{name}} diterapkan",
     "packApplied": "{{name}} diterapkan: color grade {{grade}} beserta gaya caption-nya",
     "packAppliedGradeOnly": "{{name}} diterapkan: color grade {{grade}}. Nyalakan caption untuk memakai gaya caption-nya.",
-    "packApplyFailed": "Gagal menerapkan {{name}}: color grade-nya tidak ditemukan"
+    "packApplyFailed": "Gagal menerapkan {{name}}: color grade-nya tidak ditemukan",
+    "beatRecut": "✦ Dipotong ulang jadi {{count}} klip beat (mengganti {{replaced}} klip video)",
+    "beatCut": "✦ Dipotong jadi {{count}} klip sinkron beat",
+    "autoViralAnalysing": "✦ Edit Viral Otomatis — menganalisis beat dan caption…",
+    "autoViralNothingFound": "Edit Viral Otomatis butuh beat musik atau transkrip yang bisa dipakai — keduanya tidak ditemukan.",
+    "autoViralNeedsTranscript": "Edit Viral Otomatis butuh transkrip untuk caption atau musik untuk potongan. Buat transkrip dulu, lalu coba lagi.",
+    "autoViralCuts": "{{clips}} klip beat · {{transitions}} transisi",
+    "autoViralCaptions": "{{count}} caption karaoke",
+    "autoViralDone": "✦ Edit Viral Otomatis: {{summary}}",
+    "autoViralFailed": "Edit Viral Otomatis gagal — timeline-mu tidak berubah.",
+    "resizeTimelineAria": "Ubah ukuran timeline (seret ke atas atau bawah)",
+    "resizeTimelineTitle": "Seret untuk mengubah ukuran timeline",
+    "timelineHeading": "Timeline",
+    "cmdCategoryEditor": "EDITOR"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Kait",
@@ -6310,13 +6323,13 @@
     "featuresTitle": "Fitur Elit",
     "featuresDescription": "Membuka kecerdasan multi-platform dan pertumbuhan prediktif.",
     "completeTitle": "Semua sudah siap",
-    "completeDescription": "Anda sekarang siap untuk mendominasi lanskap sosial.",
+    "completeDescription": "Kamu siap mulai berkarya.",
     "eliteAccessGranted": "Akses Elit Diberikan",
     "closeOnboarding": "Tutup orientasi",
     "back": "Kembali",
-    "startDominating": "Mulai Mendominasi",
+    "startDominating": "Mulai",
     "nextIntelligence": "Intelijen Berikutnya",
-    "clickGenesis": "Klik Kejadian",
+    "clickGenesis": "Selamat datang di Click",
     "welcomeBodyBefore": "Satu-satunya platform yang tidak hanya menulis—itu",
     "welcomeBodyOperates": "beroperasi",
     "welcomeBodyAfter": ". Yuk, atur brand-mu.",
@@ -6489,7 +6502,7 @@
     "syncing": "Memperbarui...",
     "restart": "Mulai ulang",
     "dismissInstallPrompt": "Tutup perintah pemasangan",
-    "installDescription": "Naik ke ruang kerja yang lebih cepat dan mampu offline. Dibangun untuk operasi konten elit.",
+    "installDescription": "Instal Click untuk aplikasi yang lebih cepat dan bisa dipakai offline.",
     "initializeInstallation": "Inisialisasi Instalasi",
     "tagInstant": "Instan",
     "tagEdge": "Tepian",
@@ -6779,7 +6792,7 @@
     "navAeoMetadata": "Metadata AEO",
     "navUgcRaw": "UGC Mentah",
     "navZeroPartyData": "Data Nol Pihak",
-    "headerPill": "Fase 8 — Dominasi Pasar",
+    "headerPill": "Fase 8 — Alat pertumbuhan",
     "headerTitle": "Alat pertumbuhan",
     "headerSubtitle": "5 Sistem Yang Membuat KLIK Tak Terbantahkan"
   },
@@ -6850,14 +6863,14 @@
     "pcv": "PCV",
     "steerSwarmToThisOffer": "Fokus pada penawaran ini",
     "s2sNetworkDown": "Jaringan S2S mati",
-    "globalEncirclementTitle": "Pengepungan Global",
+    "globalEncirclementTitle": "Ringkasan pertumbuhan",
     "globalEncirclementSubtitle": "Insight lintas akun",
     "godModeActiveBadge": "Aktif",
     "networkHealth": "Kesehatan Jaringan",
     "aggregatedRevenue": "Pendapatan Agregat",
     "victoryVectors": "Performa teratas",
     "logInitializingTunnel": "[SISTEM] Menginisialisasi terowongan terenkripsi S2S...",
-    "logEncirclementActive": "[SISTEM] Pengepungan aktif. {{count}} instance saudara terhubung.",
+    "logEncirclementActive": "{{count}} ruang kerja terhubung.",
     "logVectorReceived": "Hook \"{{hook}}\" unggul di {{cluster}}.",
     "logLocalSynthesis": "Hasil lokal diperbarui: bobot momentum +{{percent}}%.",
     "productionStabilityTitle": "Stabilitas Produksi",
@@ -6878,7 +6891,7 @@
     "navGlobalS2s": "S2S Global",
     "navSystemHealth": "Kesehatan Sistem",
     "headerPill": "Alat lanjutan",
-    "headerTitle": "Terminal Tuan",
+    "headerTitle": "Pusat kendali",
     "headerSubtitle": "Ekspansi pasar"
   },
   "quickActions": {
@@ -6983,7 +6996,7 @@
     "razorTool": "Alat Cukur (S)",
     "editMode": "Modus penyuntingan",
     "modeNormal": "Normal",
-    "modeRipple": "Riak",
+    "modeRipple": "Ripple",
     "modeRoll": "Gulungan",
     "modeSlip": "Tergelincir",
     "setInPoint": "Set Pada Titik (I)",
@@ -7098,7 +7111,31 @@
   "realTimeVideoPreview": {
     "overlayAlt": "Hamparan",
     "metadataError": "Gagal memuat metadata video. Periksa validitas CORS atau URL.",
-    "bootingRenderEngine": "Memuat pratinjau..."
+    "bootingRenderEngine": "Memuat pratinjau...",
+    "videoFailed": "Video gagal dimuat",
+    "retry": "Coba lagi",
+    "dragToCompare": "Seret untuk membandingkan Sebelum / Sesudah",
+    "before": "Sebelum",
+    "after": "Sesudah",
+    "rawUnfiltered": "Asli / Tanpa filter",
+    "graded": "Di-grade",
+    "editCaptionInline": "Edit teks caption langsung",
+    "captionPlaceholder": "Ketik teks caption...",
+    "opsReverse": "{{count}}× putar balik",
+    "opsJCut": "{{count}}× J-cut",
+    "opsLCut": "{{count}}× L-cut",
+    "exportOnlyTitle": "Perubahan ini hanya diterapkan saat ekspor — pratinjau memutar klip ke arah aslinya dengan sinkron audio normal.",
+    "exportOnly": "Hanya saat ekspor",
+    "imageLayer": "Layer Gambar",
+    "imageFailed": "Gambar gagal dimuat",
+    "svgLayer": "Layer SVG",
+    "preview": "Pratinjau",
+    "latency": "Latensi",
+    "pause": "Jeda",
+    "play": "Putar",
+    "toggleBeforeAfter": "Tampilkan sebelum/sesudah",
+    "beforeAfter": "Sebelum / sesudah",
+    "aiStylingActive": "Gaya AI aktif"
   },
   "realtimeCollaboration": {
     "failedToJoin": "Gagal bergabung dalam sesi kolaborasi",
@@ -7172,7 +7209,137 @@
   },
   "resizableTimeline": {
     "restore": "Kembalikan ukuran garis waktu",
-    "maximize": "Maksimalkan garis waktu"
+    "maximize": "Maksimalkan garis waktu",
+    "snapKind": {
+      "word": "Kata",
+      "silence": "Jeda",
+      "beat": "Beat",
+      "marker": "Penanda",
+      "edge": "Tepi",
+      "playhead": "Playhead",
+      "boundary": "Batas"
+    },
+    "realignedCountOne": "1 caption diselaraskan ke ucapan",
+    "realignedCount": "{{count}} caption diselaraskan ke ucapan",
+    "alreadyAligned": "Caption sudah selaras",
+    "markerNamePrompt": "Nama penanda (opsional):",
+    "unsoloTrack": "Matikan solo track",
+    "soloTrack": "Solo track",
+    "soloShort": "S",
+    "unmuteTrack": "Bunyikan track",
+    "muteTrack": "Bisukan track",
+    "unlockTrack": "Buka kunci track",
+    "lockTrack": "Kunci track",
+    "prevFrameTitle": "Frame sebelumnya (←)",
+    "prevFrame": "Frame sebelumnya",
+    "pauseTitle": "Jeda (Space)",
+    "playTitle": "Putar (Space)",
+    "pause": "Jeda",
+    "play": "Putar",
+    "nextFrameTitle": "Frame berikutnya (→)",
+    "nextFrame": "Frame berikutnya",
+    "goToTimeLabel": "Ke waktu (ketik waktu, tekan Enter)",
+    "goToTimeTitle": "Ketik waktu (mis. 1:05.5) lalu tekan Enter untuk melompat ke sana",
+    "splitTitle": "Pisah klip di bawah playhead (S)",
+    "split": "Pisah",
+    "deleteTitle": "Hapus pilihan (Delete)",
+    "delete": "Hapus",
+    "rippleOnTitle": "Ripple aktif: menghapus menutup celah di semua track",
+    "rippleOffTitle": "Ripple mati: menghapus meninggalkan celah",
+    "ripple": "Ripple",
+    "ungroupTitle": "Pisahkan grup klip terpilih",
+    "ungroup": "Pisah grup",
+    "groupTitle": "Kelompokkan klip terpilih agar bergerak dan terhapus bersama",
+    "group": "Grup",
+    "setInTitle": "Atur titik in di playhead (I)",
+    "in": "In",
+    "setOutTitle": "Atur titik out di playhead (O)",
+    "out": "Out",
+    "clearInOutTitle": "Hapus in/out (Alt+X)",
+    "clearInOutLabel": "Hapus titik in dan out",
+    "snapTitle": "Tempelkan klip ke tepi, playhead, dan penanda",
+    "snap": "Snap",
+    "speechTitle": "Tempelkan klip dan caption ke kata yang diucapkan",
+    "speechDisabledTitle": "Buat caption untuk mengaktifkan snap ke ucapan",
+    "speech": "Ucapan",
+    "realignTitle": "Atur ulang waktu setiap caption sesuai kata yang diucapkan",
+    "realign": "Selaraskan caption",
+    "dragToPan": "Seret untuk menggeser",
+    "showTracks": "Tampilkan track",
+    "allTracks": "Semua track",
+    "track": {
+      "captions": "Caption",
+      "mainVideo": "Video utama",
+      "broll": "B-roll",
+      "audio": "Audio",
+      "effects": "Efek",
+      "captionsSub": "Teks di layar",
+      "mainVideoSub": "Rekamanmu",
+      "brollSub": "Cutaway & gambar",
+      "audioSub": "Musik, suara & SFX"
+    },
+    "viewGroup": "Tampilan timeline",
+    "view": {
+      "clips": "Klip",
+      "clipsTitle": "Hanya klip",
+      "hybrid": "Klip + naskah",
+      "hybridTitle": "Klip dengan naskah di atasnya",
+      "script": "Naskah",
+      "scriptTitle": "Edit lewat teks"
+    },
+    "zoomOut": "Perkecil",
+    "zoomIn": "Perbesar",
+    "hideInsights": "Sembunyikan jalur insight AI",
+    "showInsights": "Tampilkan jalur insight AI",
+    "insights": "Insight",
+    "inOutSpan": "In/Out: {{time}}",
+    "inPointTitle": "Titik in: {{time}} (seret untuk mengatur)",
+    "outPointTitle": "Titik out: {{time}} (seret untuk mengatur)",
+    "beatLabel": "Beat ({{time}} dtk)",
+    "markerTitle": "{{name}}: {{time}} (seret untuk memindah, klik untuk melompat, klik kanan untuk edit)",
+    "marker": "Penanda",
+    "markerTag": "{{name}} ({{time}})",
+    "resolve": "Selesaikan",
+    "close": "Tutup",
+    "captionsCountOne": "1 caption",
+    "captionsCount": "{{count}} caption",
+    "clipsCountOne": "1 klip",
+    "clipsCount": "{{count}} klip",
+    "itemsCountOne": "1 item",
+    "itemsCount": "{{count}} item",
+    "audienceRetention": "Retensi penonton",
+    "retentionTitle": "Retensi: {{value}}%",
+    "audioWaveform": "Waveform audio",
+    "audioWaveformNoAudio": "Waveform audio (tanpa audio)",
+    "trimStart": "Pangkas awal",
+    "trimEnd": "Pangkas akhir",
+    "jCut": "J-Cut",
+    "lCut": "L-Cut",
+    "trimmedStart": "Awal dipangkas",
+    "trimmedEnd": "Akhir dipangkas",
+    "freeze": "Bekukan",
+    "reverseSpeed": "Putar balik {{speed}}×",
+    "keyframes": "Keyframe",
+    "playheadTitle": "Playhead: {{time}} (seret untuk scrub)",
+    "scrubTitle": "Scrub: {{time}}",
+    "dragPlayhead": "Seret playhead",
+    "origin": "Asal: {{time}}",
+    "moveDelta": "Selisih geser: {{delta}}",
+    "trackNumber": "Track {{number}}",
+    "clipsMoving": "{{count}} klip dipindahkan",
+    "trimStartAt": "Pangkas awal: {{time}}",
+    "trimEndAt": "Pangkas akhir: {{time}}",
+    "workAreaIn": "Awal area kerja: {{time}}",
+    "workAreaOut": "Akhir area kerja: {{time}}",
+    "span": "Rentang: {{time}}",
+    "menu": {
+      "splitAtPlayhead": "Pisah di playhead",
+      "duplicate": "Duplikat klip",
+      "ungroup": "Pisahkan grup klip",
+      "group": "Kelompokkan klip",
+      "rippleDelete": "Ripple delete"
+    },
+    "sceneChange": "Pergantian adegan"
   },
   "revenueOracle": {
     "synchronizing": "Memuat data pendapatan...",
@@ -7682,7 +7849,7 @@
     "neuralScheduling": "Penjadwalan pintar",
     "neuralSchedulingDesc": "Jadwalkan postingan saat audiensmu paling aktif.",
     "evergreenSynthesis": "Daur ulang evergreen",
-    "evergreenSynthesisDesc": "Aktifkan daur ulang konten penyembuhan mandiri untuk ROI repositori tak terbatas.",
+    "evergreenSynthesisDesc": "Gunakan ulang konten dengan performa terbaikmu secara otomatis.",
     "initiateSequence": "Memulai Urutan",
     "neuralProcessing": "Diproses",
     "ecosystemCalibration": "Menyiapkan...",
@@ -7691,7 +7858,7 @@
     "synchronization": "Pipeline",
     "verified": "TERVERIFIKASI",
     "nodesPrimedPrefix": "Postinganmu",
-    "primed": "prima",
+    "primed": "siap",
     "nodesPrimedSuffix": "untuk dipublikasikan.",
     "estimatedYield": "Perkiraan Hasil",
     "neuralIntegrity": "Cek kualitas",
@@ -8517,5 +8684,1369 @@
     "shift1d": "+1 hari",
     "shift1w": "+1 minggu",
     "moveWarning": "Memindahkan postingan bisa membuat dua postingan tayang di platform yang sama pada waktu yang sama. Postingan yang sedang atau sudah dipublikasikan tidak akan dipindahkan."
+  },
+  "editorSidebar": {
+    "cat": {
+      "aiEdit": {
+        "label": "Edit Otomatis AI",
+        "desc": "Edit AI sekali klik"
+      },
+      "dub": {
+        "label": "Dubbing",
+        "desc": "Terjemahkan suaramu ke 10 bahasa"
+      },
+      "edit": {
+        "label": "Edit",
+        "desc": "Alat edit dasar"
+      },
+      "assets": {
+        "label": "Asetku",
+        "desc": "Tambah musik, gambar & klip B-roll"
+      },
+      "effects": {
+        "label": "Efek",
+        "desc": "Filter & penyempurnaan"
+      },
+      "color": {
+        "label": "Warna",
+        "desc": "Color grading profesional"
+      },
+      "chromakey": {
+        "label": "Chroma Key",
+        "desc": "Green screen & compositing"
+      },
+      "timeline": {
+        "label": "Timeline",
+        "desc": "Edit lanjutan"
+      },
+      "export": {
+        "label": "Ekspor",
+        "desc": "Bagikan & ekspor"
+      },
+      "aiAssist": {
+        "label": "Bantuan AI",
+        "desc": "Potong cerdas · tinjau saran · terapkan & batalkan"
+      },
+      "monetize": {
+        "label": "Monetisasi",
+        "desc": "Link produk · QR · rencana monetisasi AI"
+      },
+      "stockLibrary": {
+        "label": "Pustaka Stok",
+        "desc": "B-roll · musik · GIF · stiker · transisi · SFX"
+      },
+      "textMotion": {
+        "label": "Teks & Gerak",
+        "desc": "Caption · animasi · gerak · font"
+      }
+    },
+    "group": {
+      "edit": {
+        "label": "Edit",
+        "desc": "Potong, grading, compositing — inti ruang edit."
+      },
+      "media": {
+        "label": "Media",
+        "desc": "Aset, stok, caption & teks."
+      },
+      "ai": {
+        "label": "AI",
+        "desc": "Edit otomatis AI sekali klik + dubbing multibahasa."
+      },
+      "export": {
+        "label": "Ekspor",
+        "desc": "Render & bagikan."
+      }
+    },
+    "badge": {
+      "new": "BARU",
+      "agency": "Agensi",
+      "pro": "PRO",
+      "beta": "BETA"
+    },
+    "title": "Alat editor",
+    "ready": "Siap",
+    "expand": "Bentangkan sidebar",
+    "collapse": "Ciutkan sidebar",
+    "searchPlaceholder": "Cari alat (⌘F)",
+    "clearSearch": "Hapus pencarian",
+    "all": "Semua",
+    "recent": "Terbaru",
+    "noTools": "Alat tidak ditemukan",
+    "pinned": "Disematkan",
+    "allTools": "Semua alat",
+    "unpin": "Lepas pin",
+    "pinToTop": "Sematkan di atas",
+    "device": {
+      "desktop": "Desktop",
+      "tablet": "Tablet",
+      "mobile": "Ponsel"
+    },
+    "shortcuts": "Pintasan keyboard",
+    "closeShortcuts": "Tutup pintasan",
+    "searchTools": "Cari alat"
+  },
+  "editorHUD": {
+    "section": {
+      "edit": "Editing",
+      "color": "Warna",
+      "ai": "Alat AI",
+      "effects": "Efek",
+      "timeline": "Timeline",
+      "export": "Ekspor",
+      "styleVault": "Style Vault",
+      "aiEdit": "Edit AI",
+      "assets": "Aset",
+      "growth": "Analitik",
+      "chromakey": "Chroma Key",
+      "visualFx": "Efek Visual",
+      "aiAnalysis": "Analisis AI",
+      "collaborate": "Kolaborasi",
+      "scripts": "Naskah",
+      "scheduling": "Penjadwalan",
+      "shortClips": "Klip Pendek",
+      "predict": "Prediksi",
+      "distribution": "Distribusi",
+      "spatial": "Spasial",
+      "agent": "Agen AI",
+      "dub": "Dubbing"
+    },
+    "layout": {
+      "balanced": "Seimbang",
+      "balancedDesc": "Pratinjau dan timeline dibagi rata",
+      "cinematic": "Sinematik",
+      "cinematicDesc": "Pratinjau lebih besar, fokus ke pemutaran",
+      "timelineFocus": "Fokus timeline",
+      "timelineFocusDesc": "Ruang lebih luas untuk edit timeline detail"
+    },
+    "projectName": "Nama proyek",
+    "savingEllipsis": "Menyimpan…",
+    "saveFailed": "Gagal menyimpan",
+    "allChangesSaved": "Semua perubahan tersimpan",
+    "saving": "Menyimpan",
+    "saved": "Tersimpan",
+    "undoTitle": "Batalkan (⌘Z)",
+    "redoTitle": "Ulangi (⌘Y)",
+    "undo": "Batalkan",
+    "redo": "Ulangi",
+    "command": "Cari atau jalankan perintah",
+    "commandTitle": "Cari atau jalankan perintah (⌘K)",
+    "workspaceLayoutTitle": "Tata letak ruang kerja (L)",
+    "workspaceLayout": "Tata letak ruang kerja",
+    "gpu": "GPU: {{backend}}",
+    "agentRunning": "Agen AI berjalan",
+    "makeViralTitle": "Jalankan resep viral sekali klik — hook, potongan, B-roll, sinkron beat, CTA",
+    "working": "Memproses…",
+    "makeViral": "Bikin Viral",
+    "focusMode": "Mode fokus",
+    "moreActions": "Aksi lainnya",
+    "more": "Lainnya",
+    "keyboardShortcuts": "Pintasan keyboard",
+    "exportTitle": "Ekspor dan publikasikan",
+    "export": "Ekspor"
+  },
+  "quickActionsBar": {
+    "variantsNeedBase": "Tambahkan caption atau hook dulu agar pembuat varian punya bahan.",
+    "noVariants": "Tidak ada varian — coba hook dasar yang lebih panjang.",
+    "variantsGenerated": "{{count}} varian dibuat — buka pemilih A/B untuk pratinjau.",
+    "variantsFailed": "Varian gagal: {{error}}",
+    "unknownError": "error tidak diketahui",
+    "brollNeedsClip": "Muat klip dulu untuk mendapat saran B-roll.",
+    "noBrollGaps": "Tidak ada celah B-roll — klipmu sudah padat secara visual.",
+    "brollSuggested": "{{count}} sisipan B-roll disarankan. Buka timeline untuk meninjau.",
+    "brollFailed": "Saran B-roll gagal: {{error}}",
+    "trendsWarmingUp": "Feed tren sedang disiapkan — coba lagi sebentar lagi.",
+    "trendsLoaded": "Lagi tren: {{sounds}} suara · {{hashtags}} hashtag. Membuka pemilih.",
+    "trendsFailed": "Tidak bisa memuat tren: {{error}}",
+    "styleApplied": "Gayamu diterapkan: {{items}}",
+    "styleAppliedGeneric": "Gaya yang dipelajari sudah diterapkan.",
+    "styleNeedsClips": "Publikasikan 3 klip dulu agar Click bisa mempelajari gayamu.",
+    "styleTimedOut": "Permintaan gayamu habis waktu. Coba lagi.",
+    "styleLoadFailed": "Tidak bisa memuat gayamu. Coba lagi.",
+    "viralEdit": "Edit Viral",
+    "viralEditLong": "Edit Viral Otomatis — edit lengkap sekali ketuk",
+    "applyStyle": "Terapkan gaya",
+    "split": "Pisah",
+    "splitLong": "Pisah di playhead",
+    "captions": "Caption",
+    "grade": "Grade",
+    "effects": "Efek",
+    "aiTools": "Alat AI",
+    "clean": "Bersihkan",
+    "cleanLong": "Pembersihan cerdas",
+    "variants": "Varian",
+    "variantsLong": "Varian A/B",
+    "broll": "B-roll",
+    "brollLong": "Sarankan B-roll",
+    "trends": "Tren",
+    "trendsLong": "Lagi tren",
+    "learnedFrom": "Click belajar dari {{count}} klip yang sudah kamu publikasikan",
+    "ariaLoading": "{{label}} — memuat",
+    "ariaShortcut": "{{label}} (pintasan {{key}})"
+  },
+  "aiAutoEdit": {
+    "preset": {
+      "mrbeastEnergy": "Energi MrBeast",
+      "mrbeastEnergyTagline": "Taruhan besar · pattern break",
+      "hormoziBold": "Hormozi Bold",
+      "hormoziBoldTagline": "Statistik tegas · sudut pandang berbeda",
+      "cinematicDoc": "Dokumenter Sinematik",
+      "cinematicDocTagline": "Membangun perlahan · potongan halus",
+      "educationalClean": "Edukatif Bersih",
+      "educationalCleanTagline": "Bingkai pertanyaan · fakta singkat",
+      "newsAuthority": "Gaya Berita",
+      "newsAuthorityTagline": "Headline · breaking · pakar",
+      "casualVlog": "Vlog Santai",
+      "casualVlogTagline": "Keseharian · gaya ngobrol",
+      "mysteryHook": "Hook Misteri",
+      "mysteryHookTagline": "Loop penasaran · terungkap perlahan",
+      "gymGrit": "Gym Grit",
+      "gymGritTagline": "Intensitas tinggi · tough love",
+      "adhdOverload": "ADHD Overload",
+      "adhdOverloadTagline": "Kacau · ledakan pop · super ramai",
+      "podcastGoldmine": "Tambang Emas Podcast",
+      "podcastGoldmineTagline": "Otoritas · chapter · dokumenter hangat",
+      "retentionMachine": "Mesin Retensi",
+      "retentionMachineTagline": "Open loop · B-roll · chapter"
+    },
+    "opt": {
+      "auto": "Otomatis",
+      "vivid": "Cerah",
+      "cinematic": "Sinematik",
+      "natural": "Natural",
+      "cool": "Dingin",
+      "warm": "Hangat",
+      "vintage": "Vintage",
+      "bw": "Hitam putih",
+      "upbeatPop": "Pop ceria",
+      "chill": "Santai",
+      "darkAmbient": "Dark ambient",
+      "synthwave": "Synthwave",
+      "phonk": "Phonk",
+      "lofi": "Lo-fi",
+      "question": "Pertanyaan",
+      "stat": "Statistik",
+      "mystery": "Misteri",
+      "story": "Cerita",
+      "boldClaim": "Klaim berani",
+      "patternBreak": "Pattern break",
+      "fastCut": "Potongan cepat",
+      "crossfade": "Crossfade",
+      "glitch": "Glitch",
+      "whipPan": "Whip pan",
+      "hardCut": "Hard cut",
+      "modern": "Modern",
+      "bold": "Tegas",
+      "minimal": "Minimal",
+      "neon": "Neon",
+      "pill": "Pil",
+      "top": "Atas",
+      "middle": "Tengah",
+      "bottom": "Bawah",
+      "lowerThird": "Lower third",
+      "energetic": "Energik",
+      "calm": "Tenang",
+      "authoritative": "Berwibawa",
+      "playful": "Ceria",
+      "serious": "Serius",
+      "urgency": "Mendesak",
+      "value": "Nilai",
+      "curiosity": "Rasa penasaran",
+      "off": "Mati",
+      "sparse": "Jarang",
+      "balanced": "Seimbang",
+      "heavy": "Padat",
+      "gentle": "Lembut",
+      "medium": "Sedang",
+      "aggressive": "Agresif",
+      "educational": "Edukatif",
+      "entertaining": "Menghibur",
+      "motivational": "Motivasi",
+      "promotional": "Promosi"
+    },
+    "brief": {
+      "title": "Ringkasan Pemasaran",
+      "postingTimes": "Waktu Posting Terbaik",
+      "competitiveInsights": "Wawasan Kompetitor"
+    },
+    "err": {
+      "videoNotFound": "Data video tidak ditemukan dalam respons",
+      "loadFailed": "Gagal memuat video. Coba lagi.",
+      "missingSource": "File sumber video ini tidak ada. Unggah ulang lalu coba lagi.",
+      "tooManyPresets": "Kamu bisa menggabungkan maksimal 3 preset gaya per edit.",
+      "serviceError": "Layanan AI mengalami error: {{error}}",
+      "serviceInternal": "Layanan AI mengalami error internal. Coba lagi sebentar lagi.",
+      "sessionExpired": "Sesimu sudah berakhir. Masuk lagi lalu coba ulang.",
+      "rateLimited": "Terlalu banyak permintaan edit. Tunggu sebentar lalu coba lagi.",
+      "rejected": "Permintaan ditolak ({{status}}). Periksa input lalu coba lagi.",
+      "timeout": "Permintaan edit habis waktu. Videonya mungkin terlalu besar atau server lambat merespons.",
+      "network": "Tidak bisa terhubung ke server. Periksa koneksimu lalu coba lagi.",
+      "startFailed": "Tidak bisa memulai edit AI. Coba lagi."
+    },
+    "badge": "Edit Otomatis AI",
+    "title": "Atur Aturan AI",
+    "untitled": "Proyek Tanpa Judul",
+    "toggleTheme": "Ganti tema",
+    "analyze": "Analisis Video",
+    "analyzing": "Menganalisis...",
+    "backToVideos": "Kembali ke Video",
+    "processingTitle": "Memproses Video",
+    "processingBody": "AI sedang menganalisis, memotong, dan mengoptimalkan videomu...",
+    "initializing": "Menyiapkan",
+    "result": {
+      "title": "Editanmu sudah siap",
+      "body": "Buka di editor untuk menyempurnakan, atau unduh apa adanya.",
+      "editsApplied": "Edit diterapkan",
+      "openInEditor": "Buka di Editor",
+      "downloadTitle": "Unduh video hasil edit",
+      "download": "Unduh",
+      "viewClipsTitle": "Lihat klip yang dibuat",
+      "viewClips": "Lihat Klip",
+      "dismissTitle": "Tutup hasil ini",
+      "dismiss": "Tutup"
+    },
+    "diag": {
+      "title": "Diagnostik",
+      "complete": "Analisis Selesai",
+      "suggestedLength": "Durasi yang Disarankan"
+    },
+    "plan": {
+      "title": "Rencana editmu",
+      "subtitle": "Yang akan dilakukan AI dengan pengaturan di kanan",
+      "opening": "Pembuka",
+      "openingHook": "Mulai dengan momen terkuat",
+      "openingOriginal": "Pertahankan awal aslinya",
+      "pacing": "Tempo",
+      "pacingGentle": "Potongan lembut",
+      "pacingFast": "Potongan cepat dan rapat",
+      "pacingBalanced": "Potongan seimbang",
+      "deadAir": "Jeda kosong",
+      "removed": "Dihapus",
+      "kept": "Tetap",
+      "captions": "Caption",
+      "burnedIn": "Tertanam",
+      "off": "Mati",
+      "clips": "Klip",
+      "under30s": "di bawah 30 dtk",
+      "fullLength": "durasi penuh",
+      "oneVideo": "Satu video hasil edit",
+      "format": "Format"
+    },
+    "director": {
+      "title": "AI Director",
+      "subtitle": "Pilih hingga 3 gaya atau atur setiap pengaturan.",
+      "presetsOne": "{{count}} preset: {{names}}",
+      "presetsOther": "{{count}} preset: {{names}}"
+    },
+    "targetPlatform": "Platform target",
+    "contentTone": "Nada konten",
+    "stylePreset": "Preset gaya",
+    "presetsSelected": "{{count}}/3 dipilih · klik lagi untuk menghapus",
+    "presetCap": "Maksimal 3 preset — hapus satu untuk mengganti",
+    "presetSelectedTitle": "Terpilih #{{n}} — klik untuk menghapus",
+    "presetSelect": "Pilih gaya: {{name}}",
+    "presetSelectedAria": "Gaya terpilih #{{n}}: {{name}}",
+    "aiTasks": "Tugas AI",
+    "task": {
+      "removeSilence": "Hapus jeda hening",
+      "removeSilenceDesc": "Potong otomatis jeda kosong & hening",
+      "optimizePacing": "Optimalkan tempo",
+      "optimizePacingDesc": "Potongan rapat untuk retensi",
+      "enhanceAudio": "Perbaiki audio",
+      "enhanceAudioDesc": "Pengurangan noise + penyeimbangan volume",
+      "generateClips": "Buat klip pendek",
+      "generateClipsDesc": "Ambil momen yang berpotensi viral",
+      "addCaptions": "Tanam caption",
+      "addCaptionsDesc": "Teks dinamis yang sinkron per kata",
+      "enhanceColor": "Koreksi warna",
+      "enhanceColorDesc": "LUT + grade otomatis"
+    },
+    "output": "Output",
+    "aspectRatio": "Rasio aspek",
+    "clipsToGenerate": "Klip yang dibuat",
+    "clipCountAria": "Jumlah klip yang dibuat",
+    "targetLength": "Durasi target",
+    "full": "Penuh",
+    "pacing": "Tempo",
+    "advanced": "Lanjutan",
+    "advancedHint": "Mood, caption, transisi, suara, B-roll, CTA",
+    "sel": {
+      "colorGrade": "Color grade",
+      "musicGenre": "Genre musik",
+      "hookStyle": "Gaya hook",
+      "transitions": "Transisi",
+      "captionStyle": "Gaya caption",
+      "subtitlePosition": "Posisi subtitle",
+      "voiceTone": "Nada suara",
+      "ctaStyle": "Gaya CTA",
+      "brollFrequency": "Frekuensi B-roll"
+    },
+    "speedRamping": "Speed ramp",
+    "speedRampingHint": "Mempercepat dan memperlambat klip agar lebih bertenaga",
+    "toggleSpeedRamping": "Aktifkan/nonaktifkan speed ramp",
+    "prioritizeHook": "Utamakan hook",
+    "prioritizeHookHint": "Buat 3 detik pertama berarti untuk retensi",
+    "togglePrioritizeHook": "Aktifkan/nonaktifkan utamakan hook",
+    "creativeDirection": "Arahan Kreatif",
+    "creativeDirectionHint": "opsional · menggantikan default AI",
+    "creativeDirectionPlaceholder": "mis. Buat terasa sinematik dan gelap, tanpa jump cut, tonjolkan jeda emosional di 0:42…",
+    "autoFit": "Pas otomatis",
+    "aiPlan": "Rencana AI",
+    "preloadedStyle": "Gayamu sudah dimuat",
+    "planLine": {
+      "composeOne": "Susun {{count}} klip {{aspect}}, target {{length}}",
+      "composeOther": "Susun {{count}} klip {{aspect}}, target {{length}}",
+      "forPlatform": "untuk {{platform}}",
+      "tone": "nada {{tone}}",
+      "acrossPresets": "di {{presets}} ({{count}} variasi sudut)",
+      "autoStyle": "dengan gaya {{auto}}",
+      "autoDetected": "terdeteksi otomatis",
+      "grade": "color grade {{grade}}",
+      "hook": "hook {{hook}}",
+      "pacing": "tempo {{pacing}}",
+      "speedRamping": "speed ramp aktif",
+      "broll": "B-roll {{broll}}"
+    },
+    "tasksOne": "{{count}} tugas",
+    "tasksOther": "{{count}} tugas",
+    "estimate": "perk. {{time}}",
+    "chip": {
+      "captions": "Caption",
+      "autoGrade": "Warna otomatis",
+      "speedRamp": "Speed ramp"
+    },
+    "composing": "Menyusun editanmu…",
+    "composeOne": "Susun {{count}} klip",
+    "composeOther": "Susun {{count}} klip",
+    "using": "Memakai {{names}}",
+    "autoSelectPreset": "Pilih preset otomatis sesuai kontenmu",
+    "tasksOnOne": "{{count}} tugas aktif",
+    "tasksOnOther": "{{count}} tugas aktif",
+    "dismissError": "Tutup pesan error ini",
+    "dismiss": "Tutup"
+  },
+  "propertiesPanel": {
+    "layout": {
+      "bottom": "Bawah",
+      "bottomTitle": "Bawah",
+      "lowerThird": "Bawah",
+      "lowerThirdTitle": "Lower third",
+      "top": "Atas",
+      "topTitle": "Atas",
+      "fullWidth": "Lebar penuh",
+      "fullWidthTitle": "Bilah lebar penuh"
+    },
+    "tab": {
+      "transform": "Posisi",
+      "color": "Warna",
+      "captions": "Caption",
+      "text": "Teks",
+      "clip": "Klip"
+    },
+    "reset": "Reset",
+    "title": "Properti",
+    "activeTab": "Pengaturan {{tab}}",
+    "close": "Tutup properti",
+    "clipProperties": "Properti klip",
+    "selectedClip": "Klip terpilih",
+    "playbackSpeed": "Kecepatan putar",
+    "playbackSpeedTitle": "Kecepatan putar: {{speed}}x",
+    "playbackSpeedHint": "Percepat atau perlambat klip ini.",
+    "stabilization": "Stabilisasi",
+    "stabilizationTitle": "Stabilisasi: {{value}}%",
+    "stabilizationHint": "Seberapa kuat guncangan kamera dihaluskan.",
+    "volume": "Volume",
+    "volumeTitle": "Volume: {{value}}%",
+    "autoDucking": "Auto-ducking",
+    "autoDuckingHint": "Kecilkan musik saat ada yang bicara",
+    "autoDuckingToggle": "Aktifkan atau nonaktifkan auto-ducking",
+    "positionAndSize": "Posisi dan ukuran",
+    "scale": "Skala (%)",
+    "positionX": "Posisi X",
+    "positionY": "Posisi Y",
+    "rotation": "Rotasi (°)",
+    "animation": "Animasi",
+    "keyframesCountOne": "1 keyframe",
+    "keyframesCount": "{{count}} keyframe",
+    "addKeyframe": "+ Tambah keyframe di playhead",
+    "prevKeyframe": "◁ Sebelumnya",
+    "nextKeyframe": "Berikutnya ▷",
+    "remove": "Hapus",
+    "curve": "Kurva",
+    "easing": {
+      "linear": "Linear",
+      "easeIn": "Ease in",
+      "easeOut": "Ease out",
+      "easeInOut": "Ease in dan out",
+      "bounceOut": "Pantul",
+      "elasticOut": "Elastis",
+      "cubic": "Halus (kuat)"
+    },
+    "brightness": "Kecerahan",
+    "contrast": "Kontras",
+    "saturation": "Saturasi",
+    "temperature": "Suhu warna",
+    "clarity": "Kejernihan",
+    "dehaze": "Dehaze",
+    "captionsOn": "Tampilkan caption",
+    "captionsOnHint": "Tampilkan transkrip sebagai caption",
+    "captionLayout": "Posisi caption",
+    "textOverlays": "Overlay teks",
+    "noTextOverlays": "Belum ada overlay teks",
+    "deleteTextOverlay": "Hapus overlay teks",
+    "synced": "Tersinkron",
+    "preset": {
+      "tiktok": {
+        "label": "TikTok",
+        "description": "Tebal, di tengah, berdampak"
+      },
+      "reels": {
+        "label": "Reels",
+        "description": "Huruf kapital bersih, kekinian"
+      },
+      "podcast": {
+        "label": "Podcast",
+        "description": "Minimal, lower third"
+      },
+      "cinematic": {
+        "label": "Sinematik",
+        "description": "Serif ala film"
+      },
+      "documentary": {
+        "label": "Dokumenter",
+        "description": "Bilah subtitle klasik"
+      },
+      "neon": {
+        "label": "Neon",
+        "description": "Bercahaya, nuansa malam"
+      },
+      "karaoke": {
+        "label": "Karaoke",
+        "description": "Gaya karaoke tebal"
+      },
+      "pill": {
+        "label": "Pil",
+        "description": "Kata dalam kapsul bulat"
+      },
+      "bubble": {
+        "label": "Balon",
+        "description": "Gaya balon percakapan"
+      },
+      "gradient": {
+        "label": "Gradien",
+        "description": "Teks gradien warna-warni"
+      },
+      "retro": {
+        "label": "Retro",
+        "description": "Tampilan vintage hangat"
+      },
+      "vintage": {
+        "label": "Vintage",
+        "description": "Mesin ketik sepia"
+      },
+      "pop": {
+        "label": "Pop",
+        "description": "Cerah dan tajam"
+      },
+      "high-contrast": {
+        "label": "Aksesibel",
+        "description": "Kontras tinggi, mudah dibaca"
+      },
+      "kinetic": {
+        "label": "Kinetik",
+        "description": "Kata muncul mengikuti beat"
+      },
+      "slow-zoom": {
+        "label": "Zoom pelan",
+        "description": "Skala 100% → 110%"
+      },
+      "fly-in-left": {
+        "label": "Masuk dari kiri",
+        "description": "Masuk dari luar layar kiri"
+      },
+      "fly-in-right": {
+        "label": "Masuk dari kanan",
+        "description": "Masuk dari luar layar kanan"
+      },
+      "fly-in-top": {
+        "label": "Masuk dari atas",
+        "description": "Masuk dari luar layar atas"
+      },
+      "fly-in-bottom": {
+        "label": "Masuk dari bawah",
+        "description": "Masuk dari luar layar bawah"
+      },
+      "fade-in-out": {
+        "label": "Fade in & out",
+        "description": "Opasitas 0 → 1 → 0"
+      }
+    }
+  },
+  "basicEditor": {
+    "preset": {
+      "title": {
+        "label": "Judul"
+      },
+      "text": {
+        "yourTitleHere": "Judulmu di Sini",
+        "subscribeForMore": "Subscribe untuk konten lainnya",
+        "likeSubscribe": "Like & Subscribe",
+        "watchMore": "Tonton lagi →",
+        "commentBelow": "Komen di bawah",
+        "linkInBio": "Link di bio",
+        "addYourCaption": "Tambahkan caption-mu",
+        "followForMore": "Follow untuk konten lainnya",
+        "newText": "TEKS BARU",
+        "youNeedToSeeThis": "KAMU HARUS LIHAT INI",
+        "nameTitle": "Nama · Jabatan",
+        "proTip": "TIPS PRO",
+        "tapToLearnMore": "KETUK UNTUK INFO LEBIH",
+        "waitForIt": "TUNGGU DULU...",
+        "storyTime": "WAKTUNYA CERITA",
+        "youWontBelieveWhatHappened": "Kamu nggak akan percaya apa yang terjadi",
+        "dayInMyLife": "Keseharianku",
+        "day1Of": "Hari ke-1...",
+        "getReadyForThis": "Bersiaplah untuk ini",
+        "watchTillTheEnd": "Tonton sampai habis",
+        "noOneTalksAboutThis": "Nggak ada yang bahas ini",
+        "theSecretTheyDontWantYouToKnow": "Rahasia yang mereka sembunyikan darimu",
+        "theSecretIs": "RAHASIANYA ADALAH",
+        "insane": "GILA!",
+        "actually": "sebenarnya...",
+        "now": "sekarang",
+        "zeroCost": "TANPA BIAYA",
+        "watch": "TONTON",
+        "here": "DI SINI",
+        "swipeUp": "Geser ke atas",
+        "seeYouNextTime": "Sampai jumpa lagi",
+        "unpopularOpinion": "Opini tidak populer:",
+        "thisChangedEverything": "Ini mengubah segalanya",
+        "hotTake": "Hot take:",
+        "nobodyTalksAboutThis": "Jarang ada yang bahas ini",
+        "povYouJustFoundTheBestTip": "POV: Kamu baru nemu tips terbaik",
+        "saveThisForLater": "Simpan untuk nanti",
+        "commentYourAnswerBelow": "Tulis jawabanmu di kolom komentar",
+        "dropAIfYouAgree": "Kasih 👍 kalau setuju",
+        "part1": "Bagian 1",
+        "chapter1": "Chapter 1",
+        "intro": "INTRO",
+        "outro": "OUTRO",
+        "comingUpNext": "Selanjutnya...",
+        "quickRecap": "Rekap singkat"
+      },
+      "subscribe": {
+        "label": "Subscribe"
+      },
+      "likeSubscribe": {
+        "label": "Like & Subscribe"
+      },
+      "watchMore": {
+        "label": "Tonton lagi"
+      },
+      "comment": {
+        "label": "Komentar"
+      },
+      "linkInBio": {
+        "label": "Link di bio"
+      },
+      "caption": {
+        "label": "Caption"
+      },
+      "follow": {
+        "label": "Follow"
+      },
+      "custom": {
+        "label": "Kustom"
+      },
+      "hook": {
+        "label": "Hook"
+      },
+      "lowerThird": {
+        "label": "Lower third"
+      },
+      "callout": {
+        "label": "Callout"
+      },
+      "timestamp": {
+        "label": "Stempel waktu"
+      },
+      "waitForIt": {
+        "label": "Tunggu dulu"
+      },
+      "storyTime": {
+        "label": "Waktunya cerita"
+      },
+      "youWontBelieve": {
+        "label": "Kamu nggak akan percaya"
+      },
+      "dayInMyLife": {
+        "label": "Keseharianku"
+      },
+      "dayXOf": {
+        "label": "Hari ke-X"
+      },
+      "getReady": {
+        "label": "Bersiaplah"
+      },
+      "watchTillEnd": {
+        "label": "Tonton sampai habis"
+      },
+      "noOneTalksAbout": {
+        "label": "Nggak ada yang bahas"
+      },
+      "theSecret": {
+        "label": "Rahasianya"
+      },
+      "hormoziBold": {
+        "label": "Hormozi Bold"
+      },
+      "beastImpact": {
+        "label": "Beast Impact"
+      },
+      "minimalNarrative": {
+        "label": "Narasi Minimal"
+      },
+      "subliminalQuick": {
+        "label": "Subliminal Cepat"
+      },
+      "punchyHighlight": {
+        "label": "Sorotan Tajam"
+      },
+      "arrowRight": {
+        "label": "Panah →"
+      },
+      "arrowLeft": {
+        "label": "Panah ←"
+      },
+      "proTip": {
+        "label": "TIPS PRO"
+      },
+      "watch": {
+        "label": "TONTON"
+      },
+      "here": {
+        "label": "DI SINI"
+      },
+      "swipeUp": {
+        "label": "Geser ke atas"
+      },
+      "commentBelow": {
+        "label": "Komen di bawah"
+      },
+      "tapToLearnMore": {
+        "label": "Ketuk untuk info lebih"
+      },
+      "seeYouNextTime": {
+        "label": "Sampai jumpa lagi"
+      },
+      "unpopularOpinion": {
+        "label": "Opini tidak populer"
+      },
+      "thisChangedEverything": {
+        "label": "Ini mengubah segalanya"
+      },
+      "hotTake": {
+        "label": "Hot take"
+      },
+      "nobodyTalksAbout": {
+        "label": "Jarang yang bahas"
+      },
+      "saveThis": {
+        "label": "Simpan ini"
+      },
+      "commentYour": {
+        "label": "Komen jawabanmu"
+      },
+      "dropA": {
+        "label": "Kasih 👍"
+      },
+      "part1": {
+        "label": "Bagian 1"
+      },
+      "chapter": {
+        "label": "Chapter"
+      },
+      "intro": {
+        "label": "Intro"
+      },
+      "outro": {
+        "label": "Outro"
+      },
+      "next": {
+        "label": "Berikutnya"
+      },
+      "recap": {
+        "label": "Rekap"
+      }
+    },
+    "filter": {
+      "vibrant": {
+        "name": "Vibrant",
+        "desc": "Warna tajam"
+      },
+      "mono": {
+        "name": "Mono",
+        "desc": "Hitam putih"
+      },
+      "cinematic": {
+        "name": "Sinematik",
+        "desc": "Tampilan film"
+      },
+      "warm": {
+        "name": "Hangat",
+        "desc": "Golden hour"
+      },
+      "cool": {
+        "name": "Dingin",
+        "desc": "Nuansa biru"
+      },
+      "vintage": {
+        "name": "Vintage",
+        "desc": "Retro"
+      },
+      "moody": {
+        "name": "Moody",
+        "desc": "Gelap & pekat"
+      },
+      "vivid": {
+        "name": "Vivid",
+        "desc": "Sangat mencolok"
+      },
+      "noir": {
+        "name": "Noir",
+        "desc": "Hitam putih kontras tinggi"
+      },
+      "sunset": {
+        "name": "Senja",
+        "desc": "Golden hour"
+      },
+      "breeze": {
+        "name": "Semilir",
+        "desc": "Sejuk & jernih"
+      },
+      "matte": {
+        "name": "Matte",
+        "desc": "Datar & lembut"
+      },
+      "neon": {
+        "name": "Neon",
+        "desc": "Warna mencolok"
+      },
+      "autumn": {
+        "name": "Musim Gugur",
+        "desc": "Nuansa tanah hangat"
+      },
+      "winter": {
+        "name": "Musim Dingin",
+        "desc": "Sejuk & bersih"
+      },
+      "dreamy": {
+        "name": "Dreamy",
+        "desc": "Pastel lembut"
+      },
+      "reset": {
+        "name": "Reset",
+        "desc": "Default"
+      }
+    },
+    "style": {
+      "creatorBold": {
+        "label": "Kreator Berani",
+        "desc": "Viral penuh energi"
+      },
+      "softAesthetic": {
+        "label": "Estetik Lembut",
+        "desc": "Lembut & dreamy"
+      },
+      "corporateMinimal": {
+        "label": "Korporat Minimal",
+        "desc": "Bersih & profesional"
+      },
+      "darkMoody": {
+        "label": "Gelap Moody",
+        "desc": "Bayangan dramatis"
+      },
+      "vibrantPop": {
+        "label": "Pop Cerah",
+        "desc": "Penuh warna & tajam"
+      },
+      "cinematicFilm": {
+        "label": "Film Sinematik",
+        "desc": "Trailer film"
+      },
+      "noirDramatic": {
+        "label": "Noir Dramatis",
+        "desc": "Hitam putih dramatis"
+      },
+      "lifestyleWarm": {
+        "label": "Lifestyle Hangat",
+        "desc": "Vlog & travel"
+      },
+      "podcastPro": {
+        "label": "Podcast Pro",
+        "desc": "Bersih & profesional"
+      },
+      "documentary": {
+        "label": "Dokumenter",
+        "desc": "Natural & imersif"
+      },
+      "fashionEditorial": {
+        "label": "Editorial Fashion",
+        "desc": "Tampilan high fashion"
+      },
+      "retroWarm": {
+        "label": "Retro Hangat",
+        "desc": "Hangat ala vintage"
+      },
+      "cinematicDrama": {
+        "label": "Drama Sinematik",
+        "desc": "Dalam & dramatis"
+      },
+      "comedyBright": {
+        "label": "Komedi Cerah",
+        "desc": "Tajam & seru"
+      },
+      "sportsDynamic": {
+        "label": "Olahraga Dinamis",
+        "desc": "Siap untuk aksi"
+      },
+      "savedDesc": "Tersimpan"
+    },
+    "platform": {
+      "tiktok": {
+        "desc": "9:16, tajam"
+      },
+      "youtube": {
+        "desc": "9:16, seimbang"
+      },
+      "feed": {
+        "label": "Feed Instagram",
+        "desc": "1:1, cerah"
+      },
+      "portrait": {
+        "label": "Instagram Potret",
+        "desc": "4:5, hangat"
+      },
+      "landscape": {
+        "label": "YouTube / Lanskap",
+        "desc": "16:9, bersih"
+      },
+      "linkedin": {
+        "desc": "16:9, profesional"
+      }
+    },
+    "filterCategory": {
+      "all": "Semua",
+      "mood": "Mood",
+      "creative": "Kreatif",
+      "dramatic": "Dramatis",
+      "neutral": "Reset"
+    },
+    "shapePreset": {
+      "logoCorner": "Logo di sudut",
+      "subscribeBadge": "Badge subscribe",
+      "fullWidthBar": "Bilah lebar penuh",
+      "dividerLine": "Garis pemisah",
+      "highlightBox": "Kotak sorotan",
+      "cornerAccent": "Aksen sudut"
+    },
+    "undo": "Batalkan",
+    "redo": "Ulangi",
+    "searchTools": "Cari alat...",
+    "clearSearch": "Hapus pencarian",
+    "layersCount": "{{count}} layer",
+    "reset": "Reset",
+    "add": "Tambah",
+    "save": "Simpan",
+    "color": "Warna",
+    "toast": {
+      "undoApplied": "Dibatalkan",
+      "redoApplied": "Diulangi",
+      "fontUploading": "Mengunggah font…",
+      "fontAdded": "Font ditambahkan.",
+      "fontInvalid": "File font itu tidak didukung.",
+      "fontFailed": "Tidak bisa mengunggah font.",
+      "rectangleAdded": "Persegi ditambahkan",
+      "circleAdded": "Lingkaran ditambahkan",
+      "lineAdded": "Garis ditambahkan",
+      "addedName": "{{name}} ditambahkan",
+      "addedQuoted": "\"{{name}}\" ditambahkan",
+      "addedAt": "\"{{name}}\" ditambahkan di {{time}} dtk",
+      "enterImageUrl": "Masukkan URL gambar",
+      "imageAdded": "Overlay gambar ditambahkan",
+      "svgAddedFromFile": "Overlay SVG dari file ditambahkan — animasikan dengan keyframe di Efek",
+      "enterSvgUrl": "Masukkan URL SVG (mis. https://… .svg atau data:image/svg+xml,…)",
+      "svgAdded": "Overlay SVG ditambahkan — animasikan dengan keyframe di Efek",
+      "compoundSaved": "\"{{name}}\" tersimpan — tambahkan ke timeline kapan saja",
+      "compoundRemoved": "Compound dihapus",
+      "renamed": "Diganti nama menjadi \"{{name}}\"",
+      "addTextHint": "Tambah teks — ketik lalu tekan Tambah atau Ctrl+Enter",
+      "textAdded": "Overlay teks ditambahkan",
+      "packApplied": "Paket {{name}} diterapkan",
+      "saved": "\"{{name}}\" tersimpan",
+      "filtersReset": "Filter dikembalikan ke default",
+      "nameYourStyle": "Beri nama gayamu lalu klik Simpan",
+      "applied": "{{name}} diterapkan",
+      "speed": "Kecepatan: {{value}}×"
+    },
+    "compound": {
+      "untitled": "Compound tanpa judul",
+      "title": "Simpan sebagai compound",
+      "namePlaceholder": "Nama compound…",
+      "name": "Nama compound",
+      "durationAria": "Durasi compound dalam detik",
+      "delete": "Hapus compound \"{{name}}\""
+    },
+    "search": {
+      "filterHit": "Filter: {{name}}",
+      "styleHit": "Gaya: {{name}}",
+      "motionHit": "Gerak: {{name}}",
+      "textHit": "Teks: {{name}}"
+    },
+    "caption": {
+      "noTranscript": "Transkrip tidak ditemukan. Tempel naskahmu di kolom bawah, lalu coba lagi.",
+      "noneGenerated": "Tidak ada caption yang dibuat — transkripnya mungkin terlalu pendek.",
+      "addedToast": "{{count}} caption ditambahkan — gaya {{style}}",
+      "generationFailed": "Gagal membuat caption",
+      "failedToast": "Caption otomatis gagal",
+      "title": "Caption otomatis AI",
+      "clearTitle": "Hapus caption otomatis",
+      "cleared": "Caption otomatis dihapus",
+      "count": "{{count}} caption",
+      "ready": "Siap",
+      "noScript": "Tidak ada naskah",
+      "pasteScript": "Tempel naskahmu",
+      "pasteScriptTitle": "Tempel naskah videomu di sini",
+      "pastePlaceholder": "Tempel atau ketik kata-kata yang diucapkan di videomu…",
+      "wordCount": "{{count}} kata",
+      "wordsPerLine": "Kata/baris",
+      "position": "Posisi",
+      "positionAt": {
+        "top": "Taruh caption di atas",
+        "mid": "Taruh caption di tengah",
+        "bottom": "Taruh caption di bawah"
+      },
+      "colorTitle": "Warna teks caption",
+      "setColor": "Ubah warna caption ke {{color}}",
+      "addedInStyle": "{{count}} caption ditambahkan dengan gaya {{style}}",
+      "generateAria": "Buat caption otomatis dari transkrip",
+      "generating": "Membuat caption {{count}} kata…",
+      "generate": "Buat caption"
+    },
+    "captionStyle": {
+      "minimal": "Minimal",
+      "neon": "Neon",
+      "kinetic": "Kinetik",
+      "cyber": "Cyber",
+      "meme": "Meme",
+      "retro": "Retro",
+      "quote": "Kutipan"
+    },
+    "translate": {
+      "noCaptions": "Tidak ada caption di timeline untuk diterjemahkan.",
+      "inProgress": "Menerjemahkan caption (timing tetap sama)…",
+      "done": "Caption diterjemahkan ke {{language}}",
+      "empty": "Terjemahan selesai tapi tidak menghasilkan caption.",
+      "failed": "Tidak bisa menerjemahkan caption.",
+      "title": "Terjemahkan caption",
+      "languageTitle": "Pilih bahasa tujuan terjemahan",
+      "translating": "Menerjemahkan…",
+      "translate": "Terjemahkan"
+    },
+    "emoji": {
+      "noTranscript": "Tidak ada kata transkrip untuk dicocokkan dengan emoji. Buat transkrip dulu.",
+      "inProgress": "Mencocokkan emoji dengan transkripmu…",
+      "noneFound": "Tidak ada emoji yang cocok di transkrip.",
+      "added": "{{count}} emoji ditambahkan ke timeline",
+      "failed": "Gagal membuat emoji",
+      "title": "Emoji otomatis",
+      "clearTitle": "Hapus emoji yang dibuat",
+      "cleared": "Emoji dihapus",
+      "count": "{{count}} emoji",
+      "enter": "Transisi masuk",
+      "enterTitle": "Pilih cara emoji muncul",
+      "exit": "Transisi keluar",
+      "exitTitle": "Pilih cara emoji menghilang",
+      "style": "Gaya",
+      "styleTitle": "Pilih gaya emoji",
+      "size": "Ukuran emoji",
+      "sizeTitle": "Pilih ukuran emoji",
+      "density": "Frekuensi",
+      "densityTitle": "Pilih seberapa sering emoji muncul",
+      "placement": "Penempatan",
+      "placementTitle": "Pilih letak emoji",
+      "inDuration": "Durasi masuk: {{value}} dtk",
+      "inDurationTitle": "Durasi animasi masuk",
+      "outDuration": "Durasi keluar: {{value}} dtk",
+      "outDurationTitle": "Durasi animasi keluar",
+      "generating": "Membuat emoji…",
+      "generate": "Buat emoji"
+    },
+    "emojiOpt": {
+      "enter": {
+        "pop": "💥 Pop masuk",
+        "bounce": "🦘 Pantul ke atas",
+        "slide": "➡️ Geser masuk",
+        "pulse": "💓 Zoom berdenyut",
+        "shake": "⚡ Guncang kamera",
+        "blur": "🌫️ Blur masuk"
+      },
+      "exit": {
+        "fade": "🌫️ Pudar halus",
+        "pop": "💥 Pop keluar",
+        "slideBottom": "⬇️ Geser ke bawah",
+        "bounceOut": "🦘 Pantul keluar",
+        "scaleOut": "🔍 Mengecil keluar",
+        "zoomOut": "🔎 Zoom out",
+        "flipOut": "🔄 Balik keluar"
+      },
+      "style": {
+        "pop3d": "✨ Pop 3D",
+        "neonGlow": "🏮 Cahaya neon",
+        "flat": "📄 Datar minimal"
+      },
+      "size": {
+        "n32": "🤏 Kecil (32px)",
+        "n48": "👌 Sedang (48px)",
+        "n64": "💪 Besar (64px)",
+        "n80": "👑 Raksasa (80px)"
+      },
+      "density": {
+        "n3": "🔥 Tinggi (tiap 3 kata)",
+        "n6": "⚡ Sedang (tiap 6 kata)",
+        "n10": "🎯 Rendah (tiap 10 kata)"
+      },
+      "place": {
+        "above": "⬆️ Di atas caption",
+        "below": "⬇️ Di bawah caption",
+        "head": "👱 Setinggi kepala",
+        "customTop": "👑 Atas bingkai"
+      }
+    },
+    "lang": {
+      "en": "Inggris (English)",
+      "es": "Spanyol (Español)",
+      "fr": "Prancis (Français)",
+      "de": "Jerman (Deutsch)",
+      "it": "Italia (Italiano)",
+      "pt": "Portugis (Português)",
+      "ru": "Rusia (Русский)",
+      "ja": "Jepang (日本語)",
+      "ko": "Korea (한국어)",
+      "zh": "Mandarin (中文)",
+      "ar": "Arab (العربية)",
+      "hi": "Hindi (हिन्दी)",
+      "nl": "Belanda (Nederlands)",
+      "pl": "Polandia (Polski)",
+      "tr": "Turki (Türkçe)"
+    },
+    "trim": {
+      "waveform": "Waveform",
+      "clickToSeek": "Klik untuk memindahkan playhead",
+      "speed": "Kecepatan",
+      "playbackSpeedAria": "Kecepatan putar: {{value}} kali",
+      "reverse": "Putar balik",
+      "reverseSub": "Balik klip yang dipilih",
+      "selectClipFirst": "Pilih klip dulu",
+      "split": "Pisah di playhead",
+      "beatCut": "Potong per beat",
+      "beatCutSub": "Potong klip di setiap beat",
+      "freeze": "Bekukan frame",
+      "freezeSub": "Tahan 1 dtk @ {{time}} dtk",
+      "trimToInOut": "Pangkas ke In/Out",
+      "trimToInOutSub": "Atur In + Out di bawah",
+      "setBothFirst": "Atur titik In dan Out dulu",
+      "jCut": "J-cut",
+      "jCutSub": "Audio mulai 0,5 dtk lebih awal",
+      "lCut": "L-cut",
+      "lCutSub": "Audio berlanjut 0,5 dtk setelah potongan",
+      "comingSoonTitle": "{{label}} — segera hadir",
+      "selectClipTitle": "{{label}} — pilih klip dulu",
+      "soon": "Segera",
+      "markers": "Penanda In / Out",
+      "inAt": "In {{time}} dtk",
+      "noIn": "Tanpa In",
+      "outAt": "Out {{time}} dtk",
+      "noOut": "Tanpa Out",
+      "inSet": "In diatur @ {{time}} dtk",
+      "setIn": "Atur In",
+      "outAfterIn": "Out harus setelah In",
+      "outSet": "Out diatur @ {{time}} dtk",
+      "setOut": "Atur Out",
+      "clear": "Hapus"
+    },
+    "layout": {
+      "auto": "Otomatis",
+      "standard": "Standar",
+      "square": "Persegi",
+      "vertical": "Vertikal",
+      "portrait": "Potret",
+      "cinematic": "Sinematik",
+      "classic": "Klasik"
+    },
+    "text": {
+      "editingOnCanvas": "Mengedit di kanvas",
+      "doubleClickHint": "Klik dua kali teks di player untuk mengetik langsung",
+      "deselect": "Batal pilih",
+      "newText": "Teks Baru",
+      "typePlaceholder": "Ketik teks… (⌘↵ untuk menambah)",
+      "duration": "Durasi:",
+      "searchPresets": "Cari preset…",
+      "activeText": "Teks di video ({{count}})",
+      "deleteOverlayAria": "Hapus overlay teks \"{{text}}\"",
+      "deleteOverlay": "Hapus overlay teks",
+      "preview": "Pratinjau",
+      "livePreview": "Pratinjau langsung",
+      "editing": "Mengedit: {{text}}",
+      "contentAria": "Teks overlay",
+      "contentPlaceholder": "Teks overlay",
+      "fontSize": "Ukuran font",
+      "textColor": "Warna teks",
+      "style": "Gaya",
+      "animateIn": "Animasi masuk",
+      "animateOut": "Animasi keluar",
+      "font": "Font",
+      "start": "Mulai",
+      "startAria": "Waktu mulai dalam detik",
+      "end": "Akhir",
+      "endAria": "Waktu akhir dalam detik",
+      "uploadFont": "Unggah font",
+      "uploadFontAria": "Unggah file font kustom"
+    },
+    "textStyle": {
+      "none": "Tidak ada",
+      "neon": "Neon",
+      "minimal": "Minimal",
+      "bold-kinetic": "Kinetik tebal",
+      "outline": "Garis tepi",
+      "shadow": "Bayangan"
+    },
+    "anim": {
+      "none": "Tidak ada",
+      "fade": "Pudar",
+      "slide-up": "Geser ke atas",
+      "slide-down": "Geser ke bawah",
+      "slide-left": "Geser ke kiri",
+      "slide-right": "Geser ke kanan",
+      "scale": "Skala",
+      "bounce": "Pantul"
+    },
+    "presetGroup": {
+      "viralHooks": "Hook viral",
+      "textPresets": "Preset teks",
+      "premiumCaptions": "Caption premium",
+      "reactionCallouts": "Reaksi / callout",
+      "trending": "Trending",
+      "endScreens": "Layar akhir",
+      "chapters": "Chapter"
+    },
+    "filters": {
+      "strengthAria": "Kekuatan filter: {{value}} persen",
+      "before": "⏪ Sebelum",
+      "after": "⏩ Sesudah",
+      "split": "🌓 Bandingkan",
+      "pinned": "Disematkan",
+      "pin": "Sematkan filter {{name}}",
+      "unpin": "Lepas sematan filter {{name}}"
+    },
+    "motion": {
+      "searchTemplates": "Cari template…",
+      "durationAria": "Durasi motion graphic dalam detik",
+      "recent": "Terbaru"
+    },
+    "layers": {
+      "addShape": "Tambah bentuk",
+      "addImage": "Tambah gambar / logo",
+      "imageUrlPlaceholder": "Tempel URL gambar…",
+      "imageUrl": "URL gambar",
+      "addSvg": "Tambah SVG",
+      "svgUrlPlaceholder": "URL SVG atau data URI…",
+      "svgUrl": "URL SVG",
+      "uploadSvg": "Unggah file SVG",
+      "gradients": "Overlay gradien",
+      "allLayers": "Semua layer ({{count}})",
+      "hoverHint": "Arahkan kursor untuk menampilkan kontrol",
+      "deleteTextAria": "Hapus layer teks \"{{text}}\"",
+      "deleteText": "Hapus layer teks",
+      "opacity": "Opasitas",
+      "opacityAria": "Opasitas layer",
+      "deleteShape": "Hapus bentuk {{shape}}",
+      "deleteImage": "Hapus layer gambar",
+      "customSvg": "SVG kustom",
+      "deleteSvg": "Hapus layer SVG",
+      "gradientName": "Gradien {{region}}",
+      "deleteGradient": "Hapus layer gradien",
+      "empty": "Belum ada layer",
+      "emptyHint": "Tambahkan bentuk, gambar, atau SVG di atas. Overlay teks juga muncul di sini.",
+      "addTextLayer": "+ Tambah layer teks"
+    },
+    "shape": {
+      "rect": "Persegi",
+      "circle": "Lingkaran",
+      "line": "Garis"
+    },
+    "region": {
+      "full": "Penuh",
+      "lower-third": "Lower third",
+      "top-bar": "Bilah atas",
+      "top-half": "Setengah atas",
+      "bottom-half": "Setengah bawah"
+    },
+    "gradient": {
+      "lowerThird": "Pudar lower third",
+      "fullDark": "Gelapkan penuh",
+      "topBar": "Bilah atas",
+      "warmTint": "Rona hangat",
+      "coolTint": "Rona dingin",
+      "bottomHalf": "Pudar setengah bawah",
+      "topHalf": "Pudar setengah atas",
+      "vignetteSoft": "Vignette lembut"
+    },
+    "pack": {
+      "hookCta": {
+        "name": "Hook + CTA",
+        "desc": "Hook viral di playhead, CTA di layar akhir"
+      },
+      "lowerThirdSubscribe": {
+        "name": "Lower third + Subscribe",
+        "desc": "Bilah nama + badge subscribe"
+      },
+      "fullCtaBar": {
+        "name": "CTA + Pudar lower third",
+        "desc": "Like & Subscribe + bilah gradien"
+      },
+      "introOutro": {
+        "name": "Intro + Outro",
+        "desc": "INTRO di playhead, \"Sampai jumpa lagi\" di akhir"
+      },
+      "trendingSave": {
+        "name": "Trending + Simpan ini",
+        "desc": "Opini tidak populer + Simpan untuk nanti"
+      }
+    },
+    "packs": {
+      "oneClick": "Paket sekali klik",
+      "styleBundles": "Paket gaya",
+      "platform": "Dibuat untuk tiap platform",
+      "saveMyStyle": "Simpan gayaku",
+      "styleNamePlaceholder": "Nama gaya…",
+      "styleName": "Nama gaya kustom",
+      "saveStyle": "Simpan gaya kustom",
+      "goTo": "Buka"
+    },
+    "nav": {
+      "shortClips": "Klip Pendek",
+      "assets": "Musik & B-Roll",
+      "timeline": "Timeline",
+      "effects": "Efek",
+      "color": "Warna",
+      "aiEdit": "Transkrip & AI",
+      "export": "Ekspor"
+    },
+    "insights": {
+      "comingSoon": "Insight segera hadir",
+      "comingSoonHint": "Analitik retensi, kekuatan hook, dan tempo akan muncul di sini setelah videomu dianalisis.",
+      "transcript": "Transkrip"
+    }
   }
 }

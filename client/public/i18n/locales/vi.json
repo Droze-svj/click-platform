@@ -846,11 +846,11 @@
     "title": "Thành tích",
     "subtitle": "Theo dõi cột mốc và tiến độ của bạn.",
     "refreshRegistry": "Làm mới",
-    "statTierLabel": "Bậc tiến hóa",
+    "statTierLabel": "Cấp độ",
     "statTierSub": "Còn {{pct}}% đến cấp tiếp theo",
-    "statMilestonesLabel": "Các cột mốc được giải mã",
+    "statMilestonesLabel": "Cột mốc đã mở khóa",
     "statMilestonesSub": "Đã mở khóa đến nay",
-    "statStreakLabel": "Chuỗi mạch lạc",
+    "statStreakLabel": "Chuỗi hiện tại",
     "statStreakSub": "Cao nhất: {{peak}}",
     "statVolumeLabel": "Nội dung đã tạo",
     "statVolumeSub": "Tổng số nội dung đã tạo",
@@ -861,14 +861,14 @@
     "detailPayloads": "Nội dung",
     "detailScripts": "Kịch bản",
     "recentBreakthroughs": "Những đột phá gần đây",
-    "decryptedOn": "ĐƯỢC GIẢI MÃ {{date}}",
+    "decryptedOn": "Mở khóa ngày {{date}}",
     "ascensionVerified": "Đã mở khóa",
     "nodeMatrix": "Tất cả cột mốc",
-    "decrypted": "ĐÃ GIẢI MÃ",
+    "decrypted": "Đã mở khóa",
     "logicGated": "Đã khóa",
     "milestones": {
       "first_video": {
-        "name": "Sáng thế ký",
+        "name": "Video đầu tiên",
         "description": "Tạo video đầu tiên của bạn."
       },
       "first_content": {
@@ -900,11 +900,11 @@
         "description": "Hoàn thành 50 video."
       },
       "streak_7": {
-        "name": "Sự mạch lạc 7",
+        "name": "Chuỗi 7 ngày",
         "description": "Hoạt động 7 ngày liên tiếp."
       },
       "streak_30": {
-        "name": "Sự mạch lạc 30",
+        "name": "Chuỗi 30 ngày",
         "description": "Hoạt động 30 ngày liên tiếp."
       },
       "streak_100": {
@@ -925,7 +925,7 @@
       },
       "early_adopter": {
         "name": "Người dùng tiên phong",
-        "description": "Tích hợp trong giai đoạn Genesis."
+        "description": "Tham gia Click từ sớm."
       },
       "power_user": {
         "name": "Người dùng chuyên sâu",
@@ -993,7 +993,7 @@
     "authorize": "ỦY QUYỀN",
     "dissent": "bất đồng chính kiến",
     "historyTitle": "Lịch sử phê duyệt",
-    "historySubtitle": "Hồ sơ bất biến về các quyết định đồng thuận và ủy quyền nút.",
+    "historySubtitle": "Lịch sử các lần phê duyệt và từ chối.",
     "protocolLogsAnalyzed": "{{count}} yêu cầu",
     "emptyTitle": "Chưa có gì ở đây",
     "emptyState": "Chưa có yêu cầu phê duyệt nào.",
@@ -1126,7 +1126,7 @@
     "purgeForgeBuffer": "Bộ đệm thanh lọc rèn",
     "neuralHeuristics": "Gợi ý",
     "neuralHeuristicsDesc": "Cách cải thiện nội dung của bạn.",
-    "decryptingHeuristics": "Giải mã Heuristic...",
+    "decryptingHeuristics": "Đang phân tích…",
     "predictiveTelemetry": "Dự báo hiệu suất",
     "predictiveTelemetryDesc": "Dự báo nội dung của bạn có thể hoạt động thế nào.",
     "scanningTrajectories": "Quét quỹ đạo..."
@@ -1288,7 +1288,7 @@
     "refreshData": "Làm mới dữ liệu thành viên",
     "activeNodeUplink": "Gói hiện tại",
     "protocolId": "ID gói:",
-    "rootGenesis": "Nguồn gốc rễ",
+    "rootGenesis": "Khởi đầu",
     "genericAccess": "Quyền truy cập chung",
     "lifecycleStatus": "Trạng thái vòng đời:",
     "uninitialized": "Chưa được khởi tạo",
@@ -1307,7 +1307,7 @@
     "coreMatrixUplink": "Tính năng cốt lõi",
     "primeCommandUplink": "Truy cập toàn bộ tính năng",
     "activeProtocol": "Gói hiện tại",
-    "ascending": "Tăng dần...",
+    "ascending": "Đang nâng cấp…",
     "genesisUplink": "Bắt đầu",
     "escalateProtocol": "Nâng cấp"
   },
@@ -1825,7 +1825,7 @@
     "heroIntro": "Kết nối tài khoản mạng xã hội với Click. Mỗi kết nối sẽ bật",
     "heroFeature1": "đăng bài tự động",
     "heroFeature2": "theo dõi tương tác",
-    "heroFeature3": "phân tích khán giả tổng hợp",
+    "heroFeature3": "phân tích khán giả",
     "heroAnd": "Và",
     "statNeuralEncryption": "Mã hóa token",
     "statUplinkLatency": "Tốc độ kết nối",
@@ -2375,7 +2375,7 @@
     "collaborationIntro1": "Mỗi nhóm có",
     "collaborationHighlight1": "tài nguyên dùng chung",
     "collaborationIntro2": ",",
-    "collaborationHighlight2": "vòng phản hồi không đồng bộ",
+    "collaborationHighlight2": "bình luận và phản hồi",
     "collaborationIntro3": ", và một sự thống nhất",
     "collaborationHighlight3": "hàng đợi sản xuất",
     "collaborationIntro4": ". Giữ công việc của mọi người ở một nơi.",
@@ -3113,7 +3113,7 @@
     "neuralLine1": "Nội dung",
     "neuralLine2": "TRUNG TÂM",
     "autonomousPrefix": "Chế độ tự động đang",
-    "dominating": "thống trị",
+    "dominating": "đang chạy",
     "autonomousMid": "cái",
     "autonomousSuffix": "hàng đợi.",
     "neuralActive": "Đang bật chế độ tự động",
@@ -3998,7 +3998,7 @@
     "latticeHealth": "Tình trạng mạng",
     "aggregatedRevenue": "Doanh thu tổng hợp",
     "victoryVectors": "Thành công hôm nay",
-    "encirclementTitle": "Bao vây toàn cầu",
+    "encirclementTitle": "Tổng quan tăng trưởng",
     "encirclementSubtitle": "Thông tin chi tiết được chia sẻ trên Click",
     "godModeSaturationActive": "Trực tiếp",
     "decentralizedIntelligenceLedger": "Nhật ký hoạt động",
@@ -4018,7 +4018,7 @@
     "tabStability": "Tình trạng hệ thống",
     "versionLabel": "Click",
     "overlordTerminalSynced": "Đã kết nối",
-    "mainTitle": "Nhấp vào Thiết bị đầu cuối Overlord",
+    "mainTitle": "Trung tâm điều khiển Click",
     "mainSubtitle": "Điều khiển kiếm tiền và tự động hóa."
   },
   "clickDebugPanel": {
@@ -5408,7 +5408,7 @@
     "presetVibrantPopName": "Nhạc Pop sôi động",
     "presetVibrantPopDesc": "Màu sắc đậm, bão hòa",
     "presetSoftDreamyName": "Mềm mại mộng mơ",
-    "presetSoftDreamyDesc": "Vẻ ngoài thanh tao, nhẹ nhàng",
+    "presetSoftDreamyDesc": "Vẻ ngoài mềm mại, dịu nhẹ",
     "presetElectricVibeName": "Điện",
     "presetElectricVibeDesc": "Vẻ ngoài rực rỡ năng lượng cao",
     "presetRetroVintageName": "cổ điển cổ điển",
@@ -6232,7 +6232,20 @@
     "appliedStyleProfile": "Đã áp dụng phong cách {{name}}",
     "packApplied": "Đã áp dụng {{name}}: chỉnh màu {{grade}} và kiểu phụ đề đi kèm",
     "packAppliedGradeOnly": "Đã áp dụng {{name}}: chỉnh màu {{grade}}. Bật phụ đề để dùng kiểu phụ đề đi kèm.",
-    "packApplyFailed": "Không áp dụng được {{name}}: không tìm thấy kiểu chỉnh màu của gói"
+    "packApplyFailed": "Không áp dụng được {{name}}: không tìm thấy kiểu chỉnh màu của gói",
+    "beatRecut": "✦ Đã cắt lại thành {{count}} clip theo nhịp (thay {{replaced}} clip video)",
+    "beatCut": "✦ Đã cắt thành {{count}} clip khớp nhịp",
+    "autoViralAnalysing": "✦ Chỉnh sửa viral tự động — đang phân tích nhịp và phụ đề…",
+    "autoViralNothingFound": "Chỉnh sửa viral tự động cần nhịp nhạc hoặc bản ghi lời thoại dùng được — không tìm thấy cái nào.",
+    "autoViralNeedsTranscript": "Chỉnh sửa viral tự động cần bản ghi lời thoại để tạo phụ đề hoặc nhạc để cắt. Hãy phiên âm trước rồi thử lại.",
+    "autoViralCuts": "{{clips}} clip theo nhịp · {{transitions}} chuyển cảnh",
+    "autoViralCaptions": "{{count}} phụ đề karaoke",
+    "autoViralDone": "✦ Chỉnh sửa viral tự động: {{summary}}",
+    "autoViralFailed": "Chỉnh sửa viral tự động thất bại — dòng thời gian của bạn không thay đổi.",
+    "resizeTimelineAria": "Đổi kích thước dòng thời gian (kéo lên hoặc xuống)",
+    "resizeTimelineTitle": "Kéo để đổi kích thước dòng thời gian",
+    "timelineHeading": "Dòng thời gian",
+    "cmdCategoryEditor": "TRÌNH CHỈNH SỬA"
   },
   "nicheStrategyPanel": {
     "tabHooks": "móc",
@@ -6310,13 +6323,13 @@
     "featuresTitle": "Tính năng ưu tú",
     "featuresDescription": "Mở khóa trí thông minh đa nền tảng và tăng trưởng dự đoán.",
     "completeTitle": "Mọi thứ đã sẵn sàng",
-    "completeDescription": "Bây giờ bạn đã sẵn sàng để thống trị bối cảnh xã hội.",
+    "completeDescription": "Bạn đã sẵn sàng bắt đầu sáng tạo.",
     "eliteAccessGranted": "Đã cấp quyền truy cập ưu tú",
     "closeOnboarding": "Đóng quá trình giới thiệu",
     "back": "Mặt sau",
-    "startDominating": "Bắt đầu thống trị",
+    "startDominating": "Bắt đầu",
     "nextIntelligence": "Thông tin tiếp theo",
-    "clickGenesis": "Nhấp vào Sáng Thế Ký",
+    "clickGenesis": "Chào mừng đến với Click",
     "welcomeBodyBefore": "Nền tảng duy nhất không chỉ viết—nó",
     "welcomeBodyOperates": "hoạt động",
     "welcomeBodyAfter": ". Hãy cùng thiết lập thương hiệu của bạn.",
@@ -6489,7 +6502,7 @@
     "syncing": "Đang cập nhật...",
     "restart": "Khởi động lại",
     "dismissInstallPrompt": "Loại bỏ lời nhắc cài đặt",
-    "installDescription": "Nâng cao không gian làm việc có khả năng ngoại tuyến nhanh hơn. Được xây dựng cho các hoạt động nội dung ưu tú.",
+    "installDescription": "Cài đặt Click để có ứng dụng nhanh hơn, dùng được cả khi ngoại tuyến.",
     "initializeInstallation": "Khởi tạo cài đặt",
     "tagInstant": "Lập tức",
     "tagEdge": "Bờ rìa",
@@ -6779,7 +6792,7 @@
     "navAeoMetadata": "Siêu dữ liệu AEO",
     "navUgcRaw": "UGC thô",
     "navZeroPartyData": "Dữ liệu không có bên nào",
-    "headerPill": "Giai đoạn 8 - Thống trị thị trường",
+    "headerPill": "Giai đoạn 8 — Công cụ tăng trưởng",
     "headerTitle": "Công cụ tăng trưởng",
     "headerSubtitle": "5 hệ thống khiến CLICK trở thành điều không thể chối cãi"
   },
@@ -6850,14 +6863,14 @@
     "pcv": "PCV",
     "steerSwarmToThisOffer": "Tập trung vào ưu đãi này",
     "s2sNetworkDown": "Mạng S2S ngừng hoạt động",
-    "globalEncirclementTitle": "Bao vây toàn cầu",
+    "globalEncirclementTitle": "Tổng quan tăng trưởng",
     "globalEncirclementSubtitle": "Thông tin chi tiết trên nhiều tài khoản",
     "godModeActiveBadge": "Đang hoạt động",
     "networkHealth": "Tình trạng mạng",
     "aggregatedRevenue": "Doanh thu tổng hợp",
     "victoryVectors": "Hiệu quả nhất",
     "logInitializingTunnel": "[HỆ THỐNG] Đang khởi tạo đường hầm mã hóa S2S...",
-    "logEncirclementActive": "[HỆ THỐNG] Vòng vây đang hoạt động. {{count}} phiên bản anh chị em được kết nối.",
+    "logEncirclementActive": "{{count}} không gian làm việc đã kết nối.",
     "logVectorReceived": "Hook \"{{hook}}\" đang dẫn đầu ở {{cluster}}.",
     "logLocalSynthesis": "Đã cập nhật kết quả cục bộ: trọng số đà tăng +{{percent}}%.",
     "productionStabilityTitle": "Ổn định sản xuất",
@@ -6878,7 +6891,7 @@
     "navGlobalS2s": "S2S toàn cầu",
     "navSystemHealth": "Tình trạng hệ thống",
     "headerPill": "Công cụ nâng cao",
-    "headerTitle": "Nhà ga Overlord",
+    "headerTitle": "Trung tâm điều khiển",
     "headerSubtitle": "Mở rộng thị trường"
   },
   "quickActions": {
@@ -6983,7 +6996,7 @@
     "razorTool": "Công cụ dao cạo (S)",
     "editMode": "Chế độ chỉnh sửa",
     "modeNormal": "Bình thường",
-    "modeRipple": "gợn sóng",
+    "modeRipple": "Ripple",
     "modeRoll": "Cuộn",
     "modeSlip": "Trượt",
     "setInPoint": "Điểm đặt (I)",
@@ -7098,7 +7111,31 @@
   "realTimeVideoPreview": {
     "overlayAlt": "Lớp phủ",
     "metadataError": "Không tải được siêu dữ liệu video. Kiểm tra tính hợp lệ của CORS hoặc URL.",
-    "bootingRenderEngine": "Đang tải bản xem trước..."
+    "bootingRenderEngine": "Đang tải bản xem trước...",
+    "videoFailed": "Không tải được video",
+    "retry": "Thử lại",
+    "dragToCompare": "Kéo để so sánh Trước / Sau",
+    "before": "Trước",
+    "after": "Sau",
+    "rawUnfiltered": "Gốc / Không bộ lọc",
+    "graded": "Đã chỉnh màu",
+    "editCaptionInline": "Sửa phụ đề trực tiếp",
+    "captionPlaceholder": "Nhập nội dung phụ đề...",
+    "opsReverse": "{{count}}× đảo ngược",
+    "opsJCut": "{{count}}× J-cut",
+    "opsLCut": "{{count}}× L-cut",
+    "exportOnlyTitle": "Các thay đổi này chỉ áp dụng khi xuất — bản xem trước phát clip theo chiều gốc với âm thanh đồng bộ bình thường.",
+    "exportOnly": "Chỉ khi xuất",
+    "imageLayer": "Lớp ảnh",
+    "imageFailed": "Không tải được ảnh",
+    "svgLayer": "Lớp SVG",
+    "preview": "Xem trước",
+    "latency": "Độ trễ",
+    "pause": "Tạm dừng",
+    "play": "Phát",
+    "toggleBeforeAfter": "Bật/tắt trước/sau",
+    "beforeAfter": "Trước / sau",
+    "aiStylingActive": "Đang bật phong cách AI"
   },
   "realtimeCollaboration": {
     "failedToJoin": "Không thể tham gia phiên cộng tác",
@@ -7172,7 +7209,137 @@
   },
   "resizableTimeline": {
     "restore": "Khôi phục kích thước dòng thời gian",
-    "maximize": "Tối đa hóa dòng thời gian"
+    "maximize": "Tối đa hóa dòng thời gian",
+    "snapKind": {
+      "word": "Từ",
+      "silence": "Khoảng ngừng",
+      "beat": "Nhịp",
+      "marker": "Điểm đánh dấu",
+      "edge": "Cạnh",
+      "playhead": "Đầu phát",
+      "boundary": "Ranh giới"
+    },
+    "realignedCountOne": "Đã khớp 1 phụ đề với lời nói",
+    "realignedCount": "Đã khớp {{count}} phụ đề với lời nói",
+    "alreadyAligned": "Phụ đề đã được căn chỉnh",
+    "markerNamePrompt": "Tên điểm đánh dấu (tùy chọn):",
+    "unsoloTrack": "Bỏ solo track",
+    "soloTrack": "Solo track",
+    "soloShort": "S",
+    "unmuteTrack": "Bật tiếng track",
+    "muteTrack": "Tắt tiếng track",
+    "unlockTrack": "Mở khóa track",
+    "lockTrack": "Khóa track",
+    "prevFrameTitle": "Khung hình trước (←)",
+    "prevFrame": "Khung hình trước",
+    "pauseTitle": "Tạm dừng (Space)",
+    "playTitle": "Phát (Space)",
+    "pause": "Tạm dừng",
+    "play": "Phát",
+    "nextFrameTitle": "Khung hình sau (→)",
+    "nextFrame": "Khung hình sau",
+    "goToTimeLabel": "Đi tới thời điểm (nhập thời gian, nhấn Enter)",
+    "goToTimeTitle": "Nhập thời gian (VD: 1:05.5) rồi nhấn Enter để nhảy tới",
+    "splitTitle": "Tách clip tại đầu phát (S)",
+    "split": "Tách",
+    "deleteTitle": "Xóa vùng chọn (Delete)",
+    "delete": "Xóa",
+    "rippleOnTitle": "Bật ripple: xóa sẽ dồn khoảng trống trên mọi track",
+    "rippleOffTitle": "Tắt ripple: xóa sẽ để lại khoảng trống",
+    "ripple": "Ripple",
+    "ungroupTitle": "Bỏ nhóm các clip đã chọn",
+    "ungroup": "Bỏ nhóm",
+    "groupTitle": "Nhóm các clip đã chọn để chúng di chuyển và xóa cùng nhau",
+    "group": "Nhóm",
+    "setInTitle": "Đặt điểm vào tại đầu phát (I)",
+    "in": "Vào",
+    "setOutTitle": "Đặt điểm ra tại đầu phát (O)",
+    "out": "Ra",
+    "clearInOutTitle": "Xóa điểm vào/ra (Alt+X)",
+    "clearInOutLabel": "Xóa điểm vào và điểm ra",
+    "snapTitle": "Bắt dính clip vào cạnh, đầu phát và điểm đánh dấu",
+    "snap": "Bắt dính",
+    "speechTitle": "Bắt dính clip và phụ đề vào lời nói",
+    "speechDisabledTitle": "Tạo phụ đề để bật bắt dính theo lời nói",
+    "speech": "Lời nói",
+    "realignTitle": "Căn lại thời gian từng phụ đề theo lời nói",
+    "realign": "Căn lại phụ đề",
+    "dragToPan": "Kéo để di chuyển",
+    "showTracks": "Hiện track",
+    "allTracks": "Tất cả track",
+    "track": {
+      "captions": "Phụ đề",
+      "mainVideo": "Video chính",
+      "broll": "B-roll",
+      "audio": "Âm thanh",
+      "effects": "Hiệu ứng",
+      "captionsSub": "Chữ trên màn hình",
+      "mainVideoSub": "Cảnh quay của bạn",
+      "brollSub": "Cảnh chèn & hình ảnh",
+      "audioSub": "Nhạc, giọng nói & hiệu ứng âm thanh"
+    },
+    "viewGroup": "Chế độ xem dòng thời gian",
+    "view": {
+      "clips": "Clip",
+      "clipsTitle": "Chỉ clip",
+      "hybrid": "Clip + kịch bản",
+      "hybridTitle": "Clip với kịch bản ở phía trên",
+      "script": "Kịch bản",
+      "scriptTitle": "Chỉnh sửa bằng văn bản"
+    },
+    "zoomOut": "Thu nhỏ",
+    "zoomIn": "Phóng to",
+    "hideInsights": "Ẩn các làn phân tích AI",
+    "showInsights": "Hiện các làn phân tích AI",
+    "insights": "Phân tích",
+    "inOutSpan": "Vào/Ra: {{time}}",
+    "inPointTitle": "Điểm vào: {{time}} (kéo để điều chỉnh)",
+    "outPointTitle": "Điểm ra: {{time}} (kéo để điều chỉnh)",
+    "beatLabel": "Nhịp ({{time}} giây)",
+    "markerTitle": "{{name}}: {{time}} (kéo để di chuyển, bấm để tua tới, chuột phải để sửa)",
+    "marker": "Điểm đánh dấu",
+    "markerTag": "{{name}} ({{time}})",
+    "resolve": "Giải quyết",
+    "close": "Đóng",
+    "captionsCountOne": "1 phụ đề",
+    "captionsCount": "{{count}} phụ đề",
+    "clipsCountOne": "1 clip",
+    "clipsCount": "{{count}} clip",
+    "itemsCountOne": "1 mục",
+    "itemsCount": "{{count}} mục",
+    "audienceRetention": "Tỷ lệ giữ chân người xem",
+    "retentionTitle": "Giữ chân: {{value}}%",
+    "audioWaveform": "Dạng sóng âm thanh",
+    "audioWaveformNoAudio": "Dạng sóng âm thanh (không có âm thanh)",
+    "trimStart": "Cắt phần đầu",
+    "trimEnd": "Cắt phần cuối",
+    "jCut": "J-cut",
+    "lCut": "L-cut",
+    "trimmedStart": "Đã cắt phần đầu",
+    "trimmedEnd": "Đã cắt phần cuối",
+    "freeze": "Đóng băng",
+    "reverseSpeed": "Đảo ngược {{speed}}×",
+    "keyframes": "Keyframe",
+    "playheadTitle": "Đầu phát: {{time}} (kéo để tua)",
+    "scrubTitle": "Tua: {{time}}",
+    "dragPlayhead": "Kéo đầu phát",
+    "origin": "Gốc: {{time}}",
+    "moveDelta": "Độ dịch chuyển: {{delta}}",
+    "trackNumber": "Track {{number}}",
+    "clipsMoving": "Đang di chuyển {{count}} clip",
+    "trimStartAt": "Cắt phần đầu: {{time}}",
+    "trimEndAt": "Cắt phần cuối: {{time}}",
+    "workAreaIn": "Đầu vùng làm việc: {{time}}",
+    "workAreaOut": "Cuối vùng làm việc: {{time}}",
+    "span": "Khoảng: {{time}}",
+    "menu": {
+      "splitAtPlayhead": "Tách tại đầu phát",
+      "duplicate": "Nhân bản clip",
+      "ungroup": "Bỏ nhóm clip",
+      "group": "Nhóm clip",
+      "rippleDelete": "Xóa và dồn khoảng trống"
+    },
+    "sceneChange": "Chuyển cảnh quay"
   },
   "revenueOracle": {
     "synchronizing": "Đang tải dữ liệu doanh thu...",
@@ -7682,7 +7849,7 @@
     "neuralScheduling": "Lên lịch thông minh",
     "neuralSchedulingDesc": "Lên lịch đăng vào lúc khán giả của bạn hoạt động nhiều nhất.",
     "evergreenSynthesis": "Tái sử dụng nội dung evergreen",
-    "evergreenSynthesisDesc": "Kích hoạt tái chế nội dung tự phục hồi để có ROI kho lưu trữ vô hạn.",
+    "evergreenSynthesisDesc": "Tự động tái sử dụng nội dung hiệu quả nhất của bạn.",
     "initiateSequence": "Bắt đầu trình tự",
     "neuralProcessing": "Đang xử lý",
     "ecosystemCalibration": "Đang thiết lập...",
@@ -7691,7 +7858,7 @@
     "synchronization": "Quy trình",
     "verified": "ĐÃ XÁC MINH",
     "nodesPrimedPrefix": "Bài đăng của bạn đã",
-    "primed": "mồi",
+    "primed": "sẵn sàng",
     "nodesPrimedSuffix": "để đăng.",
     "estimatedYield": "Năng suất ước tính",
     "neuralIntegrity": "Kiểm tra chất lượng",
@@ -8517,5 +8684,1369 @@
     "shift1d": "+1 ngày",
     "shift1w": "+1 tuần",
     "moveWarning": "Dời bài đăng có thể khiến hai bài trên cùng nền tảng đăng cùng lúc. Bài đang đăng hoặc đã đăng sẽ không bị dời."
+  },
+  "editorSidebar": {
+    "cat": {
+      "aiEdit": {
+        "label": "Tự động chỉnh sửa AI",
+        "desc": "Chỉnh sửa AI một chạm"
+      },
+      "dub": {
+        "label": "Lồng tiếng",
+        "desc": "Dịch giọng nói của bạn sang 10 ngôn ngữ"
+      },
+      "edit": {
+        "label": "Chỉnh sửa",
+        "desc": "Công cụ chỉnh sửa cơ bản"
+      },
+      "assets": {
+        "label": "Tài nguyên của tôi",
+        "desc": "Thêm nhạc, ảnh & clip B-roll"
+      },
+      "effects": {
+        "label": "Hiệu ứng",
+        "desc": "Bộ lọc & cải thiện"
+      },
+      "color": {
+        "label": "Màu",
+        "desc": "Chỉnh màu chuyên nghiệp"
+      },
+      "chromakey": {
+        "label": "Chroma Key",
+        "desc": "Phông xanh & ghép hình"
+      },
+      "timeline": {
+        "label": "Dòng thời gian",
+        "desc": "Chỉnh sửa nâng cao"
+      },
+      "export": {
+        "label": "Xuất",
+        "desc": "Chia sẻ & xuất"
+      },
+      "aiAssist": {
+        "label": "Trợ lý AI",
+        "desc": "Cắt thông minh · xem gợi ý · áp dụng & hoàn tác"
+      },
+      "monetize": {
+        "label": "Kiếm tiền",
+        "desc": "Link sản phẩm · QR · kế hoạch kiếm tiền bằng AI"
+      },
+      "stockLibrary": {
+        "label": "Thư viện stock",
+        "desc": "B-roll · nhạc · GIF · sticker · chuyển cảnh · hiệu ứng âm thanh"
+      },
+      "textMotion": {
+        "label": "Chữ & Chuyển động",
+        "desc": "Phụ đề · hoạt ảnh · chuyển động · phông chữ"
+      }
+    },
+    "group": {
+      "edit": {
+        "label": "Chỉnh sửa",
+        "desc": "Cắt, chỉnh màu, ghép hình — phần chỉnh sửa cốt lõi."
+      },
+      "media": {
+        "label": "Media",
+        "desc": "Tài nguyên, stock, phụ đề & chữ."
+      },
+      "ai": {
+        "label": "AI",
+        "desc": "Tự động chỉnh sửa AI một chạm + lồng tiếng đa ngôn ngữ."
+      },
+      "export": {
+        "label": "Xuất",
+        "desc": "Kết xuất & chia sẻ."
+      }
+    },
+    "badge": {
+      "new": "MỚI",
+      "agency": "Agency",
+      "pro": "PRO",
+      "beta": "BETA"
+    },
+    "title": "Công cụ chỉnh sửa",
+    "ready": "Sẵn sàng",
+    "expand": "Mở rộng thanh bên",
+    "collapse": "Thu gọn thanh bên",
+    "searchPlaceholder": "Tìm công cụ (⌘F)",
+    "clearSearch": "Xóa tìm kiếm",
+    "all": "Tất cả",
+    "recent": "Gần đây",
+    "noTools": "Không tìm thấy công cụ",
+    "pinned": "Đã ghim",
+    "allTools": "Tất cả công cụ",
+    "unpin": "Bỏ ghim",
+    "pinToTop": "Ghim lên đầu",
+    "device": {
+      "desktop": "Máy tính",
+      "tablet": "Máy tính bảng",
+      "mobile": "Điện thoại"
+    },
+    "shortcuts": "Phím tắt",
+    "closeShortcuts": "Đóng phím tắt",
+    "searchTools": "Tìm công cụ"
+  },
+  "editorHUD": {
+    "section": {
+      "edit": "Chỉnh sửa",
+      "color": "Màu",
+      "ai": "Công cụ AI",
+      "effects": "Hiệu ứng",
+      "timeline": "Dòng thời gian",
+      "export": "Xuất",
+      "styleVault": "Style Vault",
+      "aiEdit": "Chỉnh sửa AI",
+      "assets": "Tài nguyên",
+      "growth": "Phân tích",
+      "chromakey": "Chroma Key",
+      "visualFx": "Hiệu ứng hình ảnh",
+      "aiAnalysis": "Phân tích AI",
+      "collaborate": "Cộng tác",
+      "scripts": "Kịch bản",
+      "scheduling": "Lên lịch",
+      "shortClips": "Clip ngắn",
+      "predict": "Dự đoán",
+      "distribution": "Phân phối",
+      "spatial": "Không gian",
+      "agent": "AI Agent",
+      "dub": "Lồng tiếng"
+    },
+    "layout": {
+      "balanced": "Cân bằng",
+      "balancedDesc": "Chia đều khung xem trước và dòng thời gian",
+      "cinematic": "Điện ảnh",
+      "cinematicDesc": "Khung xem trước lớn hơn, tập trung vào phát",
+      "timelineFocus": "Tập trung dòng thời gian",
+      "timelineFocusDesc": "Thêm không gian để chỉnh chi tiết trên dòng thời gian"
+    },
+    "projectName": "Tên dự án",
+    "savingEllipsis": "Đang lưu…",
+    "saveFailed": "Lưu thất bại",
+    "allChangesSaved": "Đã lưu mọi thay đổi",
+    "saving": "Đang lưu",
+    "saved": "Đã lưu",
+    "undoTitle": "Hoàn tác (⌘Z)",
+    "redoTitle": "Làm lại (⌘Y)",
+    "undo": "Hoàn tác",
+    "redo": "Làm lại",
+    "command": "Tìm hoặc chạy lệnh",
+    "commandTitle": "Tìm hoặc chạy lệnh (⌘K)",
+    "workspaceLayoutTitle": "Bố cục không gian làm việc (L)",
+    "workspaceLayout": "Bố cục không gian làm việc",
+    "gpu": "GPU: {{backend}}",
+    "agentRunning": "AI agent đang chạy",
+    "makeViralTitle": "Chạy công thức viral một chạm — hook, cắt, B-roll, khớp nhịp, CTA",
+    "working": "Đang xử lý…",
+    "makeViral": "Làm viral",
+    "focusMode": "Chế độ tập trung",
+    "moreActions": "Thao tác khác",
+    "more": "Thêm",
+    "keyboardShortcuts": "Phím tắt",
+    "exportTitle": "Xuất và đăng",
+    "export": "Xuất"
+  },
+  "quickActionsBar": {
+    "variantsNeedBase": "Hãy thêm phụ đề hoặc hook trước để trình tạo biến thể có nội dung để làm việc.",
+    "noVariants": "Không có biến thể nào — hãy thử hook gốc dài hơn.",
+    "variantsGenerated": "Đã tạo {{count}} biến thể — mở bộ chọn A/B để xem trước.",
+    "variantsFailed": "Tạo biến thể thất bại: {{error}}",
+    "unknownError": "lỗi không xác định",
+    "brollNeedsClip": "Hãy tải một clip trước để nhận gợi ý B-roll.",
+    "noBrollGaps": "Không thấy chỗ trống cho B-roll — clip của bạn đã đủ phong phú về hình ảnh.",
+    "brollSuggested": "Đã gợi ý {{count}} chỗ chèn B-roll. Mở dòng thời gian để xem lại.",
+    "brollFailed": "Gợi ý B-roll thất bại: {{error}}",
+    "trendsWarmingUp": "Nguồn xu hướng đang khởi động — thử lại sau một phút.",
+    "trendsLoaded": "Đang thịnh hành: {{sounds}} âm thanh · {{hashtags}} hashtag. Đang mở bộ chọn.",
+    "trendsFailed": "Không tải được xu hướng: {{error}}",
+    "styleApplied": "Đã áp dụng phong cách của bạn: {{items}}",
+    "styleAppliedGeneric": "Đã áp dụng phong cách đã học của bạn.",
+    "styleNeedsClips": "Hãy đăng 3 clip trước để Click học phong cách của bạn.",
+    "styleTimedOut": "Yêu cầu phong cách đã hết thời gian chờ. Hãy thử lại.",
+    "styleLoadFailed": "Không tải được phong cách của bạn. Hãy thử lại.",
+    "viralEdit": "Chỉnh sửa viral",
+    "viralEditLong": "Chỉnh sửa viral tự động — chỉnh sửa trọn vẹn một chạm",
+    "applyStyle": "Áp dụng phong cách",
+    "split": "Tách",
+    "splitLong": "Tách tại đầu phát",
+    "captions": "Phụ đề",
+    "grade": "Chỉnh màu",
+    "effects": "Hiệu ứng",
+    "aiTools": "Công cụ AI",
+    "clean": "Dọn dẹp",
+    "cleanLong": "Dọn dẹp thông minh",
+    "variants": "Biến thể",
+    "variantsLong": "Biến thể A/B",
+    "broll": "B-roll",
+    "brollLong": "Gợi ý B-roll",
+    "trends": "Xu hướng",
+    "trendsLong": "Đang thịnh hành",
+    "learnedFrom": "Click đã học từ {{count}} clip bạn đã đăng",
+    "ariaLoading": "{{label}} — đang tải",
+    "ariaShortcut": "{{label}} (phím tắt {{key}})"
+  },
+  "aiAutoEdit": {
+    "preset": {
+      "mrbeastEnergy": "MrBeast Energy",
+      "mrbeastEnergyTagline": "Thử thách lớn · phá mô-típ",
+      "hormoziBold": "Hormozi Bold",
+      "hormoziBoldTagline": "Số liệu mạnh · góc nhìn ngược",
+      "cinematicDoc": "Phim tài liệu điện ảnh",
+      "cinematicDocTagline": "Chậm rãi · cắt tinh tế",
+      "educationalClean": "Giáo dục gọn gàng",
+      "educationalCleanTagline": "Đặt câu hỏi · đưa sự thật",
+      "newsAuthority": "Phong cách bản tin",
+      "newsAuthorityTagline": "Tiêu đề · tin nóng · chuyên gia",
+      "casualVlog": "Vlog đời thường",
+      "casualVlogTagline": "Một ngày của tôi · trò chuyện",
+      "mysteryHook": "Hook bí ẩn",
+      "mysteryHookTagline": "Vòng tò mò · hé lộ từ từ",
+      "gymGrit": "Gym Grit",
+      "gymGritTagline": "Cường độ cao · nghiêm khắc",
+      "adhdOverload": "ADHD Overload",
+      "adhdOverloadTagline": "Hỗn loạn · bùng nổ · kích thích cao",
+      "podcastGoldmine": "Mỏ vàng podcast",
+      "podcastGoldmineTagline": "Uy tín · chương · tài liệu ấm áp",
+      "retentionMachine": "Cỗ máy giữ chân",
+      "retentionMachineTagline": "Vòng mở · B-roll · chương"
+    },
+    "opt": {
+      "auto": "Tự động",
+      "vivid": "Rực rỡ",
+      "cinematic": "Điện ảnh",
+      "natural": "Tự nhiên",
+      "cool": "Lạnh",
+      "warm": "Ấm",
+      "vintage": "Cổ điển",
+      "bw": "Đen trắng",
+      "upbeatPop": "Pop sôi động",
+      "chill": "Chill",
+      "darkAmbient": "Dark ambient",
+      "synthwave": "Synthwave",
+      "phonk": "Phonk",
+      "lofi": "Lo-fi",
+      "question": "Câu hỏi",
+      "stat": "Số liệu",
+      "mystery": "Bí ẩn",
+      "story": "Câu chuyện",
+      "boldClaim": "Tuyên bố mạnh",
+      "patternBreak": "Phá mô-típ",
+      "fastCut": "Cắt nhanh",
+      "crossfade": "Hòa tan chéo",
+      "glitch": "Glitch",
+      "whipPan": "Whip pan",
+      "hardCut": "Cắt cứng",
+      "modern": "Hiện đại",
+      "bold": "Nổi bật",
+      "minimal": "Tối giản",
+      "neon": "Neon",
+      "pill": "Viên nhộng",
+      "top": "Trên",
+      "middle": "Giữa",
+      "bottom": "Dưới",
+      "lowerThird": "Thanh tiêu đề dưới",
+      "energetic": "Sôi động",
+      "calm": "Điềm tĩnh",
+      "authoritative": "Uy tín",
+      "playful": "Vui nhộn",
+      "serious": "Nghiêm túc",
+      "urgency": "Khẩn cấp",
+      "value": "Giá trị",
+      "curiosity": "Tò mò",
+      "off": "Tắt",
+      "sparse": "Thưa",
+      "balanced": "Cân bằng",
+      "heavy": "Dày",
+      "gentle": "Nhẹ nhàng",
+      "medium": "Vừa",
+      "aggressive": "Mạnh tay",
+      "educational": "Giáo dục",
+      "entertaining": "Giải trí",
+      "motivational": "Truyền động lực",
+      "promotional": "Quảng bá"
+    },
+    "brief": {
+      "title": "Bản tóm tắt marketing",
+      "postingTimes": "Thời điểm đăng tốt nhất",
+      "competitiveInsights": "Phân tích đối thủ"
+    },
+    "err": {
+      "videoNotFound": "Không tìm thấy dữ liệu video trong phản hồi",
+      "loadFailed": "Không tải được video. Vui lòng thử lại.",
+      "missingSource": "Video này thiếu tệp gốc. Hãy tải lên lại và thử lại.",
+      "tooManyPresets": "Mỗi lần chỉnh sửa chỉ kết hợp được tối đa 3 preset phong cách.",
+      "serviceError": "Dịch vụ AI gặp lỗi: {{error}}",
+      "serviceInternal": "Dịch vụ AI gặp lỗi nội bộ. Hãy thử lại sau giây lát.",
+      "sessionExpired": "Phiên đăng nhập đã hết hạn. Đăng nhập lại và thử lại.",
+      "rateLimited": "Quá nhiều yêu cầu chỉnh sửa. Đợi một chút rồi thử lại.",
+      "rejected": "Yêu cầu bị từ chối ({{status}}). Kiểm tra dữ liệu nhập và thử lại.",
+      "timeout": "Yêu cầu chỉnh sửa đã hết thời gian chờ. Video có thể quá lớn hoặc máy chủ phản hồi chậm.",
+      "network": "Không kết nối được máy chủ. Kiểm tra kết nối và thử lại.",
+      "startFailed": "Không thể bắt đầu chỉnh sửa AI. Hãy thử lại."
+    },
+    "badge": "Tự động chỉnh sửa AI",
+    "title": "Cấu hình quy tắc AI",
+    "untitled": "Dự án chưa đặt tên",
+    "toggleTheme": "Đổi giao diện",
+    "analyze": "Phân tích video",
+    "analyzing": "Đang phân tích...",
+    "backToVideos": "Quay lại video",
+    "processingTitle": "Đang xử lý video",
+    "processingBody": "AI đang phân tích, cắt và tối ưu video của bạn...",
+    "initializing": "Đang khởi tạo",
+    "result": {
+      "title": "Video của bạn đã sẵn sàng",
+      "body": "Mở trong trình chỉnh sửa để tinh chỉnh, hoặc tải xuống luôn.",
+      "editsApplied": "Đã áp dụng chỉnh sửa",
+      "openInEditor": "Mở trong trình chỉnh sửa",
+      "downloadTitle": "Tải xuống video đã chỉnh sửa",
+      "download": "Tải xuống",
+      "viewClipsTitle": "Xem các clip đã tạo",
+      "viewClips": "Xem clip",
+      "dismissTitle": "Bỏ qua kết quả này",
+      "dismiss": "Bỏ qua"
+    },
+    "diag": {
+      "title": "Chẩn đoán",
+      "complete": "Đã phân tích xong",
+      "suggestedLength": "Độ dài đề xuất"
+    },
+    "plan": {
+      "title": "Kế hoạch chỉnh sửa của bạn",
+      "subtitle": "AI sẽ làm gì với các cài đặt bên phải",
+      "opening": "Mở đầu",
+      "openingHook": "Mở đầu bằng khoảnh khắc mạnh nhất",
+      "openingOriginal": "Giữ phần mở đầu gốc",
+      "pacing": "Nhịp độ",
+      "pacingGentle": "Cắt nhẹ nhàng",
+      "pacingFast": "Cắt nhanh, gọn",
+      "pacingBalanced": "Cắt cân bằng",
+      "deadAir": "Khoảng lặng",
+      "removed": "Đã xóa",
+      "kept": "Giữ lại",
+      "captions": "Phụ đề",
+      "burnedIn": "Gắn cứng",
+      "off": "Tắt",
+      "clips": "Clip",
+      "under30s": "dưới 30 giây",
+      "fullLength": "toàn bộ độ dài",
+      "oneVideo": "Một video đã chỉnh sửa",
+      "format": "Định dạng"
+    },
+    "director": {
+      "title": "AI Director",
+      "subtitle": "Chọn tối đa 3 phong cách hoặc tinh chỉnh từng cài đặt.",
+      "presetsOne": "{{count}} preset: {{names}}",
+      "presetsOther": "{{count}} preset: {{names}}"
+    },
+    "targetPlatform": "Nền tảng mục tiêu",
+    "contentTone": "Giọng điệu nội dung",
+    "stylePreset": "Preset phong cách",
+    "presetsSelected": "Đã chọn {{count}}/3 · bấm lần nữa để bỏ",
+    "presetCap": "Tối đa 3 preset — bỏ một cái để đổi",
+    "presetSelectedTitle": "Đã chọn #{{n}} — bấm để bỏ",
+    "presetSelect": "Chọn phong cách: {{name}}",
+    "presetSelectedAria": "Phong cách đã chọn #{{n}}: {{name}}",
+    "aiTasks": "Tác vụ AI",
+    "task": {
+      "removeSilence": "Xóa khoảng lặng",
+      "removeSilenceDesc": "Tự động cắt khoảng lặng và chỗ ngừng",
+      "optimizePacing": "Tối ưu nhịp độ",
+      "optimizePacingDesc": "Cắt gọn để giữ chân người xem",
+      "enhanceAudio": "Cải thiện âm thanh",
+      "enhanceAudioDesc": "Giảm tạp âm + cân bằng mức",
+      "generateClips": "Tạo clip ngắn",
+      "generateClipsDesc": "Trích xuất khoảnh khắc viral",
+      "addCaptions": "Gắn phụ đề cứng",
+      "addCaptionsDesc": "Chữ động đồng bộ theo từng từ",
+      "enhanceColor": "Hiệu chỉnh màu",
+      "enhanceColorDesc": "LUT tự động + chỉnh màu"
+    },
+    "output": "Đầu ra",
+    "aspectRatio": "Tỷ lệ khung hình",
+    "clipsToGenerate": "Số clip cần tạo",
+    "clipCountAria": "Số clip cần tạo",
+    "targetLength": "Độ dài mục tiêu",
+    "full": "Đầy đủ",
+    "pacing": "Nhịp độ",
+    "advanced": "Nâng cao",
+    "advancedHint": "Mood, phụ đề, chuyển cảnh, giọng nói, B-roll, CTA",
+    "sel": {
+      "colorGrade": "Chỉnh màu",
+      "musicGenre": "Thể loại nhạc",
+      "hookStyle": "Kiểu hook",
+      "transitions": "Chuyển cảnh",
+      "captionStyle": "Kiểu phụ đề",
+      "subtitlePosition": "Vị trí phụ đề",
+      "voiceTone": "Tông giọng",
+      "ctaStyle": "Kiểu CTA",
+      "brollFrequency": "Tần suất B-roll"
+    },
+    "speedRamping": "Speed ramping",
+    "speedRampingHint": "Tăng giảm tốc độ clip để tạo năng lượng",
+    "toggleSpeedRamping": "Bật/tắt speed ramping",
+    "prioritizeHook": "Ưu tiên hook",
+    "prioritizeHookHint": "Tận dụng 3 giây đầu để giữ chân người xem",
+    "togglePrioritizeHook": "Bật/tắt ưu tiên hook",
+    "creativeDirection": "Định hướng sáng tạo",
+    "creativeDirectionHint": "tùy chọn · ghi đè mặc định của AI",
+    "creativeDirectionPlaceholder": "VD: Làm cho video có cảm giác điện ảnh và tối, không jump cut, nhấn mạnh khoảng lặng cảm xúc ở 0:42…",
+    "autoFit": "Tự động khớp",
+    "aiPlan": "Kế hoạch AI",
+    "preloadedStyle": "Đã tải sẵn phong cách của bạn",
+    "planLine": {
+      "composeOne": "Tạo {{count}} clip {{aspect}}, mục tiêu {{length}}",
+      "composeOther": "Tạo {{count}} clip {{aspect}}, mục tiêu {{length}}",
+      "forPlatform": "cho {{platform}}",
+      "tone": "giọng điệu {{tone}}",
+      "acrossPresets": "trên {{presets}} ({{count}} biến thể)",
+      "autoStyle": "với phong cách {{auto}}",
+      "autoDetected": "tự động phát hiện",
+      "grade": "chỉnh màu {{grade}}",
+      "hook": "hook {{hook}}",
+      "pacing": "nhịp độ {{pacing}}",
+      "speedRamping": "bật speed ramping",
+      "broll": "B-roll {{broll}}"
+    },
+    "tasksOne": "{{count}} tác vụ",
+    "tasksOther": "{{count}} tác vụ",
+    "estimate": "khoảng {{time}}",
+    "chip": {
+      "captions": "Phụ đề",
+      "autoGrade": "Tự chỉnh màu",
+      "speedRamp": "Speed ramp"
+    },
+    "composing": "Đang dựng video của bạn…",
+    "composeOne": "Tạo {{count}} clip",
+    "composeOther": "Tạo {{count}} clip",
+    "using": "Đang dùng {{names}}",
+    "autoSelectPreset": "Tự chọn preset dựa trên nội dung của bạn",
+    "tasksOnOne": "Bật {{count}} tác vụ",
+    "tasksOnOther": "Bật {{count}} tác vụ",
+    "dismissError": "Bỏ qua lỗi này",
+    "dismiss": "Bỏ qua"
+  },
+  "propertiesPanel": {
+    "layout": {
+      "bottom": "Dưới",
+      "bottomTitle": "Dưới",
+      "lowerThird": "Phía dưới",
+      "lowerThirdTitle": "Phần ba dưới",
+      "top": "Trên",
+      "topTitle": "Trên",
+      "fullWidth": "Toàn chiều rộng",
+      "fullWidthTitle": "Thanh toàn chiều rộng"
+    },
+    "tab": {
+      "transform": "Vị trí",
+      "color": "Màu",
+      "captions": "Phụ đề",
+      "text": "Chữ",
+      "clip": "Clip"
+    },
+    "reset": "Đặt lại",
+    "title": "Thuộc tính",
+    "activeTab": "Cài đặt {{tab}}",
+    "close": "Đóng thuộc tính",
+    "clipProperties": "Thuộc tính clip",
+    "selectedClip": "Clip đã chọn",
+    "playbackSpeed": "Tốc độ phát",
+    "playbackSpeedTitle": "Tốc độ phát: {{speed}}x",
+    "playbackSpeedHint": "Tăng tốc hoặc làm chậm clip này.",
+    "stabilization": "Chống rung",
+    "stabilizationTitle": "Chống rung: {{value}}%",
+    "stabilizationHint": "Mức làm mượt rung máy quay.",
+    "volume": "Âm lượng",
+    "volumeTitle": "Âm lượng: {{value}}%",
+    "autoDucking": "Tự động giảm nhạc",
+    "autoDuckingHint": "Giảm nhạc khi có người nói",
+    "autoDuckingToggle": "Bật hoặc tắt tự động giảm nhạc",
+    "positionAndSize": "Vị trí và kích thước",
+    "scale": "Tỷ lệ (%)",
+    "positionX": "Vị trí X",
+    "positionY": "Vị trí Y",
+    "rotation": "Xoay (°)",
+    "animation": "Hoạt ảnh",
+    "keyframesCountOne": "1 keyframe",
+    "keyframesCount": "{{count}} keyframe",
+    "addKeyframe": "+ Thêm keyframe tại đầu phát",
+    "prevKeyframe": "◁ Trước",
+    "nextKeyframe": "Sau ▷",
+    "remove": "Xóa",
+    "curve": "Đường cong",
+    "easing": {
+      "linear": "Tuyến tính",
+      "easeIn": "Chậm đầu",
+      "easeOut": "Chậm cuối",
+      "easeInOut": "Chậm đầu và cuối",
+      "bounceOut": "Nảy",
+      "elasticOut": "Đàn hồi",
+      "cubic": "Mượt (mạnh)"
+    },
+    "brightness": "Độ sáng",
+    "contrast": "Độ tương phản",
+    "saturation": "Độ bão hòa",
+    "temperature": "Nhiệt độ màu",
+    "clarity": "Độ rõ",
+    "dehaze": "Khử mờ",
+    "captionsOn": "Hiện phụ đề",
+    "captionsOnHint": "Hiện bản ghi lời thoại dưới dạng phụ đề",
+    "captionLayout": "Vị trí phụ đề",
+    "textOverlays": "Chữ phủ",
+    "noTextOverlays": "Chưa có chữ phủ nào",
+    "deleteTextOverlay": "Xóa chữ phủ",
+    "synced": "Đã đồng bộ",
+    "preset": {
+      "tiktok": {
+        "label": "TikTok",
+        "description": "Đậm, ở giữa, ấn tượng mạnh"
+      },
+      "reels": {
+        "label": "Reels",
+        "description": "Chữ hoa gọn gàng, hợp xu hướng"
+      },
+      "podcast": {
+        "label": "Podcast",
+        "description": "Tối giản, phần ba dưới"
+      },
+      "cinematic": {
+        "label": "Điện ảnh",
+        "description": "Chữ serif kiểu phim"
+      },
+      "documentary": {
+        "label": "Phim tài liệu",
+        "description": "Thanh phụ đề cổ điển"
+      },
+      "neon": {
+        "label": "Neon",
+        "description": "Phát sáng, không khí về đêm"
+      },
+      "karaoke": {
+        "label": "Karaoke",
+        "description": "Kiểu karaoke đậm"
+      },
+      "pill": {
+        "label": "Viên nhộng",
+        "description": "Chữ trong khung bo tròn"
+      },
+      "bubble": {
+        "label": "Bong bóng",
+        "description": "Kiểu bong bóng thoại"
+      },
+      "gradient": {
+        "label": "Chuyển màu",
+        "description": "Chữ chuyển màu nhiều sắc"
+      },
+      "retro": {
+        "label": "Retro",
+        "description": "Vẻ cổ điển ấm áp"
+      },
+      "vintage": {
+        "label": "Cổ điển",
+        "description": "Máy đánh chữ màu nâu đỏ"
+      },
+      "pop": {
+        "label": "Pop",
+        "description": "Tươi sáng và mạnh mẽ"
+      },
+      "high-contrast": {
+        "label": "Dễ tiếp cận",
+        "description": "Tương phản cao, dễ đọc"
+      },
+      "kinetic": {
+        "label": "Chuyển động",
+        "description": "Chữ bật lên theo nhịp"
+      },
+      "slow-zoom": {
+        "label": "Zoom chậm",
+        "description": "Tỷ lệ 100% → 110%"
+      },
+      "fly-in-left": {
+        "label": "Bay vào từ trái",
+        "description": "Bay vào từ ngoài màn hình bên trái"
+      },
+      "fly-in-right": {
+        "label": "Bay vào từ phải",
+        "description": "Bay vào từ ngoài màn hình bên phải"
+      },
+      "fly-in-top": {
+        "label": "Bay vào từ trên",
+        "description": "Bay vào từ ngoài màn hình phía trên"
+      },
+      "fly-in-bottom": {
+        "label": "Bay vào từ dưới",
+        "description": "Bay vào từ ngoài màn hình phía dưới"
+      },
+      "fade-in-out": {
+        "label": "Hiện dần & mờ dần",
+        "description": "Độ mờ 0 → 1 → 0"
+      }
+    }
+  },
+  "basicEditor": {
+    "preset": {
+      "title": {
+        "label": "Tiêu đề"
+      },
+      "text": {
+        "yourTitleHere": "Tiêu đề của bạn",
+        "subscribeForMore": "Đăng ký để xem thêm",
+        "likeSubscribe": "Like & Đăng ký",
+        "watchMore": "Xem thêm →",
+        "commentBelow": "Bình luận bên dưới",
+        "linkInBio": "Link ở bio",
+        "addYourCaption": "Thêm chú thích của bạn",
+        "followForMore": "Theo dõi để xem thêm",
+        "newText": "CHỮ MỚI",
+        "youNeedToSeeThis": "BẠN PHẢI XEM CÁI NÀY",
+        "nameTitle": "Tên · Chức danh",
+        "proTip": "MẸO HAY",
+        "tapToLearnMore": "CHẠM ĐỂ TÌM HIỂU THÊM",
+        "waitForIt": "ĐỢI ĐÃ...",
+        "storyTime": "KỂ CHUYỆN",
+        "youWontBelieveWhatHappened": "Bạn sẽ không tin chuyện gì đã xảy ra",
+        "dayInMyLife": "Một ngày của tôi",
+        "day1Of": "Ngày 1 của...",
+        "getReadyForThis": "Chuẩn bị tinh thần nhé",
+        "watchTillTheEnd": "Xem đến cuối nhé",
+        "noOneTalksAboutThis": "Không ai nói về điều này",
+        "theSecretTheyDontWantYouToKnow": "Bí mật họ không muốn bạn biết",
+        "theSecretIs": "BÍ MẬT LÀ",
+        "insane": "QUÁ ĐỈNH!",
+        "actually": "thật ra...",
+        "now": "ngay",
+        "zeroCost": "MIỄN PHÍ",
+        "watch": "XEM",
+        "here": "ĐÂY",
+        "swipeUp": "Vuốt lên",
+        "seeYouNextTime": "Hẹn gặp lại",
+        "unpopularOpinion": "Quan điểm trái chiều:",
+        "thisChangedEverything": "Điều này đã thay đổi tất cả",
+        "hotTake": "Quan điểm nóng:",
+        "nobodyTalksAboutThis": "Chẳng ai nói về điều này",
+        "povYouJustFoundTheBestTip": "POV: Bạn vừa tìm ra mẹo hay nhất",
+        "saveThisForLater": "Lưu lại xem sau",
+        "commentYourAnswerBelow": "Bình luận câu trả lời của bạn bên dưới",
+        "dropAIfYouAgree": "Thả 👍 nếu bạn đồng ý",
+        "part1": "Phần 1",
+        "chapter1": "Chương 1",
+        "intro": "INTRO",
+        "outro": "OUTRO",
+        "comingUpNext": "Tiếp theo là...",
+        "quickRecap": "Tóm tắt nhanh"
+      },
+      "subscribe": {
+        "label": "Đăng ký"
+      },
+      "likeSubscribe": {
+        "label": "Like & Đăng ký"
+      },
+      "watchMore": {
+        "label": "Xem thêm"
+      },
+      "comment": {
+        "label": "Bình luận"
+      },
+      "linkInBio": {
+        "label": "Link ở bio"
+      },
+      "caption": {
+        "label": "Phụ đề"
+      },
+      "follow": {
+        "label": "Theo dõi"
+      },
+      "custom": {
+        "label": "Tùy chỉnh"
+      },
+      "hook": {
+        "label": "Hook"
+      },
+      "lowerThird": {
+        "label": "Thanh tiêu đề dưới"
+      },
+      "callout": {
+        "label": "Chú thích nổi"
+      },
+      "timestamp": {
+        "label": "Mốc thời gian"
+      },
+      "waitForIt": {
+        "label": "Đợi đã"
+      },
+      "storyTime": {
+        "label": "Kể chuyện"
+      },
+      "youWontBelieve": {
+        "label": "Bạn sẽ không tin"
+      },
+      "dayInMyLife": {
+        "label": "Một ngày của tôi"
+      },
+      "dayXOf": {
+        "label": "Ngày X của"
+      },
+      "getReady": {
+        "label": "Sẵn sàng"
+      },
+      "watchTillEnd": {
+        "label": "Xem đến cuối"
+      },
+      "noOneTalksAbout": {
+        "label": "Không ai nói về"
+      },
+      "theSecret": {
+        "label": "Bí mật"
+      },
+      "hormoziBold": {
+        "label": "Hormozi Bold"
+      },
+      "beastImpact": {
+        "label": "Beast Impact"
+      },
+      "minimalNarrative": {
+        "label": "Kể chuyện tối giản"
+      },
+      "subliminalQuick": {
+        "label": "Thoáng qua nhanh"
+      },
+      "punchyHighlight": {
+        "label": "Nhấn mạnh nổi bật"
+      },
+      "arrowRight": {
+        "label": "Mũi tên →"
+      },
+      "arrowLeft": {
+        "label": "Mũi tên ←"
+      },
+      "proTip": {
+        "label": "MẸO HAY"
+      },
+      "watch": {
+        "label": "XEM"
+      },
+      "here": {
+        "label": "ĐÂY"
+      },
+      "swipeUp": {
+        "label": "Vuốt lên"
+      },
+      "commentBelow": {
+        "label": "Bình luận bên dưới"
+      },
+      "tapToLearnMore": {
+        "label": "Chạm để tìm hiểu thêm"
+      },
+      "seeYouNextTime": {
+        "label": "Hẹn gặp lại"
+      },
+      "unpopularOpinion": {
+        "label": "Quan điểm trái chiều"
+      },
+      "thisChangedEverything": {
+        "label": "Điều này thay đổi tất cả"
+      },
+      "hotTake": {
+        "label": "Quan điểm nóng"
+      },
+      "nobodyTalksAbout": {
+        "label": "Chẳng ai nói về"
+      },
+      "saveThis": {
+        "label": "Lưu lại"
+      },
+      "commentYour": {
+        "label": "Bình luận câu trả lời"
+      },
+      "dropA": {
+        "label": "Thả một"
+      },
+      "part1": {
+        "label": "Phần 1"
+      },
+      "chapter": {
+        "label": "Chương"
+      },
+      "intro": {
+        "label": "Intro"
+      },
+      "outro": {
+        "label": "Outro"
+      },
+      "next": {
+        "label": "Tiếp theo"
+      },
+      "recap": {
+        "label": "Tóm tắt"
+      }
+    },
+    "filter": {
+      "vibrant": {
+        "name": "Sống động",
+        "desc": "Màu mạnh"
+      },
+      "mono": {
+        "name": "Mono",
+        "desc": "Đen trắng"
+      },
+      "cinematic": {
+        "name": "Điện ảnh",
+        "desc": "Chất phim"
+      },
+      "warm": {
+        "name": "Ấm",
+        "desc": "Giờ vàng"
+      },
+      "cool": {
+        "name": "Lạnh",
+        "desc": "Tông xanh"
+      },
+      "vintage": {
+        "name": "Cổ điển",
+        "desc": "Retro"
+      },
+      "moody": {
+        "name": "Trầm",
+        "desc": "Tối và đậm"
+      },
+      "vivid": {
+        "name": "Rực rỡ",
+        "desc": "Rất nổi"
+      },
+      "noir": {
+        "name": "Noir",
+        "desc": "Đen trắng tương phản cao"
+      },
+      "sunset": {
+        "name": "Hoàng hôn",
+        "desc": "Giờ vàng"
+      },
+      "breeze": {
+        "name": "Gió nhẹ",
+        "desc": "Mát và trong"
+      },
+      "matte": {
+        "name": "Matte",
+        "desc": "Phẳng và dịu"
+      },
+      "neon": {
+        "name": "Neon",
+        "desc": "Màu nổi"
+      },
+      "autumn": {
+        "name": "Mùa thu",
+        "desc": "Tông đất ấm"
+      },
+      "winter": {
+        "name": "Mùa đông",
+        "desc": "Mát và sạch"
+      },
+      "dreamy": {
+        "name": "Mơ màng",
+        "desc": "Pastel dịu"
+      },
+      "reset": {
+        "name": "Đặt lại",
+        "desc": "Mặc định"
+      }
+    },
+    "style": {
+      "creatorBold": {
+        "label": "Creator nổi bật",
+        "desc": "Viral năng lượng cao"
+      },
+      "softAesthetic": {
+        "label": "Thẩm mỹ dịu",
+        "desc": "Nhẹ nhàng & mơ màng"
+      },
+      "corporateMinimal": {
+        "label": "Doanh nghiệp tối giản",
+        "desc": "Gọn gàng & chuyên nghiệp"
+      },
+      "darkMoody": {
+        "label": "Tối & trầm",
+        "desc": "Bóng tối kịch tính"
+      },
+      "vibrantPop": {
+        "label": "Pop rực rỡ",
+        "desc": "Nhiều màu & mạnh mẽ"
+      },
+      "cinematicFilm": {
+        "label": "Phim điện ảnh",
+        "desc": "Trailer phim"
+      },
+      "noirDramatic": {
+        "label": "Noir kịch tính",
+        "desc": "Đen trắng kịch tính"
+      },
+      "lifestyleWarm": {
+        "label": "Lifestyle ấm áp",
+        "desc": "Vlog & du lịch"
+      },
+      "podcastPro": {
+        "label": "Podcast Pro",
+        "desc": "Gọn gàng & chuyên nghiệp"
+      },
+      "documentary": {
+        "label": "Phim tài liệu",
+        "desc": "Tự nhiên & cuốn hút"
+      },
+      "fashionEditorial": {
+        "label": "Thời trang tạp chí",
+        "desc": "Phong cách thời trang cao cấp"
+      },
+      "retroWarm": {
+        "label": "Retro ấm",
+        "desc": "Ấm áp hoài cổ"
+      },
+      "cinematicDrama": {
+        "label": "Kịch tính điện ảnh",
+        "desc": "Sâu lắng & kịch tính"
+      },
+      "comedyBright": {
+        "label": "Hài tươi sáng",
+        "desc": "Mạnh mẽ & vui nhộn"
+      },
+      "sportsDynamic": {
+        "label": "Thể thao năng động",
+        "desc": "Sẵn sàng cho hành động"
+      },
+      "savedDesc": "Đã lưu"
+    },
+    "platform": {
+      "tiktok": {
+        "desc": "9:16, mạnh mẽ"
+      },
+      "youtube": {
+        "desc": "9:16, cân bằng"
+      },
+      "feed": {
+        "label": "Bảng tin Instagram",
+        "desc": "1:1, rực rỡ"
+      },
+      "portrait": {
+        "label": "Instagram dọc",
+        "desc": "4:5, ấm áp"
+      },
+      "landscape": {
+        "label": "YouTube / Ngang",
+        "desc": "16:9, gọn gàng"
+      },
+      "linkedin": {
+        "desc": "16:9, chuyên nghiệp"
+      }
+    },
+    "filterCategory": {
+      "all": "Tất cả",
+      "mood": "Cảm xúc",
+      "creative": "Sáng tạo",
+      "dramatic": "Kịch tính",
+      "neutral": "Đặt lại"
+    },
+    "shapePreset": {
+      "logoCorner": "Logo ở góc",
+      "subscribeBadge": "Huy hiệu đăng ký",
+      "fullWidthBar": "Thanh toàn chiều rộng",
+      "dividerLine": "Đường phân cách",
+      "highlightBox": "Khung làm nổi bật",
+      "cornerAccent": "Điểm nhấn góc"
+    },
+    "undo": "Hoàn tác",
+    "redo": "Làm lại",
+    "searchTools": "Tìm công cụ...",
+    "clearSearch": "Xóa tìm kiếm",
+    "layersCount": "{{count}} lớp",
+    "reset": "Đặt lại",
+    "add": "Thêm",
+    "save": "Lưu",
+    "color": "Màu",
+    "toast": {
+      "undoApplied": "Đã hoàn tác",
+      "redoApplied": "Đã làm lại",
+      "fontUploading": "Đang tải phông chữ lên…",
+      "fontAdded": "Đã thêm phông chữ.",
+      "fontInvalid": "Tệp phông chữ này không được hỗ trợ.",
+      "fontFailed": "Không tải lên được phông chữ.",
+      "rectangleAdded": "Đã thêm hình chữ nhật",
+      "circleAdded": "Đã thêm hình tròn",
+      "lineAdded": "Đã thêm đường kẻ",
+      "addedName": "Đã thêm {{name}}",
+      "addedQuoted": "Đã thêm \"{{name}}\"",
+      "addedAt": "Đã thêm \"{{name}}\" tại {{time}} giây",
+      "enterImageUrl": "Nhập URL ảnh",
+      "imageAdded": "Đã thêm ảnh phủ",
+      "svgAddedFromFile": "Đã thêm SVG phủ từ tệp — tạo chuyển động bằng keyframe trong Hiệu ứng",
+      "enterSvgUrl": "Nhập URL SVG (VD: https://… .svg hoặc data:image/svg+xml,…)",
+      "svgAdded": "Đã thêm SVG phủ — tạo chuyển động bằng keyframe trong Hiệu ứng",
+      "compoundSaved": "Đã lưu \"{{name}}\" — thêm vào dòng thời gian bất cứ lúc nào",
+      "compoundRemoved": "Đã xóa clip ghép",
+      "renamed": "Đã đổi tên thành \"{{name}}\"",
+      "addTextHint": "Thêm chữ — gõ rồi nhấn Thêm hoặc Ctrl+Enter",
+      "textAdded": "Đã thêm chữ phủ",
+      "packApplied": "Đã áp dụng gói {{name}}",
+      "saved": "Đã lưu \"{{name}}\"",
+      "filtersReset": "Đã đặt lại bộ lọc về mặc định",
+      "nameYourStyle": "Đặt tên cho phong cách rồi bấm Lưu",
+      "applied": "Đã áp dụng {{name}}",
+      "speed": "Tốc độ: {{value}}×"
+    },
+    "compound": {
+      "untitled": "Clip ghép chưa đặt tên",
+      "title": "Lưu thành clip ghép",
+      "namePlaceholder": "Tên clip ghép…",
+      "name": "Tên clip ghép",
+      "durationAria": "Thời lượng clip ghép tính bằng giây",
+      "delete": "Xóa clip ghép \"{{name}}\""
+    },
+    "search": {
+      "filterHit": "Bộ lọc: {{name}}",
+      "styleHit": "Phong cách: {{name}}",
+      "motionHit": "Chuyển động: {{name}}",
+      "textHit": "Chữ: {{name}}"
+    },
+    "caption": {
+      "noTranscript": "Không tìm thấy bản ghi lời thoại. Dán kịch bản vào ô bên dưới rồi thử lại.",
+      "noneGenerated": "Không tạo được phụ đề nào — bản ghi lời thoại có thể quá ngắn.",
+      "addedToast": "Đã thêm {{count}} phụ đề — kiểu {{style}}",
+      "generationFailed": "Tạo phụ đề thất bại",
+      "failedToast": "Tạo phụ đề tự động thất bại",
+      "title": "Phụ đề tự động AI",
+      "clearTitle": "Xóa phụ đề tự động",
+      "cleared": "Đã xóa phụ đề tự động",
+      "count": "{{count}} phụ đề",
+      "ready": "Sẵn sàng",
+      "noScript": "Chưa có kịch bản",
+      "pasteScript": "Dán kịch bản",
+      "pasteScriptTitle": "Dán kịch bản video vào đây",
+      "pastePlaceholder": "Dán hoặc nhập lời nói trong video của bạn…",
+      "wordCount": "{{count}} từ",
+      "wordsPerLine": "Từ/dòng",
+      "position": "Vị trí",
+      "positionAt": {
+        "top": "Đặt phụ đề ở trên",
+        "mid": "Đặt phụ đề ở giữa",
+        "bottom": "Đặt phụ đề ở dưới"
+      },
+      "colorTitle": "Màu chữ phụ đề",
+      "setColor": "Đặt màu phụ đề thành {{color}}",
+      "addedInStyle": "Đã thêm {{count}} phụ đề theo kiểu {{style}}",
+      "generateAria": "Tạo phụ đề tự động từ bản ghi lời thoại",
+      "generating": "Đang tạo phụ đề {{count}} từ…",
+      "generate": "Tạo phụ đề"
+    },
+    "captionStyle": {
+      "minimal": "Tối giản",
+      "neon": "Neon",
+      "kinetic": "Chuyển động",
+      "cyber": "Cyber",
+      "meme": "Meme",
+      "retro": "Retro",
+      "quote": "Trích dẫn"
+    },
+    "translate": {
+      "noCaptions": "Không có phụ đề nào trên dòng thời gian để dịch.",
+      "inProgress": "Đang dịch phụ đề (giữ nguyên thời gian)…",
+      "done": "Đã dịch phụ đề sang {{language}}",
+      "empty": "Đã dịch xong nhưng không có phụ đề nào được trả về.",
+      "failed": "Không dịch được phụ đề.",
+      "title": "Dịch phụ đề",
+      "languageTitle": "Chọn ngôn ngữ muốn dịch sang",
+      "translating": "Đang dịch…",
+      "translate": "Dịch"
+    },
+    "emoji": {
+      "noTranscript": "Không có từ nào trong bản ghi lời thoại để ghép emoji. Hãy tạo bản ghi trước.",
+      "inProgress": "Đang ghép emoji với lời thoại…",
+      "noneFound": "Không tìm thấy emoji phù hợp trong bản ghi lời thoại.",
+      "added": "Đã thêm {{count}} emoji vào dòng thời gian",
+      "failed": "Tạo emoji thất bại",
+      "title": "Emoji tự động",
+      "clearTitle": "Xóa emoji đã tạo",
+      "cleared": "Đã xóa emoji",
+      "count": "{{count}} emoji",
+      "enter": "Hiệu ứng vào",
+      "enterTitle": "Chọn cách emoji xuất hiện",
+      "exit": "Hiệu ứng ra",
+      "exitTitle": "Chọn cách emoji biến mất",
+      "style": "Kiểu",
+      "styleTitle": "Chọn kiểu emoji",
+      "size": "Kích thước emoji",
+      "sizeTitle": "Chọn kích thước emoji",
+      "density": "Tần suất",
+      "densityTitle": "Chọn tần suất xuất hiện của emoji",
+      "placement": "Vị trí",
+      "placementTitle": "Chọn vị trí đặt emoji",
+      "inDuration": "Thời lượng vào: {{value}} giây",
+      "inDurationTitle": "Thời lượng hiệu ứng vào",
+      "outDuration": "Thời lượng ra: {{value}} giây",
+      "outDurationTitle": "Thời lượng hiệu ứng ra",
+      "generating": "Đang tạo emoji…",
+      "generate": "Tạo emoji"
+    },
+    "emojiOpt": {
+      "enter": {
+        "pop": "💥 Bật ra",
+        "bounce": "🦘 Nảy lên",
+        "slide": "➡️ Trượt vào",
+        "pulse": "💓 Zoom nhịp",
+        "shake": "⚡ Rung máy quay",
+        "blur": "🌫️ Hiện mờ"
+      },
+      "exit": {
+        "fade": "🌫️ Mờ dần mượt",
+        "pop": "💥 Bật tắt",
+        "slideBottom": "⬇️ Trượt xuống",
+        "bounceOut": "🦘 Nảy ra",
+        "scaleOut": "🔍 Thu nhỏ",
+        "zoomOut": "🔎 Zoom ra",
+        "flipOut": "🔄 Lật ra"
+      },
+      "style": {
+        "pop3d": "✨ 3D nổi",
+        "neonGlow": "🏮 Phát sáng neon",
+        "flat": "📄 Phẳng tối giản"
+      },
+      "size": {
+        "n32": "🤏 Nhỏ (32px)",
+        "n48": "👌 Vừa (48px)",
+        "n64": "💪 Lớn (64px)",
+        "n80": "👑 Khổng lồ (80px)"
+      },
+      "density": {
+        "n3": "🔥 Cao (mỗi 3 từ)",
+        "n6": "⚡ Vừa (mỗi 6 từ)",
+        "n10": "🎯 Thấp (mỗi 10 từ)"
+      },
+      "place": {
+        "above": "⬆️ Trên phụ đề",
+        "below": "⬇️ Dưới phụ đề",
+        "head": "👱 Ngang đầu",
+        "customTop": "👑 Đầu khung hình"
+      }
+    },
+    "lang": {
+      "en": "Tiếng Anh (English)",
+      "es": "Tiếng Tây Ban Nha (Español)",
+      "fr": "Tiếng Pháp (Français)",
+      "de": "Tiếng Đức (Deutsch)",
+      "it": "Tiếng Ý (Italiano)",
+      "pt": "Tiếng Bồ Đào Nha (Português)",
+      "ru": "Tiếng Nga (Русский)",
+      "ja": "Tiếng Nhật (日本語)",
+      "ko": "Tiếng Hàn (한국어)",
+      "zh": "Tiếng Trung (中文)",
+      "ar": "Tiếng Ả Rập (العربية)",
+      "hi": "Tiếng Hindi (हिन्दी)",
+      "nl": "Tiếng Hà Lan (Nederlands)",
+      "pl": "Tiếng Ba Lan (Polski)",
+      "tr": "Tiếng Thổ Nhĩ Kỳ (Türkçe)"
+    },
+    "trim": {
+      "waveform": "Dạng sóng",
+      "clickToSeek": "Bấm để di chuyển đầu phát",
+      "speed": "Tốc độ",
+      "playbackSpeedAria": "Tốc độ phát: {{value}} lần",
+      "reverse": "Đảo ngược",
+      "reverseSub": "Phát ngược clip đã chọn",
+      "selectClipFirst": "Hãy chọn một clip trước",
+      "split": "Tách tại đầu phát",
+      "beatCut": "Cắt theo nhịp",
+      "beatCutSub": "Cắt clip theo từng nhịp",
+      "freeze": "Đóng băng khung hình",
+      "freezeSub": "Giữ 1 giây tại {{time}} giây",
+      "trimToInOut": "Cắt theo điểm vào/ra",
+      "trimToInOutSub": "Đặt điểm vào + ra bên dưới",
+      "setBothFirst": "Hãy đặt cả điểm vào và điểm ra trước",
+      "jCut": "J-cut",
+      "jCutSub": "Âm thanh bắt đầu sớm 0,5 giây",
+      "lCut": "L-cut",
+      "lCutSub": "Âm thanh kéo dài 0,5 giây sau điểm cắt",
+      "comingSoonTitle": "{{label}} — sắp ra mắt",
+      "selectClipTitle": "{{label}} — hãy chọn một clip trước",
+      "soon": "Sắp có",
+      "markers": "Điểm vào / ra",
+      "inAt": "Vào {{time}} giây",
+      "noIn": "Chưa có điểm vào",
+      "outAt": "Ra {{time}} giây",
+      "noOut": "Chưa có điểm ra",
+      "inSet": "Đã đặt điểm vào tại {{time}} giây",
+      "setIn": "Đặt điểm vào",
+      "outAfterIn": "Điểm ra phải sau điểm vào",
+      "outSet": "Đã đặt điểm ra tại {{time}} giây",
+      "setOut": "Đặt điểm ra",
+      "clear": "Xóa"
+    },
+    "layout": {
+      "auto": "Tự động",
+      "standard": "Tiêu chuẩn",
+      "square": "Vuông",
+      "vertical": "Đứng",
+      "portrait": "Dọc",
+      "cinematic": "Điện ảnh",
+      "classic": "Cổ điển"
+    },
+    "text": {
+      "editingOnCanvas": "Đang sửa trên khung",
+      "doubleClickHint": "Nhấp đúp vào chữ trong trình phát để gõ trực tiếp",
+      "deselect": "Bỏ chọn",
+      "newText": "Chữ mới",
+      "typePlaceholder": "Nhập chữ… (⌘↵ để thêm)",
+      "duration": "Thời lượng:",
+      "searchPresets": "Tìm preset…",
+      "activeText": "Chữ trên video ({{count}})",
+      "deleteOverlayAria": "Xóa chữ phủ \"{{text}}\"",
+      "deleteOverlay": "Xóa chữ phủ",
+      "preview": "Xem trước",
+      "livePreview": "Xem trước trực tiếp",
+      "editing": "Đang sửa: {{text}}",
+      "contentAria": "Chữ phủ",
+      "contentPlaceholder": "Chữ phủ",
+      "fontSize": "Cỡ chữ",
+      "textColor": "Màu chữ",
+      "style": "Kiểu",
+      "animateIn": "Hiệu ứng vào",
+      "animateOut": "Hiệu ứng ra",
+      "font": "Phông chữ",
+      "start": "Bắt đầu",
+      "startAria": "Thời điểm bắt đầu tính bằng giây",
+      "end": "Kết thúc",
+      "endAria": "Thời điểm kết thúc tính bằng giây",
+      "uploadFont": "Tải phông lên",
+      "uploadFontAria": "Tải lên tệp phông chữ tùy chỉnh"
+    },
+    "textStyle": {
+      "none": "Không",
+      "neon": "Neon",
+      "minimal": "Tối giản",
+      "bold-kinetic": "Chuyển động đậm",
+      "outline": "Viền",
+      "shadow": "Đổ bóng"
+    },
+    "anim": {
+      "none": "Không",
+      "fade": "Mờ dần",
+      "slide-up": "Trượt lên",
+      "slide-down": "Trượt xuống",
+      "slide-left": "Trượt sang trái",
+      "slide-right": "Trượt sang phải",
+      "scale": "Phóng to",
+      "bounce": "Nảy"
+    },
+    "presetGroup": {
+      "viralHooks": "Hook viral",
+      "textPresets": "Mẫu chữ",
+      "premiumCaptions": "Phụ đề cao cấp",
+      "reactionCallouts": "Phản ứng / chú thích nổi",
+      "trending": "Thịnh hành",
+      "endScreens": "Màn hình kết",
+      "chapters": "Chương"
+    },
+    "filters": {
+      "strengthAria": "Cường độ bộ lọc: {{value}} phần trăm",
+      "before": "⏪ Trước",
+      "after": "⏩ Sau",
+      "split": "🌓 Chia đôi",
+      "pinned": "Đã ghim",
+      "pin": "Ghim bộ lọc {{name}}",
+      "unpin": "Bỏ ghim bộ lọc {{name}}"
+    },
+    "motion": {
+      "searchTemplates": "Tìm mẫu…",
+      "durationAria": "Thời lượng đồ họa chuyển động tính bằng giây",
+      "recent": "Gần đây"
+    },
+    "layers": {
+      "addShape": "Thêm hình",
+      "addImage": "Thêm ảnh / logo",
+      "imageUrlPlaceholder": "Dán URL ảnh…",
+      "imageUrl": "URL ảnh",
+      "addSvg": "Thêm SVG",
+      "svgUrlPlaceholder": "URL SVG hoặc data URI…",
+      "svgUrl": "URL SVG",
+      "uploadSvg": "Tải lên tệp SVG",
+      "gradients": "Lớp phủ chuyển màu",
+      "allLayers": "Tất cả lớp ({{count}})",
+      "hoverHint": "Di chuột để hiện điều khiển",
+      "deleteTextAria": "Xóa lớp chữ \"{{text}}\"",
+      "deleteText": "Xóa lớp chữ",
+      "opacity": "Độ mờ",
+      "opacityAria": "Độ mờ của lớp",
+      "deleteShape": "Xóa hình {{shape}}",
+      "deleteImage": "Xóa lớp ảnh",
+      "customSvg": "SVG tùy chỉnh",
+      "deleteSvg": "Xóa lớp SVG",
+      "gradientName": "Chuyển màu {{region}}",
+      "deleteGradient": "Xóa lớp chuyển màu",
+      "empty": "Chưa có lớp nào",
+      "emptyHint": "Thêm hình, ảnh hoặc SVG ở trên. Lớp chữ phủ cũng hiện ở đây.",
+      "addTextLayer": "+ Thêm lớp chữ"
+    },
+    "shape": {
+      "rect": "Chữ nhật",
+      "circle": "Hình tròn",
+      "line": "Đường kẻ"
+    },
+    "region": {
+      "full": "Toàn bộ",
+      "lower-third": "Phần ba dưới",
+      "top-bar": "Thanh trên",
+      "top-half": "Nửa trên",
+      "bottom-half": "Nửa dưới"
+    },
+    "gradient": {
+      "lowerThird": "Mờ phần ba dưới",
+      "fullDark": "Làm tối toàn bộ",
+      "topBar": "Thanh trên",
+      "warmTint": "Phủ tông ấm",
+      "coolTint": "Phủ tông lạnh",
+      "bottomHalf": "Mờ nửa dưới",
+      "topHalf": "Mờ nửa trên",
+      "vignetteSoft": "Viền tối nhẹ"
+    },
+    "pack": {
+      "hookCta": {
+        "name": "Hook + CTA",
+        "desc": "Hook viral tại đầu phát, CTA ở màn hình kết"
+      },
+      "lowerThirdSubscribe": {
+        "name": "Thanh tên + Đăng ký",
+        "desc": "Thanh tên + huy hiệu đăng ký"
+      },
+      "fullCtaBar": {
+        "name": "CTA + mờ phần ba dưới",
+        "desc": "Like & Đăng ký + thanh chuyển màu"
+      },
+      "introOutro": {
+        "name": "Intro + Outro",
+        "desc": "INTRO tại đầu phát, \"Hẹn gặp lại\" ở cuối"
+      },
+      "trendingSave": {
+        "name": "Thịnh hành + Lưu lại",
+        "desc": "Quan điểm trái chiều + Lưu lại xem sau"
+      }
+    },
+    "packs": {
+      "oneClick": "Gói một chạm",
+      "styleBundles": "Gói phong cách",
+      "platform": "Dành riêng cho từng nền tảng",
+      "saveMyStyle": "Lưu phong cách của tôi",
+      "styleNamePlaceholder": "Tên phong cách…",
+      "styleName": "Tên phong cách tùy chỉnh",
+      "saveStyle": "Lưu phong cách tùy chỉnh",
+      "goTo": "Đi tới"
+    },
+    "nav": {
+      "shortClips": "Clip ngắn",
+      "assets": "Nhạc & B-roll",
+      "timeline": "Dòng thời gian",
+      "effects": "Hiệu ứng",
+      "color": "Màu",
+      "aiEdit": "Phiên âm & AI",
+      "export": "Xuất"
+    },
+    "insights": {
+      "comingSoon": "Phân tích sắp ra mắt",
+      "comingSoonHint": "Phân tích tỷ lệ giữ chân, độ mạnh của hook và nhịp độ sẽ hiện ở đây sau khi video được phân tích.",
+      "transcript": "Bản ghi lời thoại"
+    }
   }
 }

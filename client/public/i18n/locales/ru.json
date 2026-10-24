@@ -846,11 +846,11 @@
     "title": "Достижения",
     "subtitle": "Следите за своими достижениями и прогрессом.",
     "refreshRegistry": "Обновить",
-    "statTierLabel": "Эволюционный уровень",
+    "statTierLabel": "Уровень",
     "statTierSub": "{{pct}}% до следующего уровня",
-    "statMilestonesLabel": "Расшифрованные вехи",
+    "statMilestonesLabel": "Открыто достижений",
     "statMilestonesSub": "Открыто на данный момент",
-    "statStreakLabel": "Полоса согласованности",
+    "statStreakLabel": "Текущая серия",
     "statStreakSub": "Рекорд: {{peak}}",
     "statVolumeLabel": "Создано публикаций",
     "statVolumeSub": "Всего создано",
@@ -861,14 +861,14 @@
     "detailPayloads": "Контент",
     "detailScripts": "Сценарии",
     "recentBreakthroughs": "Недавние прорывы",
-    "decryptedOn": "РАСШИФРОВАНО {{date}}",
+    "decryptedOn": "Открыто {{date}}",
     "ascensionVerified": "Открыто",
     "nodeMatrix": "Все достижения",
-    "decrypted": "расшифровано",
+    "decrypted": "Открыто",
     "logicGated": "Заблокировано",
     "milestones": {
       "first_video": {
-        "name": "Бытие Исполнение",
+        "name": "Первое видео",
         "description": "Создайте своё первое видео."
       },
       "first_content": {
@@ -900,11 +900,11 @@
         "description": "Завершите 50 видео."
       },
       "streak_7": {
-        "name": "Согласованность 7",
+        "name": "Серия 7 дней",
         "description": "Будьте активны 7 дней подряд."
       },
       "streak_30": {
-        "name": "Согласованность 30",
+        "name": "Серия 30 дней",
         "description": "Будьте активны 30 дней подряд."
       },
       "streak_100": {
@@ -925,7 +925,7 @@
       },
       "early_adopter": {
         "name": "Первопроходец",
-        "description": "Интегрировано на этапе генезиса."
+        "description": "Присоединились к Click одними из первых."
       },
       "power_user": {
         "name": "Продвинутый пользователь",
@@ -993,7 +993,7 @@
     "authorize": "АВТОРИЗОВАТЬ",
     "dissent": "НЕсогласие",
     "historyTitle": "История одобрений",
-    "historySubtitle": "Неизменяемые записи консенсусных решений и узловых разрешений.",
+    "historySubtitle": "История прошлых одобрений и отклонений.",
     "protocolLogsAnalyzed": "Запросов: {{count}}",
     "emptyTitle": "Здесь пока пусто",
     "emptyState": "Запросов на согласование пока нет.",
@@ -1126,7 +1126,7 @@
     "purgeForgeBuffer": "Очистить буфер кузницы",
     "neuralHeuristics": "Предложения",
     "neuralHeuristicsDesc": "Как улучшить ваш контент.",
-    "decryptingHeuristics": "Расшифровка эвристики...",
+    "decryptingHeuristics": "Анализируем…",
     "predictiveTelemetry": "Прогноз эффективности",
     "predictiveTelemetryDesc": "Прогнозы того, как может сработать ваш контент.",
     "scanningTrajectories": "Сканирование траекторий..."
@@ -1288,7 +1288,7 @@
     "refreshData": "Обновить данные о членстве",
     "activeNodeUplink": "Текущий тариф",
     "protocolId": "ID тарифа:",
-    "rootGenesis": "Корневой генезис",
+    "rootGenesis": "Стартовый",
     "genericAccess": "Общий доступ",
     "lifecycleStatus": "Статус жизненного цикла:",
     "uninitialized": "Неинициализированный",
@@ -1307,7 +1307,7 @@
     "coreMatrixUplink": "Основные функции",
     "primeCommandUplink": "Доступ ко всем функциям",
     "activeProtocol": "Текущий тариф",
-    "ascending": "По возрастанию...",
+    "ascending": "Повышаем тариф…",
     "genesisUplink": "Начать",
     "escalateProtocol": "Улучшить тариф"
   },
@@ -1825,7 +1825,7 @@
     "heroIntro": "Подключите свои соцсети к Click. Каждое подключение включает",
     "heroFeature1": "автопубликацию",
     "heroFeature2": "отслеживание вовлечённости",
-    "heroFeature3": "синтетический анализ аудитории",
+    "heroFeature3": "аналитика аудитории",
     "heroAnd": "и",
     "statNeuralEncryption": "Шифрование токенов",
     "statUplinkLatency": "Скорость подключения",
@@ -2375,7 +2375,7 @@
     "collaborationIntro1": "Каждая команда получает",
     "collaborationHighlight1": "общие ассеты",
     "collaborationIntro2": ",",
-    "collaborationHighlight2": "асинхронные петли обратной связи",
+    "collaborationHighlight2": "комментарии и отзывы",
     "collaborationIntro3": "и единый",
     "collaborationHighlight3": "производственная очередь",
     "collaborationIntro4": ". Вся работа команды в одном месте.",
@@ -3113,7 +3113,7 @@
     "neuralLine1": "Контент",
     "neuralLine2": "ЦЕНТР",
     "autonomousPrefix": "Автоматический режим:",
-    "dominating": "доминирующий",
+    "dominating": "работает",
     "autonomousMid": "тот",
     "autonomousSuffix": "очередь.",
     "neuralActive": "Автоматический режим включён",
@@ -3998,7 +3998,7 @@
     "latticeHealth": "Состояние сети",
     "aggregatedRevenue": "Совокупный доход",
     "victoryVectors": "Победы сегодня",
-    "encirclementTitle": "Глобальное окружение",
+    "encirclementTitle": "Обзор роста",
     "encirclementSubtitle": "Выводы, общие для всего Click",
     "godModeSaturationActive": "В эфире",
     "decentralizedIntelligenceLedger": "Журнал активности",
@@ -4018,7 +4018,7 @@
     "tabStability": "Здоровье системы",
     "versionLabel": "Click",
     "overlordTerminalSynced": "Подключено",
-    "mainTitle": "Нажмите «Терминал Оверлорда».",
+    "mainTitle": "Центр управления Click",
     "mainSubtitle": "Управление монетизацией и автоматизацией."
   },
   "clickDebugPanel": {
@@ -5408,7 +5408,7 @@
     "presetVibrantPopName": "Яркий поп",
     "presetVibrantPopDesc": "Яркие, насыщенные цвета",
     "presetSoftDreamyName": "Мягкий мечтательный",
-    "presetSoftDreamyDesc": "Неземной, нежный взгляд",
+    "presetSoftDreamyDesc": "Мягкий, нежный вид",
     "presetElectricVibeName": "Электрический",
     "presetElectricVibeDesc": "Энергичный, яркий вид",
     "presetRetroVintageName": "Ретро Винтаж",
@@ -6232,7 +6232,20 @@
     "appliedStyleProfile": "Применён стиль {{name}}",
     "packApplied": "Применён {{name}}: цветокоррекция {{grade}} и её стиль субтитров",
     "packAppliedGradeOnly": "Применён {{name}}: цветокоррекция {{grade}}. Включите субтитры, чтобы использовать её стиль субтитров.",
-    "packApplyFailed": "Не удалось применить {{name}}: цветокоррекция не найдена"
+    "packApplyFailed": "Не удалось применить {{name}}: цветокоррекция не найдена",
+    "beatRecut": "✦ Перенарезано на клипы по битам: {{count}} (заменено видеоклипов: {{replaced}})",
+    "beatCut": "✦ Нарезано на клипы в такт: {{count}}",
+    "autoViralAnalysing": "✦ Авто-вирусный монтаж — анализируем биты и субтитры…",
+    "autoViralNothingFound": "Для авто-вирусного монтажа нужны биты музыки или пригодная расшифровка — не найдено ни того, ни другого.",
+    "autoViralNeedsTranscript": "Для авто-вирусного монтажа нужна расшифровка для субтитров или музыка для склеек. Сначала сделайте расшифровку, затем повторите.",
+    "autoViralCuts": "Клипов по битам: {{clips}} · переходов: {{transitions}}",
+    "autoViralCaptions": "Караоке-субтитров: {{count}}",
+    "autoViralDone": "✦ Авто-вирусный монтаж: {{summary}}",
+    "autoViralFailed": "Авто-вирусный монтаж не удался — таймлайн не изменён.",
+    "resizeTimelineAria": "Изменить высоту таймлайна (тяните вверх или вниз)",
+    "resizeTimelineTitle": "Потяните, чтобы изменить размер таймлайна",
+    "timelineHeading": "Таймлайн",
+    "cmdCategoryEditor": "РЕДАКТОР"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Крючки",
@@ -6310,13 +6323,13 @@
     "featuresTitle": "Элитные возможности",
     "featuresDescription": "Откройте для себя многоплатформенный интеллект и прогнозируемый рост.",
     "completeTitle": "Всё готово",
-    "completeDescription": "Теперь вы готовы доминировать в социальном пространстве.",
+    "completeDescription": "Всё готово — можно начинать.",
     "eliteAccessGranted": "Элитный доступ предоставлен",
     "closeOnboarding": "Закрыть регистрацию",
     "back": "Назад",
-    "startDominating": "Начни доминировать",
+    "startDominating": "Начать",
     "nextIntelligence": "Следующая разведка",
-    "clickGenesis": "Нажмите Бытие",
+    "clickGenesis": "Добро пожаловать в Click",
     "welcomeBodyBefore": "Единственная платформа, которая не просто пишет — это",
     "welcomeBodyOperates": "действует",
     "welcomeBodyAfter": ". Давайте настроим ваш бренд.",
@@ -6489,7 +6502,7 @@
     "syncing": "Обновляем…",
     "restart": "Перезапуск",
     "dismissInstallPrompt": "Отклонить запрос на установку",
-    "installDescription": "Поднимитесь на более быстрое рабочее пространство с возможностью автономной работы. Создан для работы с элитным контентом.",
+    "installDescription": "Установите Click — приложение работает быстрее и даже офлайн.",
     "initializeInstallation": "Инициализация установки",
     "tagInstant": "Мгновенный",
     "tagEdge": "Край",
@@ -6779,7 +6792,7 @@
     "navAeoMetadata": "Метаданные УЭО",
     "navUgcRaw": "Пользовательский контент Raw",
     "navZeroPartyData": "Данные нулевой стороны",
-    "headerPill": "Фаза 8 — Доминирование на рынке",
+    "headerPill": "Фаза 8 — инструменты роста",
     "headerTitle": "Инструменты роста",
     "headerSubtitle": "5 систем, которые делают CLICK неоспоримым"
   },
@@ -6850,14 +6863,14 @@
     "pcv": "ПКВ",
     "steerSwarmToThisOffer": "Сосредоточиться на этом оффере",
     "s2sNetworkDown": "Сеть S2S отключена",
-    "globalEncirclementTitle": "Глобальное окружение",
+    "globalEncirclementTitle": "Обзор роста",
     "globalEncirclementSubtitle": "Аналитика по всем аккаунтам",
     "godModeActiveBadge": "Активно",
     "networkHealth": "Состояние сети",
     "aggregatedRevenue": "Совокупный доход",
     "victoryVectors": "Лидеры",
     "logInitializingTunnel": "[СИСТЕМА] Инициализация зашифрованного туннеля S2S...",
-    "logEncirclementActive": "[СИСТЕМА] Окружение активно. {{count}} подключено одноуровневых экземпляров.",
+    "logEncirclementActive": "Подключено рабочих пространств: {{count}}.",
     "logVectorReceived": "Хук «{{hook}}» лидирует в {{cluster}}.",
     "logLocalSynthesis": "Локальные результаты обновлены: вес импульса +{{percent}}%.",
     "productionStabilityTitle": "Стабильность производства",
@@ -6878,7 +6891,7 @@
     "navGlobalS2s": "Глобальный S2S",
     "navSystemHealth": "Здоровье системы",
     "headerPill": "Продвинутые инструменты",
-    "headerTitle": "Терминал Оверлорда",
+    "headerTitle": "Центр управления",
     "headerSubtitle": "Выход на новые рынки"
   },
   "quickActions": {
@@ -6983,7 +6996,7 @@
     "razorTool": "Бритвенный инструмент (S)",
     "editMode": "Режим редактирования",
     "modeNormal": "Нормальный",
-    "modeRipple": "Пульсация",
+    "modeRipple": "Сдвиг",
     "modeRoll": "Рулон",
     "modeSlip": "Соскальзывать",
     "setInPoint": "Установить точку входа (I)",
@@ -7098,7 +7111,31 @@
   "realTimeVideoPreview": {
     "overlayAlt": "Наложение",
     "metadataError": "Не удалось загрузить метаданные видео. Проверьте CORS или действительность URL.",
-    "bootingRenderEngine": "Загружаем превью…"
+    "bootingRenderEngine": "Загружаем превью…",
+    "videoFailed": "Не удалось загрузить видео",
+    "retry": "Повторить",
+    "dragToCompare": "Потяните, чтобы сравнить до / после",
+    "before": "До",
+    "after": "После",
+    "rawUnfiltered": "Исходник / без фильтров",
+    "graded": "С цветокоррекцией",
+    "editCaptionInline": "Редактировать текст субтитров на месте",
+    "captionPlaceholder": "Введите текст субтитров…",
+    "opsReverse": "{{count}}× реверс",
+    "opsJCut": "{{count}}× J-склейка",
+    "opsLCut": "{{count}}× L-склейка",
+    "exportOnlyTitle": "Эти изменения применяются только при экспорте — в предпросмотре клипы идут в исходном направлении с обычной синхронизацией звука.",
+    "exportOnly": "Только при экспорте",
+    "imageLayer": "Слой изображения",
+    "imageFailed": "Не удалось загрузить изображение",
+    "svgLayer": "Слой SVG",
+    "preview": "Предпросмотр",
+    "latency": "Задержка",
+    "pause": "Пауза",
+    "play": "Воспроизвести",
+    "toggleBeforeAfter": "Переключить до/после",
+    "beforeAfter": "До / после",
+    "aiStylingActive": "ИИ-стилизация включена"
   },
   "realtimeCollaboration": {
     "failedToJoin": "Не удалось присоединиться к сеансу совместной работы.",
@@ -7172,7 +7209,137 @@
   },
   "resizableTimeline": {
     "restore": "Восстановить размер временной шкалы",
-    "maximize": "Увеличить временную шкалу"
+    "maximize": "Увеличить временную шкалу",
+    "snapKind": {
+      "word": "Слово",
+      "silence": "Пауза",
+      "beat": "Бит",
+      "marker": "Маркер",
+      "edge": "Край",
+      "playhead": "Курсор",
+      "boundary": "Граница"
+    },
+    "realignedCountOne": "1 субтитр привязан к речи",
+    "realignedCount": "Субтитров привязано к речи: {{count}}",
+    "alreadyAligned": "Субтитры уже выровнены",
+    "markerNamePrompt": "Название маркера (необязательно):",
+    "unsoloTrack": "Снять соло",
+    "soloTrack": "Соло дорожки",
+    "soloShort": "S",
+    "unmuteTrack": "Включить звук дорожки",
+    "muteTrack": "Выключить звук дорожки",
+    "unlockTrack": "Разблокировать дорожку",
+    "lockTrack": "Заблокировать дорожку",
+    "prevFrameTitle": "Предыдущий кадр (←)",
+    "prevFrame": "Предыдущий кадр",
+    "pauseTitle": "Пауза (Пробел)",
+    "playTitle": "Воспроизвести (Пробел)",
+    "pause": "Пауза",
+    "play": "Воспроизвести",
+    "nextFrameTitle": "Следующий кадр (→)",
+    "nextFrame": "Следующий кадр",
+    "goToTimeLabel": "Перейти ко времени (введите время, нажмите Enter)",
+    "goToTimeTitle": "Введите время (например, 1:05.5) и нажмите Enter, чтобы перейти",
+    "splitTitle": "Разрезать клип под курсором (S)",
+    "split": "Разрезать",
+    "deleteTitle": "Удалить выделенное (Delete)",
+    "delete": "Удалить",
+    "rippleOnTitle": "Сдвиг вкл.: удаление закрывает пробел на всех дорожках",
+    "rippleOffTitle": "Сдвиг выкл.: после удаления остаётся пустое место",
+    "ripple": "Сдвиг",
+    "ungroupTitle": "Разгруппировать выбранные клипы",
+    "ungroup": "Разгруппировать",
+    "groupTitle": "Сгруппировать выбранные клипы, чтобы перемещать и удалять их вместе",
+    "group": "Группа",
+    "setInTitle": "Задать точку входа по курсору (I)",
+    "in": "Вход",
+    "setOutTitle": "Задать точку выхода по курсору (O)",
+    "out": "Выход",
+    "clearInOutTitle": "Очистить вход/выход (Alt+X)",
+    "clearInOutLabel": "Очистить точки входа и выхода",
+    "snapTitle": "Привязывать клипы к краям, курсору и маркерам",
+    "snap": "Привязка",
+    "speechTitle": "Привязывать клипы и субтитры к произнесённым словам",
+    "speechDisabledTitle": "Создайте субтитры, чтобы включить привязку к речи",
+    "speech": "Речь",
+    "realignTitle": "Заново привязать каждый субтитр к произнесённым словам",
+    "realign": "Выровнять субтитры",
+    "dragToPan": "Потяните для прокрутки",
+    "showTracks": "Показать дорожки",
+    "allTracks": "Все дорожки",
+    "track": {
+      "captions": "Субтитры",
+      "mainVideo": "Основное видео",
+      "broll": "B-roll",
+      "audio": "Аудио",
+      "effects": "Эффекты",
+      "captionsSub": "Текст на экране",
+      "mainVideoSub": "Ваши исходники",
+      "brollSub": "Перебивки и изображения",
+      "audioSub": "Музыка, голос и SFX"
+    },
+    "viewGroup": "Вид таймлайна",
+    "view": {
+      "clips": "Клипы",
+      "clipsTitle": "Только клипы",
+      "hybrid": "Клипы + сценарий",
+      "hybridTitle": "Клипы со сценарием над ними",
+      "script": "Сценарий",
+      "scriptTitle": "Монтаж по тексту"
+    },
+    "zoomOut": "Отдалить",
+    "zoomIn": "Приблизить",
+    "hideInsights": "Скрыть дорожки ИИ-аналитики",
+    "showInsights": "Показать дорожки ИИ-аналитики",
+    "insights": "Аналитика",
+    "inOutSpan": "Вход/выход: {{time}}",
+    "inPointTitle": "Точка входа: {{time}} (потяните, чтобы изменить)",
+    "outPointTitle": "Точка выхода: {{time}} (потяните, чтобы изменить)",
+    "beatLabel": "Бит ({{time}} с)",
+    "markerTitle": "{{name}}: {{time}} (тяните — переместить, щелчок — перейти, правый щелчок — изменить)",
+    "marker": "Маркер",
+    "markerTag": "{{name}} ({{time}})",
+    "resolve": "Решить",
+    "close": "Закрыть",
+    "captionsCountOne": "1 субтитр",
+    "captionsCount": "Субтитров: {{count}}",
+    "clipsCountOne": "1 клип",
+    "clipsCount": "Клипов: {{count}}",
+    "itemsCountOne": "1 элемент",
+    "itemsCount": "Элементов: {{count}}",
+    "audienceRetention": "Удержание аудитории",
+    "retentionTitle": "Удержание: {{value}}%",
+    "audioWaveform": "Звуковая волна",
+    "audioWaveformNoAudio": "Звуковая волна (нет звука)",
+    "trimStart": "Обрезать начало",
+    "trimEnd": "Обрезать конец",
+    "jCut": "J-склейка",
+    "lCut": "L-склейка",
+    "trimmedStart": "Начало обрезано",
+    "trimmedEnd": "Конец обрезан",
+    "freeze": "Стоп-кадр",
+    "reverseSpeed": "Реверс {{speed}}×",
+    "keyframes": "Ключевые кадры",
+    "playheadTitle": "Курсор: {{time}} (тяните для перемотки)",
+    "scrubTitle": "Перемотка: {{time}}",
+    "dragPlayhead": "Перетащить курсор",
+    "origin": "Исходная точка: {{time}}",
+    "moveDelta": "Смещение: {{delta}}",
+    "trackNumber": "Дорожка {{number}}",
+    "clipsMoving": "Перемещается клипов: {{count}}",
+    "trimStartAt": "Обрезать начало: {{time}}",
+    "trimEndAt": "Обрезать конец: {{time}}",
+    "workAreaIn": "Начало рабочей области: {{time}}",
+    "workAreaOut": "Конец рабочей области: {{time}}",
+    "span": "Длительность: {{time}}",
+    "menu": {
+      "splitAtPlayhead": "Разрезать по курсору",
+      "duplicate": "Дублировать клип",
+      "ungroup": "Разгруппировать клипы",
+      "group": "Сгруппировать клипы",
+      "rippleDelete": "Удалить со сдвигом"
+    },
+    "sceneChange": "Смена сцены"
   },
   "revenueOracle": {
     "synchronizing": "Загружаем данные о доходе…",
@@ -7682,7 +7849,7 @@
     "neuralScheduling": "Умное планирование",
     "neuralSchedulingDesc": "Планируйте посты на время, когда ваша аудитория наиболее активна.",
     "evergreenSynthesis": "Переиспользование вечнозелёного контента",
-    "evergreenSynthesisDesc": "Активируйте самовосстанавливающуюся переработку контента для бесконечной окупаемости инвестиций в репозиторий.",
+    "evergreenSynthesisDesc": "Автоматически используйте повторно свой самый успешный контент.",
     "initiateSequence": "Инициировать последовательность",
     "neuralProcessing": "Обработка",
     "ecosystemCalibration": "Настраиваем…",
@@ -7691,7 +7858,7 @@
     "synchronization": "Конвейер",
     "verified": "ПРОВЕРЕНО",
     "nodesPrimedPrefix": "Ваши посты",
-    "primed": "грунтованный",
+    "primed": "готово",
     "nodesPrimedSuffix": "к публикации.",
     "estimatedYield": "Предполагаемая доходность",
     "neuralIntegrity": "Проверка качества",
@@ -8517,5 +8684,1369 @@
     "shift1d": "+1 день",
     "shift1w": "+1 неделя",
     "moveWarning": "После переноса два поста могут оказаться на одной платформе в одно и то же время. Посты, которые уже публикуются или опубликованы, не переносятся."
+  },
+  "editorSidebar": {
+    "cat": {
+      "aiEdit": {
+        "label": "ИИ-автомонтаж",
+        "desc": "ИИ-монтаж в один клик"
+      },
+      "dub": {
+        "label": "Дубляж",
+        "desc": "Переведите свой голос на 10 языков"
+      },
+      "edit": {
+        "label": "Монтаж",
+        "desc": "Базовые инструменты монтажа"
+      },
+      "assets": {
+        "label": "Мои материалы",
+        "desc": "Добавляйте музыку, изображения и клипы B-roll"
+      },
+      "effects": {
+        "label": "Эффекты",
+        "desc": "Фильтры и улучшения"
+      },
+      "color": {
+        "label": "Цвет",
+        "desc": "Профессиональная цветокоррекция"
+      },
+      "chromakey": {
+        "label": "Хромакей",
+        "desc": "Зелёный экран и композитинг"
+      },
+      "timeline": {
+        "label": "Таймлайн",
+        "desc": "Расширенный монтаж"
+      },
+      "export": {
+        "label": "Экспорт",
+        "desc": "Публикация и экспорт"
+      },
+      "aiAssist": {
+        "label": "ИИ-помощник",
+        "desc": "Умные склейки · проверка предложений · применить и отменить"
+      },
+      "monetize": {
+        "label": "Монетизация",
+        "desc": "Ссылки на товары · QR · план монетизации от ИИ"
+      },
+      "stockLibrary": {
+        "label": "Стоковая библиотека",
+        "desc": "B-roll · музыка · GIF · стикеры · переходы · SFX"
+      },
+      "textMotion": {
+        "label": "Текст и анимация",
+        "desc": "Субтитры · анимации · моушн · шрифты"
+      }
+    },
+    "group": {
+      "edit": {
+        "label": "Монтаж",
+        "desc": "Резка, цветокоррекция, композитинг — основа монтажа."
+      },
+      "media": {
+        "label": "Медиа",
+        "desc": "Материалы, стоки, субтитры и текст."
+      },
+      "ai": {
+        "label": "ИИ",
+        "desc": "ИИ-автомонтаж в один клик + многоязычный дубляж."
+      },
+      "export": {
+        "label": "Экспорт",
+        "desc": "Рендер и публикация."
+      }
+    },
+    "badge": {
+      "new": "НОВОЕ",
+      "agency": "Агентство",
+      "pro": "PRO",
+      "beta": "БЕТА"
+    },
+    "title": "Инструменты редактора",
+    "ready": "Готово",
+    "expand": "Развернуть боковую панель",
+    "collapse": "Свернуть боковую панель",
+    "searchPlaceholder": "Поиск инструментов (⌘F)",
+    "clearSearch": "Очистить поиск",
+    "all": "Все",
+    "recent": "Недавние",
+    "noTools": "Инструменты не найдены",
+    "pinned": "Закреплённые",
+    "allTools": "Все инструменты",
+    "unpin": "Открепить",
+    "pinToTop": "Закрепить вверху",
+    "device": {
+      "desktop": "Компьютер",
+      "tablet": "Планшет",
+      "mobile": "Телефон"
+    },
+    "shortcuts": "Горячие клавиши",
+    "closeShortcuts": "Закрыть горячие клавиши",
+    "searchTools": "Поиск инструментов"
+  },
+  "editorHUD": {
+    "section": {
+      "edit": "Монтаж",
+      "color": "Цвет",
+      "ai": "ИИ-инструменты",
+      "effects": "Эффекты",
+      "timeline": "Таймлайн",
+      "export": "Экспорт",
+      "styleVault": "Style Vault",
+      "aiEdit": "ИИ-монтаж",
+      "assets": "Материалы",
+      "growth": "Аналитика",
+      "chromakey": "Хромакей",
+      "visualFx": "Визуальные эффекты",
+      "aiAnalysis": "ИИ-анализ",
+      "collaborate": "Совместная работа",
+      "scripts": "Сценарии",
+      "scheduling": "Планирование",
+      "shortClips": "Короткие клипы",
+      "predict": "Прогнозы",
+      "distribution": "Распространение",
+      "spatial": "Пространство",
+      "agent": "ИИ-агент",
+      "dub": "Дубляж"
+    },
+    "layout": {
+      "balanced": "Сбалансированный",
+      "balancedDesc": "Предпросмотр и таймлайн поровну",
+      "cinematic": "Кино",
+      "cinematicDesc": "Крупный предпросмотр, акцент на просмотре",
+      "timelineFocus": "Акцент на таймлайне",
+      "timelineFocusDesc": "Больше места для точного монтажа"
+    },
+    "projectName": "Название проекта",
+    "savingEllipsis": "Сохранение…",
+    "saveFailed": "Ошибка сохранения",
+    "allChangesSaved": "Все изменения сохранены",
+    "saving": "Сохранение",
+    "saved": "Сохранено",
+    "undoTitle": "Отменить (⌘Z)",
+    "redoTitle": "Повторить (⌘Y)",
+    "undo": "Отменить",
+    "redo": "Повторить",
+    "command": "Найти или выполнить команду",
+    "commandTitle": "Найти или выполнить команду (⌘K)",
+    "workspaceLayoutTitle": "Макет рабочей области (L)",
+    "workspaceLayout": "Макет рабочей области",
+    "gpu": "GPU: {{backend}}",
+    "agentRunning": "ИИ-агент работает",
+    "makeViralTitle": "Вирусный рецепт в один клик — хук, склейки, B-roll, синхронизация с битом, CTA",
+    "working": "Работаем…",
+    "makeViral": "Сделать вирусным",
+    "focusMode": "Режим фокуса",
+    "moreActions": "Другие действия",
+    "more": "Ещё",
+    "keyboardShortcuts": "Горячие клавиши",
+    "exportTitle": "Экспорт и публикация",
+    "export": "Экспорт"
+  },
+  "quickActionsBar": {
+    "variantsNeedBase": "Сначала добавьте подпись или хук, чтобы генератору вариантов было с чем работать.",
+    "noVariants": "Варианты не получены — попробуйте более длинный базовый хук.",
+    "variantsGenerated": "Создано вариантов: {{count}} — откройте A/B-выбор для предпросмотра.",
+    "variantsFailed": "Не удалось создать варианты: {{error}}",
+    "unknownError": "неизвестная ошибка",
+    "brollNeedsClip": "Сначала загрузите клип, чтобы подобрать B-roll.",
+    "noBrollGaps": "Пробелов для B-roll не найдено — клип и так визуально насыщен.",
+    "brollSuggested": "Предложено вставок B-roll: {{count}}. Откройте таймлайн, чтобы проверить.",
+    "brollFailed": "Не удалось подобрать B-roll: {{error}}",
+    "trendsWarmingUp": "Лента трендов ещё загружается — попробуйте через минуту.",
+    "trendsLoaded": "Сейчас в тренде: звуков — {{sounds}} · хештегов — {{hashtags}}. Открываем выбор.",
+    "trendsFailed": "Не удалось загрузить тренды: {{error}}",
+    "styleApplied": "Ваш стиль применён: {{items}}",
+    "styleAppliedGeneric": "Изученный стиль применён.",
+    "styleNeedsClips": "Сначала опубликуйте 3 клипа, чтобы Click изучил ваш стиль.",
+    "styleTimedOut": "Время ожидания запроса стиля истекло. Попробуйте ещё раз.",
+    "styleLoadFailed": "Не удалось загрузить ваш стиль. Попробуйте ещё раз.",
+    "viralEdit": "Вирусный монтаж",
+    "viralEditLong": "Авто-вирусный монтаж — полный монтаж в одно касание",
+    "applyStyle": "Применить стиль",
+    "split": "Разрезать",
+    "splitLong": "Разрезать по курсору",
+    "captions": "Субтитры",
+    "grade": "Цвет",
+    "effects": "Эффекты",
+    "aiTools": "ИИ-инструменты",
+    "clean": "Очистка",
+    "cleanLong": "Умная очистка",
+    "variants": "Варианты",
+    "variantsLong": "A/B-варианты",
+    "broll": "B-roll",
+    "brollLong": "Подобрать B-roll",
+    "trends": "Тренды",
+    "trendsLong": "Сейчас в тренде",
+    "learnedFrom": "Click изучил ваши опубликованные клипы: {{count}}",
+    "ariaLoading": "{{label}} — загрузка",
+    "ariaShortcut": "{{label}} (клавиша {{key}})"
+  },
+  "aiAutoEdit": {
+    "preset": {
+      "mrbeastEnergy": "Энергия MrBeast",
+      "mrbeastEnergyTagline": "Высокие ставки · слом шаблона",
+      "hormoziBold": "Hormozi Bold",
+      "hormoziBoldTagline": "Жёсткие цифры · смелое мнение",
+      "cinematicDoc": "Кинодок",
+      "cinematicDocTagline": "Медленный накал · тихие склейки",
+      "educationalClean": "Чистое обучение",
+      "educationalCleanTagline": "Вопрос в начале · факты по делу",
+      "newsAuthority": "Новостной эксперт",
+      "newsAuthorityTagline": "Заголовок · срочно · эксперт",
+      "casualVlog": "Лёгкий влог",
+      "casualVlogTagline": "Один день из жизни · разговорный",
+      "mysteryHook": "Загадочный хук",
+      "mysteryHookTagline": "Петля любопытства · медленная развязка",
+      "gymGrit": "Gym Grit",
+      "gymGritTagline": "Высокая интенсивность · жёсткая мотивация",
+      "adhdOverload": "СДВГ-перегруз",
+      "adhdOverloadTagline": "Хаос · поп-вспышки · перегрузка",
+      "podcastGoldmine": "Золото подкаста",
+      "podcastGoldmineTagline": "Экспертность · главы · тёплый док",
+      "retentionMachine": "Машина удержания",
+      "retentionMachineTagline": "Открытые петли · B-roll · главы"
+    },
+    "opt": {
+      "auto": "Авто",
+      "vivid": "Яркий",
+      "cinematic": "Кинематографичный",
+      "natural": "Естественный",
+      "cool": "Холодный",
+      "warm": "Тёплый",
+      "vintage": "Винтаж",
+      "bw": "Чёрно-белый",
+      "upbeatPop": "Бодрый поп",
+      "chill": "Чилл",
+      "darkAmbient": "Dark ambient",
+      "synthwave": "Синтвейв",
+      "phonk": "Фонк",
+      "lofi": "Lo-fi",
+      "question": "Вопрос",
+      "stat": "Цифра",
+      "mystery": "Загадка",
+      "story": "История",
+      "boldClaim": "Смелое заявление",
+      "patternBreak": "Слом шаблона",
+      "fastCut": "Быстрая склейка",
+      "crossfade": "Наплыв",
+      "glitch": "Глитч",
+      "whipPan": "Резкая панорама",
+      "hardCut": "Жёсткая склейка",
+      "modern": "Современный",
+      "bold": "Жирный",
+      "minimal": "Минимальный",
+      "neon": "Неон",
+      "pill": "Плашка",
+      "top": "Вверху",
+      "middle": "По центру",
+      "bottom": "Внизу",
+      "lowerThird": "Нижняя плашка",
+      "energetic": "Энергичный",
+      "calm": "Спокойный",
+      "authoritative": "Уверенный",
+      "playful": "Игривый",
+      "serious": "Серьёзный",
+      "urgency": "Срочность",
+      "value": "Польза",
+      "curiosity": "Любопытство",
+      "off": "Выкл.",
+      "sparse": "Редко",
+      "balanced": "Сбалансированный",
+      "heavy": "Сильный",
+      "gentle": "Мягкий",
+      "medium": "Средний",
+      "aggressive": "Агрессивный",
+      "educational": "Обучающий",
+      "entertaining": "Развлекательный",
+      "motivational": "Мотивирующий",
+      "promotional": "Рекламный"
+    },
+    "brief": {
+      "title": "Маркетинговый бриф",
+      "postingTimes": "Лучшее время для публикации",
+      "competitiveInsights": "Анализ конкурентов"
+    },
+    "err": {
+      "videoNotFound": "В ответе нет данных видео",
+      "loadFailed": "Не удалось загрузить видео. Попробуйте ещё раз.",
+      "missingSource": "У этого видео нет исходного файла. Загрузите его заново и попробуйте ещё раз.",
+      "tooManyPresets": "В одном монтаже можно совместить не более 3 пресетов стиля.",
+      "serviceError": "Ошибка сервиса ИИ: {{error}}",
+      "serviceInternal": "Внутренняя ошибка сервиса ИИ. Попробуйте чуть позже.",
+      "sessionExpired": "Сессия истекла. Войдите снова и повторите попытку.",
+      "rateLimited": "Слишком много запросов на монтаж. Подождите немного и попробуйте снова.",
+      "rejected": "Запрос отклонён ({{status}}). Проверьте введённые данные и повторите.",
+      "timeout": "Время ожидания запроса истекло. Возможно, видео слишком большое или сервер отвечает медленно.",
+      "network": "Нет связи с сервером. Проверьте подключение и попробуйте ещё раз.",
+      "startFailed": "Не удалось запустить ИИ-монтаж. Попробуйте ещё раз."
+    },
+    "badge": "ИИ-автомонтаж",
+    "title": "Настройка правил ИИ",
+    "untitled": "Проект без названия",
+    "toggleTheme": "Переключить тему",
+    "analyze": "Анализировать видео",
+    "analyzing": "Анализируем…",
+    "backToVideos": "Назад к видео",
+    "processingTitle": "Обработка видео",
+    "processingBody": "ИИ анализирует, монтирует и оптимизирует ваше видео…",
+    "initializing": "Запуск",
+    "result": {
+      "title": "Ваш монтаж готов",
+      "body": "Откройте его в редакторе для доработки или скачайте как есть.",
+      "editsApplied": "Применённые правки",
+      "openInEditor": "Открыть в редакторе",
+      "downloadTitle": "Скачать смонтированное видео",
+      "download": "Скачать",
+      "viewClipsTitle": "Посмотреть созданные клипы",
+      "viewClips": "Смотреть клипы",
+      "dismissTitle": "Закрыть этот результат",
+      "dismiss": "Закрыть"
+    },
+    "diag": {
+      "title": "Диагностика",
+      "complete": "Анализ завершён",
+      "suggestedLength": "Рекомендуемая длина"
+    },
+    "plan": {
+      "title": "Ваш план монтажа",
+      "subtitle": "Что ИИ сделает с настройками справа",
+      "opening": "Начало",
+      "openingHook": "Начать с самого сильного момента",
+      "openingOriginal": "Оставить исходное начало",
+      "pacing": "Темп",
+      "pacingGentle": "Мягкие склейки",
+      "pacingFast": "Быстрые, плотные склейки",
+      "pacingBalanced": "Сбалансированные склейки",
+      "deadAir": "Паузы",
+      "removed": "Удалены",
+      "kept": "Оставлены",
+      "captions": "Субтитры",
+      "burnedIn": "Вшитые",
+      "off": "Выкл.",
+      "clips": "Клипы",
+      "under30s": "до 30 с",
+      "fullLength": "полная длина",
+      "oneVideo": "Одно смонтированное видео",
+      "format": "Формат"
+    },
+    "director": {
+      "title": "ИИ-режиссёр",
+      "subtitle": "Выберите до 3 стилей или настройте всё вручную.",
+      "presetsOne": "{{count}} пресет: {{names}}",
+      "presetsOther": "Пресетов: {{count}} — {{names}}"
+    },
+    "targetPlatform": "Целевая платформа",
+    "contentTone": "Тон контента",
+    "stylePreset": "Пресет стиля",
+    "presetsSelected": "Выбрано {{count}}/3 · нажмите ещё раз, чтобы убрать",
+    "presetCap": "До 3 пресетов — уберите один, чтобы заменить",
+    "presetSelectedTitle": "Выбран №{{n}} — нажмите, чтобы убрать",
+    "presetSelect": "Выбрать стиль: {{name}}",
+    "presetSelectedAria": "Выбранный стиль №{{n}}: {{name}}",
+    "aiTasks": "Задачи ИИ",
+    "task": {
+      "removeSilence": "Убрать тишину",
+      "removeSilenceDesc": "Автоматически вырезать паузы",
+      "optimizePacing": "Оптимизировать темп",
+      "optimizePacingDesc": "Плотные склейки для удержания",
+      "enhanceAudio": "Улучшить звук",
+      "enhanceAudioDesc": "Шумоподавление + выравнивание громкости",
+      "generateClips": "Создать короткие клипы",
+      "generateClipsDesc": "Найти вирусные моменты",
+      "addCaptions": "Вшить субтитры",
+      "addCaptionsDesc": "Динамический текст по словам",
+      "enhanceColor": "Цветокоррекция",
+      "enhanceColorDesc": "Авто-LUT + грейдинг"
+    },
+    "output": "Результат",
+    "aspectRatio": "Соотношение сторон",
+    "clipsToGenerate": "Сколько клипов создать",
+    "clipCountAria": "Количество клипов для создания",
+    "targetLength": "Целевая длина",
+    "full": "Полное",
+    "pacing": "Темп",
+    "advanced": "Дополнительно",
+    "advancedHint": "Настроение, субтитры, переходы, голос, B-roll, CTA",
+    "sel": {
+      "colorGrade": "Цветокоррекция",
+      "musicGenre": "Жанр музыки",
+      "hookStyle": "Стиль хука",
+      "transitions": "Переходы",
+      "captionStyle": "Стиль субтитров",
+      "subtitlePosition": "Положение субтитров",
+      "voiceTone": "Тон голоса",
+      "ctaStyle": "Стиль CTA",
+      "brollFrequency": "Частота B-roll"
+    },
+    "speedRamping": "Изменение скорости",
+    "speedRampingHint": "Ускоряет и замедляет клипы для динамики",
+    "toggleSpeedRamping": "Переключить изменение скорости",
+    "prioritizeHook": "Приоритет хука",
+    "prioritizeHookHint": "Первые 3 с должны удержать зрителя",
+    "togglePrioritizeHook": "Переключить приоритет хука",
+    "creativeDirection": "Творческое задание",
+    "creativeDirectionHint": "необязательно · заменяет настройки ИИ по умолчанию",
+    "creativeDirectionPlaceholder": "Например: кинематографично и мрачно, без джамп-катов, подчеркнуть эмоциональную паузу на 0:42…",
+    "autoFit": "Автоподгонка",
+    "aiPlan": "План ИИ",
+    "preloadedStyle": "Ваш стиль уже загружен",
+    "planLine": {
+      "composeOne": "Собрать {{count}} клип {{aspect}}, длина {{length}}",
+      "composeOther": "Собрать клипов {{aspect}}: {{count}}, длина {{length}}",
+      "forPlatform": "для {{platform}}",
+      "tone": "тон: {{tone}}",
+      "acrossPresets": "по пресетам {{presets}} (вариантов: {{count}})",
+      "autoStyle": "в стиле {{auto}}",
+      "autoDetected": "определено автоматически",
+      "grade": "цветокоррекция: {{grade}}",
+      "hook": "хук: {{hook}}",
+      "pacing": "темп: {{pacing}}",
+      "speedRamping": "изменение скорости вкл.",
+      "broll": "B-roll: {{broll}}"
+    },
+    "tasksOne": "{{count}} задача",
+    "tasksOther": "Задач: {{count}}",
+    "estimate": "≈ {{time}}",
+    "chip": {
+      "captions": "Субтитры",
+      "autoGrade": "Автоцветокоррекция",
+      "speedRamp": "Изменение скорости"
+    },
+    "composing": "Собираем ваш монтаж…",
+    "composeOne": "Собрать {{count}} клип",
+    "composeOther": "Собрать клипов: {{count}}",
+    "using": "Используется: {{names}}",
+    "autoSelectPreset": "Автоматически выбрать пресет по вашему контенту",
+    "tasksOnOne": "{{count}} задача включена",
+    "tasksOnOther": "Включено задач: {{count}}",
+    "dismissError": "Закрыть это сообщение об ошибке",
+    "dismiss": "Закрыть"
+  },
+  "propertiesPanel": {
+    "layout": {
+      "bottom": "Внизу",
+      "bottomTitle": "Внизу",
+      "lowerThird": "Ниже",
+      "lowerThirdTitle": "Нижняя треть",
+      "top": "Вверху",
+      "topTitle": "Вверху",
+      "fullWidth": "Во всю ширину",
+      "fullWidthTitle": "Полоса во всю ширину"
+    },
+    "tab": {
+      "transform": "Положение",
+      "color": "Цвет",
+      "captions": "Субтитры",
+      "text": "Текст",
+      "clip": "Клип"
+    },
+    "reset": "Сбросить",
+    "title": "Свойства",
+    "activeTab": "Настройки: {{tab}}",
+    "close": "Закрыть свойства",
+    "clipProperties": "Свойства клипа",
+    "selectedClip": "Выбранный клип",
+    "playbackSpeed": "Скорость воспроизведения",
+    "playbackSpeedTitle": "Скорость воспроизведения: {{speed}}x",
+    "playbackSpeedHint": "Ускорьте или замедлите этот клип.",
+    "stabilization": "Стабилизация",
+    "stabilizationTitle": "Стабилизация: {{value}}%",
+    "stabilizationHint": "Насколько сильно сглаживать дрожание камеры.",
+    "volume": "Громкость",
+    "volumeTitle": "Громкость: {{value}}%",
+    "autoDucking": "Автоприглушение",
+    "autoDuckingHint": "Приглушать музыку, когда кто-то говорит",
+    "autoDuckingToggle": "Включить или выключить автоприглушение",
+    "positionAndSize": "Положение и размер",
+    "scale": "Масштаб (%)",
+    "positionX": "Положение X",
+    "positionY": "Положение Y",
+    "rotation": "Поворот (°)",
+    "animation": "Анимация",
+    "keyframesCountOne": "1 ключевой кадр",
+    "keyframesCount": "Ключевых кадров: {{count}}",
+    "addKeyframe": "+ Ключевой кадр на позиции курсора",
+    "prevKeyframe": "◁ Пред.",
+    "nextKeyframe": "След. ▷",
+    "remove": "Удалить",
+    "curve": "Кривая",
+    "easing": {
+      "linear": "Линейно",
+      "easeIn": "Плавный вход",
+      "easeOut": "Плавный выход",
+      "easeInOut": "Плавный вход и выход",
+      "bounceOut": "Отскок",
+      "elasticOut": "Упругость",
+      "cubic": "Плавно (сильно)"
+    },
+    "brightness": "Яркость",
+    "contrast": "Контраст",
+    "saturation": "Насыщенность",
+    "temperature": "Температура",
+    "clarity": "Чёткость",
+    "dehaze": "Убрать дымку",
+    "captionsOn": "Показывать субтитры",
+    "captionsOnHint": "Показывать расшифровку как субтитры",
+    "captionLayout": "Положение субтитров",
+    "textOverlays": "Текстовые наложения",
+    "noTextOverlays": "Текстовых наложений пока нет",
+    "deleteTextOverlay": "Удалить текстовое наложение",
+    "synced": "Синхронизировано",
+    "preset": {
+      "tiktok": {
+        "label": "TikTok",
+        "description": "Жирно, по центру, максимум эффекта"
+      },
+      "reels": {
+        "label": "Reels",
+        "description": "Чистые заглавные, в тренде"
+      },
+      "podcast": {
+        "label": "Подкаст",
+        "description": "Минимализм, нижняя треть"
+      },
+      "cinematic": {
+        "label": "Кино",
+        "description": "Киношный шрифт с засечками"
+      },
+      "documentary": {
+        "label": "Документальный",
+        "description": "Классическая полоса субтитров"
+      },
+      "neon": {
+        "label": "Неон",
+        "description": "Свечение, ночная атмосфера"
+      },
+      "karaoke": {
+        "label": "Караоке",
+        "description": "Жирный стиль караоке"
+      },
+      "pill": {
+        "label": "Плашка",
+        "description": "Слова в скруглённых плашках"
+      },
+      "bubble": {
+        "label": "Облачко",
+        "description": "В стиле облачка с репликой"
+      },
+      "gradient": {
+        "label": "Градиент",
+        "description": "Яркий градиентный текст"
+      },
+      "retro": {
+        "label": "Ретро",
+        "description": "Тёплый винтажный вид"
+      },
+      "vintage": {
+        "label": "Винтаж",
+        "description": "Сепия и печатная машинка"
+      },
+      "pop": {
+        "label": "Поп",
+        "description": "Ярко и бодро"
+      },
+      "high-contrast": {
+        "label": "Доступный",
+        "description": "Высокий контраст, легко читать"
+      },
+      "kinetic": {
+        "label": "Кинетика",
+        "description": "Слова появляются в такт"
+      },
+      "slow-zoom": {
+        "label": "Медленный зум",
+        "description": "Масштаб 100% → 110%"
+      },
+      "fly-in-left": {
+        "label": "Влёт слева",
+        "description": "Положение из-за левого края"
+      },
+      "fly-in-right": {
+        "label": "Влёт справа",
+        "description": "Положение из-за правого края"
+      },
+      "fly-in-top": {
+        "label": "Влёт сверху",
+        "description": "Положение из-за верхнего края"
+      },
+      "fly-in-bottom": {
+        "label": "Влёт снизу",
+        "description": "Положение из-за нижнего края"
+      },
+      "fade-in-out": {
+        "label": "Появление и затухание",
+        "description": "Непрозрачность 0 → 1 → 0"
+      }
+    }
+  },
+  "basicEditor": {
+    "preset": {
+      "title": {
+        "label": "Заголовок"
+      },
+      "text": {
+        "yourTitleHere": "Ваш заголовок",
+        "subscribeForMore": "Подпишись, будет ещё",
+        "likeSubscribe": "Лайк и подписка",
+        "watchMore": "Смотреть ещё →",
+        "commentBelow": "Пиши в комментариях",
+        "linkInBio": "Ссылка в профиле",
+        "addYourCaption": "Добавьте подпись",
+        "followForMore": "Подписывайся, будет ещё",
+        "newText": "НОВЫЙ ТЕКСТ",
+        "youNeedToSeeThis": "ТЫ ДОЛЖЕН ЭТО УВИДЕТЬ",
+        "nameTitle": "Имя · Должность",
+        "proTip": "СОВЕТ ПРО",
+        "tapToLearnMore": "НАЖМИ, ЧТОБЫ УЗНАТЬ",
+        "waitForIt": "ЖДИ…",
+        "storyTime": "ИСТОРИЯ",
+        "youWontBelieveWhatHappened": "Ты не поверишь, что случилось",
+        "dayInMyLife": "Один мой день",
+        "day1Of": "День 1 из…",
+        "getReadyForThis": "Приготовься",
+        "watchTillTheEnd": "Досмотри до конца",
+        "noOneTalksAboutThis": "Никто об этом не говорит",
+        "theSecretTheyDontWantYouToKnow": "Секрет, который от тебя скрывают",
+        "theSecretIs": "СЕКРЕТ В ТОМ",
+        "insane": "БЕЗУМИЕ!",
+        "actually": "на самом деле…",
+        "now": "сейчас",
+        "zeroCost": "БЕСПЛАТНО",
+        "watch": "СМОТРИ",
+        "here": "ЗДЕСЬ",
+        "swipeUp": "Свайп вверх",
+        "seeYouNextTime": "До встречи",
+        "unpopularOpinion": "Непопулярное мнение:",
+        "thisChangedEverything": "Это изменило всё",
+        "hotTake": "Смелое мнение:",
+        "nobodyTalksAboutThis": "Об этом все молчат",
+        "povYouJustFoundTheBestTip": "POV: ты нашёл лучший совет",
+        "saveThisForLater": "Сохрани на потом",
+        "commentYourAnswerBelow": "Пиши свой ответ в комментариях",
+        "dropAIfYouAgree": "Ставь 👍, если согласен",
+        "part1": "Часть 1",
+        "chapter1": "Глава 1",
+        "intro": "ИНТРО",
+        "outro": "АУТРО",
+        "comingUpNext": "Дальше…",
+        "quickRecap": "Коротко об итогах"
+      },
+      "subscribe": {
+        "label": "Подписаться"
+      },
+      "likeSubscribe": {
+        "label": "Лайк и подписка"
+      },
+      "watchMore": {
+        "label": "Смотреть ещё"
+      },
+      "comment": {
+        "label": "Комментарий"
+      },
+      "linkInBio": {
+        "label": "Ссылка в профиле"
+      },
+      "caption": {
+        "label": "Подпись"
+      },
+      "follow": {
+        "label": "Подписка"
+      },
+      "custom": {
+        "label": "Свой"
+      },
+      "hook": {
+        "label": "Хук"
+      },
+      "lowerThird": {
+        "label": "Нижняя плашка"
+      },
+      "callout": {
+        "label": "Выноска"
+      },
+      "timestamp": {
+        "label": "Таймкод"
+      },
+      "waitForIt": {
+        "label": "Жди"
+      },
+      "storyTime": {
+        "label": "История"
+      },
+      "youWontBelieve": {
+        "label": "Ты не поверишь"
+      },
+      "dayInMyLife": {
+        "label": "Мой день"
+      },
+      "dayXOf": {
+        "label": "День X из"
+      },
+      "getReady": {
+        "label": "Приготовься"
+      },
+      "watchTillEnd": {
+        "label": "Досмотри до конца"
+      },
+      "noOneTalksAbout": {
+        "label": "Никто не говорит о"
+      },
+      "theSecret": {
+        "label": "Секрет"
+      },
+      "hormoziBold": {
+        "label": "Hormozi Bold"
+      },
+      "beastImpact": {
+        "label": "Beast Impact"
+      },
+      "minimalNarrative": {
+        "label": "Minimal Narrative"
+      },
+      "subliminalQuick": {
+        "label": "Subliminal Quick"
+      },
+      "punchyHighlight": {
+        "label": "Punchy Highlight"
+      },
+      "arrowRight": {
+        "label": "Стрелка →"
+      },
+      "arrowLeft": {
+        "label": "Стрелка ←"
+      },
+      "proTip": {
+        "label": "СОВЕТ ПРО"
+      },
+      "watch": {
+        "label": "СМОТРИ"
+      },
+      "here": {
+        "label": "ЗДЕСЬ"
+      },
+      "swipeUp": {
+        "label": "Свайп вверх"
+      },
+      "commentBelow": {
+        "label": "Пиши в комментах"
+      },
+      "tapToLearnMore": {
+        "label": "Нажми, чтобы узнать"
+      },
+      "seeYouNextTime": {
+        "label": "До встречи"
+      },
+      "unpopularOpinion": {
+        "label": "Непопулярное мнение"
+      },
+      "thisChangedEverything": {
+        "label": "Это изменило всё"
+      },
+      "hotTake": {
+        "label": "Смелое мнение"
+      },
+      "nobodyTalksAbout": {
+        "label": "Об этом молчат"
+      },
+      "saveThis": {
+        "label": "Сохрани"
+      },
+      "commentYour": {
+        "label": "Пиши свой ответ"
+      },
+      "dropA": {
+        "label": "Ставь 👍"
+      },
+      "part1": {
+        "label": "Часть 1"
+      },
+      "chapter": {
+        "label": "Глава"
+      },
+      "intro": {
+        "label": "Интро"
+      },
+      "outro": {
+        "label": "Аутро"
+      },
+      "next": {
+        "label": "Далее"
+      },
+      "recap": {
+        "label": "Итоги"
+      }
+    },
+    "filter": {
+      "vibrant": {
+        "name": "Сочный",
+        "desc": "Сочные цвета"
+      },
+      "mono": {
+        "name": "Моно",
+        "desc": "Ч/Б"
+      },
+      "cinematic": {
+        "name": "Кино",
+        "desc": "Киношный вид"
+      },
+      "warm": {
+        "name": "Тёплый",
+        "desc": "Золотой час"
+      },
+      "cool": {
+        "name": "Холодный",
+        "desc": "Синие тона"
+      },
+      "vintage": {
+        "name": "Винтаж",
+        "desc": "Ретро"
+      },
+      "moody": {
+        "name": "Атмосферный",
+        "desc": "Темно и насыщенно"
+      },
+      "vivid": {
+        "name": "Яркий",
+        "desc": "Максимум яркости"
+      },
+      "noir": {
+        "name": "Нуар",
+        "desc": "Контрастный Ч/Б"
+      },
+      "sunset": {
+        "name": "Закат",
+        "desc": "Золотой час"
+      },
+      "breeze": {
+        "name": "Бриз",
+        "desc": "Свежо и чётко"
+      },
+      "matte": {
+        "name": "Матовый",
+        "desc": "Плоско и мягко"
+      },
+      "neon": {
+        "name": "Неон",
+        "desc": "Яркие цвета"
+      },
+      "autumn": {
+        "name": "Осень",
+        "desc": "Тёплые земляные тона"
+      },
+      "winter": {
+        "name": "Зима",
+        "desc": "Холодно и чисто"
+      },
+      "dreamy": {
+        "name": "Мечта",
+        "desc": "Мягкая пастель"
+      },
+      "reset": {
+        "name": "Сброс",
+        "desc": "По умолчанию"
+      }
+    },
+    "style": {
+      "creatorBold": {
+        "label": "Смелый креатор",
+        "desc": "Энергично и вирусно"
+      },
+      "softAesthetic": {
+        "label": "Мягкая эстетика",
+        "desc": "Нежно и мечтательно"
+      },
+      "corporateMinimal": {
+        "label": "Деловой минимализм",
+        "desc": "Чисто и профессионально"
+      },
+      "darkMoody": {
+        "label": "Тёмный и мрачный",
+        "desc": "Драматичные тени"
+      },
+      "vibrantPop": {
+        "label": "Яркий поп",
+        "desc": "Красочно и бодро"
+      },
+      "cinematicFilm": {
+        "label": "Кинофильм",
+        "desc": "Как трейлер фильма"
+      },
+      "noirDramatic": {
+        "label": "Драматичный нуар",
+        "desc": "Драматичный Ч/Б"
+      },
+      "lifestyleWarm": {
+        "label": "Тёплый лайфстайл",
+        "desc": "Влоги и путешествия"
+      },
+      "podcastPro": {
+        "label": "Подкаст Про",
+        "desc": "Чисто и профессионально"
+      },
+      "documentary": {
+        "label": "Документальный",
+        "desc": "Естественно и с погружением"
+      },
+      "fashionEditorial": {
+        "label": "Модная съёмка",
+        "desc": "Образ высокой моды"
+      },
+      "retroWarm": {
+        "label": "Тёплое ретро",
+        "desc": "Винтажное тепло"
+      },
+      "cinematicDrama": {
+        "label": "Кинодрама",
+        "desc": "Глубоко и драматично"
+      },
+      "comedyBright": {
+        "label": "Яркая комедия",
+        "desc": "Бодро и весело"
+      },
+      "sportsDynamic": {
+        "label": "Спортивная динамика",
+        "desc": "Для экшена"
+      },
+      "savedDesc": "Сохранён"
+    },
+    "platform": {
+      "tiktok": {
+        "desc": "9:16, динамично"
+      },
+      "youtube": {
+        "desc": "9:16, сбалансированно"
+      },
+      "feed": {
+        "label": "Лента Instagram",
+        "desc": "1:1, ярко"
+      },
+      "portrait": {
+        "label": "Instagram портрет",
+        "desc": "4:5, тёплый"
+      },
+      "landscape": {
+        "label": "YouTube / Горизонтально",
+        "desc": "16:9, чисто"
+      },
+      "linkedin": {
+        "desc": "16:9, деловой"
+      }
+    },
+    "filterCategory": {
+      "all": "Все",
+      "mood": "Настроение",
+      "creative": "Креатив",
+      "dramatic": "Драма",
+      "neutral": "Сброс"
+    },
+    "shapePreset": {
+      "logoCorner": "Логотип в углу",
+      "subscribeBadge": "Значок подписки",
+      "fullWidthBar": "Полоса во всю ширину",
+      "dividerLine": "Разделитель",
+      "highlightBox": "Рамка выделения",
+      "cornerAccent": "Угловой акцент"
+    },
+    "undo": "Отменить",
+    "redo": "Повторить",
+    "searchTools": "Поиск инструментов…",
+    "clearSearch": "Очистить поиск",
+    "layersCount": "Слоёв: {{count}}",
+    "reset": "Сбросить",
+    "add": "Добавить",
+    "save": "Сохранить",
+    "color": "Цвет",
+    "toast": {
+      "undoApplied": "Действие отменено",
+      "redoApplied": "Действие повторено",
+      "fontUploading": "Загружаем шрифт…",
+      "fontAdded": "Шрифт добавлен.",
+      "fontInvalid": "Этот файл шрифта не поддерживается.",
+      "fontFailed": "Не удалось загрузить шрифт.",
+      "rectangleAdded": "Прямоугольник добавлен",
+      "circleAdded": "Круг добавлен",
+      "lineAdded": "Линия добавлена",
+      "addedName": "Добавлено: {{name}}",
+      "addedQuoted": "Добавлено: «{{name}}»",
+      "addedAt": "«{{name}}» добавлено на {{time}} с",
+      "enterImageUrl": "Введите URL изображения",
+      "imageAdded": "Наложение изображения добавлено",
+      "svgAddedFromFile": "SVG-наложение добавлено из файла — анимируйте его ключевыми кадрами в разделе «Эффекты»",
+      "enterSvgUrl": "Введите URL SVG (например, https://… .svg или data:image/svg+xml,…)",
+      "svgAdded": "SVG-наложение добавлено — анимируйте его ключевыми кадрами в разделе «Эффекты»",
+      "compoundSaved": "«{{name}}» сохранён — добавляйте его на таймлайн в любой момент",
+      "compoundRemoved": "Составной клип удалён",
+      "renamed": "Переименовано в «{{name}}»",
+      "addTextHint": "Добавьте текст — введите его и нажмите «Добавить» или Ctrl+Enter",
+      "textAdded": "Текстовое наложение добавлено",
+      "packApplied": "Набор {{name}} применён",
+      "saved": "Сохранено: «{{name}}»",
+      "filtersReset": "Фильтры сброшены по умолчанию",
+      "nameYourStyle": "Назовите стиль и нажмите «Сохранить»",
+      "applied": "Применено: {{name}}",
+      "speed": "Скорость: {{value}}×"
+    },
+    "compound": {
+      "untitled": "Составной клип без названия",
+      "title": "Сохранить как составной клип",
+      "namePlaceholder": "Название составного клипа…",
+      "name": "Название составного клипа",
+      "durationAria": "Длительность составного клипа в секундах",
+      "delete": "Удалить составной клип «{{name}}»"
+    },
+    "search": {
+      "filterHit": "Фильтр: {{name}}",
+      "styleHit": "Стиль: {{name}}",
+      "motionHit": "Анимация: {{name}}",
+      "textHit": "Текст: {{name}}"
+    },
+    "caption": {
+      "noTranscript": "Расшифровка не найдена. Вставьте сценарий в поле ниже и попробуйте снова.",
+      "noneGenerated": "Субтитры не созданы — возможно, расшифровка слишком короткая.",
+      "addedToast": "Добавлено субтитров: {{count}} — стиль {{style}}",
+      "generationFailed": "Не удалось создать субтитры",
+      "failedToast": "Не удалось создать автосубтитры",
+      "title": "ИИ-автосубтитры",
+      "clearTitle": "Удалить автосубтитры",
+      "cleared": "Автосубтитры удалены",
+      "count": "Субтитров: {{count}}",
+      "ready": "Готово",
+      "noScript": "Нет сценария",
+      "pasteScript": "Вставьте сценарий",
+      "pasteScriptTitle": "Вставьте сюда сценарий видео",
+      "pastePlaceholder": "Вставьте или введите текст, который звучит в видео…",
+      "wordCount": "Слов: {{count}}",
+      "wordsPerLine": "Слов в строке",
+      "position": "Положение",
+      "positionAt": {
+        "top": "Субтитры вверху",
+        "mid": "Субтитры по центру",
+        "bottom": "Субтитры внизу"
+      },
+      "colorTitle": "Цвет текста субтитров",
+      "setColor": "Цвет субтитров: {{color}}",
+      "addedInStyle": "Добавлено субтитров в стиле {{style}}: {{count}}",
+      "generateAria": "Создать автосубтитры из расшифровки",
+      "generating": "Создаём субтитры (слов: {{count}})…",
+      "generate": "Создать субтитры"
+    },
+    "captionStyle": {
+      "minimal": "Минимал",
+      "neon": "Неон",
+      "kinetic": "Кинетика",
+      "cyber": "Кибер",
+      "meme": "Мем",
+      "retro": "Ретро",
+      "quote": "Цитата"
+    },
+    "translate": {
+      "noCaptions": "На таймлайне нет субтитров для перевода.",
+      "inProgress": "Переводим субтитры (тайминги не меняются)…",
+      "done": "Субтитры переведены: {{language}}",
+      "empty": "Перевод завершён, но субтитров не получено.",
+      "failed": "Не удалось перевести субтитры.",
+      "title": "Перевести субтитры",
+      "languageTitle": "Выберите язык перевода",
+      "translating": "Переводим…",
+      "translate": "Перевести"
+    },
+    "emoji": {
+      "noTranscript": "В расшифровке нет слов для подбора эмодзи. Сначала создайте расшифровку.",
+      "inProgress": "Подбираем эмодзи к расшифровке…",
+      "noneFound": "В расшифровке не найдено подходящих эмодзи.",
+      "added": "Добавлено эмодзи на таймлайн: {{count}}",
+      "failed": "Не удалось создать эмодзи",
+      "title": "Автоэмодзи",
+      "clearTitle": "Удалить созданные эмодзи",
+      "cleared": "Эмодзи удалены",
+      "count": "Эмодзи: {{count}}",
+      "enter": "Появление",
+      "enterTitle": "Выберите, как появляются эмодзи",
+      "exit": "Исчезновение",
+      "exitTitle": "Выберите, как исчезают эмодзи",
+      "style": "Стиль",
+      "styleTitle": "Выберите стиль эмодзи",
+      "size": "Размер эмодзи",
+      "sizeTitle": "Выберите размер эмодзи",
+      "density": "Частота",
+      "densityTitle": "Выберите, как часто появляются эмодзи",
+      "placement": "Расположение",
+      "placementTitle": "Выберите, где размещать эмодзи",
+      "inDuration": "Появление: {{value}} с",
+      "inDurationTitle": "Длительность анимации появления",
+      "outDuration": "Исчезновение: {{value}} с",
+      "outDurationTitle": "Длительность анимации исчезновения",
+      "generating": "Создаём эмодзи…",
+      "generate": "Создать эмодзи"
+    },
+    "emojiOpt": {
+      "enter": {
+        "pop": "💥 Выскакивание",
+        "bounce": "🦘 Прыжок вверх",
+        "slide": "➡️ Въезд",
+        "pulse": "💓 Пульсация зума",
+        "shake": "⚡ Тряска камеры",
+        "blur": "🌫️ Из размытия"
+      },
+      "exit": {
+        "fade": "🌫️ Плавное затухание",
+        "pop": "💥 Лопнуть",
+        "slideBottom": "⬇️ Уезд вниз",
+        "bounceOut": "🦘 Отскок",
+        "scaleOut": "🔍 Уменьшение",
+        "zoomOut": "🔎 Отдаление",
+        "flipOut": "🔄 Переворот"
+      },
+      "style": {
+        "pop3d": "✨ 3D-поп",
+        "neonGlow": "🏮 Неоновое свечение",
+        "flat": "📄 Плоский минимал"
+      },
+      "size": {
+        "n32": "🤏 Маленький (32px)",
+        "n48": "👌 Средний (48px)",
+        "n64": "💪 Большой (64px)",
+        "n80": "👑 Огромный (80px)"
+      },
+      "density": {
+        "n3": "🔥 Часто (каждые 3 слова)",
+        "n6": "⚡ Средне (каждые 6 слов)",
+        "n10": "🎯 Редко (каждые 10 слов)"
+      },
+      "place": {
+        "above": "⬆️ Над субтитрами",
+        "below": "⬇️ Под субтитрами",
+        "head": "👱 На уровне головы",
+        "customTop": "👑 Верх кадра"
+      }
+    },
+    "lang": {
+      "en": "Английский (English)",
+      "es": "Испанский (Español)",
+      "fr": "Французский (Français)",
+      "de": "Немецкий (Deutsch)",
+      "it": "Итальянский (Italiano)",
+      "pt": "Португальский (Português)",
+      "ru": "Русский",
+      "ja": "Японский (日本語)",
+      "ko": "Корейский (한국어)",
+      "zh": "Китайский (中文)",
+      "ar": "Арабский (العربية)",
+      "hi": "Хинди (हिन्दी)",
+      "nl": "Нидерландский (Nederlands)",
+      "pl": "Польский (Polski)",
+      "tr": "Турецкий (Türkçe)"
+    },
+    "trim": {
+      "waveform": "Волна",
+      "clickToSeek": "Нажмите, чтобы переместить курсор воспроизведения",
+      "speed": "Скорость",
+      "playbackSpeedAria": "Скорость воспроизведения: {{value}}×",
+      "reverse": "Реверс",
+      "reverseSub": "Развернуть выбранный клип",
+      "selectClipFirst": "Сначала выберите клип",
+      "split": "Разрезать по курсору",
+      "beatCut": "Нарезка по битам",
+      "beatCutSub": "Резать клип на каждом бите",
+      "freeze": "Стоп-кадр",
+      "freezeSub": "Удержать 1 с @ {{time}} с",
+      "trimToInOut": "Обрезать по входу/выходу",
+      "trimToInOutSub": "Задайте вход + выход ниже",
+      "setBothFirst": "Сначала задайте точки входа и выхода",
+      "jCut": "J-склейка",
+      "jCutSub": "Звук начинается на 0,5 с раньше",
+      "lCut": "L-склейка",
+      "lCutSub": "Звук идёт на 0,5 с после склейки",
+      "comingSoonTitle": "{{label}} — скоро",
+      "selectClipTitle": "{{label}} — сначала выберите клип",
+      "soon": "Скоро",
+      "markers": "Метки входа / выхода",
+      "inAt": "Вход {{time}} с",
+      "noIn": "Нет входа",
+      "outAt": "Выход {{time}} с",
+      "noOut": "Нет выхода",
+      "inSet": "Вход задан @ {{time}} с",
+      "setIn": "Задать вход",
+      "outAfterIn": "Выход должен быть после входа",
+      "outSet": "Выход задан @ {{time}} с",
+      "setOut": "Задать выход",
+      "clear": "Очистить"
+    },
+    "layout": {
+      "auto": "Авто",
+      "standard": "Стандарт",
+      "square": "Квадрат",
+      "vertical": "Вертикаль",
+      "portrait": "Портрет",
+      "cinematic": "Кино",
+      "classic": "Классика"
+    },
+    "text": {
+      "editingOnCanvas": "Редактирование в кадре",
+      "doubleClickHint": "Дважды щёлкните текст в плеере, чтобы редактировать на месте",
+      "deselect": "Снять выделение",
+      "newText": "Новый текст",
+      "typePlaceholder": "Введите текст… (⌘↵ — добавить)",
+      "duration": "Длительность:",
+      "searchPresets": "Поиск пресетов…",
+      "activeText": "Текст на видео ({{count}})",
+      "deleteOverlayAria": "Удалить текстовое наложение «{{text}}»",
+      "deleteOverlay": "Удалить текстовое наложение",
+      "preview": "Предпросмотр",
+      "livePreview": "Живой предпросмотр",
+      "editing": "Редактирование: {{text}}",
+      "contentAria": "Текст наложения",
+      "contentPlaceholder": "Текст наложения",
+      "fontSize": "Размер шрифта",
+      "textColor": "Цвет текста",
+      "style": "Стиль",
+      "animateIn": "Анимация появления",
+      "animateOut": "Анимация исчезновения",
+      "font": "Шрифт",
+      "start": "Начало",
+      "startAria": "Время начала в секундах",
+      "end": "Конец",
+      "endAria": "Время окончания в секундах",
+      "uploadFont": "Загрузить шрифт",
+      "uploadFontAria": "Загрузить свой файл шрифта"
+    },
+    "textStyle": {
+      "none": "Нет",
+      "neon": "Неон",
+      "minimal": "Минимал",
+      "bold-kinetic": "Жирный кинетический",
+      "outline": "Обводка",
+      "shadow": "Тень"
+    },
+    "anim": {
+      "none": "Нет",
+      "fade": "Затухание",
+      "slide-up": "Сдвиг вверх",
+      "slide-down": "Сдвиг вниз",
+      "slide-left": "Сдвиг влево",
+      "slide-right": "Сдвиг вправо",
+      "scale": "Масштаб",
+      "bounce": "Прыжок"
+    },
+    "presetGroup": {
+      "viralHooks": "Вирусные хуки",
+      "textPresets": "Текстовые пресеты",
+      "premiumCaptions": "Премиум-субтитры",
+      "reactionCallouts": "Реакции / выноски",
+      "trending": "В тренде",
+      "endScreens": "Конечные заставки",
+      "chapters": "Главы"
+    },
+    "filters": {
+      "strengthAria": "Сила фильтра: {{value}} процентов",
+      "before": "⏪ До",
+      "after": "⏩ После",
+      "split": "🌓 Сравнение",
+      "pinned": "Закреплено",
+      "pin": "Закрепить фильтр {{name}}",
+      "unpin": "Открепить фильтр {{name}}"
+    },
+    "motion": {
+      "searchTemplates": "Поиск шаблонов…",
+      "durationAria": "Длительность моушн-графики в секундах",
+      "recent": "Недавние"
+    },
+    "layers": {
+      "addShape": "Добавить фигуру",
+      "addImage": "Добавить изображение / логотип",
+      "imageUrlPlaceholder": "Вставьте URL изображения…",
+      "imageUrl": "URL изображения",
+      "addSvg": "Добавить SVG",
+      "svgUrlPlaceholder": "URL SVG или data URI…",
+      "svgUrl": "URL SVG",
+      "uploadSvg": "Загрузить файл SVG",
+      "gradients": "Градиентные наложения",
+      "allLayers": "Все слои ({{count}})",
+      "hoverHint": "Наведите курсор, чтобы увидеть управление",
+      "deleteTextAria": "Удалить текстовый слой «{{text}}»",
+      "deleteText": "Удалить текстовый слой",
+      "opacity": "Непрозрачность",
+      "opacityAria": "Непрозрачность слоя",
+      "deleteShape": "Удалить фигуру {{shape}}",
+      "deleteImage": "Удалить слой изображения",
+      "customSvg": "Свой SVG",
+      "deleteSvg": "Удалить слой SVG",
+      "gradientName": "Градиент: {{region}}",
+      "deleteGradient": "Удалить слой градиента",
+      "empty": "Слоёв пока нет",
+      "emptyHint": "Добавьте фигуры, изображения или SVG выше. Текстовые наложения тоже появятся здесь.",
+      "addTextLayer": "+ Добавить текстовый слой"
+    },
+    "shape": {
+      "rect": "Прямоугольник",
+      "circle": "Круг",
+      "line": "Линия"
+    },
+    "region": {
+      "full": "Целиком",
+      "lower-third": "Нижняя треть",
+      "top-bar": "Полоса сверху",
+      "top-half": "Верхняя половина",
+      "bottom-half": "Нижняя половина"
+    },
+    "gradient": {
+      "lowerThird": "Градиент нижней трети",
+      "fullDark": "Полное затемнение",
+      "topBar": "Полоса сверху",
+      "warmTint": "Тёплый оттенок",
+      "coolTint": "Холодный оттенок",
+      "bottomHalf": "Градиент снизу",
+      "topHalf": "Градиент сверху",
+      "vignetteSoft": "Мягкая виньетка"
+    },
+    "pack": {
+      "hookCta": {
+        "name": "Хук + CTA",
+        "desc": "Вирусный хук на позиции курсора, CTA на конечной заставке"
+      },
+      "lowerThirdSubscribe": {
+        "name": "Плашка + подписка",
+        "desc": "Плашка с именем + значок подписки"
+      },
+      "fullCtaBar": {
+        "name": "CTA + градиент нижней трети",
+        "desc": "Лайк и подписка + градиентная полоса"
+      },
+      "introOutro": {
+        "name": "Интро + аутро",
+        "desc": "ИНТРО на позиции курсора, «До встречи» в конце"
+      },
+      "trendingSave": {
+        "name": "Тренд + Сохрани",
+        "desc": "Непопулярное мнение + Сохрани на потом"
+      }
+    },
+    "packs": {
+      "oneClick": "Наборы в один клик",
+      "styleBundles": "Наборы стилей",
+      "platform": "Под каждую платформу",
+      "saveMyStyle": "Сохранить мой стиль",
+      "styleNamePlaceholder": "Название стиля…",
+      "styleName": "Название своего стиля",
+      "saveStyle": "Сохранить свой стиль",
+      "goTo": "Перейти"
+    },
+    "nav": {
+      "shortClips": "Короткие клипы",
+      "assets": "Музыка и B-roll",
+      "timeline": "Таймлайн",
+      "effects": "Эффекты",
+      "color": "Цвет",
+      "aiEdit": "Расшифровка и ИИ",
+      "export": "Экспорт"
+    },
+    "insights": {
+      "comingSoon": "Аналитика скоро появится",
+      "comingSoonHint": "Аналитика удержания, силы хука и темпа появится здесь после анализа видео.",
+      "transcript": "Расшифровка"
+    }
   }
 }

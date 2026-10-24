@@ -846,11 +846,11 @@
     "title": "Conquistas",
     "subtitle": "Acompanhe suas conquistas e seu progresso.",
     "refreshRegistry": "Atualizar",
-    "statTierLabel": "Nível Evolutivo",
+    "statTierLabel": "Nível",
     "statTierSub": "{{pct}}% para o próximo nível",
-    "statMilestonesLabel": "Marcos descriptografados",
+    "statMilestonesLabel": "Marcos desbloqueados",
     "statMilestonesSub": "Desbloqueadas até agora",
-    "statStreakLabel": "Sequência de Coerência",
+    "statStreakLabel": "Sequência ativa",
     "statStreakSub": "Melhor: {{peak}}",
     "statVolumeLabel": "Conteúdos criados",
     "statVolumeSub": "Total de conteúdos criados",
@@ -861,14 +861,14 @@
     "detailPayloads": "Conteúdo",
     "detailScripts": "Roteiros",
     "recentBreakthroughs": "Avanços recentes",
-    "decryptedOn": "DESCRIPTOGRAFADO {{date}}",
+    "decryptedOn": "Desbloqueado em {{date}}",
     "ascensionVerified": "Desbloqueada",
     "nodeMatrix": "Todas as conquistas",
-    "decrypted": "DESCRIPTOGRAFADO",
+    "decrypted": "Desbloqueado",
     "logicGated": "Bloqueado",
     "milestones": {
       "first_video": {
-        "name": "Interpretação do Gênesis",
+        "name": "Primeiro vídeo",
         "description": "Crie seu primeiro vídeo."
       },
       "first_content": {
@@ -900,11 +900,11 @@
         "description": "Finalize 50 vídeos."
       },
       "streak_7": {
-        "name": "Coerência 7",
+        "name": "Sequência de 7 dias",
         "description": "Fique ativo por 7 dias seguidos."
       },
       "streak_30": {
-        "name": "Coerência 30",
+        "name": "Sequência de 30 dias",
         "description": "Fique ativo por 30 dias seguidos."
       },
       "streak_100": {
@@ -925,7 +925,7 @@
       },
       "early_adopter": {
         "name": "Pioneiro",
-        "description": "Integrado durante a fase de gênese."
+        "description": "Entrou no Click logo no começo."
       },
       "power_user": {
         "name": "Usuário avançado",
@@ -993,7 +993,7 @@
     "authorize": "AUTORIZAR",
     "dissent": "DISSIDÊNCIA",
     "historyTitle": "Histórico de aprovação",
-    "historySubtitle": "Registros imutáveis ​​de decisões de consenso e autorizações nodais.",
+    "historySubtitle": "Um registro das aprovações e recusas anteriores.",
     "protocolLogsAnalyzed": "{{count}} solicitações",
     "emptyTitle": "Nada por aqui ainda",
     "emptyState": "Nenhuma solicitação de aprovação ainda.",
@@ -1126,7 +1126,7 @@
     "purgeForgeBuffer": "Limpar buffer do Forge",
     "neuralHeuristics": "Sugestões",
     "neuralHeuristicsDesc": "Formas de melhorar seu conteúdo.",
-    "decryptingHeuristics": "Descriptografando heurísticas...",
+    "decryptingHeuristics": "Analisando…",
     "predictiveTelemetry": "Previsão de desempenho",
     "predictiveTelemetryDesc": "Previsões de como seu conteúdo pode se sair.",
     "scanningTrajectories": "Digitalizando trajetórias..."
@@ -1288,7 +1288,7 @@
     "refreshData": "Atualizar dados de associação",
     "activeNodeUplink": "Plano atual",
     "protocolId": "ID do plano:",
-    "rootGenesis": "Gênese da raiz",
+    "rootGenesis": "Inicial",
     "genericAccess": "Acesso genérico",
     "lifecycleStatus": "Status do ciclo de vida:",
     "uninitialized": "Não inicializado",
@@ -1307,7 +1307,7 @@
     "coreMatrixUplink": "Recursos principais",
     "primeCommandUplink": "Acesso a todos os recursos",
     "activeProtocol": "Plano atual",
-    "ascending": "Ascendente...",
+    "ascending": "Fazendo upgrade…",
     "genesisUplink": "Começar",
     "escalateProtocol": "Fazer upgrade"
   },
@@ -1825,7 +1825,7 @@
     "heroIntro": "Conecte suas redes sociais ao Click. Cada conexão ativa",
     "heroFeature1": "postagem automática",
     "heroFeature2": "acompanhamento de engajamento",
-    "heroFeature3": "análise sintética de audiência",
+    "heroFeature3": "insights do público",
     "heroAnd": "e",
     "statNeuralEncryption": "Criptografia de tokens",
     "statUplinkLatency": "Velocidade da conexão",
@@ -2375,7 +2375,7 @@
     "collaborationIntro1": "Cada equipe tem",
     "collaborationHighlight1": "recursos compartilhados",
     "collaborationIntro2": ",",
-    "collaborationHighlight2": "ciclos de feedback assíncronos",
+    "collaborationHighlight2": "comentários e feedback",
     "collaborationIntro3": ", e um sistema unificado",
     "collaborationHighlight3": "fila de produção",
     "collaborationIntro4": ". Mantenha o trabalho de todos em um só lugar.",
@@ -3113,7 +3113,7 @@
     "neuralLine1": "Conteúdo",
     "neuralLine2": "CENTRO",
     "autonomousPrefix": "O modo automático está",
-    "dominating": "dominando",
+    "dominating": "em execução",
     "autonomousMid": "o",
     "autonomousSuffix": "fila.",
     "neuralActive": "Modo automático ativo",
@@ -3998,7 +3998,7 @@
     "latticeHealth": "Saúde da rede",
     "aggregatedRevenue": "Receita agregada",
     "victoryVectors": "Vitórias de hoje",
-    "encirclementTitle": "Cerco Global",
+    "encirclementTitle": "Visão geral do crescimento",
     "encirclementSubtitle": "Insights compartilhados em todo o Click",
     "godModeSaturationActive": "Ao vivo",
     "decentralizedIntelligenceLedger": "Registro de atividades",
@@ -4018,7 +4018,7 @@
     "tabStability": "Saúde do sistema",
     "versionLabel": "Click",
     "overlordTerminalSynced": "Conectado",
-    "mainTitle": "Clique em Terminal Overlord",
+    "mainTitle": "Central de controle do Click",
     "mainSubtitle": "Controles de monetização e automação."
   },
   "clickDebugPanel": {
@@ -5408,7 +5408,7 @@
     "presetVibrantPopName": "Pop vibrante",
     "presetVibrantPopDesc": "Cores fortes e saturadas",
     "presetSoftDreamyName": "Suave Sonhador",
-    "presetSoftDreamyDesc": "Olhar etéreo e gentil",
+    "presetSoftDreamyDesc": "Visual suave e delicado",
     "presetElectricVibeName": "Elétrico",
     "presetElectricVibeDesc": "Aparência vibrante de alta energia",
     "presetRetroVintageName": "Vintage retrô",
@@ -6232,7 +6232,20 @@
     "appliedStyleProfile": "Estilo {{name}} aplicado",
     "packApplied": "{{name}} aplicado: correção de cor {{grade}} e seu estilo de legenda",
     "packAppliedGradeOnly": "{{name}} aplicado: correção de cor {{grade}}. Ative as legendas para usar o estilo de legenda dele.",
-    "packApplyFailed": "Não foi possível aplicar {{name}}: a correção de cor dele não foi encontrada"
+    "packApplyFailed": "Não foi possível aplicar {{name}}: a correção de cor dele não foi encontrada",
+    "beatRecut": "✦ Recortado em {{count}} clipes na batida ({{replaced}} clipes de vídeo substituídos)",
+    "beatCut": "✦ Cortado em {{count}} clipes sincronizados com a batida",
+    "autoViralAnalysing": "✦ Edição viral automática — analisando batidas e legendas…",
+    "autoViralNothingFound": "A edição viral automática precisa de batidas de música ou de uma transcrição utilizável — nenhuma das duas foi encontrada.",
+    "autoViralNeedsTranscript": "A edição viral automática precisa de uma transcrição para as legendas ou de música para os cortes. Transcreva primeiro e tente de novo.",
+    "autoViralCuts": "{{clips}} clipes na batida · {{transitions}} transições",
+    "autoViralCaptions": "{{count}} legendas estilo karaokê",
+    "autoViralDone": "✦ Edição viral automática: {{summary}}",
+    "autoViralFailed": "A edição viral automática falhou — sua linha do tempo não foi alterada.",
+    "resizeTimelineAria": "Redimensionar linha do tempo (arraste para cima ou para baixo)",
+    "resizeTimelineTitle": "Arraste para redimensionar a linha do tempo",
+    "timelineHeading": "Linha do tempo",
+    "cmdCategoryEditor": "EDITOR"
   },
   "nicheStrategyPanel": {
     "tabHooks": "Ganchos",
@@ -6310,13 +6323,13 @@
     "featuresTitle": "Recursos de elite",
     "featuresDescription": "Desbloqueie a inteligência multiplataforma e o crescimento preditivo.",
     "completeTitle": "Tudo pronto",
-    "completeDescription": "Agora você está pronto para dominar o cenário social.",
+    "completeDescription": "Tudo pronto para você começar a criar.",
     "eliteAccessGranted": "Acesso Elite concedido",
     "closeOnboarding": "Fechar integração",
     "back": "Voltar",
-    "startDominating": "Comece a dominar",
+    "startDominating": "Começar",
     "nextIntelligence": "Próxima Inteligência",
-    "clickGenesis": "Clique em Gênesis",
+    "clickGenesis": "Boas-vindas ao Click",
     "welcomeBodyBefore": "A única plataforma que não apenas escreve – ela",
     "welcomeBodyOperates": "opera",
     "welcomeBodyAfter": ". Vamos configurar sua marca.",
@@ -6489,7 +6502,7 @@
     "syncing": "Atualizando...",
     "restart": "Reiniciar",
     "dismissInstallPrompt": "Ignorar prompt de instalação",
-    "installDescription": "Ascenda para um espaço de trabalho mais rápido e com capacidade off-line. Construído para operações de conteúdo de elite.",
+    "installDescription": "Instale o Click para ter um app mais rápido que também funciona offline.",
     "initializeInstallation": "Inicializar instalação",
     "tagInstant": "Instantâneo",
     "tagEdge": "Borda",
@@ -6779,7 +6792,7 @@
     "navAeoMetadata": "Metadados AEO",
     "navUgcRaw": "UGC bruto",
     "navZeroPartyData": "Dados de terceiros",
-    "headerPill": "Fase 8 – Dominação do Mercado",
+    "headerPill": "Fase 8 — Ferramentas de crescimento",
     "headerTitle": "Ferramentas de crescimento",
     "headerSubtitle": "5 sistemas que tornam o CLICK indiscutível"
   },
@@ -6850,14 +6863,14 @@
     "pcv": "PCV",
     "steerSwarmToThisOffer": "Focar nesta oferta",
     "s2sNetworkDown": "Rede S2S inativa",
-    "globalEncirclementTitle": "Cerco Global",
+    "globalEncirclementTitle": "Visão geral do crescimento",
     "globalEncirclementSubtitle": "Insights entre contas",
     "godModeActiveBadge": "Ativo",
     "networkHealth": "Saúde da rede",
     "aggregatedRevenue": "Receita agregada",
     "victoryVectors": "Melhores desempenhos",
     "logInitializingTunnel": "[SYSTEM] Inicializando túnel criptografado S2S...",
-    "logEncirclementActive": "[SISTEMA] Cerco ativo. {{count}} instâncias irmãs conectadas.",
+    "logEncirclementActive": "{{count}} espaços de trabalho conectados.",
     "logVectorReceived": "O gancho \"{{hook}}\" está liderando em {{cluster}}.",
     "logLocalSynthesis": "Resultados locais atualizados: peso do momentum +{{percent}}%.",
     "productionStabilityTitle": "Estabilidade de Produção",
@@ -6878,7 +6891,7 @@
     "navGlobalS2s": "S2S global",
     "navSystemHealth": "Saúde do sistema",
     "headerPill": "Ferramentas avançadas",
-    "headerTitle": "O Terminal Overlord",
+    "headerTitle": "Central de controle",
     "headerSubtitle": "Expansão de mercado"
   },
   "quickActions": {
@@ -6983,7 +6996,7 @@
     "razorTool": "Ferramenta Navalha (S)",
     "editMode": "Modo de edição",
     "modeNormal": "Normal",
-    "modeRipple": "Ondulação",
+    "modeRipple": "Ripple",
     "modeRoll": "Rolar",
     "modeSlip": "Escorregar",
     "setInPoint": "Definir ponto (I)",
@@ -7098,7 +7111,31 @@
   "realTimeVideoPreview": {
     "overlayAlt": "Sobreposição",
     "metadataError": "Falha ao carregar metadados de vídeo. Verifique a validade do CORS ou URL.",
-    "bootingRenderEngine": "Carregando a pré-visualização..."
+    "bootingRenderEngine": "Carregando a pré-visualização...",
+    "videoFailed": "Não foi possível carregar o vídeo",
+    "retry": "Tentar de novo",
+    "dragToCompare": "Arraste para comparar Antes / Depois",
+    "before": "Antes",
+    "after": "Depois",
+    "rawUnfiltered": "Original / sem filtro",
+    "graded": "Com cor",
+    "editCaptionInline": "Editar o texto da legenda direto",
+    "captionPlaceholder": "Digite o texto da legenda...",
+    "opsReverse": "{{count}}× invertido",
+    "opsJCut": "{{count}}× corte J",
+    "opsLCut": "{{count}}× corte L",
+    "exportOnlyTitle": "Estas alterações só são aplicadas na exportação — a prévia reproduz os clipes na direção original, com o áudio sincronizado normalmente.",
+    "exportOnly": "Só na exportação",
+    "imageLayer": "Camada de imagem",
+    "imageFailed": "Não foi possível carregar a imagem",
+    "svgLayer": "Camada SVG",
+    "preview": "Prévia",
+    "latency": "Latência",
+    "pause": "Pausar",
+    "play": "Reproduzir",
+    "toggleBeforeAfter": "Alternar antes/depois",
+    "beforeAfter": "Antes / depois",
+    "aiStylingActive": "Estilo com IA ativo"
   },
   "realtimeCollaboration": {
     "failedToJoin": "Falha ao ingressar na sessão de colaboração",
@@ -7172,7 +7209,137 @@
   },
   "resizableTimeline": {
     "restore": "Restaurar tamanho da linha do tempo",
-    "maximize": "Maximizar o cronograma"
+    "maximize": "Maximizar o cronograma",
+    "snapKind": {
+      "word": "Palavra",
+      "silence": "Pausa",
+      "beat": "Batida",
+      "marker": "Marcador",
+      "edge": "Borda",
+      "playhead": "Cursor",
+      "boundary": "Limite"
+    },
+    "realignedCountOne": "1 legenda encaixada na fala",
+    "realignedCount": "{{count}} legendas encaixadas na fala",
+    "alreadyAligned": "As legendas já estão alinhadas",
+    "markerNamePrompt": "Nome do marcador (opcional):",
+    "unsoloTrack": "Desativar solo da faixa",
+    "soloTrack": "Solo da faixa",
+    "soloShort": "S",
+    "unmuteTrack": "Ativar som da faixa",
+    "muteTrack": "Silenciar faixa",
+    "unlockTrack": "Desbloquear faixa",
+    "lockTrack": "Bloquear faixa",
+    "prevFrameTitle": "Quadro anterior (←)",
+    "prevFrame": "Quadro anterior",
+    "pauseTitle": "Pausar (Espaço)",
+    "playTitle": "Reproduzir (Espaço)",
+    "pause": "Pausar",
+    "play": "Reproduzir",
+    "nextFrameTitle": "Próximo quadro (→)",
+    "nextFrame": "Próximo quadro",
+    "goToTimeLabel": "Ir para o tempo (digite um tempo e pressione Enter)",
+    "goToTimeTitle": "Digite um tempo (ex.: 1:05.5) e pressione Enter para ir até ele",
+    "splitTitle": "Dividir o clipe sob o cursor (S)",
+    "split": "Dividir",
+    "deleteTitle": "Excluir a seleção (Delete)",
+    "delete": "Excluir",
+    "rippleOnTitle": "Ripple ligado: excluir fecha o espaço em todas as faixas",
+    "rippleOffTitle": "Ripple desligado: excluir deixa um espaço vazio",
+    "ripple": "Ripple",
+    "ungroupTitle": "Desagrupar os clipes selecionados",
+    "ungroup": "Desagrupar",
+    "groupTitle": "Agrupe os clipes selecionados para mover e excluir juntos",
+    "group": "Agrupar",
+    "setInTitle": "Marcar entrada no cursor (I)",
+    "in": "Entrada",
+    "setOutTitle": "Marcar saída no cursor (O)",
+    "out": "Saída",
+    "clearInOutTitle": "Limpar entrada/saída (Alt+X)",
+    "clearInOutLabel": "Limpar pontos de entrada e saída",
+    "snapTitle": "Encaixar clipes nas bordas, no cursor e nos marcadores",
+    "snap": "Encaixe",
+    "speechTitle": "Encaixar clipes e legendas nas palavras faladas",
+    "speechDisabledTitle": "Gere legendas para ativar o encaixe na fala",
+    "speech": "Fala",
+    "realignTitle": "Ajustar o tempo de cada legenda às palavras faladas",
+    "realign": "Realinhar legendas",
+    "dragToPan": "Arraste para mover",
+    "showTracks": "Mostrar faixas",
+    "allTracks": "Todas as faixas",
+    "track": {
+      "captions": "Legendas",
+      "mainVideo": "Vídeo principal",
+      "broll": "B-roll",
+      "audio": "Áudio",
+      "effects": "Efeitos",
+      "captionsSub": "Texto na tela",
+      "mainVideoSub": "Suas gravações",
+      "brollSub": "Cortes de cena e imagens",
+      "audioSub": "Música, voz e efeitos sonoros"
+    },
+    "viewGroup": "Visualização da linha do tempo",
+    "view": {
+      "clips": "Clipes",
+      "clipsTitle": "Só clipes",
+      "hybrid": "Clipes + roteiro",
+      "hybridTitle": "Clipes com o roteiro acima",
+      "script": "Roteiro",
+      "scriptTitle": "Editar pelo texto"
+    },
+    "zoomOut": "Afastar",
+    "zoomIn": "Aproximar",
+    "hideInsights": "Ocultar faixas de insights da IA",
+    "showInsights": "Mostrar faixas de insights da IA",
+    "insights": "Insights",
+    "inOutSpan": "Entrada/saída: {{time}}",
+    "inPointTitle": "Ponto de entrada: {{time}} (arraste para ajustar)",
+    "outPointTitle": "Ponto de saída: {{time}} (arraste para ajustar)",
+    "beatLabel": "Batida ({{time}}s)",
+    "markerTitle": "{{name}}: {{time}} (arraste para mover, clique para ir, botão direito para editar)",
+    "marker": "Marcador",
+    "markerTag": "{{name}} ({{time}})",
+    "resolve": "Resolver",
+    "close": "Fechar",
+    "captionsCountOne": "1 legenda",
+    "captionsCount": "{{count}} legendas",
+    "clipsCountOne": "1 clipe",
+    "clipsCount": "{{count}} clipes",
+    "itemsCountOne": "1 item",
+    "itemsCount": "{{count}} itens",
+    "audienceRetention": "Retenção do público",
+    "retentionTitle": "Retenção: {{value}}%",
+    "audioWaveform": "Forma de onda do áudio",
+    "audioWaveformNoAudio": "Forma de onda do áudio (sem áudio)",
+    "trimStart": "Aparar início",
+    "trimEnd": "Aparar fim",
+    "jCut": "Corte J",
+    "lCut": "Corte L",
+    "trimmedStart": "Início aparado",
+    "trimmedEnd": "Fim aparado",
+    "freeze": "Congelar",
+    "reverseSpeed": "Invertido {{speed}}×",
+    "keyframes": "Keyframes",
+    "playheadTitle": "Cursor: {{time}} (arraste para percorrer)",
+    "scrubTitle": "Percorrer: {{time}}",
+    "dragPlayhead": "Arrastar o cursor",
+    "origin": "Origem: {{time}}",
+    "moveDelta": "Deslocamento: {{delta}}",
+    "trackNumber": "Faixa {{number}}",
+    "clipsMoving": "Movendo {{count}} clipes",
+    "trimStartAt": "Aparar início: {{time}}",
+    "trimEndAt": "Aparar fim: {{time}}",
+    "workAreaIn": "Início da área de trabalho: {{time}}",
+    "workAreaOut": "Fim da área de trabalho: {{time}}",
+    "span": "Intervalo: {{time}}",
+    "menu": {
+      "splitAtPlayhead": "Dividir no cursor",
+      "duplicate": "Duplicar clipe",
+      "ungroup": "Desagrupar clipes",
+      "group": "Agrupar clipes",
+      "rippleDelete": "Excluir e fechar espaço"
+    },
+    "sceneChange": "Mudança de cena"
   },
   "revenueOracle": {
     "synchronizing": "Carregando dados de receita...",
@@ -7682,7 +7849,7 @@
     "neuralScheduling": "Agendamento inteligente",
     "neuralSchedulingDesc": "Agende posts para quando seu público estiver mais ativo.",
     "evergreenSynthesis": "Reciclagem evergreen",
-    "evergreenSynthesisDesc": "Ative a reciclagem de conteúdo com autocorreção para obter ROI infinito do repositório.",
+    "evergreenSynthesisDesc": "Reaproveite automaticamente seu conteúdo de melhor desempenho.",
     "initiateSequence": "Iniciar sequência",
     "neuralProcessing": "Processando",
     "ecosystemCalibration": "Configurando...",
@@ -7691,7 +7858,7 @@
     "synchronization": "Pipeline",
     "verified": "VERIFICADO",
     "nodesPrimedPrefix": "Seus posts estão",
-    "primed": "preparado",
+    "primed": "pronto",
     "nodesPrimedSuffix": "para publicar.",
     "estimatedYield": "Rendimento estimado",
     "neuralIntegrity": "Controle de qualidade",
@@ -8517,5 +8684,1369 @@
     "shift1d": "+1 dia",
     "shift1w": "+1 semana",
     "moveWarning": "Mover posts pode deixar dois posts na mesma plataforma no mesmo horário. Posts que já estão sendo publicados ou já foram publicados não serão movidos."
+  },
+  "editorSidebar": {
+    "cat": {
+      "aiEdit": {
+        "label": "Edição automática com IA",
+        "desc": "Edição com IA em um clique"
+      },
+      "dub": {
+        "label": "Dublagem",
+        "desc": "Traduza sua voz para 10 idiomas"
+      },
+      "edit": {
+        "label": "Editar",
+        "desc": "Ferramentas básicas de edição"
+      },
+      "assets": {
+        "label": "Meus recursos",
+        "desc": "Adicione músicas, imagens e clipes de B-roll"
+      },
+      "effects": {
+        "label": "Efeitos",
+        "desc": "Filtros e melhorias"
+      },
+      "color": {
+        "label": "Cor",
+        "desc": "Correção de cor profissional"
+      },
+      "chromakey": {
+        "label": "Chroma Key",
+        "desc": "Tela verde e composição"
+      },
+      "timeline": {
+        "label": "Linha do tempo",
+        "desc": "Edição avançada"
+      },
+      "export": {
+        "label": "Exportar",
+        "desc": "Compartilhar e exportar"
+      },
+      "aiAssist": {
+        "label": "Assistente de IA",
+        "desc": "Cortes inteligentes · revisão de sugestões · aplicar e desfazer"
+      },
+      "monetize": {
+        "label": "Monetizar",
+        "desc": "Links de produtos · QR · plano de monetização com IA"
+      },
+      "stockLibrary": {
+        "label": "Banco de mídia",
+        "desc": "B-roll · músicas · GIFs · figurinhas · transições · efeitos sonoros"
+      },
+      "textMotion": {
+        "label": "Texto e movimento",
+        "desc": "Legendas · animações · movimento · fontes"
+      }
+    },
+    "group": {
+      "edit": {
+        "label": "Editar",
+        "desc": "Corte, cor, composição — o essencial da edição."
+      },
+      "media": {
+        "label": "Mídia",
+        "desc": "Recursos, banco de mídia, legendas e texto."
+      },
+      "ai": {
+        "label": "IA",
+        "desc": "Edição automática com IA em um clique + dublagem multilíngue."
+      },
+      "export": {
+        "label": "Exportar",
+        "desc": "Renderizar e compartilhar."
+      }
+    },
+    "badge": {
+      "new": "NOVO",
+      "agency": "Agência",
+      "pro": "PRO",
+      "beta": "BETA"
+    },
+    "title": "Ferramentas do editor",
+    "ready": "Pronto",
+    "expand": "Expandir barra lateral",
+    "collapse": "Recolher barra lateral",
+    "searchPlaceholder": "Buscar ferramentas (⌘F)",
+    "clearSearch": "Limpar busca",
+    "all": "Todos",
+    "recent": "Recentes",
+    "noTools": "Nenhuma ferramenta encontrada",
+    "pinned": "Fixados",
+    "allTools": "Todas as ferramentas",
+    "unpin": "Desafixar",
+    "pinToTop": "Fixar no topo",
+    "device": {
+      "desktop": "Computador",
+      "tablet": "Tablet",
+      "mobile": "Celular"
+    },
+    "shortcuts": "Atalhos de teclado",
+    "closeShortcuts": "Fechar atalhos",
+    "searchTools": "Buscar ferramentas"
+  },
+  "editorHUD": {
+    "section": {
+      "edit": "Edição",
+      "color": "Cor",
+      "ai": "Ferramentas de IA",
+      "effects": "Efeitos",
+      "timeline": "Linha do tempo",
+      "export": "Exportar",
+      "styleVault": "Style Vault",
+      "aiEdit": "Edição com IA",
+      "assets": "Recursos",
+      "growth": "Análises",
+      "chromakey": "Chroma Key",
+      "visualFx": "Efeitos visuais",
+      "aiAnalysis": "Análise com IA",
+      "collaborate": "Colaborar",
+      "scripts": "Roteiros",
+      "scheduling": "Agendamento",
+      "shortClips": "Clipes curtos",
+      "predict": "Previsões",
+      "distribution": "Distribuição",
+      "spatial": "Espacial",
+      "agent": "Agente de IA",
+      "dub": "Dublagem"
+    },
+    "layout": {
+      "balanced": "Equilibrado",
+      "balancedDesc": "Prévia e linha do tempo divididas por igual",
+      "cinematic": "Cinema",
+      "cinematicDesc": "Prévia maior, foco na reprodução",
+      "timelineFocus": "Foco na linha do tempo",
+      "timelineFocusDesc": "Mais espaço para ajustes finos na linha do tempo"
+    },
+    "projectName": "Nome do projeto",
+    "savingEllipsis": "Salvando…",
+    "saveFailed": "Falha ao salvar",
+    "allChangesSaved": "Todas as alterações salvas",
+    "saving": "Salvando",
+    "saved": "Salvo",
+    "undoTitle": "Desfazer (⌘Z)",
+    "redoTitle": "Refazer (⌘Y)",
+    "undo": "Desfazer",
+    "redo": "Refazer",
+    "command": "Buscar ou executar um comando",
+    "commandTitle": "Buscar ou executar um comando (⌘K)",
+    "workspaceLayoutTitle": "Layout do espaço de trabalho (L)",
+    "workspaceLayout": "Layout do espaço de trabalho",
+    "gpu": "GPU: {{backend}}",
+    "agentRunning": "Agente de IA em execução",
+    "makeViralTitle": "Aplique a receita viral de um clique — gancho, cortes, B-roll, sincronia com a batida, CTA",
+    "working": "Trabalhando…",
+    "makeViral": "Tornar viral",
+    "focusMode": "Modo foco",
+    "moreActions": "Mais ações",
+    "more": "Mais",
+    "keyboardShortcuts": "Atalhos de teclado",
+    "exportTitle": "Exportar e publicar",
+    "export": "Exportar"
+  },
+  "quickActionsBar": {
+    "variantsNeedBase": "Adicione uma legenda ou gancho primeiro para o gerador de variações ter com o que trabalhar.",
+    "noVariants": "Nenhuma variação retornada — tente um gancho base mais longo.",
+    "variantsGenerated": "{{count}} variações geradas — abra o seletor A/B para ver a prévia.",
+    "variantsFailed": "Falha nas variações: {{error}}",
+    "unknownError": "erro desconhecido",
+    "brollNeedsClip": "Carregue um clipe primeiro para sugerir B-roll.",
+    "noBrollGaps": "Nenhuma lacuna para B-roll — seu clipe já está visualmente cheio.",
+    "brollSuggested": "{{count}} inserções de B-roll sugeridas. Abra a linha do tempo para revisar.",
+    "brollFailed": "Falha nas sugestões de B-roll: {{error}}",
+    "trendsWarmingUp": "O feed de tendências está aquecendo — tente de novo em um minuto.",
+    "trendsLoaded": "Em alta agora: {{sounds}} sons · {{hashtags}} hashtags. Abrindo o seletor.",
+    "trendsFailed": "Não foi possível carregar as tendências: {{error}}",
+    "styleApplied": "Seu estilo foi aplicado: {{items}}",
+    "styleAppliedGeneric": "O estilo aprendido foi aplicado.",
+    "styleNeedsClips": "Publique 3 clipes primeiro para o Click aprender seu estilo.",
+    "styleTimedOut": "O pedido do seu estilo demorou demais. Tente novamente.",
+    "styleLoadFailed": "Não foi possível carregar seu estilo. Tente novamente.",
+    "viralEdit": "Edição viral",
+    "viralEditLong": "Edição viral automática — edição completa em um toque",
+    "applyStyle": "Aplicar estilo",
+    "split": "Dividir",
+    "splitLong": "Dividir no cursor",
+    "captions": "Legendas",
+    "grade": "Cor",
+    "effects": "Efeitos",
+    "aiTools": "Ferramentas de IA",
+    "clean": "Limpar",
+    "cleanLong": "Limpeza inteligente",
+    "variants": "Variações",
+    "variantsLong": "Variações A/B",
+    "broll": "B-roll",
+    "brollLong": "Sugerir B-roll",
+    "trends": "Tendências",
+    "trendsLong": "Em alta agora",
+    "learnedFrom": "O Click aprendeu com {{count}} dos seus clipes publicados",
+    "ariaLoading": "{{label}} — carregando",
+    "ariaShortcut": "{{label}} (atalho {{key}})"
+  },
+  "aiAutoEdit": {
+    "preset": {
+      "mrbeastEnergy": "Energia MrBeast",
+      "mrbeastEnergyTagline": "Muita coisa em jogo · quebra de padrão",
+      "hormoziBold": "Hormozi ousado",
+      "hormoziBoldTagline": "Dado forte · opinião contrária",
+      "cinematicDoc": "Doc cinematográfico",
+      "cinematicDocTagline": "Tensão lenta · cortes sussurrados",
+      "educationalClean": "Educativo limpo",
+      "educationalCleanTagline": "Pergunta inicial · fatos diretos",
+      "newsAuthority": "Autoridade jornalística",
+      "newsAuthorityTagline": "Manchete · urgente · especialista",
+      "casualVlog": "Vlog casual",
+      "casualVlogTagline": "Dia a dia · conversa",
+      "mysteryHook": "Gancho de mistério",
+      "mysteryHookTagline": "Loop de curiosidade · revelação lenta",
+      "gymGrit": "Garra de academia",
+      "gymGritTagline": "Alta intensidade · sem mimimi",
+      "adhdOverload": "Sobrecarga TDAH",
+      "adhdOverloadTagline": "Caos · explosões pop · superestímulo",
+      "podcastGoldmine": "Mina de ouro do podcast",
+      "podcastGoldmineTagline": "Autoridade · capítulos · doc acolhedor",
+      "retentionMachine": "Máquina de retenção",
+      "retentionMachineTagline": "Loops abertos · B-roll · capítulos"
+    },
+    "opt": {
+      "auto": "Automático",
+      "vivid": "Vívido",
+      "cinematic": "Cinematográfico",
+      "natural": "Natural",
+      "cool": "Frio",
+      "warm": "Quente",
+      "vintage": "Vintage",
+      "bw": "Preto e branco",
+      "upbeatPop": "Pop animado",
+      "chill": "Relax",
+      "darkAmbient": "Ambiente sombrio",
+      "synthwave": "Synthwave",
+      "phonk": "Phonk",
+      "lofi": "Lo-fi",
+      "question": "Pergunta",
+      "stat": "Estatística",
+      "mystery": "Mistério",
+      "story": "História",
+      "boldClaim": "Afirmação ousada",
+      "patternBreak": "Quebra de padrão",
+      "fastCut": "Corte rápido",
+      "crossfade": "Fusão cruzada",
+      "glitch": "Glitch",
+      "whipPan": "Whip pan",
+      "hardCut": "Corte seco",
+      "modern": "Moderno",
+      "bold": "Ousado",
+      "minimal": "Minimalista",
+      "neon": "Neon",
+      "pill": "Pílula",
+      "top": "Em cima",
+      "middle": "Meio",
+      "bottom": "Embaixo",
+      "lowerThird": "Terço inferior",
+      "energetic": "Enérgico",
+      "calm": "Calmo",
+      "authoritative": "Confiante",
+      "playful": "Divertido",
+      "serious": "Sério",
+      "urgency": "Urgência",
+      "value": "Valor",
+      "curiosity": "Curiosidade",
+      "off": "Desligado",
+      "sparse": "Pouco",
+      "balanced": "Equilibrado",
+      "heavy": "Intenso",
+      "gentle": "Suave",
+      "medium": "Médio",
+      "aggressive": "Agressivo",
+      "educational": "Educativo",
+      "entertaining": "Divertido",
+      "motivational": "Motivacional",
+      "promotional": "Promocional"
+    },
+    "brief": {
+      "title": "Resumo de marketing",
+      "postingTimes": "Melhores horários para postar",
+      "competitiveInsights": "Insights da concorrência"
+    },
+    "err": {
+      "videoNotFound": "Dados do vídeo não encontrados na resposta",
+      "loadFailed": "Não foi possível carregar o vídeo. Tente novamente.",
+      "missingSource": "Este vídeo está sem o arquivo original. Envie de novo e tente outra vez.",
+      "tooManyPresets": "Você pode combinar no máximo 3 predefinições de estilo por edição.",
+      "serviceError": "O serviço de IA encontrou um erro: {{error}}",
+      "serviceInternal": "O serviço de IA teve um erro interno. Tente novamente daqui a pouco.",
+      "sessionExpired": "Sua sessão expirou. Entre novamente e tente de novo.",
+      "rateLimited": "Muitos pedidos de edição. Aguarde um momento e tente novamente.",
+      "rejected": "O pedido foi recusado ({{status}}). Confira os dados e tente de novo.",
+      "timeout": "O pedido de edição demorou demais. O vídeo pode ser grande demais ou o servidor está lento.",
+      "network": "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
+      "startFailed": "Não foi possível iniciar a edição com IA. Tente novamente."
+    },
+    "badge": "Edição automática com IA",
+    "title": "Configurar regras da IA",
+    "untitled": "Projeto sem título",
+    "toggleTheme": "Alternar tema",
+    "analyze": "Analisar vídeo",
+    "analyzing": "Analisando...",
+    "backToVideos": "Voltar aos vídeos",
+    "processingTitle": "Processando vídeo",
+    "processingBody": "A IA está analisando, cortando e otimizando seu vídeo...",
+    "initializing": "Iniciando",
+    "result": {
+      "title": "Sua edição está pronta",
+      "body": "Abra no editor para ajustar ou baixe do jeito que está.",
+      "editsApplied": "Edições aplicadas",
+      "openInEditor": "Abrir no editor",
+      "downloadTitle": "Baixar o vídeo editado",
+      "download": "Baixar",
+      "viewClipsTitle": "Ver os clipes gerados",
+      "viewClips": "Ver clipes",
+      "dismissTitle": "Dispensar este resultado",
+      "dismiss": "Dispensar"
+    },
+    "diag": {
+      "title": "Diagnóstico",
+      "complete": "Análise concluída",
+      "suggestedLength": "Duração sugerida"
+    },
+    "plan": {
+      "title": "Seu plano de edição",
+      "subtitle": "O que a IA vai fazer com as configurações à direita",
+      "opening": "Abertura",
+      "openingHook": "Começar pelo momento mais forte",
+      "openingOriginal": "Manter o início original",
+      "pacing": "Ritmo",
+      "pacingGentle": "Cortes suaves",
+      "pacingFast": "Cortes rápidos e enxutos",
+      "pacingBalanced": "Cortes equilibrados",
+      "deadAir": "Silêncios",
+      "removed": "Removidos",
+      "kept": "Mantidos",
+      "captions": "Legendas",
+      "burnedIn": "Gravadas no vídeo",
+      "off": "Desligado",
+      "clips": "Clipes",
+      "under30s": "menos de 30s",
+      "fullLength": "duração completa",
+      "oneVideo": "Um vídeo editado",
+      "format": "Formato"
+    },
+    "director": {
+      "title": "Diretor IA",
+      "subtitle": "Escolha até 3 estilos ou ajuste cada configuração.",
+      "presetsOne": "{{count}} predefinição: {{names}}",
+      "presetsOther": "{{count}} predefinições: {{names}}"
+    },
+    "targetPlatform": "Plataforma alvo",
+    "contentTone": "Tom do conteúdo",
+    "stylePreset": "Predefinição de estilo",
+    "presetsSelected": "{{count}}/3 selecionados · clique de novo para remover",
+    "presetCap": "Até 3 predefinições — remova uma para trocar",
+    "presetSelectedTitle": "Selecionado nº {{n}} — clique para remover",
+    "presetSelect": "Escolher estilo: {{name}}",
+    "presetSelectedAria": "Estilo selecionado nº {{n}}: {{name}}",
+    "aiTasks": "Tarefas da IA",
+    "task": {
+      "removeSilence": "Remover silêncios",
+      "removeSilenceDesc": "Corta silêncios e pausas automaticamente",
+      "optimizePacing": "Otimizar ritmo",
+      "optimizePacingDesc": "Cortes enxutos para retenção",
+      "enhanceAudio": "Melhorar áudio",
+      "enhanceAudioDesc": "Redução de ruído + nivelamento",
+      "generateClips": "Gerar clipes curtos",
+      "generateClipsDesc": "Extrair momentos virais",
+      "addCaptions": "Legendas no vídeo",
+      "addCaptionsDesc": "Texto dinâmico sincronizado com as palavras",
+      "enhanceColor": "Correção de cor",
+      "enhanceColorDesc": "LUT automático + correção"
+    },
+    "output": "Saída",
+    "aspectRatio": "Proporção",
+    "clipsToGenerate": "Clipes a gerar",
+    "clipCountAria": "Número de clipes a gerar",
+    "targetLength": "Duração alvo",
+    "full": "Completo",
+    "pacing": "Ritmo",
+    "advanced": "Avançado",
+    "advancedHint": "Clima, legendas, transições, voz, B-roll, CTA",
+    "sel": {
+      "colorGrade": "Correção de cor",
+      "musicGenre": "Gênero musical",
+      "hookStyle": "Estilo do gancho",
+      "transitions": "Transições",
+      "captionStyle": "Estilo da legenda",
+      "subtitlePosition": "Posição da legenda",
+      "voiceTone": "Tom de voz",
+      "ctaStyle": "Estilo do CTA",
+      "brollFrequency": "Frequência de B-roll"
+    },
+    "speedRamping": "Rampa de velocidade",
+    "speedRampingHint": "Acelera e desacelera os clipes para dar energia",
+    "toggleSpeedRamping": "Ativar/desativar rampa de velocidade",
+    "prioritizeHook": "Priorizar o gancho",
+    "prioritizeHookHint": "Faça os primeiros 3s valerem para a retenção",
+    "togglePrioritizeHook": "Ativar/desativar prioridade do gancho",
+    "creativeDirection": "Direção criativa",
+    "creativeDirectionHint": "opcional · substitui os padrões da IA",
+    "creativeDirectionPlaceholder": "ex.: Deixe com cara de cinema e escuro, sem jump cuts, destaque a pausa emocional em 0:42…",
+    "autoFit": "Ajuste automático",
+    "aiPlan": "Plano da IA",
+    "preloadedStyle": "Seu estilo já foi carregado",
+    "planLine": {
+      "composeOne": "Montar {{count}} clipe {{aspect}}, alvo de {{length}}",
+      "composeOther": "Montar {{count}} clipes {{aspect}}, alvo de {{length}}",
+      "forPlatform": "para {{platform}}",
+      "tone": "tom {{tone}}",
+      "acrossPresets": "usando {{presets}} ({{count}} ângulos de variação)",
+      "autoStyle": "com estilo {{auto}}",
+      "autoDetected": "detectado automaticamente",
+      "grade": "correção de cor {{grade}}",
+      "hook": "gancho {{hook}}",
+      "pacing": "ritmo {{pacing}}",
+      "speedRamping": "rampa de velocidade ligada",
+      "broll": "B-roll {{broll}}"
+    },
+    "tasksOne": "{{count}} tarefa",
+    "tasksOther": "{{count}} tarefas",
+    "estimate": "aprox. {{time}}",
+    "chip": {
+      "captions": "Legendas",
+      "autoGrade": "Cor automática",
+      "speedRamp": "Rampa de velocidade"
+    },
+    "composing": "Montando sua edição…",
+    "composeOne": "Montar {{count}} clipe",
+    "composeOther": "Montar {{count}} clipes",
+    "using": "Usando {{names}}",
+    "autoSelectPreset": "Escolher predefinição automaticamente com base no seu conteúdo",
+    "tasksOnOne": "{{count}} tarefa ativa",
+    "tasksOnOther": "{{count}} tarefas ativas",
+    "dismissError": "Dispensar este erro",
+    "dismiss": "Dispensar"
+  },
+  "propertiesPanel": {
+    "layout": {
+      "bottom": "Embaixo",
+      "bottomTitle": "Embaixo",
+      "lowerThird": "Inferior",
+      "lowerThirdTitle": "Terço inferior",
+      "top": "Em cima",
+      "topTitle": "Em cima",
+      "fullWidth": "Largura total",
+      "fullWidthTitle": "Barra de largura total"
+    },
+    "tab": {
+      "transform": "Posição",
+      "color": "Cor",
+      "captions": "Legendas",
+      "text": "Texto",
+      "clip": "Clipe"
+    },
+    "reset": "Redefinir",
+    "title": "Propriedades",
+    "activeTab": "Configurações de {{tab}}",
+    "close": "Fechar propriedades",
+    "clipProperties": "Propriedades do clipe",
+    "selectedClip": "Clipe selecionado",
+    "playbackSpeed": "Velocidade de reprodução",
+    "playbackSpeedTitle": "Velocidade de reprodução: {{speed}}x",
+    "playbackSpeedHint": "Acelere ou desacelere este clipe.",
+    "stabilization": "Estabilização",
+    "stabilizationTitle": "Estabilização: {{value}}%",
+    "stabilizationHint": "Quanto suavizar o tremor da câmera.",
+    "volume": "Volume",
+    "volumeTitle": "Volume: {{value}}%",
+    "autoDucking": "Ducking automático",
+    "autoDuckingHint": "Abaixa a música enquanto alguém fala",
+    "autoDuckingToggle": "Ligar ou desligar o ducking automático",
+    "positionAndSize": "Posição e tamanho",
+    "scale": "Escala (%)",
+    "positionX": "Posição X",
+    "positionY": "Posição Y",
+    "rotation": "Rotação (°)",
+    "animation": "Animação",
+    "keyframesCountOne": "1 keyframe",
+    "keyframesCount": "{{count}} keyframes",
+    "addKeyframe": "+ Adicionar keyframe no cursor",
+    "prevKeyframe": "◁ Anterior",
+    "nextKeyframe": "Próximo ▷",
+    "remove": "Remover",
+    "curve": "Curva",
+    "easing": {
+      "linear": "Linear",
+      "easeIn": "Aceleração na entrada",
+      "easeOut": "Desaceleração na saída",
+      "easeInOut": "Suavizar entrada e saída",
+      "bounceOut": "Quique",
+      "elasticOut": "Elástico",
+      "cubic": "Suave (forte)"
+    },
+    "brightness": "Brilho",
+    "contrast": "Contraste",
+    "saturation": "Saturação",
+    "temperature": "Temperatura",
+    "clarity": "Nitidez",
+    "dehaze": "Remover névoa",
+    "captionsOn": "Mostrar legendas",
+    "captionsOnHint": "Mostra a transcrição como legendas",
+    "captionLayout": "Posição da legenda",
+    "textOverlays": "Textos sobrepostos",
+    "noTextOverlays": "Nenhum texto sobreposto ainda",
+    "deleteTextOverlay": "Excluir texto sobreposto",
+    "synced": "Sincronizado",
+    "preset": {
+      "tiktok": {
+        "label": "TikTok",
+        "description": "Negrito, centralizado, alto impacto"
+      },
+      "reels": {
+        "label": "Reels",
+        "description": "Maiúsculas limpas, na moda"
+      },
+      "podcast": {
+        "label": "Podcast",
+        "description": "Minimalista, terço inferior"
+      },
+      "cinematic": {
+        "label": "Cinematográfico",
+        "description": "Serifa estilo filme"
+      },
+      "documentary": {
+        "label": "Documentário",
+        "description": "Barra de legenda clássica"
+      },
+      "neon": {
+        "label": "Neon",
+        "description": "Brilhante, clima noturno"
+      },
+      "karaoke": {
+        "label": "Karaokê",
+        "description": "Estilo karaokê em negrito"
+      },
+      "pill": {
+        "label": "Pílula",
+        "description": "Palavras em pílulas arredondadas"
+      },
+      "bubble": {
+        "label": "Balão",
+        "description": "Estilo balão de fala"
+      },
+      "gradient": {
+        "label": "Degradê",
+        "description": "Texto colorido em degradê"
+      },
+      "retro": {
+        "label": "Retrô",
+        "description": "Visual vintage quente"
+      },
+      "vintage": {
+        "label": "Vintage",
+        "description": "Máquina de escrever sépia"
+      },
+      "pop": {
+        "label": "Pop",
+        "description": "Brilhante e marcante"
+      },
+      "high-contrast": {
+        "label": "Acessível",
+        "description": "Alto contraste, fácil de ler"
+      },
+      "kinetic": {
+        "label": "Cinético",
+        "description": "Palavras surgem na batida"
+      },
+      "slow-zoom": {
+        "label": "Zoom lento",
+        "description": "Escala 100% → 110%"
+      },
+      "fly-in-left": {
+        "label": "Entrar pela esquerda",
+        "description": "Entra de fora da tela, pela esquerda"
+      },
+      "fly-in-right": {
+        "label": "Entrar pela direita",
+        "description": "Entra de fora da tela, pela direita"
+      },
+      "fly-in-top": {
+        "label": "Entrar por cima",
+        "description": "Entra de fora da tela, por cima"
+      },
+      "fly-in-bottom": {
+        "label": "Entrar por baixo",
+        "description": "Entra de fora da tela, por baixo"
+      },
+      "fade-in-out": {
+        "label": "Aparecer e sumir",
+        "description": "Opacidade 0 → 1 → 0"
+      }
+    }
+  },
+  "basicEditor": {
+    "preset": {
+      "title": {
+        "label": "Título"
+      },
+      "text": {
+        "yourTitleHere": "Seu título aqui",
+        "subscribeForMore": "Inscreva-se para mais",
+        "likeSubscribe": "Curta e inscreva-se",
+        "watchMore": "Veja mais →",
+        "commentBelow": "Comente abaixo",
+        "linkInBio": "Link na bio",
+        "addYourCaption": "Adicione sua legenda",
+        "followForMore": "Siga para mais",
+        "newText": "NOVO TEXTO",
+        "youNeedToSeeThis": "VOCÊ PRECISA VER ISSO",
+        "nameTitle": "Nome · Cargo",
+        "proTip": "DICA DE PRO",
+        "tapToLearnMore": "TOQUE PARA SABER MAIS",
+        "waitForIt": "ESPERA SÓ...",
+        "storyTime": "HORA DA HISTÓRIA",
+        "youWontBelieveWhatHappened": "Você não vai acreditar no que aconteceu",
+        "dayInMyLife": "Um dia na minha vida",
+        "day1Of": "Dia 1 de...",
+        "getReadyForThis": "Prepare-se para isso",
+        "watchTillTheEnd": "Assista até o final",
+        "noOneTalksAboutThis": "Ninguém fala sobre isso",
+        "theSecretTheyDontWantYouToKnow": "O segredo que não querem que você saiba",
+        "theSecretIs": "O SEGREDO É",
+        "insane": "INSANO!",
+        "actually": "na verdade...",
+        "now": "agora",
+        "zeroCost": "CUSTO ZERO",
+        "watch": "ASSISTA",
+        "here": "AQUI",
+        "swipeUp": "Arraste para cima",
+        "seeYouNextTime": "Até a próxima",
+        "unpopularOpinion": "Opinião impopular:",
+        "thisChangedEverything": "Isso mudou tudo",
+        "hotTake": "Opinião polêmica:",
+        "nobodyTalksAboutThis": "Ninguém comenta sobre isso",
+        "povYouJustFoundTheBestTip": "POV: você acabou de achar a melhor dica",
+        "saveThisForLater": "Salve para ver depois",
+        "commentYourAnswerBelow": "Comente sua resposta abaixo",
+        "dropAIfYouAgree": "Deixe um 👍 se você concorda",
+        "part1": "Parte 1",
+        "chapter1": "Capítulo 1",
+        "intro": "INTRO",
+        "outro": "FIM",
+        "comingUpNext": "A seguir...",
+        "quickRecap": "Resumo rápido"
+      },
+      "subscribe": {
+        "label": "Inscreva-se"
+      },
+      "likeSubscribe": {
+        "label": "Curta e inscreva-se"
+      },
+      "watchMore": {
+        "label": "Veja mais"
+      },
+      "comment": {
+        "label": "Comente"
+      },
+      "linkInBio": {
+        "label": "Link na bio"
+      },
+      "caption": {
+        "label": "Legenda"
+      },
+      "follow": {
+        "label": "Siga"
+      },
+      "custom": {
+        "label": "Personalizado"
+      },
+      "hook": {
+        "label": "Gancho"
+      },
+      "lowerThird": {
+        "label": "Terço inferior"
+      },
+      "callout": {
+        "label": "Destaque"
+      },
+      "timestamp": {
+        "label": "Marcação de tempo"
+      },
+      "waitForIt": {
+        "label": "Espera só"
+      },
+      "storyTime": {
+        "label": "Hora da história"
+      },
+      "youWontBelieve": {
+        "label": "Você não vai acreditar"
+      },
+      "dayInMyLife": {
+        "label": "Um dia na minha vida"
+      },
+      "dayXOf": {
+        "label": "Dia X de"
+      },
+      "getReady": {
+        "label": "Prepare-se"
+      },
+      "watchTillEnd": {
+        "label": "Assista até o final"
+      },
+      "noOneTalksAbout": {
+        "label": "Ninguém fala sobre"
+      },
+      "theSecret": {
+        "label": "O segredo"
+      },
+      "hormoziBold": {
+        "label": "Hormozi ousado"
+      },
+      "beastImpact": {
+        "label": "Impacto Beast"
+      },
+      "minimalNarrative": {
+        "label": "Narrativa minimalista"
+      },
+      "subliminalQuick": {
+        "label": "Subliminar rápido"
+      },
+      "punchyHighlight": {
+        "label": "Destaque marcante"
+      },
+      "arrowRight": {
+        "label": "Seta →"
+      },
+      "arrowLeft": {
+        "label": "Seta ←"
+      },
+      "proTip": {
+        "label": "DICA DE PRO"
+      },
+      "watch": {
+        "label": "ASSISTA"
+      },
+      "here": {
+        "label": "AQUI"
+      },
+      "swipeUp": {
+        "label": "Arraste para cima"
+      },
+      "commentBelow": {
+        "label": "Comente abaixo"
+      },
+      "tapToLearnMore": {
+        "label": "Toque para saber mais"
+      },
+      "seeYouNextTime": {
+        "label": "Até a próxima"
+      },
+      "unpopularOpinion": {
+        "label": "Opinião impopular"
+      },
+      "thisChangedEverything": {
+        "label": "Isso mudou tudo"
+      },
+      "hotTake": {
+        "label": "Opinião polêmica"
+      },
+      "nobodyTalksAbout": {
+        "label": "Ninguém comenta sobre"
+      },
+      "saveThis": {
+        "label": "Salve isto"
+      },
+      "commentYour": {
+        "label": "Comente sua resposta"
+      },
+      "dropA": {
+        "label": "Deixe um"
+      },
+      "part1": {
+        "label": "Parte 1"
+      },
+      "chapter": {
+        "label": "Capítulo"
+      },
+      "intro": {
+        "label": "Intro"
+      },
+      "outro": {
+        "label": "Encerramento"
+      },
+      "next": {
+        "label": "A seguir"
+      },
+      "recap": {
+        "label": "Resumo"
+      }
+    },
+    "filter": {
+      "vibrant": {
+        "name": "Vibrante",
+        "desc": "Cores marcantes"
+      },
+      "mono": {
+        "name": "Mono",
+        "desc": "P&B"
+      },
+      "cinematic": {
+        "name": "Cinematográfico",
+        "desc": "Visual de filme"
+      },
+      "warm": {
+        "name": "Quente",
+        "desc": "Hora dourada"
+      },
+      "cool": {
+        "name": "Frio",
+        "desc": "Tons azuis"
+      },
+      "vintage": {
+        "name": "Vintage",
+        "desc": "Retrô"
+      },
+      "moody": {
+        "name": "Dramático",
+        "desc": "Escuro e intenso"
+      },
+      "vivid": {
+        "name": "Vívido",
+        "desc": "Muito vibrante"
+      },
+      "noir": {
+        "name": "Noir",
+        "desc": "P&B de alto contraste"
+      },
+      "sunset": {
+        "name": "Pôr do sol",
+        "desc": "Hora dourada"
+      },
+      "breeze": {
+        "name": "Brisa",
+        "desc": "Frio e nítido"
+      },
+      "matte": {
+        "name": "Fosco",
+        "desc": "Plano e suave"
+      },
+      "neon": {
+        "name": "Neon",
+        "desc": "Cores vibrantes"
+      },
+      "autumn": {
+        "name": "Outono",
+        "desc": "Tons terrosos quentes"
+      },
+      "winter": {
+        "name": "Inverno",
+        "desc": "Frio e limpo"
+      },
+      "dreamy": {
+        "name": "Sonhador",
+        "desc": "Pastel suave"
+      },
+      "reset": {
+        "name": "Redefinir",
+        "desc": "Padrão"
+      }
+    },
+    "style": {
+      "creatorBold": {
+        "label": "Criador ousado",
+        "desc": "Viral e cheio de energia"
+      },
+      "softAesthetic": {
+        "label": "Estética suave",
+        "desc": "Suave e sonhador"
+      },
+      "corporateMinimal": {
+        "label": "Corporativo minimalista",
+        "desc": "Limpo e profissional"
+      },
+      "darkMoody": {
+        "label": "Sombrio",
+        "desc": "Sombras dramáticas"
+      },
+      "vibrantPop": {
+        "label": "Pop vibrante",
+        "desc": "Colorido e marcante"
+      },
+      "cinematicFilm": {
+        "label": "Filme cinematográfico",
+        "desc": "Trailer de filme"
+      },
+      "noirDramatic": {
+        "label": "Noir dramático",
+        "desc": "P&B dramático"
+      },
+      "lifestyleWarm": {
+        "label": "Lifestyle quente",
+        "desc": "Vlog e viagem"
+      },
+      "podcastPro": {
+        "label": "Podcast Pro",
+        "desc": "Limpo e profissional"
+      },
+      "documentary": {
+        "label": "Documentário",
+        "desc": "Natural e imersivo"
+      },
+      "fashionEditorial": {
+        "label": "Editorial de moda",
+        "desc": "Visual de alta moda"
+      },
+      "retroWarm": {
+        "label": "Retrô quente",
+        "desc": "Calor vintage"
+      },
+      "cinematicDrama": {
+        "label": "Drama cinematográfico",
+        "desc": "Profundo e dramático"
+      },
+      "comedyBright": {
+        "label": "Comédia vibrante",
+        "desc": "Marcante e divertido"
+      },
+      "sportsDynamic": {
+        "label": "Esporte dinâmico",
+        "desc": "Pronto para ação"
+      },
+      "savedDesc": "Salvo"
+    },
+    "platform": {
+      "tiktok": {
+        "desc": "9:16, marcante"
+      },
+      "youtube": {
+        "desc": "9:16, equilibrado"
+      },
+      "feed": {
+        "label": "Feed do Instagram",
+        "desc": "1:1, vibrante"
+      },
+      "portrait": {
+        "label": "Instagram Retrato",
+        "desc": "4:5, quente"
+      },
+      "landscape": {
+        "label": "YouTube / Paisagem",
+        "desc": "16:9, limpo"
+      },
+      "linkedin": {
+        "desc": "16:9, profissional"
+      }
+    },
+    "filterCategory": {
+      "all": "Todos",
+      "mood": "Clima",
+      "creative": "Criativos",
+      "dramatic": "Dramáticos",
+      "neutral": "Redefinir"
+    },
+    "shapePreset": {
+      "logoCorner": "Logo no canto",
+      "subscribeBadge": "Selo de inscrição",
+      "fullWidthBar": "Barra de largura total",
+      "dividerLine": "Linha divisória",
+      "highlightBox": "Caixa de destaque",
+      "cornerAccent": "Detalhe de canto"
+    },
+    "undo": "Desfazer",
+    "redo": "Refazer",
+    "searchTools": "Buscar ferramentas...",
+    "clearSearch": "Limpar busca",
+    "layersCount": "{{count}} camadas",
+    "reset": "Redefinir",
+    "add": "Adicionar",
+    "save": "Salvar",
+    "color": "Cor",
+    "toast": {
+      "undoApplied": "Desfeito",
+      "redoApplied": "Refeito",
+      "fontUploading": "Enviando fonte…",
+      "fontAdded": "Fonte adicionada.",
+      "fontInvalid": "Esse arquivo de fonte não é compatível.",
+      "fontFailed": "Não foi possível enviar a fonte.",
+      "rectangleAdded": "Retângulo adicionado",
+      "circleAdded": "Círculo adicionado",
+      "lineAdded": "Linha adicionada",
+      "addedName": "{{name}} adicionado",
+      "addedQuoted": "\"{{name}}\" adicionado",
+      "addedAt": "\"{{name}}\" adicionado em {{time}}s",
+      "enterImageUrl": "Digite o URL de uma imagem",
+      "imageAdded": "Imagem sobreposta adicionada",
+      "svgAddedFromFile": "SVG sobreposto adicionado do arquivo — anime com keyframes em Efeitos",
+      "enterSvgUrl": "Digite o URL de um SVG (ex.: https://… .svg ou data:image/svg+xml,…)",
+      "svgAdded": "SVG sobreposto adicionado — anime com keyframes em Efeitos",
+      "compoundSaved": "\"{{name}}\" salvo — adicione à linha do tempo quando quiser",
+      "compoundRemoved": "Composto removido",
+      "renamed": "Renomeado para \"{{name}}\"",
+      "addTextHint": "Adicione texto — digite e clique em Adicionar ou use Ctrl+Enter",
+      "textAdded": "Texto sobreposto adicionado",
+      "packApplied": "Pacote {{name}} aplicado",
+      "saved": "\"{{name}}\" salvo",
+      "filtersReset": "Filtros redefinidos para o padrão",
+      "nameYourStyle": "Dê um nome ao seu estilo e clique em Salvar",
+      "applied": "{{name}} aplicado",
+      "speed": "Velocidade: {{value}}×"
+    },
+    "compound": {
+      "untitled": "Composto sem título",
+      "title": "Salvar como composto",
+      "namePlaceholder": "Nome do composto…",
+      "name": "Nome do composto",
+      "durationAria": "Duração do composto em segundos",
+      "delete": "Excluir composto \"{{name}}\""
+    },
+    "search": {
+      "filterHit": "Filtro: {{name}}",
+      "styleHit": "Estilo: {{name}}",
+      "motionHit": "Movimento: {{name}}",
+      "textHit": "Texto: {{name}}"
+    },
+    "caption": {
+      "noTranscript": "Nenhuma transcrição encontrada. Cole seu roteiro no campo abaixo e tente novamente.",
+      "noneGenerated": "Nenhuma legenda gerada — a transcrição pode ser curta demais.",
+      "addedToast": "{{count}} legendas adicionadas — estilo {{style}}",
+      "generationFailed": "Falha ao gerar legendas",
+      "failedToast": "Falha nas legendas automáticas",
+      "title": "Legendas automáticas com IA",
+      "clearTitle": "Limpar legendas geradas automaticamente",
+      "cleared": "Legendas automáticas removidas",
+      "count": "{{count}} legendas",
+      "ready": "Pronto",
+      "noScript": "Sem roteiro",
+      "pasteScript": "Cole seu roteiro",
+      "pasteScriptTitle": "Cole o roteiro do seu vídeo aqui",
+      "pastePlaceholder": "Cole ou digite o que é falado no seu vídeo…",
+      "wordCount": "{{count}} palavras",
+      "wordsPerLine": "Palavras/linha",
+      "position": "Posição",
+      "positionAt": {
+        "top": "Colocar legendas em cima",
+        "mid": "Colocar legendas no meio",
+        "bottom": "Colocar legendas embaixo"
+      },
+      "colorTitle": "Cor do texto da legenda",
+      "setColor": "Definir cor da legenda como {{color}}",
+      "addedInStyle": "{{count}} legendas adicionadas no estilo {{style}}",
+      "generateAria": "Gerar legendas automáticas a partir da transcrição",
+      "generating": "Gerando legendas de {{count}} palavras…",
+      "generate": "Gerar legendas"
+    },
+    "captionStyle": {
+      "minimal": "Minimalista",
+      "neon": "Neon",
+      "kinetic": "Cinético",
+      "cyber": "Cyber",
+      "meme": "Meme",
+      "retro": "Retrô",
+      "quote": "Citação"
+    },
+    "translate": {
+      "noCaptions": "Não há legendas na linha do tempo para traduzir.",
+      "inProgress": "Traduzindo legendas (os tempos continuam iguais)…",
+      "done": "Legendas traduzidas para {{language}}",
+      "empty": "A tradução terminou, mas não retornou legendas.",
+      "failed": "Não foi possível traduzir as legendas.",
+      "title": "Traduzir legendas",
+      "languageTitle": "Escolha o idioma da tradução",
+      "translating": "Traduzindo…",
+      "translate": "Traduzir"
+    },
+    "emoji": {
+      "noTranscript": "Não há palavras na transcrição para combinar com emojis. Gere uma transcrição primeiro.",
+      "inProgress": "Combinando emojis com sua transcrição…",
+      "noneFound": "Nenhum emoji combina com a transcrição.",
+      "added": "{{count}} emojis adicionados à linha do tempo",
+      "failed": "Falha ao gerar emojis",
+      "title": "Emojis automáticos",
+      "clearTitle": "Limpar emojis gerados",
+      "cleared": "Emojis removidos",
+      "count": "{{count}} emojis",
+      "enter": "Transição de entrada",
+      "enterTitle": "Escolha como os emojis aparecem",
+      "exit": "Transição de saída",
+      "exitTitle": "Escolha como os emojis somem",
+      "style": "Estilo",
+      "styleTitle": "Escolha o estilo do emoji",
+      "size": "Tamanho do emoji",
+      "sizeTitle": "Escolha o tamanho do emoji",
+      "density": "Frequência",
+      "densityTitle": "Escolha com que frequência os emojis aparecem",
+      "placement": "Posição",
+      "placementTitle": "Escolha onde os emojis ficam",
+      "inDuration": "Duração da entrada: {{value}}s",
+      "inDurationTitle": "Duração da animação de entrada",
+      "outDuration": "Duração da saída: {{value}}s",
+      "outDurationTitle": "Duração da animação de saída",
+      "generating": "Gerando emojis…",
+      "generate": "Gerar emojis"
+    },
+    "emojiOpt": {
+      "enter": {
+        "pop": "💥 Surgir",
+        "bounce": "🦘 Quicar para cima",
+        "slide": "➡️ Deslizar para dentro",
+        "pulse": "💓 Pulso de zoom",
+        "shake": "⚡ Tremor de câmera",
+        "blur": "🌫️ Entrar desfocado"
+      },
+      "exit": {
+        "fade": "🌫️ Esmaecer suave",
+        "pop": "💥 Estourar",
+        "slideBottom": "⬇️ Deslizar para baixo",
+        "bounceOut": "🦘 Quicar para fora",
+        "scaleOut": "🔍 Encolher",
+        "zoomOut": "🔎 Afastar zoom",
+        "flipOut": "🔄 Girar para fora"
+      },
+      "style": {
+        "pop3d": "✨ 3D vibrante",
+        "neonGlow": "🏮 Brilho neon",
+        "flat": "📄 Plano minimalista"
+      },
+      "size": {
+        "n32": "🤏 Pequeno (32px)",
+        "n48": "👌 Médio (48px)",
+        "n64": "💪 Grande (64px)",
+        "n80": "👑 Gigante (80px)"
+      },
+      "density": {
+        "n3": "🔥 Alta (a cada 3 palavras)",
+        "n6": "⚡ Média (a cada 6 palavras)",
+        "n10": "🎯 Baixa (a cada 10 palavras)"
+      },
+      "place": {
+        "above": "⬆️ Acima das legendas",
+        "below": "⬇️ Abaixo das legendas",
+        "head": "👱 Altura da cabeça",
+        "customTop": "👑 Topo do quadro"
+      }
+    },
+    "lang": {
+      "en": "Inglês (English)",
+      "es": "Espanhol (Español)",
+      "fr": "Francês (Français)",
+      "de": "Alemão (Deutsch)",
+      "it": "Italiano (Italiano)",
+      "pt": "Português",
+      "ru": "Russo (Русский)",
+      "ja": "Japonês (日本語)",
+      "ko": "Coreano (한국어)",
+      "zh": "Chinês (中文)",
+      "ar": "Árabe (العربية)",
+      "hi": "Hindi (हिन्दी)",
+      "nl": "Holandês (Nederlands)",
+      "pl": "Polonês (Polski)",
+      "tr": "Turco (Türkçe)"
+    },
+    "trim": {
+      "waveform": "Forma de onda",
+      "clickToSeek": "Clique para mover o cursor",
+      "speed": "Velocidade",
+      "playbackSpeedAria": "Velocidade de reprodução: {{value}} vezes",
+      "reverse": "Inverter",
+      "reverseSub": "Inverte o clipe selecionado",
+      "selectClipFirst": "Selecione um clipe primeiro",
+      "split": "Dividir no cursor",
+      "beatCut": "Corte na batida",
+      "beatCutSub": "Corta o clipe a cada batida",
+      "freeze": "Congelar quadro",
+      "freezeSub": "Segura 1s em {{time}}s",
+      "trimToInOut": "Cortar entre entrada/saída",
+      "trimToInOutSub": "Defina entrada + saída abaixo",
+      "setBothFirst": "Defina a entrada e a saída primeiro",
+      "jCut": "Corte J",
+      "jCutSub": "O áudio começa 0,5s antes",
+      "lCut": "Corte L",
+      "lCutSub": "O áudio continua 0,5s após o corte",
+      "comingSoonTitle": "{{label}} — em breve",
+      "selectClipTitle": "{{label}} — selecione um clipe primeiro",
+      "soon": "Em breve",
+      "markers": "Marcadores de entrada / saída",
+      "inAt": "Entrada {{time}}s",
+      "noIn": "Sem entrada",
+      "outAt": "Saída {{time}}s",
+      "noOut": "Sem saída",
+      "inSet": "Entrada em {{time}}s",
+      "setIn": "Marcar entrada",
+      "outAfterIn": "A saída precisa vir depois da entrada",
+      "outSet": "Saída em {{time}}s",
+      "setOut": "Marcar saída",
+      "clear": "Limpar"
+    },
+    "layout": {
+      "auto": "Automático",
+      "standard": "Padrão",
+      "square": "Quadrado",
+      "vertical": "Vertical",
+      "portrait": "Retrato",
+      "cinematic": "Cinema",
+      "classic": "Clássico"
+    },
+    "text": {
+      "editingOnCanvas": "Editando na tela",
+      "doubleClickHint": "Clique duas vezes no texto do player para digitar direto",
+      "deselect": "Desmarcar",
+      "newText": "Novo texto",
+      "typePlaceholder": "Digite o texto… (⌘↵ para adicionar)",
+      "duration": "Duração:",
+      "searchPresets": "Buscar predefinições…",
+      "activeText": "Texto no vídeo ({{count}})",
+      "deleteOverlayAria": "Excluir texto sobreposto \"{{text}}\"",
+      "deleteOverlay": "Excluir texto sobreposto",
+      "preview": "Prévia",
+      "livePreview": "Prévia ao vivo",
+      "editing": "Editando: {{text}}",
+      "contentAria": "Texto sobreposto",
+      "contentPlaceholder": "Texto sobreposto",
+      "fontSize": "Tamanho da fonte",
+      "textColor": "Cor do texto",
+      "style": "Estilo",
+      "animateIn": "Animação de entrada",
+      "animateOut": "Animação de saída",
+      "font": "Fonte",
+      "start": "Início",
+      "startAria": "Tempo inicial em segundos",
+      "end": "Fim",
+      "endAria": "Tempo final em segundos",
+      "uploadFont": "Enviar fonte",
+      "uploadFontAria": "Enviar um arquivo de fonte personalizado"
+    },
+    "textStyle": {
+      "none": "Nenhum",
+      "neon": "Neon",
+      "minimal": "Minimalista",
+      "bold-kinetic": "Cinético ousado",
+      "outline": "Contorno",
+      "shadow": "Sombra"
+    },
+    "anim": {
+      "none": "Nenhuma",
+      "fade": "Esmaecer",
+      "slide-up": "Deslizar para cima",
+      "slide-down": "Deslizar para baixo",
+      "slide-left": "Deslizar para a esquerda",
+      "slide-right": "Deslizar para a direita",
+      "scale": "Escala",
+      "bounce": "Quicar"
+    },
+    "presetGroup": {
+      "viralHooks": "Ganchos virais",
+      "textPresets": "Textos prontos",
+      "premiumCaptions": "Legendas premium",
+      "reactionCallouts": "Reações / destaques",
+      "trending": "Em alta",
+      "endScreens": "Telas finais",
+      "chapters": "Capítulos"
+    },
+    "filters": {
+      "strengthAria": "Intensidade do filtro: {{value}} por cento",
+      "before": "⏪ Antes",
+      "after": "⏩ Depois",
+      "split": "🌓 Dividido",
+      "pinned": "Fixados",
+      "pin": "Fixar filtro {{name}}",
+      "unpin": "Desafixar filtro {{name}}"
+    },
+    "motion": {
+      "searchTemplates": "Buscar modelos…",
+      "durationAria": "Duração do motion graphic em segundos",
+      "recent": "Recentes"
+    },
+    "layers": {
+      "addShape": "Adicionar forma",
+      "addImage": "Adicionar imagem / logo",
+      "imageUrlPlaceholder": "Cole o URL da imagem…",
+      "imageUrl": "URL da imagem",
+      "addSvg": "Adicionar SVG",
+      "svgUrlPlaceholder": "URL do SVG ou data URI…",
+      "svgUrl": "URL do SVG",
+      "uploadSvg": "Enviar arquivo SVG",
+      "gradients": "Degradês sobrepostos",
+      "allLayers": "Todas as camadas ({{count}})",
+      "hoverHint": "Passe o mouse para ver os controles",
+      "deleteTextAria": "Excluir camada de texto \"{{text}}\"",
+      "deleteText": "Excluir camada de texto",
+      "opacity": "Opacidade",
+      "opacityAria": "Opacidade da camada",
+      "deleteShape": "Excluir forma {{shape}}",
+      "deleteImage": "Excluir camada de imagem",
+      "customSvg": "SVG personalizado",
+      "deleteSvg": "Excluir camada SVG",
+      "gradientName": "Degradê {{region}}",
+      "deleteGradient": "Excluir camada de degradê",
+      "empty": "Nenhuma camada ainda",
+      "emptyHint": "Adicione formas, imagens ou SVGs acima. Os textos sobrepostos também aparecem aqui.",
+      "addTextLayer": "+ Adicionar camada de texto"
+    },
+    "shape": {
+      "rect": "Retângulo",
+      "circle": "Círculo",
+      "line": "Linha"
+    },
+    "region": {
+      "full": "Tela inteira",
+      "lower-third": "Terço inferior",
+      "top-bar": "Barra superior",
+      "top-half": "Metade superior",
+      "bottom-half": "Metade inferior"
+    },
+    "gradient": {
+      "lowerThird": "Degradê no terço inferior",
+      "fullDark": "Escurecer tudo",
+      "topBar": "Barra superior",
+      "warmTint": "Tom quente",
+      "coolTint": "Tom frio",
+      "bottomHalf": "Degradê na metade inferior",
+      "topHalf": "Degradê na metade superior",
+      "vignetteSoft": "Vinheta suave"
+    },
+    "pack": {
+      "hookCta": {
+        "name": "Gancho + CTA",
+        "desc": "Gancho viral no cursor, CTA na tela final"
+      },
+      "lowerThirdSubscribe": {
+        "name": "Terço inferior + inscrição",
+        "desc": "Barra com nome + selo de inscrição"
+      },
+      "fullCtaBar": {
+        "name": "CTA + degradê no terço inferior",
+        "desc": "Curta e inscreva-se + barra em degradê"
+      },
+      "introOutro": {
+        "name": "Abertura + encerramento",
+        "desc": "INTRO no cursor, \"Até a próxima\" no final"
+      },
+      "trendingSave": {
+        "name": "Em alta + Salve isto",
+        "desc": "Opinião impopular + Salve para depois"
+      }
+    },
+    "packs": {
+      "oneClick": "Pacotes de um clique",
+      "styleBundles": "Pacotes de estilo",
+      "platform": "Feito para cada plataforma",
+      "saveMyStyle": "Salvar meu estilo",
+      "styleNamePlaceholder": "Nome do estilo…",
+      "styleName": "Nome do estilo personalizado",
+      "saveStyle": "Salvar estilo personalizado",
+      "goTo": "Ir para"
+    },
+    "nav": {
+      "shortClips": "Clipes curtos",
+      "assets": "Música e B-roll",
+      "timeline": "Linha do tempo",
+      "effects": "Efeitos",
+      "color": "Cor",
+      "aiEdit": "Transcrição e IA",
+      "export": "Exportar"
+    },
+    "insights": {
+      "comingSoon": "Insights em breve",
+      "comingSoonHint": "Análises de retenção, força do gancho e ritmo aparecerão aqui depois que seu vídeo for analisado.",
+      "transcript": "Transcrição"
+    }
   }
 }

@@ -846,11 +846,11 @@
     "title": "الإنجازات",
     "subtitle": "تابع إنجازاتك وتقدّمك.",
     "refreshRegistry": "تحديث",
-    "statTierLabel": "الطبقة التطورية",
+    "statTierLabel": "المستوى",
     "statTierSub": "{{pct}}% للوصول إلى المستوى التالي",
-    "statMilestonesLabel": "المعالم التي تم فك تشفيرها",
+    "statMilestonesLabel": "الإنجازات المفتوحة",
     "statMilestonesSub": "ما فُتح حتى الآن",
-    "statStreakLabel": "خط التماسك",
+    "statStreakLabel": "السلسلة الحالية",
     "statStreakSub": "الأفضل: {{peak}}",
     "statVolumeLabel": "المحتوى المُنشأ",
     "statVolumeSub": "إجمالي ما أنشأته",
@@ -861,14 +861,14 @@
     "detailPayloads": "المحتوى",
     "detailScripts": "النصوص",
     "recentBreakthroughs": "الاختراقات الأخيرة",
-    "decryptedOn": "تم فك التشفير {{date}}",
+    "decryptedOn": "فُتح في {{date}}",
     "ascensionVerified": "مفتوح",
     "nodeMatrix": "كل الإنجازات",
-    "decrypted": "تم فك التشفير",
+    "decrypted": "مفتوح",
     "logicGated": "مقفل",
     "milestones": {
       "first_video": {
-        "name": "تسليم سفر التكوين",
+        "name": "أول فيديو",
         "description": "أنشئ أول فيديو لك."
       },
       "first_content": {
@@ -900,11 +900,11 @@
         "description": "أكمل 50 فيديو."
       },
       "streak_7": {
-        "name": "التماسك 7",
+        "name": "سلسلة 7 أيام",
         "description": "ابقَ نشطًا 7 أيام متتالية."
       },
       "streak_30": {
-        "name": "التماسك 30",
+        "name": "سلسلة 30 يومًا",
         "description": "ابقَ نشطًا 30 يومًا متتاليًا."
       },
       "streak_100": {
@@ -925,7 +925,7 @@
       },
       "early_adopter": {
         "name": "من أوائل المستخدمين",
-        "description": "متكاملة خلال مرحلة التكوين."
+        "description": "انضممت إلى Click مبكرًا."
       },
       "power_user": {
         "name": "مستخدم محترف",
@@ -993,7 +993,7 @@
     "authorize": "يأذن",
     "dissent": "معارضة",
     "historyTitle": "تاريخ الموافقة",
-    "historySubtitle": "سجلات ثابتة لقرارات الإجماع والتفويضات العقدية.",
+    "historySubtitle": "سجل الموافقات والرفض السابقة.",
     "protocolLogsAnalyzed": "الطلبات: {{count}}",
     "emptyTitle": "لا شيء هنا بعد",
     "emptyState": "لا توجد طلبات موافقة بعد.",
@@ -1126,7 +1126,7 @@
     "purgeForgeBuffer": "تطهير صياغة العازلة",
     "neuralHeuristics": "اقتراحات",
     "neuralHeuristicsDesc": "طرق لتحسين محتواك.",
-    "decryptingHeuristics": "فك التشفير الاستدلالي...",
+    "decryptingHeuristics": "جارٍ التحليل…",
     "predictiveTelemetry": "توقعات الأداء",
     "predictiveTelemetryDesc": "توقعات لأداء محتواك المحتمل.",
     "scanningTrajectories": "مسح المسارات..."
@@ -1288,7 +1288,7 @@
     "refreshData": "تحديث بيانات العضوية",
     "activeNodeUplink": "الخطة الحالية",
     "protocolId": "معرّف الخطة:",
-    "rootGenesis": "نشأة الجذر",
+    "rootGenesis": "المبتدئ",
     "genericAccess": "الوصول العام",
     "lifecycleStatus": "حالة دورة الحياة:",
     "uninitialized": "غير مهيأ",
@@ -1307,7 +1307,7 @@
     "coreMatrixUplink": "الميزات الأساسية",
     "primeCommandUplink": "الوصول إلى كل الميزات",
     "activeProtocol": "الخطة الحالية",
-    "ascending": "تصاعدي...",
+    "ascending": "جارٍ الترقية…",
     "genesisUplink": "ابدأ الآن",
     "escalateProtocol": "ترقية"
   },
@@ -1825,7 +1825,7 @@
     "heroIntro": "اربط حساباتك على وسائل التواصل بـ Click. كل اتصال يتيح",
     "heroFeature1": "النشر التلقائي",
     "heroFeature2": "تتبّع التفاعل",
-    "heroFeature3": "تحليل الجمهور الاصطناعي",
+    "heroFeature3": "رؤى الجمهور",
     "heroAnd": "و",
     "statNeuralEncryption": "تشفير الرموز المميزة",
     "statUplinkLatency": "سرعة الاتصال",
@@ -2375,7 +2375,7 @@
     "collaborationIntro1": "يحصل كل فريق على",
     "collaborationHighlight1": "ملفات مشتركة",
     "collaborationIntro2": ",",
-    "collaborationHighlight2": "حلقات ردود الفعل غير المتزامنة",
+    "collaborationHighlight2": "التعليقات والملاحظات",
     "collaborationIntro3": "، وموحدة",
     "collaborationHighlight3": "طابور الإنتاج",
     "collaborationIntro4": ". اجمع عمل الجميع في مكان واحد.",
@@ -3113,7 +3113,7 @@
     "neuralLine1": "المحتوى",
     "neuralLine2": "مركز",
     "autonomousPrefix": "الوضع التلقائي",
-    "dominating": "المهيمنة",
+    "dominating": "قيد التشغيل",
     "autonomousMid": "ال",
     "autonomousSuffix": "قائمة الانتظار.",
     "neuralActive": "الوضع التلقائي مُفعّل",
@@ -3998,7 +3998,7 @@
     "latticeHealth": "صحة الشبكة",
     "aggregatedRevenue": "الإيرادات المجمعة",
     "victoryVectors": "إنجازات اليوم",
-    "encirclementTitle": "التطويق العالمي",
+    "encirclementTitle": "نظرة عامة على النمو",
     "encirclementSubtitle": "رؤى مشتركة عبر Click",
     "godModeSaturationActive": "مباشر",
     "decentralizedIntelligenceLedger": "سجل النشاط",
@@ -4018,7 +4018,7 @@
     "tabStability": "صحة النظام",
     "versionLabel": "Click",
     "overlordTerminalSynced": "متصل",
-    "mainTitle": "انقر فوق محطة أفرلورد",
+    "mainTitle": "مركز تحكم Click",
     "mainSubtitle": "أدوات التحكم في تحقيق الدخل والأتمتة."
   },
   "clickDebugPanel": {
@@ -5408,7 +5408,7 @@
     "presetVibrantPopName": "موسيقى البوب ​​النابضة بالحياة",
     "presetVibrantPopDesc": "ألوان جريئة ومشبعة",
     "presetSoftDreamyName": "حالمة ناعمة",
-    "presetSoftDreamyDesc": "أثيري، نظرة لطيفة",
+    "presetSoftDreamyDesc": "مظهر ناعم ولطيف",
     "presetElectricVibeName": "كهربائي",
     "presetElectricVibeDesc": "مظهر حيوي عالي الطاقة",
     "presetRetroVintageName": "خمر الرجعية",
@@ -6232,7 +6232,20 @@
     "appliedStyleProfile": "تم تطبيق أسلوب {{name}}",
     "packApplied": "تم تطبيق {{name}}: تدرّج الألوان {{grade}} ونمط تسمياته التوضيحية",
     "packAppliedGradeOnly": "تم تطبيق {{name}}: تدرّج الألوان {{grade}}. فعّل التسميات التوضيحية لاستخدام نمطها.",
-    "packApplyFailed": "تعذّر تطبيق {{name}}: لم يُعثر على تدرّج ألوانها"
+    "packApplyFailed": "تعذّر تطبيق {{name}}: لم يُعثر على تدرّج ألوانها",
+    "beatRecut": "✦ أُعيد التقسيم إلى {{count}} مقاطع على الإيقاع (استُبدل {{replaced}} مقطع فيديو)",
+    "beatCut": "✦ تم التقسيم إلى {{count}} مقاطع متزامنة مع الإيقاع",
+    "autoViralAnalysing": "✦ تحرير رائج تلقائي — جارٍ تحليل الإيقاعات والترجمة…",
+    "autoViralNothingFound": "يحتاج التحرير الرائج التلقائي إلى إيقاعات موسيقية أو نص مفرَّغ صالح — ولم يُعثر على أيٍّ منهما.",
+    "autoViralNeedsTranscript": "يحتاج التحرير الرائج التلقائي إلى نص مفرَّغ للترجمة أو موسيقى للقطعات. فرّغ النص أولًا ثم أعد المحاولة.",
+    "autoViralCuts": "{{clips}} مقاطع على الإيقاع · {{transitions}} انتقالات",
+    "autoViralCaptions": "{{count}} ترجمة بأسلوب الكاريوكي",
+    "autoViralDone": "✦ تحرير رائج تلقائي: {{summary}}",
+    "autoViralFailed": "فشل التحرير الرائج التلقائي — لم يتغير الخط الزمني.",
+    "resizeTimelineAria": "تغيير حجم الخط الزمني (اسحب للأعلى أو للأسفل)",
+    "resizeTimelineTitle": "اسحب لتغيير حجم الخط الزمني",
+    "timelineHeading": "الخط الزمني",
+    "cmdCategoryEditor": "المحرر"
   },
   "nicheStrategyPanel": {
     "tabHooks": "خطافات",
@@ -6310,13 +6323,13 @@
     "featuresTitle": "ميزات النخبة",
     "featuresDescription": "أطلق العنان للذكاء متعدد المنصات والنمو التنبؤي.",
     "completeTitle": "كل شيء جاهز",
-    "completeDescription": "أنت الآن جاهز للسيطرة على المشهد الاجتماعي.",
+    "completeDescription": "أنت جاهز لبدء صناعة المحتوى.",
     "eliteAccessGranted": "تم منح وصول النخبة",
     "closeOnboarding": "إغلاق عملية الإعداد",
     "back": "خلف",
-    "startDominating": "ابدأ بالهيمنة",
+    "startDominating": "ابدأ الآن",
     "nextIntelligence": "الاستخبارات القادمة",
-    "clickGenesis": "انقر فوق سفر التكوين",
+    "clickGenesis": "مرحبًا بك في Click",
     "welcomeBodyBefore": "المنصة الوحيدة التي لا تكتب فقط - هي",
     "welcomeBodyOperates": "يعمل",
     "welcomeBodyAfter": ". لنُعِدّ علامتك التجارية.",
@@ -6489,7 +6502,7 @@
     "syncing": "جارٍ التحديث...",
     "restart": "إعادة تشغيل",
     "dismissInstallPrompt": "رفض مطالبة التثبيت",
-    "installDescription": "الارتقاء إلى مساحة عمل أسرع وغير متصلة بالإنترنت. مصممة لعمليات محتوى النخبة.",
+    "installDescription": "ثبّت Click للحصول على تطبيق أسرع يعمل دون اتصال أيضًا.",
     "initializeInstallation": "تهيئة التثبيت",
     "tagInstant": "فوري",
     "tagEdge": "حافة",
@@ -6779,7 +6792,7 @@
     "navAeoMetadata": "بيانات تعريف AEO",
     "navUgcRaw": "المحتوى الذي ينشئه المستخدمون الخام",
     "navZeroPartyData": "بيانات الحزب الصفري",
-    "headerPill": "المرحلة 8 - السيطرة على السوق",
+    "headerPill": "المرحلة 8 — أدوات النمو",
     "headerTitle": "أدوات النمو",
     "headerSubtitle": "5 أنظمة تجعل النقر أمراً لا جدال فيه"
   },
@@ -6850,14 +6863,14 @@
     "pcv": "PCV",
     "steerSwarmToThisOffer": "التركيز على هذا العرض",
     "s2sNetworkDown": "شبكة S2S معطلة",
-    "globalEncirclementTitle": "التطويق العالمي",
+    "globalEncirclementTitle": "نظرة عامة على النمو",
     "globalEncirclementSubtitle": "رؤى عبر الحسابات",
     "godModeActiveBadge": "نشط",
     "networkHealth": "صحة الشبكة",
     "aggregatedRevenue": "الإيرادات المجمعة",
     "victoryVectors": "الأعلى أداءً",
     "logInitializingTunnel": "[النظام] جارٍ تهيئة نفق S2S المشفر...",
-    "logEncirclementActive": "[النظام] التطويق نشط. {{count}} مثيلات الأخوة متصلة.",
+    "logEncirclementActive": "{{count}} مساحات عمل متصلة.",
     "logVectorReceived": "الخطاف \"{{hook}}\" يتصدّر في {{cluster}}.",
     "logLocalSynthesis": "تم تحديث النتائج المحلية: ترجيح الزخم +{{percent}}%.",
     "productionStabilityTitle": "استقرار الإنتاج",
@@ -6878,7 +6891,7 @@
     "navGlobalS2s": "S2S العالمية",
     "navSystemHealth": "صحة النظام",
     "headerPill": "أدوات متقدمة",
-    "headerTitle": "محطة أفرلورد",
+    "headerTitle": "مركز التحكم",
     "headerSubtitle": "التوسع في السوق"
   },
   "quickActions": {
@@ -6983,7 +6996,7 @@
     "razorTool": "أداة الحلاقة (S)",
     "editMode": "وضع التحرير",
     "modeNormal": "طبيعي",
-    "modeRipple": "تموج",
+    "modeRipple": "سد الفراغ",
     "modeRoll": "لفافة",
     "modeSlip": "ينزلق",
     "setInPoint": "تعيين في النقطة (ط)",
@@ -7098,7 +7111,31 @@
   "realTimeVideoPreview": {
     "overlayAlt": "تراكب",
     "metadataError": "فشل تحميل البيانات الوصفية للفيديو. تحقق من صحة CORS أو عنوان URL.",
-    "bootingRenderEngine": "جارٍ تحميل المعاينة..."
+    "bootingRenderEngine": "جارٍ تحميل المعاينة...",
+    "videoFailed": "تعذّر تحميل الفيديو",
+    "retry": "إعادة المحاولة",
+    "dragToCompare": "اسحب للمقارنة بين قبل / بعد",
+    "before": "قبل",
+    "after": "بعد",
+    "rawUnfiltered": "خام / بدون فلاتر",
+    "graded": "ملوَّن",
+    "editCaptionInline": "حرّر نص الترجمة مباشرة",
+    "captionPlaceholder": "اكتب نص الترجمة...",
+    "opsReverse": "{{count}}× عكس",
+    "opsJCut": "{{count}}× J-cut",
+    "opsLCut": "{{count}}× L-cut",
+    "exportOnlyTitle": "تُطبَّق هذه التغييرات عند التصدير فقط — تعرض المعاينة المقاطع باتجاهها الأصلي مع مزامنة صوت عادية.",
+    "exportOnly": "عند التصدير فقط",
+    "imageLayer": "طبقة صورة",
+    "imageFailed": "تعذّر تحميل الصورة",
+    "svgLayer": "طبقة SVG",
+    "preview": "معاينة",
+    "latency": "زمن الاستجابة",
+    "pause": "إيقاف مؤقت",
+    "play": "تشغيل",
+    "toggleBeforeAfter": "تبديل قبل/بعد",
+    "beforeAfter": "قبل / بعد",
+    "aiStylingActive": "التنسيق بالذكاء الاصطناعي مفعّل"
   },
   "realtimeCollaboration": {
     "failedToJoin": "فشل الانضمام إلى جلسة التعاون",
@@ -7172,7 +7209,137 @@
   },
   "resizableTimeline": {
     "restore": "استعادة حجم الخط الزمني",
-    "maximize": "تعظيم الجدول الزمني"
+    "maximize": "تعظيم الجدول الزمني",
+    "snapKind": {
+      "word": "كلمة",
+      "silence": "توقف",
+      "beat": "إيقاع",
+      "marker": "علامة",
+      "edge": "حافة",
+      "playhead": "رأس التشغيل",
+      "boundary": "حد"
+    },
+    "realignedCountOne": "تمت محاذاة ترجمة واحدة مع الكلام",
+    "realignedCount": "تمت محاذاة {{count}} ترجمة مع الكلام",
+    "alreadyAligned": "الترجمة متزامنة بالفعل",
+    "markerNamePrompt": "اسم العلامة (اختياري):",
+    "unsoloTrack": "إلغاء التشغيل المنفرد",
+    "soloTrack": "تشغيل المسار منفردًا",
+    "soloShort": "S",
+    "unmuteTrack": "إلغاء كتم المسار",
+    "muteTrack": "كتم المسار",
+    "unlockTrack": "إلغاء قفل المسار",
+    "lockTrack": "قفل المسار",
+    "prevFrameTitle": "الإطار السابق (←)",
+    "prevFrame": "الإطار السابق",
+    "pauseTitle": "إيقاف مؤقت (Space)",
+    "playTitle": "تشغيل (Space)",
+    "pause": "إيقاف مؤقت",
+    "play": "تشغيل",
+    "nextFrameTitle": "الإطار التالي (→)",
+    "nextFrame": "الإطار التالي",
+    "goToTimeLabel": "انتقل إلى وقت (اكتب الوقت ثم اضغط Enter)",
+    "goToTimeTitle": "اكتب وقتًا (مثل 1:05.5) واضغط Enter للانتقال إليه",
+    "splitTitle": "قسّم المقطع تحت رأس التشغيل (S)",
+    "split": "تقسيم",
+    "deleteTitle": "حذف التحديد (Delete)",
+    "delete": "حذف",
+    "rippleOnTitle": "سد الفراغ مفعّل: الحذف يغلق الفراغ في كل المسارات",
+    "rippleOffTitle": "سد الفراغ متوقف: الحذف يترك فراغًا",
+    "ripple": "سد الفراغ",
+    "ungroupTitle": "فك تجميع المقاطع المحددة",
+    "ungroup": "فك التجميع",
+    "groupTitle": "جمّع المقاطع المحددة لتتحرك وتُحذف معًا",
+    "group": "تجميع",
+    "setInTitle": "عيّن نقطة الدخول عند رأس التشغيل (I)",
+    "in": "دخول",
+    "setOutTitle": "عيّن نقطة الخروج عند رأس التشغيل (O)",
+    "out": "خروج",
+    "clearInOutTitle": "مسح الدخول/الخروج (Alt+X)",
+    "clearInOutLabel": "مسح نقطتي الدخول والخروج",
+    "snapTitle": "ألصق المقاطع بالحواف ورأس التشغيل والعلامات",
+    "snap": "التصاق",
+    "speechTitle": "ألصق المقاطع والترجمة بالكلمات المنطوقة",
+    "speechDisabledTitle": "أنشئ الترجمة لتفعيل الالتصاق بالكلام",
+    "speech": "الكلام",
+    "realignTitle": "أعد توقيت كل ترجمة لتطابق الكلام المنطوق",
+    "realign": "إعادة مزامنة الترجمة",
+    "dragToPan": "اسحب للتمرير",
+    "showTracks": "إظهار المسارات",
+    "allTracks": "كل المسارات",
+    "track": {
+      "captions": "الترجمة",
+      "mainVideo": "الفيديو الرئيسي",
+      "broll": "B-roll",
+      "audio": "الصوت",
+      "effects": "التأثيرات",
+      "captionsSub": "نص على الشاشة",
+      "mainVideoSub": "لقطاتك",
+      "brollSub": "لقطات جانبية وصور",
+      "audioSub": "موسيقى، صوت ومؤثرات صوتية"
+    },
+    "viewGroup": "عرض الخط الزمني",
+    "view": {
+      "clips": "المقاطع",
+      "clipsTitle": "المقاطع فقط",
+      "hybrid": "المقاطع + النص",
+      "hybridTitle": "المقاطع مع النص فوقها",
+      "script": "النص",
+      "scriptTitle": "التحرير عبر النص"
+    },
+    "zoomOut": "تصغير",
+    "zoomIn": "تكبير",
+    "hideInsights": "إخفاء مسارات رؤى الذكاء الاصطناعي",
+    "showInsights": "إظهار مسارات رؤى الذكاء الاصطناعي",
+    "insights": "الرؤى",
+    "inOutSpan": "الدخول/الخروج: {{time}}",
+    "inPointTitle": "نقطة الدخول: {{time}} (اسحب للضبط)",
+    "outPointTitle": "نقطة الخروج: {{time}} (اسحب للضبط)",
+    "beatLabel": "إيقاع ({{time}} ث)",
+    "markerTitle": "{{name}}: {{time}} (اسحب للنقل، انقر للانتقال، انقر بزر الفأرة الأيمن للتحرير)",
+    "marker": "علامة",
+    "markerTag": "{{name}} ({{time}})",
+    "resolve": "حل",
+    "close": "إغلاق",
+    "captionsCountOne": "ترجمة واحدة",
+    "captionsCount": "{{count}} ترجمة",
+    "clipsCountOne": "مقطع واحد",
+    "clipsCount": "{{count}} مقاطع",
+    "itemsCountOne": "عنصر واحد",
+    "itemsCount": "{{count}} عناصر",
+    "audienceRetention": "احتفاظ الجمهور",
+    "retentionTitle": "الاحتفاظ: {{value}}%",
+    "audioWaveform": "الموجة الصوتية",
+    "audioWaveformNoAudio": "الموجة الصوتية (لا يوجد صوت)",
+    "trimStart": "قص البداية",
+    "trimEnd": "قص النهاية",
+    "jCut": "J-Cut",
+    "lCut": "L-Cut",
+    "trimmedStart": "بداية مقصوصة",
+    "trimmedEnd": "نهاية مقصوصة",
+    "freeze": "تجميد",
+    "reverseSpeed": "عكس {{speed}}×",
+    "keyframes": "الإطارات المفتاحية",
+    "playheadTitle": "رأس التشغيل: {{time}} (اسحب للتنقل)",
+    "scrubTitle": "التنقل: {{time}}",
+    "dragPlayhead": "اسحب رأس التشغيل",
+    "origin": "الأصل: {{time}}",
+    "moveDelta": "مقدار النقل: {{delta}}",
+    "trackNumber": "المسار {{number}}",
+    "clipsMoving": "جارٍ نقل {{count}} مقاطع",
+    "trimStartAt": "قص البداية: {{time}}",
+    "trimEndAt": "قص النهاية: {{time}}",
+    "workAreaIn": "بداية منطقة العمل: {{time}}",
+    "workAreaOut": "نهاية منطقة العمل: {{time}}",
+    "span": "المدى: {{time}}",
+    "menu": {
+      "splitAtPlayhead": "تقسيم عند رأس التشغيل",
+      "duplicate": "تكرار المقطع",
+      "ungroup": "فك تجميع المقاطع",
+      "group": "تجميع المقاطع",
+      "rippleDelete": "حذف مع سد الفراغ"
+    },
+    "sceneChange": "تغيّر المشهد"
   },
   "revenueOracle": {
     "synchronizing": "جارٍ تحميل بيانات الإيرادات...",
@@ -7682,7 +7849,7 @@
     "neuralScheduling": "جدولة ذكية",
     "neuralSchedulingDesc": "جدول المنشورات في الأوقات التي يكون فيها جمهورك أكثر نشاطًا.",
     "evergreenSynthesis": "إعادة تدوير المحتوى الدائم",
-    "evergreenSynthesisDesc": "قم بتنشيط إعادة تدوير محتوى الإصلاح الذاتي للحصول على عائد استثمار لا نهائي للمستودع.",
+    "evergreenSynthesisDesc": "أعد استخدام أفضل محتواك أداءً تلقائيًا.",
     "initiateSequence": "بدء التسلسل",
     "neuralProcessing": "المعالجة",
     "ecosystemCalibration": "جارٍ الإعداد...",
@@ -7691,7 +7858,7 @@
     "synchronization": "مسار العمل",
     "verified": "تم التحقق منه",
     "nodesPrimedPrefix": "منشوراتك",
-    "primed": "معدة",
+    "primed": "جاهز",
     "nodesPrimedSuffix": "للنشر.",
     "estimatedYield": "العائد المقدر",
     "neuralIntegrity": "فحص الجودة",
@@ -8517,5 +8684,1369 @@
     "shift1d": "+1 يوم",
     "shift1w": "+1 أسبوع",
     "moveWarning": "قد يؤدي نقل المنشورات إلى وضع منشورين على المنصة نفسها في الوقت نفسه. لن تُنقل المنشورات التي يجري نشرها أو التي نُشرت بالفعل."
+  },
+  "editorSidebar": {
+    "cat": {
+      "aiEdit": {
+        "label": "تحرير تلقائي بالذكاء الاصطناعي",
+        "desc": "تحرير بالذكاء الاصطناعي بنقرة واحدة"
+      },
+      "dub": {
+        "label": "الدبلجة",
+        "desc": "ترجم صوتك إلى 10 لغات"
+      },
+      "edit": {
+        "label": "تحرير",
+        "desc": "أدوات التحرير الأساسية"
+      },
+      "assets": {
+        "label": "أصولي",
+        "desc": "أضف موسيقى وصورًا ومقاطع B-roll"
+      },
+      "effects": {
+        "label": "التأثيرات",
+        "desc": "فلاتر وتحسينات"
+      },
+      "color": {
+        "label": "الألوان",
+        "desc": "تلوين احترافي للصورة"
+      },
+      "chromakey": {
+        "label": "مفتاح الكروما",
+        "desc": "الشاشة الخضراء والتركيب"
+      },
+      "timeline": {
+        "label": "الخط الزمني",
+        "desc": "تحرير متقدم"
+      },
+      "export": {
+        "label": "تصدير",
+        "desc": "مشاركة وتصدير"
+      },
+      "aiAssist": {
+        "label": "مساعد الذكاء الاصطناعي",
+        "desc": "قص ذكي · مراجعة الاقتراحات · تطبيق وتراجع"
+      },
+      "monetize": {
+        "label": "تحقيق الربح",
+        "desc": "روابط المنتجات · QR · خطة ربح بالذكاء الاصطناعي"
+      },
+      "stockLibrary": {
+        "label": "مكتبة الوسائط",
+        "desc": "B-roll · موسيقى · GIF · ملصقات · انتقالات · مؤثرات صوتية"
+      },
+      "textMotion": {
+        "label": "النص والحركة",
+        "desc": "ترجمة · رسوم متحركة · حركة · خطوط"
+      }
+    },
+    "group": {
+      "edit": {
+        "label": "تحرير",
+        "desc": "قص، تلوين، تركيب — أساس التحرير."
+      },
+      "media": {
+        "label": "الوسائط",
+        "desc": "الأصول، المكتبة، الترجمة والنصوص."
+      },
+      "ai": {
+        "label": "الذكاء الاصطناعي",
+        "desc": "تحرير تلقائي بالذكاء الاصطناعي بنقرة واحدة + دبلجة متعددة اللغات."
+      },
+      "export": {
+        "label": "تصدير",
+        "desc": "تصيير ومشاركة."
+      }
+    },
+    "badge": {
+      "new": "جديد",
+      "agency": "وكالة",
+      "pro": "PRO",
+      "beta": "تجريبي"
+    },
+    "title": "أدوات المحرر",
+    "ready": "جاهز",
+    "expand": "توسيع الشريط الجانبي",
+    "collapse": "طيّ الشريط الجانبي",
+    "searchPlaceholder": "ابحث في الأدوات (⌘F)",
+    "clearSearch": "مسح البحث",
+    "all": "الكل",
+    "recent": "الأخيرة",
+    "noTools": "لم يتم العثور على أدوات",
+    "pinned": "مثبّتة",
+    "allTools": "كل الأدوات",
+    "unpin": "إلغاء التثبيت",
+    "pinToTop": "تثبيت في الأعلى",
+    "device": {
+      "desktop": "كمبيوتر",
+      "tablet": "جهاز لوحي",
+      "mobile": "جوال"
+    },
+    "shortcuts": "اختصارات لوحة المفاتيح",
+    "closeShortcuts": "إغلاق الاختصارات",
+    "searchTools": "ابحث في الأدوات"
+  },
+  "editorHUD": {
+    "section": {
+      "edit": "التحرير",
+      "color": "الألوان",
+      "ai": "أدوات الذكاء الاصطناعي",
+      "effects": "التأثيرات",
+      "timeline": "الخط الزمني",
+      "export": "تصدير",
+      "styleVault": "Style Vault",
+      "aiEdit": "التحرير بالذكاء الاصطناعي",
+      "assets": "الأصول",
+      "growth": "التحليلات",
+      "chromakey": "مفتاح الكروما",
+      "visualFx": "مؤثرات بصرية",
+      "aiAnalysis": "التحليل بالذكاء الاصطناعي",
+      "collaborate": "التعاون",
+      "scripts": "النصوص",
+      "scheduling": "الجدولة",
+      "shortClips": "مقاطع قصيرة",
+      "predict": "التوقعات",
+      "distribution": "التوزيع",
+      "spatial": "مكاني",
+      "agent": "وكيل الذكاء الاصطناعي",
+      "dub": "الدبلجة"
+    },
+    "layout": {
+      "balanced": "متوازن",
+      "balancedDesc": "تقسيم متساوٍ بين المعاينة والخط الزمني",
+      "cinematic": "سينمائي",
+      "cinematicDesc": "معاينة أكبر مع التركيز على التشغيل",
+      "timelineFocus": "التركيز على الخط الزمني",
+      "timelineFocusDesc": "مساحة أكبر للتعديلات الدقيقة على الخط الزمني"
+    },
+    "projectName": "اسم المشروع",
+    "savingEllipsis": "جارٍ الحفظ…",
+    "saveFailed": "فشل الحفظ",
+    "allChangesSaved": "تم حفظ كل التغييرات",
+    "saving": "جارٍ الحفظ",
+    "saved": "تم الحفظ",
+    "undoTitle": "تراجع (⌘Z)",
+    "redoTitle": "إعادة (⌘Y)",
+    "undo": "تراجع",
+    "redo": "إعادة",
+    "command": "ابحث أو نفّذ أمرًا",
+    "commandTitle": "ابحث أو نفّذ أمرًا (⌘K)",
+    "workspaceLayoutTitle": "تخطيط مساحة العمل (L)",
+    "workspaceLayout": "تخطيط مساحة العمل",
+    "gpu": "GPU: {{backend}}",
+    "agentRunning": "وكيل الذكاء الاصطناعي يعمل",
+    "makeViralTitle": "شغّل وصفة الانتشار بنقرة واحدة — خطّاف، قطعات، B-roll، مزامنة الإيقاع، دعوة لإجراء",
+    "working": "جارٍ العمل…",
+    "makeViral": "اجعله رائجًا",
+    "focusMode": "وضع التركيز",
+    "moreActions": "إجراءات أخرى",
+    "more": "المزيد",
+    "keyboardShortcuts": "اختصارات لوحة المفاتيح",
+    "exportTitle": "تصدير ونشر",
+    "export": "تصدير"
+  },
+  "quickActionsBar": {
+    "variantsNeedBase": "أضف ترجمة أو خطّافًا أولًا ليجد مولّد الصيغ ما يعمل عليه.",
+    "noVariants": "لم تُرجع أي صيغ بديلة — جرّب خطّافًا أساسيًا أطول.",
+    "variantsGenerated": "تم إنشاء {{count}} صيغ بديلة — افتح أداة اختيار A/B للمعاينة.",
+    "variantsFailed": "فشل إنشاء الصيغ البديلة: {{error}}",
+    "unknownError": "خطأ غير معروف",
+    "brollNeedsClip": "حمّل مقطعًا أولًا لاقتراح B-roll.",
+    "noBrollGaps": "لم تُكتشف فجوات لـ B-roll — مقطعك غني بصريًا بالفعل.",
+    "brollSuggested": "تم اقتراح {{count}} إدراجات B-roll. افتح الخط الزمني للمراجعة.",
+    "brollFailed": "فشلت اقتراحات B-roll: {{error}}",
+    "trendsWarmingUp": "موجز الترندات قيد التجهيز — حاول بعد دقيقة.",
+    "trendsLoaded": "الرائج الآن: {{sounds}} أصوات · {{hashtags}} وسوم. جارٍ فتح أداة الاختيار.",
+    "trendsFailed": "تعذّر تحميل الترندات: {{error}}",
+    "styleApplied": "تم تطبيق أسلوبك: {{items}}",
+    "styleAppliedGeneric": "تم تطبيق الأسلوب الذي تعلّمه Click منك.",
+    "styleNeedsClips": "انشر 3 مقاطع أولًا ليتعلّم Click أسلوبك.",
+    "styleTimedOut": "انتهت مهلة طلب الأسلوب. حاول مرة أخرى.",
+    "styleLoadFailed": "تعذّر تحميل أسلوبك. حاول مرة أخرى.",
+    "viralEdit": "تحرير رائج",
+    "viralEditLong": "تحرير رائج تلقائي — تحرير كامل بنقرة واحدة",
+    "applyStyle": "تطبيق الأسلوب",
+    "split": "تقسيم",
+    "splitLong": "تقسيم عند رأس التشغيل",
+    "captions": "الترجمة",
+    "grade": "تلوين",
+    "effects": "التأثيرات",
+    "aiTools": "أدوات الذكاء الاصطناعي",
+    "clean": "تنظيف",
+    "cleanLong": "تنظيف ذكي",
+    "variants": "صيغ بديلة",
+    "variantsLong": "صيغ A/B",
+    "broll": "B-roll",
+    "brollLong": "اقترح B-roll",
+    "trends": "الترندات",
+    "trendsLong": "الرائج الآن",
+    "learnedFrom": "تعلّم Click من {{count}} من مقاطعك المنشورة",
+    "ariaLoading": "{{label}} — جارٍ التحميل",
+    "ariaShortcut": "{{label}} (الاختصار {{key}})"
+  },
+  "aiAutoEdit": {
+    "preset": {
+      "mrbeastEnergy": "طاقة MrBeast",
+      "mrbeastEnergyTagline": "رهانات كبيرة · كسر النمط",
+      "hormoziBold": "جرأة Hormozi",
+      "hormoziBoldTagline": "إحصائية صادمة · رأي مخالف",
+      "cinematicDoc": "وثائقي سينمائي",
+      "cinematicDocTagline": "تصاعد بطيء · قطع هادئ",
+      "educationalClean": "تعليمي نظيف",
+      "educationalCleanTagline": "إطار السؤال · معلومة مباشرة",
+      "newsAuthority": "أسلوب الأخبار",
+      "newsAuthorityTagline": "عنوان رئيسي · عاجل · خبير",
+      "casualVlog": "فلوغ عفوي",
+      "casualVlogTagline": "يوم في حياتي · أسلوب حواري",
+      "mysteryHook": "خطّاف الغموض",
+      "mysteryHookTagline": "حلقة فضول · كشف تدريجي",
+      "gymGrit": "عزيمة الجيم",
+      "gymGritTagline": "شدة عالية · حزم محبّ",
+      "adhdOverload": "حمل زائد ADHD",
+      "adhdOverloadTagline": "فوضى · انفجارات بصرية · تحفيز مفرط",
+      "podcastGoldmine": "كنز البودكاست",
+      "podcastGoldmineTagline": "مصداقية · فصول · وثائقي دافئ",
+      "retentionMachine": "آلة الاحتفاظ",
+      "retentionMachineTagline": "حلقات مفتوحة · B-roll · فصول"
+    },
+    "opt": {
+      "auto": "تلقائي",
+      "vivid": "زاهٍ",
+      "cinematic": "سينمائي",
+      "natural": "طبيعي",
+      "cool": "بارد",
+      "warm": "دافئ",
+      "vintage": "كلاسيكي",
+      "bw": "أبيض وأسود",
+      "upbeatPop": "بوب مبهج",
+      "chill": "مسترخٍ",
+      "darkAmbient": "أجواء داكنة",
+      "synthwave": "Synthwave",
+      "phonk": "Phonk",
+      "lofi": "Lo-fi",
+      "question": "سؤال",
+      "stat": "إحصائية",
+      "mystery": "غموض",
+      "story": "قصة",
+      "boldClaim": "ادعاء جريء",
+      "patternBreak": "كسر النمط",
+      "fastCut": "قطع سريع",
+      "crossfade": "تلاشٍ متقاطع",
+      "glitch": "تشويش",
+      "whipPan": "تحريك سريع",
+      "hardCut": "قطع حاد",
+      "modern": "عصري",
+      "bold": "جريء",
+      "minimal": "بسيط",
+      "neon": "نيون",
+      "pill": "كبسولة",
+      "top": "أعلى",
+      "middle": "الوسط",
+      "bottom": "أسفل",
+      "lowerThird": "الشريط السفلي",
+      "energetic": "حيوي",
+      "calm": "هادئ",
+      "authoritative": "واثق",
+      "playful": "مرح",
+      "serious": "جاد",
+      "urgency": "إلحاح",
+      "value": "قيمة",
+      "curiosity": "فضول",
+      "off": "إيقاف",
+      "sparse": "قليل",
+      "balanced": "متوازن",
+      "heavy": "كثيف",
+      "gentle": "لطيف",
+      "medium": "متوسط",
+      "aggressive": "حادّ",
+      "educational": "تعليمي",
+      "entertaining": "ترفيهي",
+      "motivational": "تحفيزي",
+      "promotional": "ترويجي"
+    },
+    "brief": {
+      "title": "الملخص التسويقي",
+      "postingTimes": "أفضل أوقات النشر",
+      "competitiveInsights": "رؤى المنافسين"
+    },
+    "err": {
+      "videoNotFound": "لم يتم العثور على بيانات الفيديو في الاستجابة",
+      "loadFailed": "تعذّر تحميل الفيديو. حاول مرة أخرى.",
+      "missingSource": "ملف المصدر لهذا الفيديو مفقود. أعد رفعه وحاول مجددًا.",
+      "tooManyPresets": "يمكنك دمج 3 إعدادات أنماط مسبقة كحد أقصى في كل تعديل.",
+      "serviceError": "واجهت خدمة الذكاء الاصطناعي خطأً: {{error}}",
+      "serviceInternal": "واجهت خدمة الذكاء الاصطناعي خطأً داخليًا. حاول بعد قليل.",
+      "sessionExpired": "انتهت جلستك. سجّل الدخول مجددًا وأعد المحاولة.",
+      "rateLimited": "طلبات تعديل كثيرة جدًا. انتظر قليلًا ثم حاول مجددًا.",
+      "rejected": "رُفض الطلب ({{status}}). تحقّق من المدخلات وأعد المحاولة.",
+      "timeout": "انتهت مهلة طلب التعديل. قد يكون الفيديو كبيرًا جدًا أو الخادم بطيئًا في الاستجابة.",
+      "network": "تعذّر الوصول إلى الخادم. تحقّق من اتصالك وحاول مرة أخرى.",
+      "startFailed": "تعذّر بدء التعديل بالذكاء الاصطناعي. حاول مرة أخرى."
+    },
+    "badge": "تحرير تلقائي بالذكاء الاصطناعي",
+    "title": "ضبط قواعد الذكاء الاصطناعي",
+    "untitled": "مشروع بلا عنوان",
+    "toggleTheme": "تبديل المظهر",
+    "analyze": "حلّل الفيديو",
+    "analyzing": "جارٍ التحليل...",
+    "backToVideos": "العودة إلى الفيديوهات",
+    "processingTitle": "جارٍ معالجة الفيديو",
+    "processingBody": "يقوم الذكاء الاصطناعي بتحليل الفيديو وقصّه وتحسينه...",
+    "initializing": "جارٍ التهيئة",
+    "result": {
+      "title": "تعديلك جاهز",
+      "body": "افتحه في المحرر لضبطه بدقة، أو نزّله كما هو.",
+      "editsApplied": "التعديلات المطبّقة",
+      "openInEditor": "افتح في المحرر",
+      "downloadTitle": "نزّل الفيديو المعدَّل",
+      "download": "تنزيل",
+      "viewClipsTitle": "اعرض المقاطع المُنشأة",
+      "viewClips": "عرض المقاطع",
+      "dismissTitle": "تجاهل هذه النتيجة",
+      "dismiss": "تجاهل"
+    },
+    "diag": {
+      "title": "التشخيص",
+      "complete": "اكتمل التحليل",
+      "suggestedLength": "المدة المقترحة"
+    },
+    "plan": {
+      "title": "خطة التعديل",
+      "subtitle": "ما سيفعله الذكاء الاصطناعي بالإعدادات على اليمين",
+      "opening": "البداية",
+      "openingHook": "ابدأ بأقوى لحظة",
+      "openingOriginal": "احتفظ بالبداية الأصلية",
+      "pacing": "الإيقاع",
+      "pacingGentle": "قطعات هادئة",
+      "pacingFast": "قطعات سريعة ومكثفة",
+      "pacingBalanced": "قطعات متوازنة",
+      "deadAir": "فترات الصمت",
+      "removed": "مُزالة",
+      "kept": "مُبقاة",
+      "captions": "الترجمة",
+      "burnedIn": "مدمجة في الفيديو",
+      "off": "إيقاف",
+      "clips": "المقاطع",
+      "under30s": "أقل من 30 ث",
+      "fullLength": "بالمدة الكاملة",
+      "oneVideo": "فيديو واحد معدَّل",
+      "format": "التنسيق"
+    },
+    "director": {
+      "title": "مخرج الذكاء الاصطناعي",
+      "subtitle": "اختر حتى 3 أنماط أو اضبط كل إعداد بدقة.",
+      "presetsOne": "{{count}} إعداد مسبق: {{names}}",
+      "presetsOther": "{{count}} إعدادات مسبقة: {{names}}"
+    },
+    "targetPlatform": "المنصة المستهدفة",
+    "contentTone": "نبرة المحتوى",
+    "stylePreset": "نمط مسبق",
+    "presetsSelected": "تم تحديد {{count}}/3 · انقر مجددًا للإزالة",
+    "presetCap": "حتى 3 إعدادات مسبقة — أزل واحدًا للتبديل",
+    "presetSelectedTitle": "المحدد رقم {{n}} — انقر للإزالة",
+    "presetSelect": "اختر النمط: {{name}}",
+    "presetSelectedAria": "النمط المحدد رقم {{n}}: {{name}}",
+    "aiTasks": "مهام الذكاء الاصطناعي",
+    "task": {
+      "removeSilence": "إزالة الصمت",
+      "removeSilenceDesc": "قص تلقائي لفترات الصمت والتوقفات",
+      "optimizePacing": "تحسين الإيقاع",
+      "optimizePacingDesc": "قطعات محكمة للاحتفاظ بالمشاهدين",
+      "enhanceAudio": "تحسين الصوت",
+      "enhanceAudioDesc": "تقليل الضوضاء + موازنة المستوى",
+      "generateClips": "إنشاء مقاطع قصيرة",
+      "generateClipsDesc": "استخراج اللحظات الأكثر انتشارًا",
+      "addCaptions": "ترجمة مدمجة في الفيديو",
+      "addCaptionsDesc": "نص ديناميكي متزامن مع الكلمات",
+      "enhanceColor": "تصحيح الألوان",
+      "enhanceColorDesc": "LUT تلقائي + تلوين"
+    },
+    "output": "المخرجات",
+    "aspectRatio": "نسبة العرض إلى الارتفاع",
+    "clipsToGenerate": "المقاطع المراد إنشاؤها",
+    "clipCountAria": "عدد المقاطع المراد إنشاؤها",
+    "targetLength": "المدة المستهدفة",
+    "full": "كامل",
+    "pacing": "الإيقاع",
+    "advanced": "متقدم",
+    "advancedHint": "المزاج، الترجمة، الانتقالات، الصوت، B-roll، الدعوة لاتخاذ إجراء",
+    "sel": {
+      "colorGrade": "تلوين الصورة",
+      "musicGenre": "نوع الموسيقى",
+      "hookStyle": "نمط الخطّاف",
+      "transitions": "الانتقالات",
+      "captionStyle": "نمط الترجمة",
+      "subtitlePosition": "موضع الترجمة",
+      "voiceTone": "نبرة الصوت",
+      "ctaStyle": "نمط الدعوة لاتخاذ إجراء",
+      "brollFrequency": "تكرار B-roll"
+    },
+    "speedRamping": "تدرّج السرعة",
+    "speedRampingHint": "يسرّع المقاطع ويبطئها لإضفاء الحيوية",
+    "toggleSpeedRamping": "تبديل تدرّج السرعة",
+    "prioritizeHook": "أعطِ الأولوية للخطّاف",
+    "prioritizeHookHint": "اجعل أول 3 ثوانٍ مؤثرة للاحتفاظ بالمشاهدين",
+    "togglePrioritizeHook": "تبديل أولوية الخطّاف",
+    "creativeDirection": "التوجيه الإبداعي",
+    "creativeDirectionHint": "اختياري · يتجاوز إعدادات الذكاء الاصطناعي الافتراضية",
+    "creativeDirectionPlaceholder": "مثال: اجعله سينمائيًا وداكنًا، بلا قطعات مفاجئة، وأبرز الوقفة العاطفية عند 0:42…",
+    "autoFit": "ملاءمة تلقائية",
+    "aiPlan": "خطة الذكاء الاصطناعي",
+    "preloadedStyle": "تم تحميل أسلوبك مسبقًا",
+    "planLine": {
+      "composeOne": "إنشاء {{count}} مقطع {{aspect}}، المدة المستهدفة {{length}}",
+      "composeOther": "إنشاء {{count}} مقاطع {{aspect}}، المدة المستهدفة {{length}}",
+      "forPlatform": "لـ {{platform}}",
+      "tone": "نبرة {{tone}}",
+      "acrossPresets": "عبر {{presets}} ({{count}} زوايا متنوعة)",
+      "autoStyle": "بنمط {{auto}}",
+      "autoDetected": "مكتشف تلقائيًا",
+      "grade": "تلوين {{grade}}",
+      "hook": "خطّاف {{hook}}",
+      "pacing": "إيقاع {{pacing}}",
+      "speedRamping": "تدرّج السرعة مفعّل",
+      "broll": "B-roll {{broll}}"
+    },
+    "tasksOne": "{{count}} مهمة",
+    "tasksOther": "{{count}} مهام",
+    "estimate": "تقريبًا {{time}}",
+    "chip": {
+      "captions": "الترجمة",
+      "autoGrade": "تلوين تلقائي",
+      "speedRamp": "تدرّج السرعة"
+    },
+    "composing": "جارٍ تجهيز التعديل…",
+    "composeOne": "أنشئ {{count}} مقطع",
+    "composeOther": "أنشئ {{count}} مقاطع",
+    "using": "باستخدام {{names}}",
+    "autoSelectPreset": "اختيار الإعداد المسبق تلقائيًا حسب المحتوى",
+    "tasksOnOne": "{{count}} مهمة مفعّلة",
+    "tasksOnOther": "{{count}} مهام مفعّلة",
+    "dismissError": "تجاهل هذا الخطأ",
+    "dismiss": "تجاهل"
+  },
+  "propertiesPanel": {
+    "layout": {
+      "bottom": "أسفل",
+      "bottomTitle": "أسفل",
+      "lowerThird": "سفلي",
+      "lowerThirdTitle": "الشريط السفلي",
+      "top": "أعلى",
+      "topTitle": "أعلى",
+      "fullWidth": "بعرض كامل",
+      "fullWidthTitle": "شريط بعرض كامل"
+    },
+    "tab": {
+      "transform": "الموضع",
+      "color": "الألوان",
+      "captions": "الترجمة",
+      "text": "النص",
+      "clip": "المقطع"
+    },
+    "reset": "إعادة تعيين",
+    "title": "الخصائص",
+    "activeTab": "إعدادات {{tab}}",
+    "close": "إغلاق الخصائص",
+    "clipProperties": "خصائص المقطع",
+    "selectedClip": "المقطع المحدد",
+    "playbackSpeed": "سرعة التشغيل",
+    "playbackSpeedTitle": "سرعة التشغيل: {{speed}}x",
+    "playbackSpeedHint": "سرّع هذا المقطع أو أبطئه.",
+    "stabilization": "التثبيت",
+    "stabilizationTitle": "التثبيت: {{value}}%",
+    "stabilizationHint": "مقدار تخفيف اهتزاز الكاميرا.",
+    "volume": "مستوى الصوت",
+    "volumeTitle": "مستوى الصوت: {{value}}%",
+    "autoDucking": "خفض تلقائي للموسيقى",
+    "autoDuckingHint": "اخفض صوت الموسيقى أثناء الكلام",
+    "autoDuckingToggle": "تشغيل الخفض التلقائي أو إيقافه",
+    "positionAndSize": "الموضع والحجم",
+    "scale": "الحجم (%)",
+    "positionX": "الموضع X",
+    "positionY": "الموضع Y",
+    "rotation": "الدوران (°)",
+    "animation": "الحركة",
+    "keyframesCountOne": "إطار مفتاحي واحد",
+    "keyframesCount": "{{count}} إطارات مفتاحية",
+    "addKeyframe": "+ إضافة إطار مفتاحي عند رأس التشغيل",
+    "prevKeyframe": "◁ السابق",
+    "nextKeyframe": "التالي ▷",
+    "remove": "إزالة",
+    "curve": "المنحنى",
+    "easing": {
+      "linear": "خطي",
+      "easeIn": "تسارع تدريجي",
+      "easeOut": "تباطؤ تدريجي",
+      "easeInOut": "تسارع وتباطؤ تدريجي",
+      "bounceOut": "ارتداد",
+      "elasticOut": "مطاطي",
+      "cubic": "سلس (قوي)"
+    },
+    "brightness": "السطوع",
+    "contrast": "التباين",
+    "saturation": "التشبع",
+    "temperature": "حرارة اللون",
+    "clarity": "الوضوح",
+    "dehaze": "إزالة الضباب",
+    "captionsOn": "إظهار الترجمة",
+    "captionsOnHint": "اعرض النص المفرَّغ كترجمة",
+    "captionLayout": "موضع الترجمة",
+    "textOverlays": "النصوص المضافة",
+    "noTextOverlays": "لا توجد نصوص مضافة بعد",
+    "deleteTextOverlay": "حذف النص المضاف",
+    "synced": "متزامن",
+    "preset": {
+      "tiktok": {
+        "label": "TikTok",
+        "description": "عريض، في المنتصف، تأثير قوي"
+      },
+      "reels": {
+        "label": "Reels",
+        "description": "أحرف كبيرة نظيفة وعصرية"
+      },
+      "podcast": {
+        "label": "بودكاست",
+        "description": "بسيط، في الشريط السفلي"
+      },
+      "cinematic": {
+        "label": "سينمائي",
+        "description": "خط مذيّل بطابع سينمائي"
+      },
+      "documentary": {
+        "label": "وثائقي",
+        "description": "شريط ترجمة كلاسيكي"
+      },
+      "neon": {
+        "label": "نيون",
+        "description": "متوهج بأجواء ليلية"
+      },
+      "karaoke": {
+        "label": "كاريوكي",
+        "description": "نمط كاريوكي عريض"
+      },
+      "pill": {
+        "label": "كبسولة",
+        "description": "كلمات داخل كبسولات مستديرة"
+      },
+      "bubble": {
+        "label": "فقاعة",
+        "description": "نمط فقاعة الكلام"
+      },
+      "gradient": {
+        "label": "تدرّج",
+        "description": "نص بتدرّج ملوّن"
+      },
+      "retro": {
+        "label": "ريترو",
+        "description": "مظهر كلاسيكي دافئ"
+      },
+      "vintage": {
+        "label": "كلاسيكي",
+        "description": "آلة كاتبة بلون بني عتيق"
+      },
+      "pop": {
+        "label": "بوب",
+        "description": "مشرق وقوي"
+      },
+      "high-contrast": {
+        "label": "سهل الوصول",
+        "description": "تباين عالٍ وسهل القراءة"
+      },
+      "kinetic": {
+        "label": "حركي",
+        "description": "تظهر الكلمات مع الإيقاع"
+      },
+      "slow-zoom": {
+        "label": "تكبير بطيء",
+        "description": "الحجم 100% → 110%"
+      },
+      "fly-in-left": {
+        "label": "دخول من اليسار",
+        "description": "الموضع من خارج الشاشة باليسار"
+      },
+      "fly-in-right": {
+        "label": "دخول من اليمين",
+        "description": "الموضع من خارج الشاشة باليمين"
+      },
+      "fly-in-top": {
+        "label": "دخول من الأعلى",
+        "description": "الموضع من خارج الشاشة بالأعلى"
+      },
+      "fly-in-bottom": {
+        "label": "دخول من الأسفل",
+        "description": "الموضع من خارج الشاشة بالأسفل"
+      },
+      "fade-in-out": {
+        "label": "ظهور واختفاء تدريجي",
+        "description": "الشفافية 0 → 1 → 0"
+      }
+    }
+  },
+  "basicEditor": {
+    "preset": {
+      "title": {
+        "label": "عنوان"
+      },
+      "text": {
+        "yourTitleHere": "عنوانك هنا",
+        "subscribeForMore": "اشترك للمزيد",
+        "likeSubscribe": "أعجبني واشترك",
+        "watchMore": "شاهد المزيد →",
+        "commentBelow": "علّق بالأسفل",
+        "linkInBio": "الرابط في البايو",
+        "addYourCaption": "أضف تعليقك هنا",
+        "followForMore": "تابِعني للمزيد",
+        "newText": "نص جديد",
+        "youNeedToSeeThis": "يجب أن ترى هذا",
+        "nameTitle": "الاسم · المسمى",
+        "proTip": "نصيحة احترافية",
+        "tapToLearnMore": "انقر لمعرفة المزيد",
+        "waitForIt": "انتظر قليلًا...",
+        "storyTime": "وقت القصة",
+        "youWontBelieveWhatHappened": "لن تصدق ما حدث",
+        "dayInMyLife": "يوم في حياتي",
+        "day1Of": "اليوم 1 من...",
+        "getReadyForThis": "استعد لهذا",
+        "watchTillTheEnd": "شاهد حتى النهاية",
+        "noOneTalksAboutThis": "لا أحد يتحدث عن هذا",
+        "theSecretTheyDontWantYouToKnow": "السر الذي لا يريدونك أن تعرفه",
+        "theSecretIs": "السر هو",
+        "insane": "جنوني!",
+        "actually": "في الحقيقة...",
+        "now": "الآن",
+        "zeroCost": "بلا تكلفة",
+        "watch": "شاهد",
+        "here": "هنا",
+        "swipeUp": "اسحب للأعلى",
+        "seeYouNextTime": "أراكم المرة القادمة",
+        "unpopularOpinion": "رأي غير شائع:",
+        "thisChangedEverything": "هذا غيّر كل شيء",
+        "hotTake": "رأي جريء:",
+        "nobodyTalksAboutThis": "ما من أحد يتحدث عن هذا",
+        "povYouJustFoundTheBestTip": "POV: وجدت للتو أفضل نصيحة",
+        "saveThisForLater": "احفظ هذا لوقت لاحق",
+        "commentYourAnswerBelow": "اكتب إجابتك في التعليقات",
+        "dropAIfYouAgree": "ضع 👍 إذا كنت توافق",
+        "part1": "الجزء 1",
+        "chapter1": "الفصل 1",
+        "intro": "مقدمة",
+        "outro": "خاتمة",
+        "comingUpNext": "التالي بعد قليل...",
+        "quickRecap": "ملخص سريع"
+      },
+      "subscribe": {
+        "label": "اشترك"
+      },
+      "likeSubscribe": {
+        "label": "أعجبني واشترك"
+      },
+      "watchMore": {
+        "label": "شاهد المزيد"
+      },
+      "comment": {
+        "label": "تعليق"
+      },
+      "linkInBio": {
+        "label": "الرابط في البايو"
+      },
+      "caption": {
+        "label": "ترجمة"
+      },
+      "follow": {
+        "label": "تابِع"
+      },
+      "custom": {
+        "label": "مخصص"
+      },
+      "hook": {
+        "label": "خطّاف"
+      },
+      "lowerThird": {
+        "label": "شريط سفلي"
+      },
+      "callout": {
+        "label": "تنبيه"
+      },
+      "timestamp": {
+        "label": "طابع زمني"
+      },
+      "waitForIt": {
+        "label": "انتظر قليلًا"
+      },
+      "storyTime": {
+        "label": "وقت القصة"
+      },
+      "youWontBelieve": {
+        "label": "لن تصدق"
+      },
+      "dayInMyLife": {
+        "label": "يوم في حياتي"
+      },
+      "dayXOf": {
+        "label": "اليوم X من"
+      },
+      "getReady": {
+        "label": "استعد"
+      },
+      "watchTillEnd": {
+        "label": "شاهد حتى النهاية"
+      },
+      "noOneTalksAbout": {
+        "label": "لا أحد يتحدث عن"
+      },
+      "theSecret": {
+        "label": "السر"
+      },
+      "hormoziBold": {
+        "label": "جرأة Hormozi"
+      },
+      "beastImpact": {
+        "label": "تأثير Beast"
+      },
+      "minimalNarrative": {
+        "label": "سرد بسيط"
+      },
+      "subliminalQuick": {
+        "label": "ومضة سريعة"
+      },
+      "punchyHighlight": {
+        "label": "إبراز قوي"
+      },
+      "arrowRight": {
+        "label": "سهم →"
+      },
+      "arrowLeft": {
+        "label": "سهم ←"
+      },
+      "proTip": {
+        "label": "نصيحة احترافية"
+      },
+      "watch": {
+        "label": "شاهد"
+      },
+      "here": {
+        "label": "هنا"
+      },
+      "swipeUp": {
+        "label": "اسحب للأعلى"
+      },
+      "commentBelow": {
+        "label": "علّق بالأسفل"
+      },
+      "tapToLearnMore": {
+        "label": "انقر لمعرفة المزيد"
+      },
+      "seeYouNextTime": {
+        "label": "أراكم المرة القادمة"
+      },
+      "unpopularOpinion": {
+        "label": "رأي غير شائع"
+      },
+      "thisChangedEverything": {
+        "label": "هذا غيّر كل شيء"
+      },
+      "hotTake": {
+        "label": "رأي جريء"
+      },
+      "nobodyTalksAbout": {
+        "label": "ما من أحد يتحدث عن"
+      },
+      "saveThis": {
+        "label": "احفظ هذا"
+      },
+      "commentYour": {
+        "label": "اكتب إجابتك"
+      },
+      "dropA": {
+        "label": "ضع إعجابًا"
+      },
+      "part1": {
+        "label": "الجزء 1"
+      },
+      "chapter": {
+        "label": "فصل"
+      },
+      "intro": {
+        "label": "مقدمة"
+      },
+      "outro": {
+        "label": "خاتمة"
+      },
+      "next": {
+        "label": "التالي"
+      },
+      "recap": {
+        "label": "ملخص"
+      }
+    },
+    "filter": {
+      "vibrant": {
+        "name": "نابض",
+        "desc": "ألوان قوية"
+      },
+      "mono": {
+        "name": "أحادي",
+        "desc": "أبيض وأسود"
+      },
+      "cinematic": {
+        "name": "سينمائي",
+        "desc": "مظهر سينمائي"
+      },
+      "warm": {
+        "name": "دافئ",
+        "desc": "الساعة الذهبية"
+      },
+      "cool": {
+        "name": "بارد",
+        "desc": "درجات زرقاء"
+      },
+      "vintage": {
+        "name": "كلاسيكي",
+        "desc": "ريترو"
+      },
+      "moody": {
+        "name": "مزاجي",
+        "desc": "داكن وغني"
+      },
+      "vivid": {
+        "name": "زاهٍ",
+        "desc": "تشبع عالٍ"
+      },
+      "noir": {
+        "name": "نوار",
+        "desc": "أبيض وأسود عالي التباين"
+      },
+      "sunset": {
+        "name": "غروب",
+        "desc": "الساعة الذهبية"
+      },
+      "breeze": {
+        "name": "نسيم",
+        "desc": "بارد ونقي"
+      },
+      "matte": {
+        "name": "مطفأ",
+        "desc": "مسطح وناعم"
+      },
+      "neon": {
+        "name": "نيون",
+        "desc": "ألوان زاهية"
+      },
+      "autumn": {
+        "name": "خريف",
+        "desc": "ألوان ترابية دافئة"
+      },
+      "winter": {
+        "name": "شتاء",
+        "desc": "بارد ونظيف"
+      },
+      "dreamy": {
+        "name": "حالم",
+        "desc": "ألوان باستيل ناعمة"
+      },
+      "reset": {
+        "name": "إعادة تعيين",
+        "desc": "الافتراضي"
+      }
+    },
+    "style": {
+      "creatorBold": {
+        "label": "صانع محتوى جريء",
+        "desc": "طاقة عالية وانتشار واسع"
+      },
+      "softAesthetic": {
+        "label": "جمالي ناعم",
+        "desc": "ناعم وحالم"
+      },
+      "corporateMinimal": {
+        "label": "مؤسسي بسيط",
+        "desc": "نظيف واحترافي"
+      },
+      "darkMoody": {
+        "label": "داكن ومزاجي",
+        "desc": "ظلال درامية"
+      },
+      "vibrantPop": {
+        "label": "بوب نابض",
+        "desc": "ملوّن وقوي"
+      },
+      "cinematicFilm": {
+        "label": "فيلم سينمائي",
+        "desc": "إعلان فيلم"
+      },
+      "noirDramatic": {
+        "label": "نوار درامي",
+        "desc": "أبيض وأسود درامي"
+      },
+      "lifestyleWarm": {
+        "label": "أسلوب حياة دافئ",
+        "desc": "فلوغ وسفر"
+      },
+      "podcastPro": {
+        "label": "بودكاست احترافي",
+        "desc": "نظيف واحترافي"
+      },
+      "documentary": {
+        "label": "وثائقي",
+        "desc": "طبيعي وغامر"
+      },
+      "fashionEditorial": {
+        "label": "أزياء تحريرية",
+        "desc": "مظهر أزياء راقٍ"
+      },
+      "retroWarm": {
+        "label": "ريترو دافئ",
+        "desc": "دفء كلاسيكي"
+      },
+      "cinematicDrama": {
+        "label": "دراما سينمائية",
+        "desc": "عميق ودرامي"
+      },
+      "comedyBright": {
+        "label": "كوميديا مشرقة",
+        "desc": "قوي وممتع"
+      },
+      "sportsDynamic": {
+        "label": "رياضي ديناميكي",
+        "desc": "جاهز للحركة"
+      },
+      "savedDesc": "محفوظ"
+    },
+    "platform": {
+      "tiktok": {
+        "desc": "9:16، قوي"
+      },
+      "youtube": {
+        "desc": "9:16، متوازن"
+      },
+      "feed": {
+        "label": "خلاصة Instagram",
+        "desc": "1:1، ألوان زاهية"
+      },
+      "portrait": {
+        "label": "Instagram طولي",
+        "desc": "4:5، دافئ"
+      },
+      "landscape": {
+        "label": "YouTube / أفقي",
+        "desc": "16:9، نظيف"
+      },
+      "linkedin": {
+        "desc": "16:9، احترافي"
+      }
+    },
+    "filterCategory": {
+      "all": "الكل",
+      "mood": "مزاج",
+      "creative": "إبداعي",
+      "dramatic": "درامي",
+      "neutral": "إعادة تعيين"
+    },
+    "shapePreset": {
+      "logoCorner": "شعار في الزاوية",
+      "subscribeBadge": "شارة الاشتراك",
+      "fullWidthBar": "شريط بعرض كامل",
+      "dividerLine": "خط فاصل",
+      "highlightBox": "مربع إبراز",
+      "cornerAccent": "زخرفة زاوية"
+    },
+    "undo": "تراجع",
+    "redo": "إعادة",
+    "searchTools": "ابحث في الأدوات...",
+    "clearSearch": "مسح البحث",
+    "layersCount": "{{count}} طبقات",
+    "reset": "إعادة تعيين",
+    "add": "إضافة",
+    "save": "حفظ",
+    "color": "اللون",
+    "toast": {
+      "undoApplied": "تم التراجع",
+      "redoApplied": "تمت الإعادة",
+      "fontUploading": "جارٍ رفع الخط…",
+      "fontAdded": "تمت إضافة الخط.",
+      "fontInvalid": "ملف الخط هذا غير مدعوم.",
+      "fontFailed": "تعذّر رفع الخط.",
+      "rectangleAdded": "تمت إضافة مستطيل",
+      "circleAdded": "تمت إضافة دائرة",
+      "lineAdded": "تمت إضافة خط",
+      "addedName": "تمت إضافة {{name}}",
+      "addedQuoted": "تمت إضافة «{{name}}»",
+      "addedAt": "تمت إضافة «{{name}}» عند {{time}} ث",
+      "enterImageUrl": "أدخل رابط صورة",
+      "imageAdded": "تمت إضافة صورة فوق الفيديو",
+      "svgAddedFromFile": "تمت إضافة SVG من ملف — حرّكه بالإطارات المفتاحية في التأثيرات",
+      "enterSvgUrl": "أدخل رابط SVG (مثل https://… .svg أو data:image/svg+xml,…)",
+      "svgAdded": "تمت إضافة SVG فوق الفيديو — حرّكه بالإطارات المفتاحية في التأثيرات",
+      "compoundSaved": "تم حفظ «{{name}}» — أضفه إلى الخط الزمني متى شئت",
+      "compoundRemoved": "تمت إزالة المقطع المركّب",
+      "renamed": "تمت إعادة التسمية إلى «{{name}}»",
+      "addTextHint": "أضف نصًا — اكتب ثم اضغط إضافة أو Ctrl+Enter",
+      "textAdded": "تمت إضافة نص فوق الفيديو",
+      "packApplied": "تم تطبيق حزمة {{name}}",
+      "saved": "تم حفظ «{{name}}»",
+      "filtersReset": "تمت إعادة الفلاتر إلى الوضع الافتراضي",
+      "nameYourStyle": "سمِّ أسلوبك ثم انقر حفظ",
+      "applied": "تم تطبيق {{name}}",
+      "speed": "السرعة: {{value}}×"
+    },
+    "compound": {
+      "untitled": "مقطع مركّب بلا عنوان",
+      "title": "حفظ كمقطع مركّب",
+      "namePlaceholder": "اسم المقطع المركّب…",
+      "name": "اسم المقطع المركّب",
+      "durationAria": "مدة المقطع المركّب بالثواني",
+      "delete": "حذف المقطع المركّب «{{name}}»"
+    },
+    "search": {
+      "filterHit": "فلتر: {{name}}",
+      "styleHit": "أسلوب: {{name}}",
+      "motionHit": "حركة: {{name}}",
+      "textHit": "نص: {{name}}"
+    },
+    "caption": {
+      "noTranscript": "لم يُعثر على نص مفرَّغ. الصق النص في الحقل أدناه ثم حاول مجددًا.",
+      "noneGenerated": "لم تُنشأ أي ترجمة — قد يكون النص المفرَّغ قصيرًا جدًا.",
+      "addedToast": "تمت إضافة {{count}} ترجمة — نمط {{style}}",
+      "generationFailed": "فشل إنشاء الترجمة",
+      "failedToast": "فشلت الترجمة التلقائية",
+      "title": "ترجمة تلقائية بالذكاء الاصطناعي",
+      "clearTitle": "مسح الترجمة المُنشأة تلقائيًا",
+      "cleared": "تم مسح الترجمة التلقائية",
+      "count": "{{count}} ترجمة",
+      "ready": "جاهز",
+      "noScript": "لا يوجد نص",
+      "pasteScript": "الصق النص",
+      "pasteScriptTitle": "الصق نص الفيديو هنا",
+      "pastePlaceholder": "الصق أو اكتب الكلام المنطوق في الفيديو…",
+      "wordCount": "{{count}} كلمات",
+      "wordsPerLine": "كلمات/سطر",
+      "position": "الموضع",
+      "positionAt": {
+        "top": "ضع الترجمة في الأعلى",
+        "mid": "ضع الترجمة في المنتصف",
+        "bottom": "ضع الترجمة في الأسفل"
+      },
+      "colorTitle": "لون نص الترجمة",
+      "setColor": "اجعل لون الترجمة {{color}}",
+      "addedInStyle": "تمت إضافة {{count}} ترجمة بنمط {{style}}",
+      "generateAria": "إنشاء ترجمة تلقائية من النص المفرَّغ",
+      "generating": "جارٍ إنشاء ترجمة بـ {{count}} كلمات…",
+      "generate": "إنشاء الترجمة"
+    },
+    "captionStyle": {
+      "minimal": "بسيط",
+      "neon": "نيون",
+      "kinetic": "حركي",
+      "cyber": "سايبر",
+      "meme": "ميم",
+      "retro": "ريترو",
+      "quote": "اقتباس"
+    },
+    "translate": {
+      "noCaptions": "لا توجد ترجمة نصية على الخط الزمني لترجمتها.",
+      "inProgress": "جارٍ ترجمة النصوص (يبقى التوقيت كما هو)…",
+      "done": "تمت ترجمة الترجمة النصية إلى {{language}}",
+      "empty": "انتهت الترجمة لكنها لم تُرجع أي نصوص.",
+      "failed": "تعذّرت ترجمة الترجمة النصية.",
+      "title": "ترجمة النصوص",
+      "languageTitle": "اختر اللغة المراد الترجمة إليها",
+      "translating": "جارٍ الترجمة…",
+      "translate": "ترجمة"
+    },
+    "emoji": {
+      "noTranscript": "لا توجد كلمات في النص المفرَّغ لمطابقة الرموز التعبيرية معها. أنشئ نصًا مفرَّغًا أولًا.",
+      "inProgress": "جارٍ مطابقة الرموز التعبيرية مع النص المفرَّغ…",
+      "noneFound": "لم يُعثر على رموز تعبيرية مطابقة في النص المفرَّغ.",
+      "added": "تمت إضافة {{count}} رمز تعبيري إلى الخط الزمني",
+      "failed": "فشل إنشاء الرموز التعبيرية",
+      "title": "رموز تعبيرية تلقائية",
+      "clearTitle": "مسح الرموز التعبيرية المُنشأة",
+      "cleared": "تم مسح الرموز التعبيرية",
+      "count": "{{count}} رمز تعبيري",
+      "enter": "انتقال الدخول",
+      "enterTitle": "اختر طريقة ظهور الرموز التعبيرية",
+      "exit": "انتقال الخروج",
+      "exitTitle": "اختر طريقة اختفاء الرموز التعبيرية",
+      "style": "النمط",
+      "styleTitle": "اختر نمط الرموز التعبيرية",
+      "size": "حجم الرمز التعبيري",
+      "sizeTitle": "اختر حجم الرموز التعبيرية",
+      "density": "معدل الظهور",
+      "densityTitle": "اختر معدل ظهور الرموز التعبيرية",
+      "placement": "الموضع",
+      "placementTitle": "اختر موضع الرموز التعبيرية",
+      "inDuration": "مدة الدخول: {{value}} ث",
+      "inDurationTitle": "مدة حركة الدخول",
+      "outDuration": "مدة الخروج: {{value}} ث",
+      "outDurationTitle": "مدة حركة الخروج",
+      "generating": "جارٍ إنشاء الرموز التعبيرية…",
+      "generate": "إنشاء رموز تعبيرية"
+    },
+    "emojiOpt": {
+      "enter": {
+        "pop": "💥 ظهور مفاجئ",
+        "bounce": "🦘 ارتداد للأعلى",
+        "slide": "➡️ انزلاق للداخل",
+        "pulse": "💓 نبض تكبير",
+        "shake": "⚡ اهتزاز الكاميرا",
+        "blur": "🌫️ ظهور ضبابي"
+      },
+      "exit": {
+        "fade": "🌫️ تلاشٍ سلس",
+        "pop": "💥 اختفاء مفاجئ",
+        "slideBottom": "⬇️ انزلاق للأسفل",
+        "bounceOut": "🦘 ارتداد للخارج",
+        "scaleOut": "🔍 تصغير للخارج",
+        "zoomOut": "🔎 تصغير",
+        "flipOut": "🔄 قلب للخارج"
+      },
+      "style": {
+        "pop3d": "✨ بروز ثلاثي الأبعاد",
+        "neonGlow": "🏮 توهج نيون",
+        "flat": "📄 مسطح بسيط"
+      },
+      "size": {
+        "n32": "🤏 صغير (32px)",
+        "n48": "👌 متوسط (48px)",
+        "n64": "💪 كبير (64px)",
+        "n80": "👑 ضخم (80px)"
+      },
+      "density": {
+        "n3": "🔥 مرتفع (كل 3 كلمات)",
+        "n6": "⚡ متوسط (كل 6 كلمات)",
+        "n10": "🎯 منخفض (كل 10 كلمات)"
+      },
+      "place": {
+        "above": "⬆️ فوق الترجمة",
+        "below": "⬇️ تحت الترجمة",
+        "head": "👱 بمستوى الرأس",
+        "customTop": "👑 أعلى الإطار"
+      }
+    },
+    "lang": {
+      "en": "الإنجليزية (English)",
+      "es": "الإسبانية (Español)",
+      "fr": "الفرنسية (Français)",
+      "de": "الألمانية (Deutsch)",
+      "it": "الإيطالية (Italiano)",
+      "pt": "البرتغالية (Português)",
+      "ru": "الروسية (Русский)",
+      "ja": "اليابانية (日本語)",
+      "ko": "الكورية (한국어)",
+      "zh": "الصينية (中文)",
+      "ar": "العربية",
+      "hi": "الهندية (हिन्दी)",
+      "nl": "الهولندية (Nederlands)",
+      "pl": "البولندية (Polski)",
+      "tr": "التركية (Türkçe)"
+    },
+    "trim": {
+      "waveform": "الموجة الصوتية",
+      "clickToSeek": "انقر لتحريك رأس التشغيل",
+      "speed": "السرعة",
+      "playbackSpeedAria": "سرعة التشغيل: {{value}} ضعف",
+      "reverse": "عكس",
+      "reverseSub": "عكس المقطع المحدد",
+      "selectClipFirst": "حدّد مقطعًا أولًا",
+      "split": "تقسيم عند رأس التشغيل",
+      "beatCut": "قص على الإيقاع",
+      "beatCutSub": "قص المقطع عند كل نبضة",
+      "freeze": "تجميد الإطار",
+      "freezeSub": "تثبيت 1 ث عند {{time}} ث",
+      "trimToInOut": "قص إلى الدخول/الخروج",
+      "trimToInOutSub": "عيّن الدخول + الخروج أدناه",
+      "setBothFirst": "عيّن نقطتي الدخول والخروج أولًا",
+      "jCut": "J-cut",
+      "jCutSub": "يبدأ الصوت قبل 0.5 ث",
+      "lCut": "L-cut",
+      "lCutSub": "يستمر الصوت 0.5 ث بعد القطع",
+      "comingSoonTitle": "{{label}} — قريبًا",
+      "selectClipTitle": "{{label}} — حدّد مقطعًا أولًا",
+      "soon": "قريبًا",
+      "markers": "علامات الدخول / الخروج",
+      "inAt": "الدخول {{time}} ث",
+      "noIn": "لا دخول",
+      "outAt": "الخروج {{time}} ث",
+      "noOut": "لا خروج",
+      "inSet": "تم تعيين الدخول عند {{time}} ث",
+      "setIn": "تعيين الدخول",
+      "outAfterIn": "يجب أن يأتي الخروج بعد الدخول",
+      "outSet": "تم تعيين الخروج عند {{time}} ث",
+      "setOut": "تعيين الخروج",
+      "clear": "مسح"
+    },
+    "layout": {
+      "auto": "تلقائي",
+      "standard": "قياسي",
+      "square": "مربع",
+      "vertical": "عمودي",
+      "portrait": "طولي",
+      "cinematic": "سينمائي",
+      "classic": "كلاسيكي"
+    },
+    "text": {
+      "editingOnCanvas": "التحرير على اللوحة",
+      "doubleClickHint": "انقر نقرًا مزدوجًا على النص في المشغّل للكتابة مباشرة",
+      "deselect": "إلغاء التحديد",
+      "newText": "نص جديد",
+      "typePlaceholder": "اكتب النص… (⌘↵ للإضافة)",
+      "duration": "المدة:",
+      "searchPresets": "ابحث في القوالب الجاهزة…",
+      "activeText": "النص على الفيديو ({{count}})",
+      "deleteOverlayAria": "حذف النص المضاف «{{text}}»",
+      "deleteOverlay": "حذف النص المضاف",
+      "preview": "معاينة",
+      "livePreview": "معاينة مباشرة",
+      "editing": "تحرير: {{text}}",
+      "contentAria": "النص المضاف",
+      "contentPlaceholder": "النص المضاف",
+      "fontSize": "حجم الخط",
+      "textColor": "لون النص",
+      "style": "النمط",
+      "animateIn": "حركة الدخول",
+      "animateOut": "حركة الخروج",
+      "font": "الخط",
+      "start": "البداية",
+      "startAria": "وقت البداية بالثواني",
+      "end": "النهاية",
+      "endAria": "وقت النهاية بالثواني",
+      "uploadFont": "رفع خط",
+      "uploadFontAria": "رفع ملف خط مخصص"
+    },
+    "textStyle": {
+      "none": "بلا",
+      "neon": "نيون",
+      "minimal": "بسيط",
+      "bold-kinetic": "حركي عريض",
+      "outline": "حدود",
+      "shadow": "ظل"
+    },
+    "anim": {
+      "none": "بلا",
+      "fade": "تلاشٍ",
+      "slide-up": "انزلاق للأعلى",
+      "slide-down": "انزلاق للأسفل",
+      "slide-left": "انزلاق لليسار",
+      "slide-right": "انزلاق لليمين",
+      "scale": "تكبير",
+      "bounce": "ارتداد"
+    },
+    "presetGroup": {
+      "viralHooks": "خطّافات جذابة",
+      "textPresets": "نصوص جاهزة",
+      "premiumCaptions": "ترجمات مميزة",
+      "reactionCallouts": "تفاعلات / تنبيهات",
+      "trending": "رائج",
+      "endScreens": "الشاشات الختامية",
+      "chapters": "الفصول"
+    },
+    "filters": {
+      "strengthAria": "قوة الفلتر: {{value}} بالمئة",
+      "before": "⏪ قبل",
+      "after": "⏩ بعد",
+      "split": "🌓 مقارنة",
+      "pinned": "مثبّت",
+      "pin": "تثبيت فلتر {{name}}",
+      "unpin": "إلغاء تثبيت فلتر {{name}}"
+    },
+    "motion": {
+      "searchTemplates": "ابحث في القوالب…",
+      "durationAria": "مدة الرسوم المتحركة بالثواني",
+      "recent": "الأخيرة"
+    },
+    "layers": {
+      "addShape": "إضافة شكل",
+      "addImage": "إضافة صورة / شعار",
+      "imageUrlPlaceholder": "الصق رابط الصورة…",
+      "imageUrl": "رابط الصورة",
+      "addSvg": "إضافة SVG",
+      "svgUrlPlaceholder": "رابط SVG أو data URI…",
+      "svgUrl": "رابط SVG",
+      "uploadSvg": "رفع ملف SVG",
+      "gradients": "طبقات التدرّج",
+      "allLayers": "كل الطبقات ({{count}})",
+      "hoverHint": "مرّر المؤشر لإظهار عناصر التحكم",
+      "deleteTextAria": "حذف طبقة النص «{{text}}»",
+      "deleteText": "حذف طبقة النص",
+      "opacity": "الشفافية",
+      "opacityAria": "شفافية الطبقة",
+      "deleteShape": "حذف الشكل {{shape}}",
+      "deleteImage": "حذف طبقة الصورة",
+      "customSvg": "SVG مخصص",
+      "deleteSvg": "حذف طبقة SVG",
+      "gradientName": "تدرّج {{region}}",
+      "deleteGradient": "حذف طبقة التدرّج",
+      "empty": "لا توجد طبقات بعد",
+      "emptyHint": "أضف أشكالًا أو صورًا أو ملفات SVG من الأعلى. تظهر النصوص المضافة هنا أيضًا.",
+      "addTextLayer": "+ إضافة طبقة نص"
+    },
+    "shape": {
+      "rect": "مستطيل",
+      "circle": "دائرة",
+      "line": "خط"
+    },
+    "region": {
+      "full": "كامل",
+      "lower-third": "الشريط السفلي",
+      "top-bar": "الشريط العلوي",
+      "top-half": "النصف العلوي",
+      "bottom-half": "النصف السفلي"
+    },
+    "gradient": {
+      "lowerThird": "تلاشي الشريط السفلي",
+      "fullDark": "تعتيم كامل",
+      "topBar": "شريط علوي",
+      "warmTint": "صبغة دافئة",
+      "coolTint": "صبغة باردة",
+      "bottomHalf": "تلاشي النصف السفلي",
+      "topHalf": "تلاشي النصف العلوي",
+      "vignetteSoft": "تظليل حواف ناعم"
+    },
+    "pack": {
+      "hookCta": {
+        "name": "خطّاف + دعوة لإجراء",
+        "desc": "خطّاف جذاب عند رأس التشغيل، ودعوة لإجراء في الشاشة الختامية"
+      },
+      "lowerThirdSubscribe": {
+        "name": "شريط سفلي + اشتراك",
+        "desc": "شريط الاسم + شارة الاشتراك"
+      },
+      "fullCtaBar": {
+        "name": "دعوة لإجراء + تلاشي الشريط السفلي",
+        "desc": "أعجبني واشترك + شريط متدرّج"
+      },
+      "introOutro": {
+        "name": "مقدمة + خاتمة",
+        "desc": "مقدمة عند رأس التشغيل، و«أراكم المرة القادمة» في النهاية"
+      },
+      "trendingSave": {
+        "name": "رائج + احفظ هذا",
+        "desc": "رأي غير شائع + احفظه لوقت لاحق"
+      }
+    },
+    "packs": {
+      "oneClick": "حزم بنقرة واحدة",
+      "styleBundles": "حزم الأساليب",
+      "platform": "مصممة لكل منصة",
+      "saveMyStyle": "احفظ أسلوبي",
+      "styleNamePlaceholder": "اسم الأسلوب…",
+      "styleName": "اسم الأسلوب المخصص",
+      "saveStyle": "حفظ أسلوب مخصص",
+      "goTo": "انتقل إلى"
+    },
+    "nav": {
+      "shortClips": "مقاطع قصيرة",
+      "assets": "الموسيقى وB-roll",
+      "timeline": "الخط الزمني",
+      "effects": "التأثيرات",
+      "color": "الألوان",
+      "aiEdit": "التفريغ والذكاء الاصطناعي",
+      "export": "تصدير"
+    },
+    "insights": {
+      "comingSoon": "الرؤى قريبًا",
+      "comingSoonHint": "ستظهر هنا تحليلات الاحتفاظ وقوة الخطّاف والإيقاع بعد تحليل الفيديو.",
+      "transcript": "النص المفرَّغ"
+    }
   }
 }
