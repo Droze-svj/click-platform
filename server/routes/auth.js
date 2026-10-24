@@ -1374,7 +1374,7 @@ router.post('/change-password', authRateLimiter, require('../middleware/auth'), 
       const mongoUser = await User.findById(req.user._id);
       if (!mongoUser) return res.status(404).json({ success: false, error: 'User not found' });
       if (!(await mongoUser.comparePassword(currentPassword))) {
-        return res.status(401).json({ success: false, error: 'Current password is incorrect' });
+        return res.status(400).json({ success: false, error: 'Current password is incorrect' });
       }
       mongoUser.password = newPassword; // hashed by the pre-save hook
       await mongoUser.save();
@@ -1404,7 +1404,7 @@ router.post('/change-password', authRateLimiter, require('../middleware/auth'), 
     const bcrypt = require('bcryptjs');
     const isValidPassword = await bcrypt.compare(currentPassword, user.password);
     if (!isValidPassword) {
-      return res.status(401).json({ success: false, error: 'Current password is incorrect' });
+      return res.status(400).json({ success: false, error: 'Current password is incorrect' });
     }
 
     // Hash new password
@@ -1493,8 +1493,8 @@ const mongoTwoFactor = {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ success: false, error: 'User not found' });
     if (!user.twoFactorEnabled) return res.status(400).json({ success: false, error: 'Two-factor authentication is not on' });
-    if (!(await user.comparePassword(password))) return res.status(401).json({ success: false, error: 'Password is incorrect' });
-    if (!sec.checkSecondFactor(user, token).ok) return res.status(401).json({ success: false, error: 'That code didn\'t match' });
+    if (!(await user.comparePassword(password))) return res.status(400).json({ success: false, error: 'Password is incorrect' });
+    if (!sec.checkSecondFactor(user, token).ok) return res.status(400).json({ success: false, error: 'That code didn\'t match' });
     await User.updateOne(
       { _id: user._id },
       { $set: { twoFactorEnabled: false }, $unset: { twoFactorSecret: 1, twoFactorTempSecret: 1, twoFactorBackupCodes: 1 } },
@@ -1950,7 +1950,7 @@ router.post('/deactivate', require('../middleware/auth'), async (req, res) => {
       const mongoUser = await User.findById(req.user._id);
       if (!mongoUser) return res.status(404).json({ success: false, error: 'User not found' });
       if (!(await mongoUser.comparePassword(password))) {
-        return res.status(401).json({ success: false, error: 'Invalid password' });
+        return res.status(400).json({ success: false, error: 'Invalid password' });
       }
       await User.updateOne(
         { _id: mongoUser._id },
@@ -1976,7 +1976,7 @@ router.post('/deactivate', require('../middleware/auth'), async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, user.password);
 
     if (!isValidPassword) {
-      return res.status(401).json({ success: false, error: 'Invalid password' });
+      return res.status(400).json({ success: false, error: 'Invalid password' });
     }
 
     // Deactivate account
@@ -2038,7 +2038,7 @@ router.delete('/delete', require('../middleware/auth'), async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, user.password);
 
     if (!isValidPassword) {
-      return res.status(401).json({ success: false, error: 'Invalid password' });
+      return res.status(400).json({ success: false, error: 'Invalid password' });
     }
 
     // Mark account for deletion (we'll actually delete after 30 days)
@@ -2139,7 +2139,7 @@ router.post('/reactivate', authRateLimiter, async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, user.password);
 
     if (!isValidPassword) {
-      return res.status(401).json({ success: false, error: 'Invalid password' });
+      return res.status(400).json({ success: false, error: 'Invalid password' });
     }
 
     // Reactivate account
