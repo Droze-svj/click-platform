@@ -19,6 +19,7 @@ import { CAPTION_TEXT_STYLES, type CaptionTextStyle } from '../../types/editor'
 import { resolveCaptionTextStyle } from '../../utils/captionStyler'
 import { saveEditorContentPreferences } from '../../utils/editorUtils'
 import { apiPost, apiPut } from '../../lib/api'
+import { safeNextPath } from '../../lib/authRedirect'
 import { useTranslation } from '@/hooks/useTranslation'
 
 // Matches ResizableTimeline's persisted Snap-to-Speech key so this toggle sets
@@ -45,7 +46,8 @@ export default function CaptionStyleSetup({ onComplete }: CaptionStyleSetupProps
   // welcome dashboard); defaults to the upload hub so they can edit right away.
   const nextDest = (): string => {
     if (typeof window === 'undefined') return '/dashboard/video'
-    return new URLSearchParams(window.location.search).get('next') || '/dashboard/video'
+    // Same-origin paths only — a raw ?next= was an open redirect.
+    return safeNextPath(new URLSearchParams(window.location.search).get('next'), '/dashboard/video')
   }
 
   const finish = async () => {

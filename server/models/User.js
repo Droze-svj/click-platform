@@ -217,6 +217,25 @@ const userSchema = new mongoose.Schema({
       activeAccountId: String,
       states: mongoose.Schema.Types.Mixed, // in-flight OAuth states, keyed by value
     },
+    // Google (Sign-in / Drive-style connections via googleOAuthService). It was
+    // missing here, so strict mode dropped everything saveSocialCredentials()
+    // and putState() wrote for 'google' — Google connect could never complete
+    // on MongoDB.
+    google: {
+      accessToken: String,
+      refreshToken: String,
+      connected: { type: Boolean, default: false },
+      connectedAt: Date,
+      expiresAt: Date,
+      platformUserId: String,
+      platformUsername: String,
+      avatar: String,
+      email: String,
+      state: String,
+      accounts: [mongoose.Schema.Types.Mixed],
+      activeAccountId: String,
+      states: mongoose.Schema.Types.Mixed,
+    },
     tiktok: {
       accessToken: String,
       refreshToken: String,
