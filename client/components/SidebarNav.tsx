@@ -461,20 +461,22 @@ export default function SidebarNav() {
       `}</style>
     </m.aside>
 
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 ds-surface-card !rounded-none border-x-0 border-b-0 border-t border-[var(--glass-border)] backdrop-blur-xl flex items-center justify-around px-3 py-2.5 safe-area-pb">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 ds-surface-card !rounded-none border-x-0 border-b-0 border-t border-[var(--glass-border)] backdrop-blur-xl flex items-center justify-around gap-1 px-2 py-2 safe-area-pb">
       {MOBILE_TABS.map(item => {
         const active = isActive(item.path)
         const TabIcon = item.icon
         return (
           <Link key={item.path} href={item.path} aria-current={active ? 'page' : undefined}
             className={cn(
-              'flex flex-col items-center gap-1 px-5 py-1.5 rounded-xl transition-colors',
+              // flex-1 + nowrap: four tabs share a phone's width; labels used to
+              // break mid-word ("Dashboa / rd") with px-5 on each tab.
+              'flex flex-1 min-w-0 flex-col items-center gap-1 px-1 py-1.5 rounded-xl transition-colors',
               active
                 ? 'bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-500/20'
                 : 'text-[var(--text-muted)] border border-transparent hover:text-[var(--text-strong)]'
             )}>
             <TabIcon size={20} aria-hidden="true" />
-            <span className="ds-text-caption font-semibold">{item.label}</span>
+            <span className="max-w-full truncate whitespace-nowrap text-[11px] font-semibold leading-tight">{item.label}</span>
           </Link>
         )
       })}
