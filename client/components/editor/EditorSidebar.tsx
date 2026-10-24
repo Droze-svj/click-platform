@@ -44,6 +44,8 @@ interface EditorSidebarProps {
   isOledTheme?: boolean
   /** Current user tier — used to render lock badges on gated categories */
   userTier?: 'free' | 'creator' | 'pro' | 'team' | 'elite'
+  /** Optional "back" action shown in the header (e.g. back to AI Auto Edit). */
+  backAction?: { label: string; onClick: () => void }
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -135,6 +137,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
   videoDuration,
   isOledTheme,
   userTier = 'pro',
+  backAction,
 }) => {
   const [recentSections, setRecentSections] = useState<EditorCategory[]>([])
   const [searchQuery, setSearchQuery] = useState('')
@@ -238,7 +241,20 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="p-4 flex-shrink-0 relative z-10">
         <div className="flex items-center justify-between">
-          {!isCollapsed && (
+          {backAction && (
+            <button
+              type="button"
+              onClick={backAction.onClick}
+              title={backAction.label}
+              aria-label={backAction.label}
+              data-testid="editor-back"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-theme-primary hover:bg-white/10 transition-colors min-w-0"
+            >
+              <ChevronLeft className="w-4 h-4 shrink-0" aria-hidden />
+              {!isCollapsed && <span className="truncate">{backAction.label}</span>}
+            </button>
+          )}
+          {!isCollapsed && !backAction && (
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-accent-violet flex items-center justify-center shrink-0">
                 <Sparkles className="w-4 h-4 text-white" aria-hidden />

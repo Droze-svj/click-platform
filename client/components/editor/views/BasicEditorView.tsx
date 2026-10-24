@@ -83,6 +83,7 @@ import {
   CHAPTER_PRESETS,
   SHAPE_PRESETS,
   FILTER_PRESETS,
+  replaceLook,
   STYLE_BUNDLES,
   PLATFORM_BUNDLES,
   FILTER_CATEGORIES,
@@ -1071,7 +1072,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
   const applyPlatformBundle = useCallback((bundle: typeof PLATFORM_BUNDLES[0]) => {
     pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? [])
     setTemplateLayout?.(bundle.layout)
-    setVideoFilters((prev: VideoFilter) => ({ ...prev, ...bundle.filter }))
+    setVideoFilters((prev: VideoFilter) => replaceLook(prev, bundle.filter))
     showToast(`${bundle.label} — ${bundle.desc}`, 'success')
     // Snapshots are intentional point-in-time captures; including all overlay arrays would loop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1096,13 +1097,13 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
   const applyPresetSearchResult = useCallback((r: PresetSearchHit) => {
     if (r.type === 'filter') {
       const p = FILTER_PRESETS.find((x) => x.n === r.id)
-      if (p) { pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setVideoFilters((prev) => ({ ...prev, ...p.f })); pushRecentFilter(p.n); showToast(`${p.n} applied`, 'success') }
+      if (p) { pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setVideoFilters((prev) => replaceLook(prev, p.f)); pushRecentFilter(p.n); showToast(`${p.n} applied`, 'success') }
     } else if (r.type === 'style') {
       const b = STYLE_BUNDLES.find((x) => x.id === r.id)
-      if (b) { pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTemplateLayout?.(b.layout); setVideoFilters((prev) => ({ ...prev, ...b.filter } as any)); pushRecentStyle(b.id); showToast(`${b.label} applied`, 'success') }
+      if (b) { pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTemplateLayout?.(b.layout); setVideoFilters((prev) => replaceLook(prev, b.filter)); pushRecentStyle(b.id); showToast(`${b.label} applied`, 'success') }
     } else if (r.type === 'platform') {
       const b = PLATFORM_BUNDLES.find((x) => x.id === r.id)
-      if (b) { pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTemplateLayout?.(b.layout); setVideoFilters((prev) => ({ ...prev, ...b.filter } as any)); showToast(`${b.label} applied`, 'success') }
+      if (b) { pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTemplateLayout?.(b.layout); setVideoFilters((prev) => replaceLook(prev, b.filter)); showToast(`${b.label} applied`, 'success') }
     } else if (r.type === 'text') {
       handleAddOverlay(r.preset)
       showToast(`Added "${r.label}"`, 'success')
@@ -1117,7 +1118,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
   const applyStyleBundleOneClick = useCallback((bundle: typeof STYLE_BUNDLES[0]) => {
     pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? [])
     setTemplateLayout?.(bundle.layout)
-    setVideoFilters((prev: VideoFilter) => ({ ...prev, ...(bundle.filter as Partial<VideoFilter>) }))
+    setVideoFilters((prev: VideoFilter) => replaceLook(prev, bundle.filter as Partial<VideoFilter>))
     pushRecentStyle(bundle.id)
     showToast(`${bundle.label} — ${bundle.desc}`, 'success')
     // Snapshots are intentional point-in-time captures; including all overlay arrays would loop.
@@ -1440,7 +1441,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
 
   const applyFilter = (p: typeof FILTER_PRESETS[number]) => {
     pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? [])
-    setVideoFilters((prev: VideoFilter) => ({ ...prev, ...p.f }))
+    setVideoFilters((prev: VideoFilter) => replaceLook(prev, p.f))
     pushRecentFilter(p.n)
     setSelectedFilterName(p.n)
     showToast(`${p.n} applied`, 'success')
@@ -1537,13 +1538,13 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
 
         {/* Sleek Tab bar */}
         <div className="flex justify-between items-center bg-black/60 backdrop-blur-xl p-1 rounded-2xl border border-white/10 shadow-inner shadow-black overflow-x-auto custom-scrollbar-thin select-none">
-          {EDIT_TABS.map(({ id, icon: Icon, label, shortcut, altShortcut }) => (
+          {EDIT_TABS.map(({ id, icon: Icon, altShortcut }) => (
             <button
               type="button"
               key={id}
               onClick={() => setActiveEditTab(id)}
               title={`${t(`editor.tabs.${id}`)} (${altShortcut})`}
-              className={`relative flex-1 flex flex-col items-center gap-1.5 py-2.5 px-3 min-w-[55px] rounded-xl transition-all duration-300 z-10 group shrink-0 ${
+              className={`relative flex-1 flex flex-col items-center gap-1.5 py-2.5 px-1.5 min-w-[48px] rounded-xl transition-all duration-300 z-10 group shrink-0 ${
                 activeEditTab === id ? 'text-white' : 'text-slate-500 hover:text-slate-300'
               }`}
             >
@@ -1555,9 +1556,8 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 />
               )}
               <Icon className={`w-4 h-4 relative z-10 transition-transform group-hover:scale-110 ${activeEditTab === id ? 'text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]' : 'text-slate-500 group-hover:text-slate-300'}`} />
-              <span className="text-[7.5px] font-black uppercase tracking-widest leading-none relative z-10 flex flex-col items-center gap-0.5">
+              <span className="text-[10px] font-semibold leading-none whitespace-nowrap relative z-10">
                 {t(`editor.tabs.${id}`)}
-                <span className="text-[6px] font-mono text-slate-600 bg-black/50 border border-white/5 px-1 py-0.5 rounded leading-none mt-0.5 group-hover:text-indigo-300 group-hover:border-indigo-500/20 transition-all font-normal">{altShortcut}</span>
               </span>
             </button>
           ))}
@@ -2993,7 +2993,7 @@ const BasicEditorView: React.FC<BasicEditorViewProps> = ({
                 <div className="flex gap-2 mt-2 flex-wrap">
                   {customStyleBundles.map(b => (
                     <button key={b.id}
-                      onClick={() => { pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTemplateLayout?.(b.layout); setVideoFilters((prev: VideoFilter) => ({ ...prev, ...b.filter } as VideoFilter)); showToast(`${b.name} applied`, 'success') }}
+                      onClick={() => { pushSnapshot(templateLayout, videoFilters, textOverlays ?? [], shapeOverlays ?? [], imageOverlays ?? [], svgOverlays ?? [], gradientOverlays ?? []); setTemplateLayout?.(b.layout); setVideoFilters((prev: VideoFilter) => replaceLook(prev, b.filter)); showToast(`${b.name} applied`, 'success') }}
                       className="px-3 py-1.5 rounded-xl bg-violet-600/20 border border-violet-500/30 text-[9px] font-black text-violet-300 hover:bg-violet-600/40 transition-all"
                     >{b.name}</button>
                   ))}

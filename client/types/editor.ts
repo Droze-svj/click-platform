@@ -1160,6 +1160,8 @@ export interface EditorLayoutPreferences {
   previewSize: PreviewSize
   timelineDensity: TimelineDensity
   focusMode: FocusMode
+  /** Timeline panel height in px, set by dragging its top edge (0 = automatic). */
+  timelineHeight?: number
 }
 
 /** Content & quality preferences (export defaults, experience, first-open section) */

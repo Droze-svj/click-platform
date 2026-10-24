@@ -127,7 +127,9 @@ function BrollVideo({ seg, currentTime, isPlaying }: { seg: TimelineSegment; cur
 function AudioSegment({ seg, currentTime, isPlaying, volume, isMuted, isDialogueActive }: { seg: TimelineSegment; currentTime: number; isPlaying: boolean; volume: number; isMuted: boolean; isDialogueActive: boolean }) {
   const ref = useRef<HTMLAudioElement>(null)
   const isActive = currentTime >= seg.startTime && currentTime <= seg.endTime
-  const segTime = (currentTime - seg.startTime) * (seg.playbackSpeed ?? 1)
+  // Honour the clip's source window (the second half of a split audio clip
+  // used to restart from 0:00).
+  const segTime = (seg.sourceStartTime ?? 0) + (currentTime - seg.startTime) * (seg.playbackSpeed ?? 1)
 
   useEffect(() => {
     const v = ref.current
@@ -725,8 +727,13 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     const v = videoRef.current
     if (!v) return
     let rafId: number
+    // Start the clock now. It used to carry the timestamp from mount (or the
+    // last pause), so the first frame after Play jumped the playhead forward
+    // by however long the editor had been idle. Cap each step too, so a
+    // stalled/background tab doesn't leap on return.
+    lastTimeRef.current = performance.now()
     const tick = (now: number) => {
-      const delta = now - lastTimeRef.current
+      const delta = Math.min(250, Math.max(0, now - lastTimeRef.current))
       lastTimeRef.current = now
 
       frameTimes.current.push(now)
@@ -904,16 +911,31 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
     activeTimelineEffects.some((e: any) => /flash|strobe/.test((e.name || '').toLowerCase()))
   )
 
-  const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    const v = e.currentTarget
+  const reportBaseDuration = (v: HTMLVideoElement) => {
     if (
       activeSourceUrlRef.current == null &&
       isFinite(v.duration) &&
+      v.duration > 0 &&
       Math.abs(v.duration - lastReportedDurationRef.current) > 0.01
     ) {
       lastReportedDurationRef.current = v.duration
       onDurationChange(v.duration)
     }
+  }
+
+  // A fast or cached video can finish loading its metadata BEFORE React
+  // attaches onLoadedMetadata (the <video> starts loading during hydration).
+  // The event is then missed and the editor sat at "0:00 / 0:00" with a 60s
+  // placeholder clip. Catch that case once the element is mounted.
+  useEffect(() => {
+    const v = videoRef.current
+    if (v && v.readyState >= 1) reportBaseDuration(v)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [normalizedVideoUrl])
+
+  const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const v = e.currentTarget
+    reportBaseDuration(v)
     if (v.videoWidth > 0 && v.videoHeight > 0) {
       setVideoDimensions({ w: v.videoWidth, h: v.videoHeight })
     }

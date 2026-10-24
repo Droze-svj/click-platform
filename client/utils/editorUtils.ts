@@ -166,6 +166,20 @@ const DEFAULT_CONTENT_PREFS: EditorContentPreferences = {
 }
 
 /** Load editor content/quality preferences from localStorage */
+/** True only when the user actually saved a default export preset (the loaded prefs fill one in). */
+export function hasSavedExportPreset(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    const raw = localStorage.getItem(EDITOR_CONTENT_PREFS_KEY)
+    const saved = raw ? (JSON.parse(raw) as Partial<EditorContentPreferences>).defaultExportPreset : undefined
+    // Older saves wrote the default ('1080p') whenever any setting changed, so
+    // a stored default isn't a deliberate choice.
+    return typeof saved === 'string' && saved !== DEFAULT_CONTENT_PREFS.defaultExportPreset
+  } catch {
+    return false
+  }
+}
+
 export function loadEditorContentPreferences(): EditorContentPreferences {
   if (typeof window === 'undefined') return { ...DEFAULT_CONTENT_PREFS }
   try {
@@ -190,8 +204,11 @@ export function loadEditorContentPreferences(): EditorContentPreferences {
 export function saveEditorContentPreferences(patch: Partial<EditorContentPreferences>): void {
   if (typeof window === 'undefined') return
   try {
-    const current = loadEditorContentPreferences()
-    const next = { ...current, ...patch }
+    // Merge into what was actually stored — not the defaults-filled load — so
+    // saving one setting doesn't record every default as a user choice.
+    const raw = localStorage.getItem(EDITOR_CONTENT_PREFS_KEY)
+    const stored = raw ? (JSON.parse(raw) as Partial<EditorContentPreferences>) : {}
+    const next = { ...stored, ...patch }
     localStorage.setItem(EDITOR_CONTENT_PREFS_KEY, JSON.stringify(next))
   } catch {
     // ignore
@@ -262,8 +279,11 @@ export function resolveTimelineOverlaps(
   const otherSegments = segments.filter(s => s.id !== draggedId)
 
   // 2. Extract and sort other segments on the target track
+  // Copies: the cascade below reassigns start/end and must not mutate the
+  // caller's (React state) objects.
   const trackSegments = otherSegments
     .filter(s => (s.track ?? 0) === proposedTrack)
+    .map(s => ({ ...s }))
     .sort((a, b) => a.startTime - b.startTime)
 
   // 3. Find the original dragged segment to clone its properties

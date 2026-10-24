@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { m, AnimatePresence, useDragControls, useReducedMotion } from 'framer-motion'
-import { usePathname } from 'next/navigation'
 import { 
   Sparkles, Brain, Flame, Send, X, Command,
   Cpu, Sliders, MessageSquare, Play,
@@ -49,7 +48,6 @@ function NeuralSoundWave({ color }: { color: string }) {
 }
 
 export default function ClickDynamicIsland() {
-  const pathname = usePathname()
   const [isExpanded, setIsExpanded] = useState(false)
   const [swarmMode, setSwarmMode] = useState<SwarmMode>('coach')
   const [chatInput, setChatInput] = useState('')
@@ -63,8 +61,10 @@ export default function ClickDynamicIsland() {
   const dragControls = useDragControls()
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
 
-  // Context-aware state detection based on pathname
-  const [ambientState, setAmbientState] = useState<ClickIntent>('presence.idle')
+  // Presence copy is honest by default. It used to be picked from the route,
+  // so every /video page said "Rendering in the background…" / "Working on the
+  // export…" when nothing was running.
+  const ambientState: ClickIntent = 'presence.idle'
   
   // Dynamic screen width measuring to guarantee mobile scalability
   const [screenWidth, setScreenWidth] = useState(1200)
@@ -102,22 +102,6 @@ export default function ClickDynamicIsland() {
       document.documentElement.setAttribute('data-swarm', swarmMode)
     }
   }, [swarmMode])
-
-  // Reflect an ambient presence mood based on the current route. This only
-  // drives Click's voice/glow — it does NOT fabricate task progress. (A previous
-  // version simulated fake task percentages/subtasks here; that was removed in
-  // favour of showing real state only.)
-  useEffect(() => {
-    if (pathname.includes('/forge')) {
-      setAmbientState('presence.learning')
-    } else if (pathname.includes('/video')) {
-      setAmbientState('presence.rendering')
-    } else if (pathname.includes('/scheduler') || pathname.includes('/social')) {
-      setAmbientState('presence.drafting')
-    } else {
-      setAmbientState('presence.idle')
-    }
-  }, [pathname])
 
   // Scroll to bottom of chat
   const scrollToBottom = () => {
