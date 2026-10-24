@@ -5923,7 +5923,11 @@
     "swarmGenHud": "Idea generator",
     "autoFoley": "Auto-Foley",
     "brollAgent": "B-Roll Agent",
-    "captionSwarm": "AI captions"
+    "captionSwarm": "AI captions",
+    "noTrendsYet": "No live trends right now. Try again later.",
+    "kindSound": "Sound",
+    "kindHashtag": "Hashtag",
+    "kindTopic": "Topic"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "Post your next video tonight at 10 PM — Thursday nights are 23% above average for short-form virality.",

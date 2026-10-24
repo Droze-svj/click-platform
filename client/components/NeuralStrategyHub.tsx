@@ -85,11 +85,22 @@ export default function NeuralStrategyHub() {
   const [topic, setTopic] = useState("AI Video Revolution")
   const { showToast } = useToast()
 
+  // GET /video/neural/trends answers { trends: { sounds[], hashtags[], topics[] }, strategy }.
+  // Flatten the three lists into one feed; each item carries label/kind/whyNow.
+  const trendItems: any[] = (() => {
+    const tr = trends?.trends
+    if (Array.isArray(tr)) return tr.filter((x: any) => x && x.label)
+    if (!tr || typeof tr !== 'object') return []
+    return [...(tr.topics || []), ...(tr.hashtags || []), ...(tr.sounds || [])]
+      .filter((x: any) => x && typeof x.label === 'string' && x.label)
+  })()
+
   const fetchTrends = useCallback(async () => {
     try {
       const res = await apiGet('/video/neural/trends?platform=tiktok')
-      setTrends(res)
+      setTrends(res?.trends ? res : (res?.data ?? res ?? {}))
     } catch (err) {
+      setTrends({})
       showToast(t('neuralStrategyHub.neuralTrendIngestionFailed'), 'error')
     }
   }, [showToast, t])
@@ -181,7 +192,7 @@ export default function NeuralStrategyHub() {
              </div>
  
              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 relative">
-                {trends?.strategy && (
+                {trends?.strategy?.mold && (
                   <div className="p-8 rounded-[2.5rem] bg-gradient-to-br from-indigo-500/10 to-transparent border border-indigo-500/20 space-y-6 shadow-2xl transition-all hover:bg-white/[0.01]">
                     <div className="flex items-center justify-between">
                       <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
@@ -207,25 +218,34 @@ export default function NeuralStrategyHub() {
                     <Activity className="w-3 h-3 text-indigo-400" /> {t('neuralStrategyHub.trendingPulse')}
                   </div>
                   <div className="grid grid-cols-1 gap-4">
-                    {(trends?.trends || Array(4).fill({})).map((tr: any, i: number) => {
-                      const trendText = tr.tag || tr.topic || tr.trend || t('neuralStrategyHub.detectingSignals');
+                    {trendItems.length === 0 && (
+                      <div className="p-5 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05] text-sm text-slate-400">
+                        {trends === null
+                          ? t('common.loading')
+                          : (trends?.trends?.error || t('neuralStrategyHub.noTrendsYet'))}
+                      </div>
+                    )}
+                    {trendItems.map((tr: any, i: number) => {
+                      const trendText = String(tr.label || '');
+                      const kindLabel = tr.kind === 'sound'
+                        ? t('neuralStrategyHub.kindSound')
+                        : tr.kind === 'hashtag'
+                          ? t('neuralStrategyHub.kindHashtag')
+                          : t('neuralStrategyHub.kindTopic');
                       return (
-                        <div key={i} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05] transition-all hover:bg-white/[0.05] hover:border-white/20 group cursor-default">
-                          <div className="flex flex-col">
-                            <span className="text-sm text-slate-200 font-black group-hover:text-white transition-colors uppercase italic tracking-wider">
-                              {trendText.startsWith('#') ? trendText : `#${trendText}`}
+                        <div key={`${tr.kind}-${i}`} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05] transition-all hover:bg-white/[0.05] hover:border-white/20 group cursor-default">
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-sm text-slate-200 font-black group-hover:text-white transition-colors uppercase italic tracking-wider break-words">
+                              {tr.kind === 'hashtag' && !trendText.startsWith('#') ? `#${trendText}` : trendText}
                             </span>
-                            <span className="text-[9px] text-slate-500 font-bold uppercase mt-1 tracking-widest">{tr.sentiment || t('neuralStrategyHub.analyzingEngagement')}</span>
-                          </div>
-                          <div className="flex flex-col items-end">
-                            {tr.growth && (
-                              <span className="text-xs font-black text-emerald-500 italic flex items-center gap-1 mb-1">
-                                <TrendingUp className="w-3 h-3" /> {tr.growth}
-                              </span>
+                            {tr.whyNow && (
+                              <span className="text-[10px] text-slate-500 font-bold mt-1 tracking-wide">{tr.whyNow}</span>
                             )}
+                          </div>
+                          <div className="flex flex-col items-end shrink-0 ml-3">
                             <div className="px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20">
                                <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest font-mono">
-                                 {tr.views || t('neuralStrategyHub.live')}
+                                 {kindLabel}
                                </span>
                             </div>
                           </div>
