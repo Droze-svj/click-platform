@@ -96,12 +96,12 @@ function validatePasswordPolicy(password) {
   const errors = [];
   const warnings = [];
 
-  if (!password || password.length < 6) {
-    errors.push('Password must be at least 6 characters long');
+  if (!password || password.length < 8) {
+    errors.push('Password must be at least 8 characters long');
   }
 
-  if (password.length < 8) {
-    warnings.push('Password is short. Consider using 8 or more characters');
+  if (password && password.length < 12) {
+    warnings.push('Longer is stronger: 12 or more characters is better');
   }
 
   // Check for required character types (at least 3 of 4)

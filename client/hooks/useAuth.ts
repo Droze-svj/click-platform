@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiGet } from '../lib/api'
+import { loginPathForCurrentPage } from '../lib/authRedirect'
 
 // Global flag to prevent multiple simultaneous auth checks
 let authCheckInProgress = false
@@ -182,7 +183,7 @@ export function useAuth() {
         if (typeof window !== 'undefined') {
           const pathname = window.location.pathname
           if (pathname !== '/login' && pathname !== '/register' && pathname !== '/') {
-            router.push('/login')
+            router.push(loginPathForCurrentPage())
           }
         }
         return
@@ -301,7 +302,7 @@ export function useAuth() {
         cachedToken = null
         cachedUser = null
         lastAuthSuccess = 0
-        router.push('/login')
+        router.push(loginPathForCurrentPage())
       } else {
         // For other errors, don't redirect immediately
         setError('Connection issue. Please try again.')

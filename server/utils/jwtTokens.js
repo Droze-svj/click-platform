@@ -40,14 +40,18 @@ function getRefreshSecret() {
  *
  * @param {string} userId — the user's canonical id (Mongoose ObjectId
  *                          stringified, Supabase UUID, or dev-id).
+ * @param {{ iat?: number }} [opts] — `iat` (seconds) to sign with. Used right
+ *          after a session revocation so the revoking device's new tokens
+ *          aren't caught by the revocation (see authSecurityService).
  * @returns {{ token: string, refreshToken: string, expiresIn: number }}
  *          `token` is the access token (Bearer), `refreshToken` is the
  *          long-lived token, `expiresIn` is the access lifetime in seconds.
  */
-function issueTokenPair(userId) {
-  const token = jwt.sign({ userId }, getJwtSecret(), { expiresIn: ACCESS_TTL });
+function issueTokenPair(userId, opts = {}) {
+  const iat = Number.isInteger(opts.iat) ? { iat: opts.iat } : {};
+  const token = jwt.sign({ userId, ...iat }, getJwtSecret(), { expiresIn: ACCESS_TTL });
   const refreshToken = jwt.sign(
-    { userId, type: 'refresh' },
+    { userId, type: 'refresh', ...iat },
     getRefreshSecret(),
     { expiresIn: REFRESH_TTL }
   );
