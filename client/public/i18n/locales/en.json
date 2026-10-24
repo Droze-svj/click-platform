@@ -2357,7 +2357,11 @@
     "globalSecurityEnabled": "Read-only settings",
     "latticeMetadata": "Team details",
     "clusterId": "Team ID",
-    "ownerHash": "Owner"
+    "ownerHash": "Owner",
+    "inviteEmailFailed": "The invite is ready, but the email could not be sent. Copy the link and send it yourself.",
+    "inviteLinkLabel": "Invite link",
+    "copyInviteLink": "Copy link",
+    "inviteLinkCopied": "✓ Link copied"
   },
   "teamsPage": {
     "toastLoadFailed": "Failed to load teams",

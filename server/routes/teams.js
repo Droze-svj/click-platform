@@ -148,7 +148,12 @@ router.post('/:teamId/invite-by-email', auth, asyncHandler(async (req, res) => {
   if (block) return res.status(403).json(block);
 
   const result = await inviteByEmail(teamId, req.user._id, { email: email.trim(), role });
-  sendSuccess(res, result.invitationSent ? 'Invitation sent to email' : 'Member invited', 200, result);
+  const message = result.invitationSent
+    ? 'Invitation sent to email'
+    : result.invitationCreated
+      ? 'Invitation created, but the email could not be sent. Share the invite link instead.'
+      : 'Member invited';
+  sendSuccess(res, message, 200, result);
 }));
 
 /**
