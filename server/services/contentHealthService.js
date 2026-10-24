@@ -675,15 +675,11 @@ async function autoOptimizeContent(userId, contentId) {
 /**
  * Predict future content gaps
  */
-async function predictFutureGaps(userId) {
-  try {
-    // There's no forecasting model behind this yet. It used to return fixed
-    // "80% diversity gap in 7 days / 60% volume gap in 14 days" for everyone;
-    // return nothing rather than invented probabilities.
-    return [];
-  } catch (error) {
-    return [];
-  }
+// There's no forecasting model behind this yet. It used to return fixed
+// "80% diversity gap in 7 days / 60% volume gap in 14 days" for everyone;
+// return nothing rather than invented probabilities.
+async function predictFutureGaps(_userId) {
+  return [];
 }
 
 /**
