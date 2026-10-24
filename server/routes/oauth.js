@@ -376,8 +376,14 @@ router.delete('/:platform/disconnect', auth, apiLimiter, validateDisconnect, asy
     if (typeof service.disconnectAccount === 'function') {
       result = await service.disconnectAccount(userId, accountId);
     } else {
-      const fnName = `disconnect${platform.charAt(0).toUpperCase() + platform.slice(1)}`;
-      if (typeof service[fnName] === 'function') {
+      // Match the per-platform name case-insensitively: the services spell
+      // it disconnectLinkedIn / disconnectYouTube / disconnectTikTok, which
+      // a capitalised `disconnectLinkedin` never found (500 on LinkedIn).
+      const wanted = `disconnect${plat}`;
+      const fnName = Object.getOwnPropertyNames(service)
+        .concat(Object.getOwnPropertyNames(Object.getPrototypeOf(service) || {}))
+        .find((k) => k.toLowerCase() === wanted && typeof service[k] === 'function');
+      if (fnName) {
         result = await service[fnName](userId, accountId);
       } else {
         throw new Error('Disconnect method not found on service');

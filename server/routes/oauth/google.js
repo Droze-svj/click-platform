@@ -93,15 +93,10 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
   });
 }));
 
-/**
- * DELETE /api/oauth/google/disconnect
- * Disconnect Google account
- */
-router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
-  const userId = req.userId || req.user?._id || req.user?.id;
-  await googleService.disconnectGoogle(userId);
-  sendSuccess(res, 'Google account disconnected', 200);
-}));
+// DELETE /api/oauth/google/disconnect is answered by the multi-account handler
+// in routes/oauth.js (DELETE /:platform/disconnect). A copy here used to
+// shadow it and ignore `accountId`, so disconnecting one account removed
+// every account on the platform (Instagram removed the first one instead).
 
 /**
  * GET /api/oauth/google/status

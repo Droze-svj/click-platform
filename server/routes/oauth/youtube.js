@@ -198,15 +198,10 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
   sendSuccess(res, 'YouTube post published successfully', 200, { post });
 }));
 
-/**
- * DELETE /api/oauth/youtube/disconnect
- * Disconnect YouTube account
- */
-router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
-  const userId = req.userId || req.user?._id || req.user?.id;
-  await youtubeService.disconnectYouTube(userId);
-  sendSuccess(res, 'YouTube account disconnected', 200);
-}));
+// DELETE /api/oauth/youtube/disconnect is answered by the multi-account handler
+// in routes/oauth.js (DELETE /:platform/disconnect). A copy here used to
+// shadow it and ignore `accountId`, so disconnecting one account removed
+// every account on the platform (Instagram removed the first one instead).
 
 /**
  * GET /api/oauth/youtube/status

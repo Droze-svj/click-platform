@@ -146,15 +146,10 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
   sendSuccess(res, 'TikTok post published successfully', 200, { post });
 }));
 
-/**
- * DELETE /api/oauth/tiktok/disconnect
- * Disconnect TikTok account
- */
-router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
-  const userId = req.userId || req.user?._id || req.user?.id;
-  await tiktokService.disconnectTikTok(userId);
-  sendSuccess(res, 'TikTok account disconnected', 200);
-}));
+// DELETE /api/oauth/tiktok/disconnect is answered by the multi-account handler
+// in routes/oauth.js (DELETE /:platform/disconnect). A copy here used to
+// shadow it and ignore `accountId`, so disconnecting one account removed
+// every account on the platform (Instagram removed the first one instead).
 
 /**
  * GET /api/oauth/tiktok/status
