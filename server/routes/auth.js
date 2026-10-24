@@ -800,6 +800,9 @@ function publicProfile(u) {
     social_links: publicLinks,
     email_verified: u.email_verified ?? u.emailVerified ?? false,
     created_at: u.created_at || u.createdAt || null,
+    // The admin-only pages (e.g. Infrastructure) key off this; without it
+    // every admin saw "Access denied".
+    role: u.role || 'user',
   };
 }
 
