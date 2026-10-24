@@ -31,22 +31,26 @@ router.get('/accounts', auth, asyncHandler(async (req, res) => {
 
 /**
  * POST /api/oauth/instagram/post
- * Post image to Instagram
+ * Post an image (imageUrl) or a Reel (videoUrl) to Instagram.
  */
 router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
-  const { imageUrl, caption, instagramAccountId, isCarousel, children } = req.body;
+  const { imageUrl, videoUrl, isReel, caption, instagramAccountId, isCarousel, children } = req.body;
+  const mediaUrl = videoUrl || imageUrl;
 
-  if (!imageUrl) {
-    return sendError(res, 'Image URL is required for Instagram posts', 400);
+  if (!mediaUrl) {
+    return sendError(res, 'An image or video URL is required for Instagram posts', 400);
   }
 
   const options = {};
   if (instagramAccountId) options.instagramAccountId = instagramAccountId;
   if (isCarousel) options.isCarousel = isCarousel;
   if (children) options.children = children;
+  // Rendered exports are often signed URLs without a .mp4 suffix, so the
+  // service can't sniff them — a videoUrl is always posted as a Reel.
+  if (videoUrl || isReel) options.isReel = true;
 
   const userId = req.userId || req.user?._id || req.user?.id;
-  const post = await instagramService.postToInstagram(userId, imageUrl, caption || '', options);
+  const post = await instagramService.postToInstagram(userId, mediaUrl, caption || '', options);
 
   sendSuccess(res, 'Instagram post published successfully', 200, { post });
 }));

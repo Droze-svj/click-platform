@@ -39,6 +39,7 @@ import { m, AnimatePresence, useMotionValue } from 'framer-motion'
 import { getStatusColor, loadEditorContentPreferences, pushRecentSection } from '../utils/editorUtils'
 import { CATEGORIES } from '../utils/editorConstants'
 import { EDITOR_GROUPS, groupForCategory } from '../utils/editorGroups'
+import { pinSourceWindows, splitSegmentWindow } from '../utils/timelinePlayback'
 
 // Contextual Components
 import { EditorSidebar } from './editor/EditorSidebar'
@@ -231,6 +232,7 @@ function loadLayoutPreferences(): EditorLayoutPreferences {
       previewSize: ['auto', 'small', 'medium', 'large', 'fill'].includes(parsed.previewSize ?? '') ? parsed.previewSize! : DEFAULT_LAYOUT.previewSize,
       timelineDensity: ['compact', 'comfortable', 'expanded'].includes(parsed.timelineDensity ?? '') ? parsed.timelineDensity! : DEFAULT_LAYOUT.timelineDensity,
       focusMode: ['balanced', 'preview', 'timeline'].includes(parsed.focusMode ?? '') ? parsed.focusMode! : DEFAULT_LAYOUT.focusMode,
+      timelineHeight: Number.isFinite(parsed.timelineHeight) && (parsed.timelineHeight as number) >= 180 ? Math.min(1200, parsed.timelineHeight as number) : 0,
     }
   } catch {
     return DEFAULT_LAYOUT
@@ -253,7 +255,9 @@ const ModernVideoEditor: React.FC<{
   initialAiTool?: 'silence' | 'fillers' | 'edit-by-text' | null;
   /** Build a speech-synced caption track on first open (set after a fresh upload). */
   autoGenerateCaptions?: boolean;
-}> = ({ videoUrl, videoPath, videoId, initialState, initialAiTool, autoGenerateCaptions }) => {
+  /** Shown as a back button in the tool sidebar's header. */
+  backAction?: { label: string; onClick: () => void };
+}> = ({ videoUrl, videoPath, videoId, initialState, initialAiTool, autoGenerateCaptions, backAction }) => {
   const { t } = useTranslation()
   const { showToast } = useToast()
   const brandKit = useBrandKit()
@@ -551,10 +555,23 @@ const ModernVideoEditor: React.FC<{
     })
   }, [])
 
-  // Auto-record timeline changes
+  // Every clip gets an explicit source window the moment it lands on the
+  // timeline, so moving/rippling/duplicating it can't change its footage and
+  // the export cuts exactly what the preview shows (see pinSourceWindows).
+  useEffect(() => {
+    if (pinSourceWindows(timelineSegments) !== timelineSegments) {
+      setTimelineSegments((prev: TimelineSegment[]) => pinSourceWindows(prev))
+    }
+  }, [timelineSegments, setTimelineSegments])
+
+  // Auto-record timeline changes. Settled briefly so one drag/trim (which
+  // updates state on every mouse move) is one undo step, not dozens.
   useEffect(() => {
     if (isHistoryActionRef.current) return
-    pushHistory(timelineSegments, textOverlays, shapeOverlays, imageOverlays, videoFilters)
+    const id = setTimeout(() => {
+      pushHistory(timelineSegments, textOverlays, shapeOverlays, imageOverlays, videoFilters)
+    }, 200)
+    return () => clearTimeout(id)
   }, [timelineSegments, textOverlays, shapeOverlays, imageOverlays, videoFilters, pushHistory])
 
   // ── Style Vault State ──
@@ -718,11 +735,9 @@ const ModernVideoEditor: React.FC<{
     const newId = typeof crypto !== 'undefined' && (crypto as any).randomUUID
       ? (crypto as any).randomUUID()
       : `seg-${Date.now()}-${Math.random().toString(36).slice(2)}`
-    const right: TimelineSegment = { ...seg, id: newId, startTime: time, endTime: seg.endTime, duration: durRight }
     setTimelineSegments((prev: TimelineSegment[]) => prev.flatMap((s: TimelineSegment) => {
       if (s.id !== seg.id) return [s]
-      const left: TimelineSegment = { ...seg, endTime: time, duration: durLeft }
-      return [left, right]
+      return splitSegmentWindow(s, time, newId)
     }))
     showToast(t('modernVideoEditor.splitClipAt', { time: time.toFixed(2) }), 'success')
   }, [videoState.currentTime, timelineSegments, setTimelineSegments, showToast, t])
@@ -907,6 +922,46 @@ const ModernVideoEditor: React.FC<{
 
   // ── Consolidated UI Preference State ──
   const [layoutPrefs, setLayoutPrefs] = useState<EditorLayoutPreferences>(loadLayoutPreferences)
+  // Layout choices were read on load but never saved, so they reset every visit.
+  useEffect(() => {
+    try { localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(layoutPrefs)) } catch { /* storage unavailable */ }
+  }, [layoutPrefs])
+
+  // Timeline height: drag the top edge of the timeline to resize (remembered).
+  // It used to be a fixed 160–280px, which the timeline's own toolbars filled,
+  // leaving no room for tracks.
+  const [viewportH, setViewportH] = useState(() => (typeof window === 'undefined' ? 900 : window.innerHeight))
+  useEffect(() => {
+    const onResize = () => setViewportH(window.innerHeight)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  const barToggleBase = 'flex items-center gap-1.5 px-3 h-7 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all border'
+  const barToggleOn = 'bg-indigo-600/20 border-indigo-500/40 text-indigo-200 hover:bg-indigo-600/30'
+  const barToggleOff = 'bg-white/[0.04] border-white/[0.08] text-slate-400 hover:text-white hover:border-white/20'
+  const timelineMaxH = Math.max(240, Math.round(viewportH * 0.72))
+  const timelineAutoH = Math.min(520, Math.max(300, Math.round(viewportH * 0.4)))
+  const timelineH = layoutPrefs.focusMode === 'timeline'
+    ? timelineMaxH
+    : Math.min(timelineMaxH, layoutPrefs.timelineHeight && layoutPrefs.timelineHeight >= 180 ? layoutPrefs.timelineHeight : timelineAutoH)
+  const timelineResizeRef = useRef<{ startY: number; startH: number } | null>(null)
+  const onTimelineResizeStart = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    timelineResizeRef.current = { startY: e.clientY, startH: timelineH }
+    const move = (ev: PointerEvent) => {
+      const st = timelineResizeRef.current
+      if (!st) return
+      const next = Math.min(timelineMaxH, Math.max(200, st.startH - (ev.clientY - st.startY)))
+      setLayoutPrefs((p) => ({ ...p, timelineHeight: Math.round(next), focusMode: p.focusMode === 'timeline' ? 'balanced' : p.focusMode }))
+    }
+    const up = () => {
+      timelineResizeRef.current = null
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+  }
   const [previewQuality, setPreviewQuality] = useState<'draft' | 'full'>('full')
   const [reduceMotion, setReduceMotion] = useState(false)
   const [tipDismissed, setTipDismissed] = useState(false)
@@ -2059,6 +2114,9 @@ const ModernVideoEditor: React.FC<{
 
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setCommandKOpen(p => !p); return }
       if ((e.metaKey || e.ctrlKey) && e.key === 'j') { e.preventDefault(); setAssistantOpen(p => !p); return }
+      // The HUD advertised ⌘Z / ⇧⌘Z but nothing listened for them.
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && String(e.key).toLowerCase() === 'z') { e.preventDefault(); if (e.shiftKey) handleRedo(); else handleUndo(); return }
+      if ((e.metaKey || e.ctrlKey) && String(e.key).toLowerCase() === 'y') { e.preventDefault(); handleRedo(); return }
       if (e.key === '?') { setShowKeyboardHelp(p => !p); return }
 
       // Workflow Shortcuts
@@ -2101,7 +2159,7 @@ const ModernVideoEditor: React.FC<{
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [setActiveCategory, layoutPrefs.focusMode, updateLayout, handleAutoViralEdit])
+  }, [setActiveCategory, layoutPrefs.focusMode, updateLayout, handleAutoViralEdit, handleUndo, handleRedo])
 
   const handleAssetDrop = useCallback((asset: any, trackIndex: number, time: number) => {
     // Respect locked tracks: reject drops onto a lane the user has locked.
@@ -2364,7 +2422,7 @@ const ModernVideoEditor: React.FC<{
     // Mobile: use 100dvh (avoids the iOS/Android 100vh chrome-overlap bug) and
     // w-full + overflow-x-hidden to prevent horizontal scroll. Desktop unchanged
     // via md: (the heavy row layout below stays as-is on >=768px).
-    <div className="h-[100dvh] w-full md:h-screen md:w-screen flex flex-col bg-[var(--page-bg)] text-white overflow-hidden overflow-x-hidden font-['Outfit'] selection:bg-indigo-500/30 editor-auto">
+    <div className="h-[100dvh] w-full md:h-screen md:w-screen flex flex-col bg-[var(--page-bg)] text-white overflow-hidden overflow-x-hidden selection:bg-indigo-500/30 editor-auto">
 
       {/* Calm shell: the decorative animated background nebula and the
           gamification achievement overlay were removed to reduce on-screen
@@ -2467,6 +2525,7 @@ const ModernVideoEditor: React.FC<{
           mobileMenuOpen={mobileMenuOpen}
           setMobileMenuOpen={setMobileMenuOpen}
           videoDuration={videoState.duration}
+          backAction={backAction}
         />
 
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative pt-[60px] editor-auto">
@@ -2537,60 +2596,59 @@ const ModernVideoEditor: React.FC<{
             </AnimatePresence>
           </div>
 
-          <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 gap-3 border-b border-white/[0.04]">
-            <div className="flex items-center gap-2">
+          {/* Layout bar: what's on screen (left), the one-click AI pass (middle),
+              which side panels are open (right). Transport lives in the timeline. */}
+          <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 gap-3 border-b border-white/[0.04] overflow-x-auto scrollbar-hide" data-testid="editor-layout-bar">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={() => setContentPanelCollapsed(p => !p)}
+                aria-pressed={!contentPanelCollapsed}
                 title={contentPanelCollapsed ? t('modernVideoEditor.showToolPanel') : t('modernVideoEditor.hideToolPanel')}
-                className={`flex items-center gap-2 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
-                  contentPanelCollapsed
-                    ? 'bg-indigo-600/20 border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40'
-                    : 'bg-white/[0.04] border-white/[0.08] text-slate-500 hover:text-white hover:border-white/20'
-                }`}
+                className={`${barToggleBase} ${!contentPanelCollapsed ? barToggleOn : barToggleOff}`}
               >
-                <Layers className="w-3 h-3" />
-                <span className="hidden sm:block">{contentPanelCollapsed ? t('modernVideoEditor.showPanel') : t('modernVideoEditor.hidePanel')}</span>
+                <Layers className="w-3.5 h-3.5" />
+                <span className="hidden sm:block">{t('modernVideoEditor.toolsPanel')}</span>
               </button>
 
-              <div className="flex items-center gap-1 p-1 bg-white/[0.02] rounded-xl border border-white/[0.05]">
+              <div role="group" aria-label={t('modernVideoEditor.layoutGroup')} className="flex items-center gap-0.5 p-0.5 bg-white/[0.03] rounded-xl border border-white/[0.06]">
                 {(['balanced', 'preview', 'timeline'] as const).map((mode) => (
                   <button
-                   type="button"
+                    type="button"
                     key={mode}
                     onClick={() => updateLayout({ focusMode: mode })}
+                    aria-pressed={layoutPrefs.focusMode === mode}
                     title={t('modernVideoEditor.focusModeLayoutTitle', { mode: t(`modernVideoEditor.focusMode_${mode}`) })}
-                    className={`px-2.5 h-5 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all ${
-                      layoutPrefs.focusMode === mode
-                        ? 'bg-white text-black'
-                        : 'text-slate-600 hover:text-white'
+                    className={`px-2.5 h-6 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-all ${
+                      layoutPrefs.focusMode === mode ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
                     }`}
                   >
-                    {mode === 'balanced' ? '⚖' : mode === 'preview' ? '🎬' : '🎵'}
-                    <span className="hidden lg:inline ml-1">{t(`modernVideoEditor.focusMode_${mode}`)}</span>
+                    {t(`modernVideoEditor.focusMode_${mode}`)}
                   </button>
                 ))}
               </div>
 
-              <div className="flex items-center gap-1 p-1 bg-white/[0.02] rounded-xl border border-white/[0.05]">
+              <div role="group" aria-label={t('modernVideoEditor.trackSizeGroup')} className="flex items-center gap-0.5 p-0.5 bg-white/[0.03] rounded-xl border border-white/[0.06]">
+                <span className="hidden xl:inline px-1.5 text-[11px] text-slate-500 whitespace-nowrap">{t('modernVideoEditor.trackSizeGroup')}</span>
                 {(['compact', 'comfortable', 'expanded'] as const).map((d) => (
                   <button
-                   type="button"
+                    type="button"
                     key={d}
                     onClick={() => updateLayout({ timelineDensity: d })}
+                    aria-pressed={layoutPrefs.timelineDensity === d}
+                    aria-label={t('modernVideoEditor.densityTitle', { density: t(`modernVideoEditor.density_${d}`) })}
                     title={t('modernVideoEditor.densityTitle', { density: t(`modernVideoEditor.density_${d}`) })}
-                    className={`px-2 h-5 rounded-lg text-[8px] font-black uppercase tracking-wider transition-all ${
-                      layoutPrefs.timelineDensity === d
-                        ? 'bg-white text-black'
-                        : 'text-slate-600 hover:text-white'
+                    className={`w-6 h-6 rounded-lg text-[11px] font-semibold transition-all ${
+                      layoutPrefs.timelineDensity === d ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
                     }`}
                   >
-                    {d === 'compact' ? '═' : d === 'comfortable' ? '≡' : '☰'}
-                    <span className="hidden xl:inline ml-1">{t(`modernVideoEditor.densityShort_${d}`)}</span>
+                    {t(`modernVideoEditor.densityShort_${d}`)}
                   </button>
                 ))}
               </div>
+            </div>
 
+            <div className="flex items-center gap-2 shrink-0">
               <button
                type="button"
                 disabled={creatorPipeline.running || !videoId}
@@ -2606,7 +2664,7 @@ const ModernVideoEditor: React.FC<{
                     .catch((e: any) => showToast?.(t('modernVideoEditor.pipelineFailed', { error: e?.message || 'unknown' }), 'error'))
                 }}
                 title={t('modernVideoEditor.runPipelineTitle')}
-                className={`flex items-center gap-1.5 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
+                className={`flex items-center gap-1.5 px-3 h-7 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all border ${
                   creatorPipeline.running
                     ? 'bg-violet-500/30 border-violet-500/50 text-violet-200 animate-pulse'
                     : 'bg-gradient-to-r from-fuchsia-500 to-violet-600 text-white border-white/20 hover:shadow-lg hover:shadow-fuchsia-500/30'
@@ -2636,84 +2694,41 @@ const ModernVideoEditor: React.FC<{
               )}
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setVideoState(prev => ({ ...prev, currentTime: Math.max(0, prev.currentTime - 5) }))}
-                title={t('modernVideoEditor.back5s')}
-                className="w-7 h-7 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.08] transition-all text-[9px] font-black"
-              >
-                ‹5
-              </button>
-              <button
-                type="button"
-                onClick={() => setVideoState(prev => ({ ...prev, isPlaying: !prev.isPlaying }))}
-                title={videoState.isPlaying ? t('modernVideoEditor.pause') : t('modernVideoEditor.play')}
-                className="w-8 h-8 rounded-xl bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 transition-all"
-              >
-                {videoState.isPlaying
-                  ? <div className="flex gap-0.5"><div className="w-1 h-3 bg-white rounded-sm" /><div className="w-1 h-3 bg-white rounded-sm" /></div>
-                  : <div className="w-0 h-0 border-t-[5px] border-t-transparent border-b-[5px] border-b-transparent border-l-[8px] border-l-white ml-0.5" />}
-              </button>
-              <button
-                type="button"
-                onClick={() => setVideoState(prev => ({ ...prev, currentTime: Math.min(prev.duration, prev.currentTime + 5) }))}
-                title={t('modernVideoEditor.forward5s')}
-                className="w-7 h-7 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.08] transition-all text-[9px] font-black"
-              >
-                5›
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2">
+            <div role="group" aria-label={t('modernVideoEditor.panelsGroup')} className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={() => setPropertiesPanelOpen(p => !p)}
+                aria-pressed={propertiesPanelOpen}
                 title={propertiesPanelOpen ? t('modernVideoEditor.hideProperties') : t('modernVideoEditor.showProperties')}
-                className={`flex items-center gap-2 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
-                  propertiesPanelOpen
-                    ? 'bg-indigo-600/20 border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40'
-                    : 'bg-white/[0.04] border-white/[0.08] text-slate-400 hover:text-white hover:border-white/20'
-                }`}
+                className={`${barToggleBase} ${propertiesPanelOpen ? barToggleOn : barToggleOff}`}
               >
-                <span className="hidden sm:block">{propertiesPanelOpen ? t('modernVideoEditor.hideProps') : t('modernVideoEditor.showProps')}</span>
-                <Layers className="w-3 h-3 rotate-90" />
+                <Layers className="w-3.5 h-3.5 rotate-90" />
+                <span className="hidden sm:block">{t('modernVideoEditor.showProps')}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowPerformanceRail(p => !p)}
+                aria-pressed={showPerformanceRail}
                 title={showPerformanceRail ? t('modernVideoEditor.hideInsights') : t('modernVideoEditor.showInsights')}
-                className={`flex items-center gap-2 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
-                  showPerformanceRail
-                    ? 'bg-fuchsia-600/20 border-fuchsia-500/30 text-fuchsia-400 hover:bg-fuchsia-600/40'
-                    : 'bg-white/[0.04] border-white/[0.08] text-slate-400 hover:text-white hover:border-white/20'
-                }`}
+                className={`${barToggleBase} ${showPerformanceRail ? barToggleOn : barToggleOff}`}
               >
-                <span className="hidden sm:block">{showPerformanceRail ? t('modernVideoEditor.hideInsights') : t('modernVideoEditor.showInsights')}</span>
-                <TrendingUp className="w-3 h-3" />
+                <TrendingUp className="w-3.5 h-3.5" />
+                <span className="hidden sm:block">{t('modernVideoEditor.topPerformers')}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setInsightsSidebarCollapsed(p => !p)}
+                aria-pressed={!insightsSidebarCollapsed}
                 title={insightsSidebarCollapsed ? t('modernVideoEditor.showExpert') : t('modernVideoEditor.hideExpert')}
-                className={`flex items-center gap-2 px-3 h-7 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all border ${
-                  !insightsSidebarCollapsed
-                    ? 'bg-indigo-600/20 border-indigo-500/30 text-indigo-400 hover:bg-indigo-600/40'
-                    : 'bg-white/[0.04] border-white/[0.08] text-slate-400 hover:text-white hover:border-white/20'
-                }`}
+                className={`${barToggleBase} ${!insightsSidebarCollapsed ? barToggleOn : barToggleOff}`}
               >
-                <span className="hidden sm:block">{insightsSidebarCollapsed ? t('modernVideoEditor.showExpert') : t('modernVideoEditor.hideExpert')}</span>
-                <BrainCircuit className="w-3 h-3 text-indigo-400" />
+                <BrainCircuit className="w-3.5 h-3.5" />
+                <span className="hidden sm:block">{t('modernVideoEditor.aiCoach')}</span>
               </button>
-
-              <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-              <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">{t('modernVideoEditor.uplinkLive')}</span>
             </div>
           </div>
-        </div>
 
         {/* ── Neural Command Input (Center) ── */}
 
@@ -2897,19 +2912,25 @@ const ModernVideoEditor: React.FC<{
           </div>{/* end content row */}
 
           {/* ── Timeline — adaptive height below the content row ── */}
-          <div className={`flex-shrink-0 flex flex-col gap-2 px-4 pb-4 ${
-            layoutPrefs.timelineDensity === 'compact' ? 'h-[160px] min-h-[140px]'
-            : layoutPrefs.timelineDensity === 'expanded' ? 'h-[280px] min-h-[200px]'
-            : 'h-[220px] min-h-[160px]'
-          } ${
-            layoutPrefs.focusMode === 'timeline' ? '!h-[400px] !min-h-[300px]' : ''
-          }`}>
+          <div
+            role="separator"
+            aria-orientation="horizontal"
+            aria-label="Resize timeline (drag up or down)"
+            title="Drag to resize the timeline"
+            data-testid="timeline-resize-handle"
+            onPointerDown={onTimelineResizeStart}
+            onDoubleClick={() => updateLayout({ timelineHeight: 0, focusMode: 'balanced' })}
+            className="flex-shrink-0 h-2 mx-4 cursor-row-resize group flex items-center justify-center"
+          >
+            <div className="h-1 w-16 rounded-full bg-white/10 group-hover:bg-indigo-400/70 transition-colors" />
+          </div>
+          <div className="flex-shrink-0 flex flex-col gap-2 px-4 pb-4" style={{ height: timelineH }} data-testid="timeline-panel">
             <div className="bg-surface-900 flex-1 min-h-0 rounded-xl border border-surface-800 p-3 flex flex-col gap-2 overflow-hidden shadow-lg relative">
               <div className="flex items-center justify-between gap-4 relative z-10 px-2 flex-shrink-0">
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white italic">{t('modernVideoEditor.neuralEngine')}</span>
+                    <span className="text-xs font-semibold text-white">Timeline</span>
                   </div>
                   <div className="h-4 w-px bg-white/10 mx-2" />
                   <span className="text-xl font-black font-mono text-indigo-400 tabular-nums tracking-tighter">
@@ -2921,24 +2942,11 @@ const ModernVideoEditor: React.FC<{
                     type="button"
                     onClick={() => setSnapToKeyframes((prev) => !prev)}
                     title={t('modernVideoEditor.toggleNeuralSnapping')}
-                    className={`flex items-center gap-2.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${snapToKeyframes ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-white/5 border border-white/5 text-slate-500 hover:text-white'}`}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${snapToKeyframes ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-white/5 border border-white/5 text-slate-500 hover:text-white'}`}
                   >
                     <Magnet className="w-3.5 h-3.5" />
-                    {t('modernVideoEditor.neuralSnap')}
+                    Snap to keyframes
                   </button>
-                  <div className="flex gap-1.5 p-1 bg-white/[0.03] rounded-2xl border border-white/5">
-                    {[0.5, 1, 2].map((s) => (
-                      <button
-                        type="button"
-                        key={s}
-                        onClick={() => setPlaybackSpeed(s)}
-                        title={t('modernVideoEditor.setPlaybackSpeed', { speed: s })}
-                        className={`px-4 py-1.5 rounded-xl text-[10px] font-black transition-all ${playbackSpeed === s ? 'bg-white text-black' : 'text-slate-500 hover:text-white'}`}
-                      >
-                        {s}X
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>
               <div className="flex-1 min-h-0 relative flex gap-2">

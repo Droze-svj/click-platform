@@ -145,6 +145,26 @@ export const PLATFORM_BUNDLES = [
   { id: 'linkedin', label: 'LinkedIn', layout: 'standard' as TemplateLayout, filter: { saturation: 102, contrast: 108, sharpen: 12, clarity: 8 }, desc: '16:9, pro' },
 ]
 
+/**
+ * Apply a look (filter preset / style / platform bundle) on top of `prev`,
+ * first returning every setting any look controls to neutral. Plain merging
+ * stacked looks: Noir then Cinematic stayed black-and-white because Cinematic
+ * doesn't set saturation. Settings no look touches (e.g. blur) are kept.
+ */
+export function replaceLook<T extends Record<string, any>>(prev: T, look: Record<string, any>, lookKeys: readonly string[] = LOOK_KEYS): T {
+  const next: Record<string, any> = { ...prev }
+  for (const k of lookKeys) {
+    if (k in RESET_FILTER) next[k] = (RESET_FILTER as Record<string, any>)[k]
+  }
+  return { ...next, ...look } as T
+}
+
+export const LOOK_KEYS: readonly string[] = Array.from(new Set([
+  ...FILTER_PRESETS.flatMap((p) => Object.keys(p.f)),
+  ...STYLE_BUNDLES.flatMap((b) => Object.keys(b.filter)),
+  ...PLATFORM_BUNDLES.flatMap((b) => Object.keys(b.filter)),
+]))
+
 export const FILTER_CATEGORIES = [
   { id: 'all', label: 'All' },
   { id: 'mood', label: 'Mood' },

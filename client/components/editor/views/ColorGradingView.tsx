@@ -7,6 +7,7 @@ import { useTranslation } from '../../../hooks/useTranslation'
 import { Panel, Button, Badge, Slider, SectionHeader } from '../../ui'
 import { cn } from '../../../lib/utils'
 import { COLOR_GRADES } from '../../../lib/colorGrades'
+import { replaceLook } from './basic/basicEditorConstants'
 import SavedLooksPanel from '../SavedLooksPanel'
 
 // Per-grade UI metadata (group + one-line desc) for the preset grid. The grade
@@ -52,6 +53,10 @@ const COLOR_PRESETS: { id: string; label: string; f: Partial<VideoFilter>; vfx?:
     desc: GRADE_META[g.id]?.desc || '',
     group: GRADE_META[g.id]?.group || 'Signature',
   }))
+
+// Settings and baked effects any grade controls (replaced, not stacked, on apply).
+const GRADE_KEYS: readonly string[] = Array.from(new Set(COLOR_PRESETS.flatMap((p) => Object.keys(p.f))))
+const GRADE_VFX = new Set(COLOR_PRESETS.flatMap((p) => p.vfx || []))
 
 const INITIAL_FILTERS: VideoFilter = {
   brightness: 100,
@@ -242,12 +247,16 @@ const ColorGradingView: React.FC<ColorGradingViewProps> = ({
   }
 
   const applyPreset = (preset: typeof COLOR_PRESETS[0]) => {
-    setVideoFilters((prev: any) => ({
-      ...prev,
-      ...preset.f,
-      // Union vfx so grades like cyberpunk/vaporwave/film-noir carry their baked effects.
-      vfx: Array.from(new Set([...(Array.isArray(prev?.vfx) ? prev.vfx : []), ...(preset.vfx || [])])),
-    }))
+    // A grade replaces the previous grade: reset what grades control, and swap
+    // the previous grade's baked effects for this one's (effects the user added
+    // themselves stay). Merging made grades stack on each other.
+    setVideoFilters((prev: any) => {
+      const userVfx = (Array.isArray(prev?.vfx) ? prev.vfx : []).filter((v: string) => !GRADE_VFX.has(v))
+      return {
+        ...replaceLook(prev, preset.f, GRADE_KEYS),
+        vfx: Array.from(new Set([...userVfx, ...(preset.vfx || [])])),
+      }
+    })
     onRecordPick?.('colorGrades', preset.id)
     showToast(`${preset.label} applied`, 'success')
   }

@@ -495,6 +495,11 @@ export default function VideoEditPage({ params }: PageProps) {
   const editorVideoUrl = getMediaUrl(clipUrl || (aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl ?? aiEditResult?.result?.editedVideoUrl) || videoUrl || '')
   // The AI-edited output ONLY (no fallback to the source) — for the result card's
   // Download action, so users can grab the finished cut without opening the editor.
+  // What the pipeline actually did (server `editsApplied`), shown on the result card.
+  const aiEditsApplied: string[] = (() => {
+    const list = aiEditResult?.data?.editsApplied ?? aiEditResult?.editsApplied ?? aiEditResult?.result?.editsApplied
+    return Array.isArray(list) ? Array.from(new Set(list.filter((e: unknown): e is string => typeof e === 'string' && e.trim().length > 0))).slice(0, 12) : []
+  })()
   const aiEditedDownloadUrl = getMediaUrl((aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl ?? aiEditResult?.result?.editedVideoUrl) || '')
 
   if (editMode === 'manual') {
@@ -502,10 +507,8 @@ export default function VideoEditPage({ params }: PageProps) {
     if (!urlForEditor) return null
     return (
       <div className="fixed inset-0 bg-surface-50 dark:bg-surface-950 overflow-hidden transition-colors duration-500">
-        <button type="button" onClick={() => setEditMode('ai-auto')} title="Back to AI Auto Edit" aria-label="Back to AI Auto Edit" className="absolute top-4 left-4 z-[100] flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 text-surface-700 dark:text-surface-300 text-xs font-bold uppercase tracking-wider shadow-sm hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors">
-          <ChevronLeft size={16} /> AI Auto Edit
-        </button>
-        <DynamicModernVideoEditor videoId={videoId} videoUrl={urlForEditor} initialAiTool={aiTool} autoGenerateCaptions={autoCaptions} />
+        {/* Back lives in the editor's sidebar header (it used to float on top of it). */}
+        <DynamicModernVideoEditor videoId={videoId} videoUrl={urlForEditor} initialAiTool={aiTool} autoGenerateCaptions={autoCaptions} backAction={{ label: 'AI Auto Edit', onClick: () => setEditMode('ai-auto') }} />
       </div>
     )
   }
@@ -573,15 +576,26 @@ export default function VideoEditPage({ params }: PageProps) {
               </m.div>
             ) : aiEditResult ? (
               <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 max-w-4xl mx-auto">
-                <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl p-10 flex flex-col md:flex-row items-center gap-10 shadow-sm relative overflow-hidden">
-                  <div className="w-20 h-20 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0">
-                    <CheckCircle2 size={36} className="text-emerald-600 dark:text-emerald-400" />
+                {/* Header and actions on separate rows — side by side, the four
+                    buttons squeezed the title into a one-word-wide column. */}
+                <div className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl p-8 sm:p-10 flex flex-col gap-8 shadow-sm relative overflow-hidden">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
+                    <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center shrink-0">
+                      <CheckCircle2 size={32} className="text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <h2 className="text-2xl sm:text-3xl font-black text-surface-900 dark:text-white tracking-tight mb-2">Your edit is ready</h2>
+                      <p className="text-surface-500 font-medium text-sm">Open it in the editor to fine-tune, or download it as it is.</p>
+                      {aiEditsApplied.length > 0 && (
+                        <ul className="mt-4 flex flex-wrap justify-center sm:justify-start gap-2" aria-label="Edits applied">
+                          {aiEditsApplied.map((e) => (
+                            <li key={e} className="px-3 py-1 rounded-full bg-surface-100 dark:bg-surface-800 text-xs font-semibold text-surface-700 dark:text-surface-300">{e}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1 text-center md:text-left">
-                    <h2 className="text-3xl font-black text-surface-900 dark:text-white tracking-tight mb-2">Processing Complete</h2>
-                    <p className="text-surface-500 font-medium text-sm">Your video has been successfully processed and edited by AI.</p>
-                  </div>
-                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 w-full md:w-auto">
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3">
                     <button type="button" onClick={() => { setProcessingError(''); setEditJobId(null); setEditMode('manual'); }} className="col-span-2 sm:col-auto px-6 py-4 rounded-xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-colors shadow-sm flex items-center justify-center gap-2">
                       Open in Editor <ArrowRight size={16} />
                     </button>
@@ -631,12 +645,21 @@ export default function VideoEditPage({ params }: PageProps) {
                           <Brain size={24} className="text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                           <h3 className="text-lg font-black text-surface-900 dark:text-white tracking-tight">Content Strategy</h3>
-                           <p className="text-[10px] font-bold text-surface-500 uppercase tracking-wider mt-1">AI Recommendations</p>
+                           <h3 className="text-lg font-black text-surface-900 dark:text-white tracking-tight">Your edit plan</h3>
+                           <p className="text-xs font-medium text-surface-500 mt-1">What the AI will do with the settings on the right</p>
                         </div>
                      </div>
+                     {/* Built from the user's current picks — this used to show the same
+                         hardcoded "AI Recommendations" for every video. */}
                      <div className="space-y-3">
-                        {[{ label: 'Hook Focus', val: 'First 3s' }, { label: 'Pacing Target', val: 'Dynamic' }].map((s, i) => (
+                        {[
+                          { label: 'Opening', val: prioritizeHook ? 'Lead with the strongest moment' : 'Keep the original start' },
+                          { label: 'Pacing', val: pacingIntensity === 'gentle' ? 'Gentle cuts' : pacingIntensity === 'aggressive' ? 'Fast, tight cuts' : 'Balanced cuts' },
+                          { label: 'Dead air', val: editingOptions.removeSilence ? 'Removed' : 'Kept' },
+                          { label: 'Captions', val: editingOptions.addCaptions ? 'Burned in' : 'Off' },
+                          { label: 'Clips', val: editingOptions.generateClips ? `${clipCount} × ${clipTargetLength === 'short' ? 'under 30s' : clipTargetLength === 'mid-3-5' ? '30–60s' : clipTargetLength === 'mid-5-10' ? '1–3 min' : 'full length'}` : 'One edited video' },
+                          { label: 'Format', val: exportFormats.join(' · ') || '9:16' },
+                        ].map((s, i) => (
                           <div key={i} className="flex justify-between items-center p-5 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800">
                             <span className="text-xs font-bold text-surface-500">{s.label}</span>
                             <span className="text-sm font-black text-surface-900 dark:text-white">{s.val}</span>

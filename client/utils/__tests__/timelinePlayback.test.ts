@@ -1,4 +1,4 @@
-import { mapTimelineToSource, resolveSegmentSpeed, selectPrimarySegments, clampPlaybackRate } from '../timelinePlayback'
+import { mapTimelineToSource, resolveSegmentSpeed, selectPrimarySegments, clampPlaybackRate, pinSourceWindows, splitSegmentWindow, trimSegmentStart, trimSegmentEnd, sourceStartOf } from '../timelinePlayback'
 import { TimelineSegment } from '../../types/editor'
 
 // A minimal segment factory — only the fields the mapper reads.
@@ -130,5 +130,55 @@ describe('mapTimelineToSource', () => {
     expect(m.segment?.id).toBe('a')
     expect(m.sourceUrl).toBeNull()
     expect(m.sourceTime).toBe(4)
+  })
+})
+
+// Clips carry an explicit source window so edits never change their footage,
+// and the export (which cuts by window) matches the preview.
+describe('source windows', () => {
+  it('defaults: main clips start at their timeline position, other clips at 0', () => {
+    expect(sourceStartOf(seg({ startTime: 4, endTime: 12 }))).toBe(4)
+    expect(sourceStartOf(seg({ startTime: 4, endTime: 12, track: 2 }))).toBe(0)
+    expect(sourceStartOf(seg({ startTime: 4, endTime: 12, type: 'audio' as any, track: 6 }))).toBe(0)
+  })
+
+  it('pins a missing window once and leaves pinned clips alone', () => {
+    const a = seg({ id: 'a', startTime: 4, endTime: 12 })
+    const b = seg({ id: 'b', startTime: 0, endTime: 4, sourceStartTime: 1 })
+    const pinned = pinSourceWindows([a, b])
+    expect(pinned[0].sourceStartTime).toBe(4)
+    expect(pinned[1]).toBe(b)
+    expect(pinSourceWindows(pinned)).toBe(pinned)
+  })
+
+  it('a pinned clip keeps its footage when moved', () => {
+    const [moved] = pinSourceWindows([seg({ startTime: 4, endTime: 12 })]).map((s) => ({ ...s, startTime: 0, endTime: 8 }))
+    expect(mapTimelineToSource(1, [moved]).sourceTime).toBe(5)
+  })
+
+  it('split gives the right half the footage after the cut', () => {
+    const [l, r] = splitSegmentWindow(seg({ id: 'a', startTime: 0, endTime: 12 }), 4, 'b')
+    expect([l.startTime, l.endTime, l.sourceStartTime, l.sourceEndTime]).toEqual([0, 4, 0, 4])
+    expect([r.id, r.startTime, r.endTime, r.sourceStartTime]).toEqual(['b', 4, 12, 4])
+  })
+
+  it('split respects speed, reverse and freeze', () => {
+    const [, fast] = splitSegmentWindow(seg({ startTime: 0, endTime: 6, playbackSpeed: 2 }), 2, 'b')
+    expect(fast.sourceStartTime).toBe(4)
+    const [rl, rr] = splitSegmentWindow(seg({ startTime: 0, endTime: 10, sourceStartTime: 0, sourceEndTime: 10, reversed: true }), 4, 'b')
+    expect([rl.sourceStartTime, rl.sourceEndTime, rr.sourceStartTime, rr.sourceEndTime]).toEqual([6, 10, 0, 6])
+    const [fl, fr] = splitSegmentWindow(seg({ startTime: 2, endTime: 6, sourceStartTime: 3, freezeFrame: true }), 4, 'b')
+    expect([fl.sourceStartTime, fr.sourceStartTime]).toEqual([3, 3])
+  })
+
+  it('trimming the start skips footage; it never reveals footage before 0', () => {
+    expect(trimSegmentStart(seg({ startTime: 4, endTime: 12, sourceStartTime: 4 }), 6).sourceStartTime).toBe(6)
+    const clamped = trimSegmentStart(seg({ startTime: 4, endTime: 12, sourceStartTime: 1 }), 0)
+    expect([clamped.startTime, clamped.sourceStartTime]).toEqual([3, 0])
+  })
+
+  it('trimming the end moves an explicit source end with it', () => {
+    expect(trimSegmentEnd(seg({ startTime: 0, endTime: 4, sourceStartTime: 0, sourceEndTime: 4 }), 3).sourceEndTime).toBe(3)
+    expect(trimSegmentEnd(seg({ startTime: 0, endTime: 4 }), 3).sourceEndTime).toBeUndefined()
   })
 })

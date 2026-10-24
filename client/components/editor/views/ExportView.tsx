@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Download,
   Share2,
@@ -32,10 +32,11 @@ import {
 } from 'lucide-react'
 import { apiGet, apiPost, apiPatch } from '../../../lib/api'
 import { m, AnimatePresence } from 'framer-motion'
-import { loadEditorContentPreferences, saveEditorContentPreferences } from '../../../utils/editorUtils'
+import { loadEditorContentPreferences, saveEditorContentPreferences, hasSavedExportPreset } from '../../../utils/editorUtils'
 import OptimalPostingWindow from '../OptimalPostingWindow'
 import { Panel, Button, Badge, SectionHeader } from '../../ui'
 import { cn } from '../../../lib/utils'
+import { getMediaUrl } from '../../../utils/url'
 
 const EXPORT_PRESETS = [
   { id: 'shorts', label: 'YT Shorts', icon: Youtube, color: 'from-red-500 to-red-700', res: '1080×1920', width: 1080, height: 1920, bitrateMbps: 4, format: 'mp4', quality: undefined, fps: 30, platformHint: 'Clear value, Subscribe CTA', glow: 'rgba(220,38,38,0.3)' },
@@ -93,7 +94,6 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
   const [duckLevel, setDuckLevel] = useState(-12)
   const [isPublishing, setIsPublishing] = useState(false)
   const [isRendering, setIsRendering] = useState(false)
-  const [renderProgress, setRenderProgress] = useState(0)
   const [renderResult, setRenderResult] = useState<{ url?: string; downloadUrl?: string } | null>(null)
   
   // Batch Export Mode (Agency)
@@ -107,6 +107,26 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
   const [batchResults, setBatchResults] = useState<{ [formatId: string]: { url?: string; downloadUrl?: string } }>({})
 
   const [lastRenderExportPath, setLastRenderExportPath] = useState<string | null>(null)
+  // Default the export shape to the video's shape: a vertical phone video
+  // defaulted to a 1920×1080 preset and came out pillarboxed. A saved default
+  // or the user's own pick always wins.
+  const presetChosenRef = useRef(false)
+  useEffect(() => {
+    if (!videoUrl || typeof document === 'undefined') return
+    const probe = document.createElement('video')
+    probe.preload = 'metadata'
+    probe.muted = true
+    const onMeta = () => {
+      if (!presetChosenRef.current && probe.videoHeight > probe.videoWidth * 1.1) setSelectedPreset('shorts')
+    }
+    probe.addEventListener('loadedmetadata', onMeta)
+    probe.src = getMediaUrl(videoUrl)
+    return () => {
+      probe.removeEventListener('loadedmetadata', onMeta)
+      probe.removeAttribute('src')
+      probe.load()
+    }
+  }, [videoUrl])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -116,9 +136,13 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
       const pids = EXPORT_PRESETS.map(p => p.id)
       if (preferred && pids.includes(preferred)) {
         sessionStorage.removeItem('export-preferred-preset')
+        presetChosenRef.current = true
         setSelectedPreset(preferred)
       } else {
-        if (prefs.defaultExportPreset && pids.includes(prefs.defaultExportPreset)) setSelectedPreset(prefs.defaultExportPreset)
+        if (prefs.defaultExportPreset && pids.includes(prefs.defaultExportPreset)) {
+          presetChosenRef.current = hasSavedExportPreset()
+          setSelectedPreset(prefs.defaultExportPreset)
+        }
         if (prefs.defaultExportQuality) setExportQuality(prefs.defaultExportQuality)
         if (prefs.defaultExportCodec) setExportCodec(prefs.defaultExportCodec)
       }
@@ -186,35 +210,40 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
 
     try {
       setIsPublishing(true)
-      showToast(`Broadcasting to ${selectedPlatforms.length} platform(s)...`, 'info')
-      
-      const promises = selectedPlatforms.map(platform => {
-        const payload: any = {}
-        let endpoint = `/oauth/${platform}/upload`
+      showToast(`Posting to ${selectedPlatforms.length} platform(s)…`, 'info')
 
-        if (platform === 'youtube') {
-          payload.videoFile = url
-          payload.title = projectName || 'Rendered with Neural Master'
-          payload.description = 'Published from Click Video Editor'
-        } else if (platform === 'instagram') {
-          endpoint = `/oauth/${platform}/post`
-          payload.imageUrl = url // Future: Add videoUrl support to IG backend
-          payload.caption = projectName || 'Rendered with Neural Master'
-        } else {
-          payload.videoFile = url
-          payload.caption = projectName || 'Rendered with Neural Master'
+      const title = projectName || 'Made with Click'
+      const results = await Promise.allSettled(selectedPlatforms.map((platform) => {
+        if (platform === 'instagram') {
+          return apiPost(`/oauth/instagram/post`, { videoUrl: url, isReel: true, caption: title })
         }
+        if (platform === 'youtube') {
+          return apiPost(`/oauth/youtube/upload`, { videoFile: url, title, description: 'Made with Click' })
+        }
+        if (platform === 'tiktok') {
+          return apiPost(`/oauth/tiktok/upload`, { videoFile: url, caption: title })
+        }
+        return Promise.reject(new Error(`Posting to ${platform} isn't supported here yet`))
+      }))
 
-        return apiPost(endpoint, payload)
-      })
-
-      await Promise.allSettled(promises)
-      
-      showToast('Neural Broadcast Complete! Content live on selected platforms.', 'success')
-      setSelectedPlatforms([])
+      // Report what actually happened — this used to announce success even
+      // when every upload failed.
+      const label = (p: string) => PLATFORMS.find((x) => x.id === p)?.label || p
+      const failed = selectedPlatforms.filter((_, i) => results[i].status === 'rejected')
+      const posted = selectedPlatforms.filter((_, i) => results[i].status === 'fulfilled')
+      if (failed.length === 0) {
+        showToast(`Posted to ${posted.map(label).join(', ')}.`, 'success')
+        setSelectedPlatforms([])
+      } else if (posted.length === 0) {
+        const reason = (results.find((r) => r.status === 'rejected') as PromiseRejectedResult | undefined)?.reason
+        showToast(`Couldn't post to ${failed.map(label).join(', ')}${reason?.message ? `: ${reason.message}` : ''}`, 'error')
+      } else {
+        showToast(`Posted to ${posted.map(label).join(', ')} — failed on ${failed.map(label).join(', ')}.`, 'error')
+        setSelectedPlatforms(failed)
+      }
     } catch (error) {
-      console.error('Broadcasting failed', error)
-      showToast('Broadcast partial failure. Check connection matrices.', 'error')
+      console.error('Posting failed', error)
+      showToast('Posting failed. Check your connected accounts and try again.', 'error')
     } finally {
       setIsPublishing(false)
     }
@@ -418,6 +447,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                 type="button"
                 key={p.id}
                 onClick={() => {
+                  presetChosenRef.current = true
                   setSelectedPreset(p.id)
                   showToast(`${p.label} selected`, 'info')
                 }}
@@ -471,7 +501,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
               disabled={isRendering || !videoUrl || (isBatchMode && !batchFormats.some(f => f.selected))}
               onClick={async () => {
                 if (!videoUrl && !videoId) {
-                  showToast('Production node offline', 'error')
+                  showToast('There’s no video to render yet.', 'error')
                   return
                 }
                 
@@ -631,25 +661,16 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                     return
                   }
 
-                  showToast('Neural Render Initialized - Routing to Clusters', 'success')
-                  setRenderProgress(0)
-                  const interval = setInterval(() => {
-                    setRenderProgress(prev => {
-                      if (prev >= 100) {
-                        clearInterval(interval)
-                        setIsRendering(false)
-                        showToast('Project Rendered: Assets Available in Repository', 'success')
-
-                        setRenderResult({ url, downloadUrl })
-                        setLastRenderExportPath(data?.url ?? (typeof url === 'string' && url.startsWith('/') ? url : null))
-                        onExportComplete?.()
-                        return 100
-                      }
-                      return prev + (Math.random() * 8)
-                    })
-                  }, 500)
+                  // The file is ready now — show it. (This used to play a random
+                  // 0→100% animation for several seconds after the render had
+                  // already finished.)
+                  setIsRendering(false)
+                  setRenderResult({ url, downloadUrl })
+                  setLastRenderExportPath(data?.url ?? (typeof url === 'string' && url.startsWith('/') ? url : null))
+                  showToast('Your video is ready to download.', 'success')
+                  onExportComplete?.()
                 } catch (err: any) {
-                  showToast(err?.response?.data?.error ?? err?.message ?? 'Synthesis failed', 'error')
+                  showToast(err?.response?.data?.error ?? err?.message ?? 'Render failed', 'error')
                   setIsRendering(false)
                 }
               }}
@@ -678,13 +699,13 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
                           </div>
                        ) : (
                           <>
-                           <span className="flex items-center justify-center gap-3 font-semibold text-white">
+                           {/* The server renders in one request and doesn't stream
+                               progress, so show honest activity rather than a number. */}
+                           <span className="flex items-center justify-center gap-3 font-semibold text-white" role="status">
                              <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
-                             Rendering: {Math.round(renderProgress)}%
+                             Rendering your video…
                            </span>
-                           <div className="h-1.5 w-1/2 overflow-hidden rounded-full bg-white/20">
-                               <div className="h-full rounded-full bg-white transition-all" style={{ width: `${renderProgress}%` }} />
-                           </div>
+                           <span className="text-xs text-white/70">This usually takes under a minute for short clips.</span>
                           </>
                        )}
                     </div>
