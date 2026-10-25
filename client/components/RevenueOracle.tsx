@@ -1,15 +1,10 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { m } from 'framer-motion'
-import {
-  TrendingUp, Zap, Activity, ShieldCheck,
-  BarChart3, Orbit, Cpu, RefreshCw
-} from 'lucide-react'
+import { TrendingUp, Activity, ShieldCheck, RefreshCw } from 'lucide-react'
 import { apiGet, handleApiError } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
-
-const glassStyle = 'backdrop-blur-3xl bg-black/40 border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.5)]'
+import { Button } from './ui/button'
 
 interface OracleInsight {
   type: string
@@ -51,147 +46,70 @@ export default function RevenueOracle() {
 
   if (loading) {
     return (
-      <div className={`w-full h-[600px] ${glassStyle} rounded-[4rem] flex flex-col items-center justify-center space-y-8 relative overflow-hidden`}>
-         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-emerald-500/5" />
-         <Orbit className="animate-spin text-indigo-500 opacity-20" size={120} />
-         <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.5em] animate-pulse italic">{t('revenueOracle.synchronizing')}</p>
+      <div className="ds-surface-card p-6 flex flex-col items-center justify-center gap-3 min-h-[240px] text-theme-muted">
+        <RefreshCw className="animate-spin text-indigo-500" size={24} aria-hidden />
+        <p className="ds-text-label">{t('revenueOracle.synchronizing')}</p>
       </div>
     )
   }
 
   return (
-    <div className={`w-full ${glassStyle} rounded-[4rem] p-12 relative overflow-hidden group`}>
-      {/* Background Kinetic Layer */}
-      <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none group-hover:scale-110 transition-transform duration-1000">
-        <Cpu size={400} className="rotate-45" />
-      </div>
-
-      <header className="flex flex-col md:flex-row items-center justify-between mb-16 gap-8 relative z-10">
-        <div className="flex items-center gap-8">
-          <div className="w-20 h-20 bg-emerald-500/10 border-2 border-emerald-500/30 rounded-[2.2rem] flex items-center justify-center shadow-2xl overflow-hidden relative">
-             <m.div 
-               animate={{ rotate: 360 }} 
-               transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
-               className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent"
-             />
-             <TrendingUp className="text-emerald-400 relative z-10" size={36} />
-          </div>
-          <div>
-            <h1 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none mb-2">{t('revenueOracle.title')}</h1>
-            <p className="text-[10px] font-black text-emerald-500/60 uppercase tracking-[0.4em] italic leading-none border-l-2 border-emerald-500/20 pl-4 ml-1">{t('revenueOracle.subtitle')}</p>
+    <div className="ds-surface-card p-6 flex flex-col gap-5">
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+            <TrendingUp size={22} aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <h2 className="ds-text-h3 text-theme-primary">{t('revenueOracle.title')}</h2>
+            <p className="ds-text-caption text-theme-muted">{t('revenueOracle.subtitle')}</p>
           </div>
         </div>
-        
-        <div className="flex items-center gap-6 p-6 rounded-[2.5rem] bg-white/[0.02] border border-white/5">
-           <div className="text-right">
-              <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic leading-none mb-1">{t('revenueOracle.postsAnalyzed')}</p>
-              <p className="text-3xl font-black text-white italic tabular-nums leading-none tracking-tighter">
-                {typeof meta.analyzedVideos === 'number' ? meta.analyzedVideos : '—'}
-              </p>
-           </div>
-           <div className="w-[1px] h-12 bg-white/10" />
-           <div className="flex flex-col items-end">
-              <span className="flex items-center gap-2 text-[10px] font-black text-emerald-400 uppercase tracking-widest italic">
-                 <ShieldCheck size={14} />
-                 {t('revenueOracle.niche')}
-              </span>
-              <p className="text-[8px] font-black text-emerald-500/40 uppercase tracking-widest mt-1">
-                {meta.niche || '—'}
-              </p>
-           </div>
-        </div>
+        <Button variant="secondary" size="sm" onClick={() => fetchInsights(true)} disabled={refreshing} leftIcon={<RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} aria-hidden />}>
+          {t('common.refresh')}
+        </Button>
       </header>
 
-      <div className="grid grid-cols-12 gap-8 relative z-10">
-        {/* Left Stats Console */}
-        <div className="col-span-12 lg:col-span-4 space-y-6">
-           <div className="p-8 rounded-[2.8rem] bg-white/[0.03] border border-white/10 group/stat hover:bg-emerald-500/5 transition-all duration-700">
-              <div className="flex items-center justify-between mb-8">
-                 <div className="flex items-center gap-4">
-                    <Zap className="text-amber-400" size={18} />
-                    <span className="text-[11px] font-black text-white uppercase tracking-widest italic">{t('revenueOracle.salesResonance')}</span>
-                 </div>
-                 <span className="text-2xl font-black text-slate-600 italic tabular-nums">—</span>
-              </div>
-              <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden border border-white/5 relative" />
-              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-4 italic">{t('revenueOracle.awaitingResonance')}</p>
-           </div>
-
-           <div className="p-8 rounded-[2.8rem] bg-white/[0.03] border border-white/10 group/stat hover:bg-indigo-500/5 transition-all duration-700">
-              <div className="flex items-center justify-between mb-8">
-                 <div className="flex items-center gap-4">
-                    <BarChart3 className="text-indigo-400" size={18} />
-                    <span className="text-[11px] font-black text-white uppercase tracking-widest italic">{t('revenueOracle.neuralPacing')}</span>
-                 </div>
-                 <span className="text-2xl font-black text-slate-600 italic tabular-nums">—</span>
-              </div>
-               <div className="flex justify-center items-center h-12 px-2">
-                 <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest italic">{t('revenueOracle.noPacingTelemetry')}</p>
-               </div>
-              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-4 italic">{t('revenueOracle.awaitingCutFrequency')}</p>
-           </div>
-
-           <div className="p-8 rounded-[2.8rem] bg-emerald-500/10 border border-emerald-500/20">
-              <div className="flex items-center gap-4 mb-4">
-                 <ShieldCheck className="text-emerald-400" size={20} />
-                 <h3 className="text-[12px] font-black text-emerald-400 uppercase tracking-widest leading-none italic">{t('revenueOracle.oracleInsights')}</h3>
-              </div>
-              <p className="text-[11px] font-black text-white leading-relaxed uppercase italic opacity-80">
-                {insights[0]?.text || t('revenueOracle.emptyInsightsHint')}
-              </p>
-           </div>
+      <dl className="grid grid-cols-2 gap-3">
+        <div className="ds-surface-subtle p-4">
+          <dt className="ds-text-caption text-theme-muted">{t('revenueOracle.postsAnalyzed')}</dt>
+          <dd className="mt-1 text-2xl font-semibold tabular-nums text-theme-primary">{typeof meta.analyzedVideos === 'number' ? meta.analyzedVideos : '—'}</dd>
         </div>
+        <div className="ds-surface-subtle p-4">
+          <dt className="ds-text-caption text-theme-muted inline-flex items-center gap-1.5"><ShieldCheck size={14} aria-hidden /> {t('revenueOracle.niche')}</dt>
+          <dd className="mt-1 text-base font-semibold text-theme-primary capitalize truncate">{meta.niche || '—'}</dd>
+        </div>
+      </dl>
 
-        {/* Center Trajectory Visualization */}
-        <div className="col-span-12 lg:col-span-8 flex flex-col justify-end p-12 rounded-[3.5rem] bg-black/60 border border-white/5 relative group/viz overflow-hidden">
-           <div className="absolute top-12 left-12 right-12 flex items-center gap-4">
-              <Activity className="text-emerald-400 animate-pulse" size={20} />
-              <div>
-                 <h3 className="text-[12px] font-black text-[var(--text-main)] uppercase tracking-widest italic underline decoration-emerald-500/40 underline-offset-8">{t('revenueOracle.strategicInsightFeed')}</h3>
-                 <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">{t('revenueOracle.feedSubtitle')}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => fetchInsights(true)}
-                disabled={refreshing}
-                className="ml-auto inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 text-[10px] font-bold text-slate-300 hover:bg-white/5 disabled:opacity-50"
-              >
-                <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} aria-hidden />
-                {t('common.refresh')}
-              </button>
-           </div>
-           {error && (
-             <p className="absolute top-28 left-12 right-12 text-[11px] text-rose-400" role="alert">{error}</p>
-           )}
+      {error && <p className="text-sm text-rose-500" role="alert">{error}</p>}
 
-           <div className="w-full mt-28 relative z-10 space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-              {insights.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-4 py-16">
-                   <Activity className="text-slate-700" size={40} />
-                   <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] italic text-center">
-                     {meta.status === 'cold_start' || meta.status === 'manual'
-                       ? t('revenueOracle.coldStartHint')
-                       : t('revenueOracle.noInsightsYet')}
-                   </p>
+      <div>
+        <h3 className="ds-text-label text-theme-primary mb-2 inline-flex items-center gap-2">
+          <Activity className="text-emerald-500" size={16} aria-hidden /> {t('revenueOracle.strategicInsightFeed')}
+        </h3>
+        {insights.length === 0 ? (
+          <p className="ds-surface-subtle p-4 text-sm text-theme-muted">
+            {meta.status === 'cold_start' || meta.status === 'manual'
+              ? t('revenueOracle.emptyInsightsHint')
+              : t('revenueOracle.noInsightsYet')}
+          </p>
+        ) : (
+          <ul className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+            {insights.map((insight, i) => (
+              <li key={i} className="ds-surface-subtle p-4 flex items-start gap-3">
+                <span className="shrink-0 rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold capitalize text-emerald-600 dark:text-emerald-400">
+                  {insight.type}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-theme-primary leading-relaxed">{insight.text}</p>
+                  {insight.expectedImpact && (
+                    <p className="ds-text-caption text-emerald-600 dark:text-emerald-400 mt-1">{t('revenueOracle.impact', { impact: insight.expectedImpact })}</p>
+                  )}
                 </div>
-              ) : (
-                insights.map((insight, i) => (
-                  <div key={i} className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 flex items-start gap-5">
-                     <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-widest italic shrink-0 mt-0.5">
-                       {insight.type}
-                     </span>
-                     <div className="flex-1 min-w-0">
-                       <p className="text-[12px] font-bold text-white/90 leading-relaxed italic">{insight.text}</p>
-                       {insight.expectedImpact && (
-                         <p className="text-[9px] font-black text-emerald-500/60 uppercase tracking-widest mt-2 italic">{t('revenueOracle.impact', { impact: insight.expectedImpact })}</p>
-                       )}
-                     </div>
-
-                  </div>
-                ))
-              )}
-           </div>
-        </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   )

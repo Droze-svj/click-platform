@@ -35,59 +35,50 @@ const IntelligenceEngine = () => {
   }, [])
 
   return (
-    <div className="neural-glass-card rounded-[3rem] p-6 sm:p-10 lg:p-14 relative overflow-hidden group border-indigo-500/20 shadow-[0_48px_96px_-24px_rgba(0,0,0,0.8)]">
-      <div className="absolute top-0 right-0 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-indigo-600/[0.05] rounded-full blur-[120px] pointer-events-none" aria-hidden="true" />
-
-      <div className="space-y-6 sm:space-y-8 max-w-3xl relative z-10">
-        <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8 text-center sm:text-left">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center text-white shadow-glow-primary flex-shrink-0">
-            <Brain size={36} aria-hidden="true" />
-          </div>
-          <div className="flex flex-col items-center sm:items-start">
-            <span className="px-3 py-1 mb-2 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 text-[8px] sm:text-[9px] font-black uppercase tracking-[0.3em]">{t('intelligenceEngine.neuralEngineVersion')}</span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[var(--text-main)] tracking-tighter uppercase italic leading-none">{t('intelligenceEngine.neuralCommandCenter')}</h2>
-          </div>
+    <div className="ds-surface-card p-6 flex flex-col gap-5">
+      <div className="flex items-center gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
+          <Brain size={22} aria-hidden="true" />
+        </span>
+        <div>
+          <h2 className="ds-text-h3 text-theme-primary">{t('intelligenceEngine.neuralCommandCenter')}</h2>
+          <p className="ds-text-caption text-theme-muted">{t('intelligenceEngine.neuralEngineVersion')}</p>
         </div>
+      </div>
 
-        <AnimatePresence mode="wait">
-          {insight ? (
-            <m.div
-              key="insight"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-6"
-            >
-              <div className="relative p-6 sm:p-8 rounded-[2rem] bg-white/[0.03] border border-white/10 shadow-inner">
-                <Quote className="absolute -top-3 -left-3 text-indigo-500 opacity-40" size={32} aria-hidden="true" />
-                <p className="text-lg sm:text-xl font-black text-white italic tracking-tight leading-snug">
-                  {insight.quote}
+      <AnimatePresence mode="wait">
+        {insight ? (
+          <m.div
+            key="insight"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            className="space-y-3"
+          >
+            <div className="ds-surface-subtle relative p-4 pl-10">
+              <Quote className="absolute left-3 top-4 text-indigo-500 opacity-60" size={18} aria-hidden="true" />
+              <p className="text-base font-medium text-theme-primary leading-snug">{insight.quote}</p>
+            </div>
+            {insight.tip && (
+              <div className="flex items-start gap-3 rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-4">
+                <Lightbulb size={18} className="mt-0.5 shrink-0 text-indigo-500" aria-hidden="true" />
+                <p className="text-sm text-theme-secondary leading-relaxed">
+                  <span className="block ds-text-label text-indigo-500 mb-0.5">{t('intelligenceEngine.strategicCalibration')}</span>
+                  {insight.tip}
                 </p>
               </div>
-
-              {insight.tip && (
-                <div className="flex items-start gap-4 p-5 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
-                    <Lightbulb size={20} aria-hidden="true" />
-                  </div>
-                  <p className="text-sm sm:text-base text-indigo-200 font-medium leading-relaxed">
-                    <span className="text-indigo-400 font-black uppercase text-[10px] tracking-widest block mb-1">{t('intelligenceEngine.strategicCalibration')}</span>
-                    {insight.tip}
-                  </p>
-                </div>
-              )}
-            </m.div>
-          ) : failed ? (
-            <p key="failed" role="alert" className="flex items-center gap-3 text-base sm:text-lg text-rose-300 font-medium leading-relaxed">
-              <AlertCircle size={20} className="shrink-0" aria-hidden="true" /> {t('intelligenceEngine.loadFailed')}
-            </p>
-          ) : (
-            <p key="empty" className="text-base sm:text-lg text-[var(--text-dim)] font-medium leading-relaxed italic">
-              {loading ? t('intelligenceEngine.loading') : t('intelligenceEngine.noInsightYet')}
-            </p>
-          )}
-        </AnimatePresence>
-      </div>
+            )}
+          </m.div>
+        ) : failed ? (
+          <p key="failed" role="alert" className="flex items-center gap-2 text-sm text-rose-500">
+            <AlertCircle size={16} className="shrink-0" aria-hidden="true" /> {t('intelligenceEngine.loadFailed')}
+          </p>
+        ) : (
+          <p key="empty" className="ds-surface-subtle p-4 text-sm text-theme-muted">
+            {loading ? t('intelligenceEngine.loading') : t('intelligenceEngine.noInsightYet')}
+          </p>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

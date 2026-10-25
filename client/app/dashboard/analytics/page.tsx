@@ -235,7 +235,7 @@ export default function AnalyticsPage() {
           />
           <StatCard
             className="ds-hover-lift ds-anim-rise"
-            label={t('analyticsPage.engagement')}
+            label={t('analyticsPage.cardEngagementRate')}
             value={`${data?.avg_engagement_rate || 0}%`}
             icon={BarChart3}
           />
@@ -386,10 +386,7 @@ export default function AnalyticsPage() {
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-3 px-5 py-3 border-t border-[var(--border-subtle)]">
-            <span className="ds-text-caption inline-flex items-center gap-1.5">
-              <ArrowUpRight size={12} aria-hidden /> {t('analyticsPage.secureConnection')}
-            </span>
+          <div className="flex items-center justify-end gap-3 px-5 py-3 border-t border-[var(--border-subtle)]">
             <span className="ds-text-caption text-theme-secondary">
               {filteredNodes.length === nodes.length
                 ? t('analyticsPage.postsTracked', { count: nodes.length })

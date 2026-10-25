@@ -45,6 +45,7 @@ function platformIcon(platform: string): LucideIcon {
 }
 
 // ── Utils ──────────────────────────────────────────────────────────────────────
+const CREATOR_PLATFORM_LABELS: Record<string, string> = { tiktok: 'TikTok', instagram: 'Instagram', youtube: 'YouTube', twitter: 'X', linkedin: 'LinkedIn' }
 const fmt = (n: number) => n >= 1_000_000 ? `${(n/1_000_000).toFixed(1)}M` : n >= 1000 ? `${(n/1000).toFixed(0)}K` : n.toString()
 const scoreTone = (s: number) =>
   s >= 80 ? 'bg-emerald-500/10 text-emerald-500' : s >= 60 ? 'bg-amber-500/10 text-amber-500' : 'bg-rose-500/10 text-rose-500'
@@ -171,11 +172,17 @@ export default function HeuristicMatrixPage() {
   const aiSummary = useMemo(() => {
     const worstVideo = [...videos].sort((a, b) => a.hookDropOff - b.hookDropOff).reverse()[0]
     const bestVideo = [...videos].sort((a, b) => b.viralScore - a.viralScore)[0]
+    // Only say what the data supports: an "unknown" hook type, a 0% drop-off or
+    // an "Unknown" edit style produced advice like "Your unknown hooks are your
+    // best performers" — which reads as fabricated.
+    const knownHook = !!bestVideo?.hookType && !/^unknown$/i.test(String(bestVideo.hookType))
+    const hasDropOff = Number(worstVideo?.hookDropOff) > 0
+    const knownStyle = !!bestEditStyle && bestEditStyle !== '—' && !/^unknown$/i.test(bestEditStyle)
     return {
-      headline: t('analyticsCreatorPage.aiHeadline', { hookType: hookLabel(bestVideo?.hookType) }),
-      action: t('analyticsCreatorPage.aiAction', { title: worstVideo?.title.substring(0, 35), dropOff: worstVideo?.hookDropOff }),
+      headline: knownHook ? t('analyticsCreatorPage.aiHeadline', { hookType: hookLabel(bestVideo?.hookType) }) : null,
+      action: hasDropOff ? t('analyticsCreatorPage.aiAction', { title: worstVideo?.title.substring(0, 35), dropOff: worstVideo?.hookDropOff }) : null,
       // No projected-views number: it was views × 0.18, not a forecast.
-      opportunity: t('analyticsCreatorPage.aiOpportunity', { style: bestEditStyle }),
+      opportunity: knownStyle ? t('analyticsCreatorPage.aiOpportunity', { style: bestEditStyle }) : null,
     }
   }, [videos, bestEditStyle, hookLabel, t])
 
@@ -236,9 +243,9 @@ export default function HeuristicMatrixPage() {
               variant={selectedPlatform === p ? 'primary' : 'secondary'}
               size="sm"
               onClick={() => setSelectedPlatform(p)}
-              aria-label={t('analyticsCreatorPage.filterBy', { platform: p === 'all' ? t('analyticsCreatorPage.cluster') : p.toUpperCase() })}
+              aria-label={t('analyticsCreatorPage.filterBy', { platform: p === 'all' ? t('analyticsCreatorPage.cluster') : (CREATOR_PLATFORM_LABELS[p] || p) })}
             >
-              {p === 'all' ? t('analyticsCreatorPage.clusterUpper') : p.toUpperCase()}
+              {p === 'all' ? t('analyticsCreatorPage.clusterUpper') : (CREATOR_PLATFORM_LABELS[p] || p)}
             </Button>
           ))}
         </div>
@@ -263,10 +270,16 @@ export default function HeuristicMatrixPage() {
                 <span className="ds-text-caption">{t('analyticsCreatorPage.potency')}</span>
               </div>
             </div>
-            <p className="ds-text-h3 text-theme-primary mt-3 [overflow-wrap:anywhere]">
-              &ldquo;{aiSummary.headline}&rdquo;
-            </p>
+            {aiSummary.headline ? (
+              <p className="ds-text-h3 text-theme-primary mt-3 [overflow-wrap:anywhere]">
+                &ldquo;{aiSummary.headline}&rdquo;
+              </p>
+            ) : !aiSummary.action && !aiSummary.opportunity ? (
+              <p className="ds-text-body text-theme-muted mt-3">{t('analyticsCreatorPage.summaryNotEnoughData')}</p>
+            ) : null}
+            {(aiSummary.action || aiSummary.opportunity) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+              {aiSummary.action && (
               <div className="flex items-start gap-3 rounded-xl border border-rose-500/20 bg-rose-500/[0.06] p-4">
                 <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-rose-500/10 text-rose-500">
                   <AlertTriangle size={18} aria-hidden />
@@ -276,6 +289,8 @@ export default function HeuristicMatrixPage() {
                   <p className="ds-text-body text-theme-secondary mt-1">{aiSummary.action}</p>
                 </div>
               </div>
+              )}
+              {aiSummary.opportunity && (
               <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
                 <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
                   <Lightbulb size={18} aria-hidden />
@@ -285,7 +300,9 @@ export default function HeuristicMatrixPage() {
                   <p className="ds-text-body text-theme-secondary mt-1">{aiSummary.opportunity}</p>
                 </div>
               </div>
+              )}
             </div>
+            )}
           </Panel>
         )}
 

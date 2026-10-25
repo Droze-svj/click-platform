@@ -84,6 +84,10 @@ function formatMetric(value: any, format: 'number' | 'percent' | 'text'): string
   return String(value)
 }
 
+const INSIGHT_PLATFORM_LABELS: Record<string, string> = {
+  tiktok: 'TikTok', instagram: 'Instagram', youtube: 'YouTube', twitter: 'X', linkedin: 'LinkedIn', facebook: 'Facebook',
+}
+
 export default function CognitiveForecasterPage() {
   const router = useRouter()
   const { user } = useAuth()
@@ -164,7 +168,7 @@ export default function CognitiveForecasterPage() {
   const reach = audienceInsights?.insights?.overview?.totalImpressions ?? platformAudience?.totalReach ?? 0
   const eng = audienceInsights?.insights?.overview?.totalEngagement ?? platformAudience?.totalEngagement ?? 0
   const engRate = audienceInsights?.insights?.overview?.engagementRate ?? platformAudience?.averageEngagementRate ?? 0
-  const topPlatform = platformAudience?.topPlatform ?? t('insightsPage.notAvailable')
+  const topPlatform = platformAudience?.topPlatform ? (INSIGHT_PLATFORM_LABELS[platformAudience.topPlatform] || platformAudience.topPlatform) : t('insightsPage.notAvailable')
   const hasData = (Number(reach) || 0) > 0 || (Number(eng) || 0) > 0
   const platformDist = audienceInsights?.insights?.overview?.platformDistribution
   const recommendations = audienceInsights?.insights?.recommendations
@@ -277,7 +281,7 @@ export default function CognitiveForecasterPage() {
                     <div className="space-y-2">
                       {Object.entries(platformDist).map(([p, count]) => (
                         <div key={p} className="flex items-center justify-between gap-4 p-3 rounded-lg ds-surface-subtle">
-                          <span className="text-sm font-medium text-theme-primary capitalize">{p}</span>
+                          <span className="text-sm font-medium text-theme-primary">{INSIGHT_PLATFORM_LABELS[p] || p}</span>
                           <div className="flex items-center gap-3">
                             <div className="hidden md:block w-40 h-2 rounded-full bg-accent overflow-hidden">
                               <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min((count as number) * 10, 100)}%` }} />
