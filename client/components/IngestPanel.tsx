@@ -272,24 +272,24 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
   const platforms = useMemo(() => PLATFORM_HINTS.join(' • '), [])
 
   return (
-    <div className="rounded-[3.5rem] bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 shadow-2xl overflow-hidden group transition-all duration-500">
+    <div className="rounded-2xl bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 overflow-hidden group transition-all duration-500">
       {/* HUD Tabs */}
       <nav className="flex items-center gap-1 p-3 bg-surface-page dark:bg-surface-950/40 border-b-2 border-surface-100 dark:border-surface-800 overflow-x-auto custom-scrollbar">
         {TABS.map(tabDef => {
           const active = tabDef.id === tab
           return (
             <button type="button" key={tabDef.id} onClick={() => { setTab(tabDef.id); setError(null) }}
-              className={`flex items-center gap-3 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all duration-500 relative group/tab ${
+              className={`flex items-center gap-3 px-6 py-4 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all duration-500 relative group/tab ${
                 active ? 'bg-primary-500 text-white shadow-lg' : 'text-surface-400 hover:text-surface-900 dark:hover:text-white hover:bg-surface-page dark:hover:bg-surface-900'
               }`}
             >
-              <tabDef.icon size={16} className={active ? 'text-white' : 'text-surface-300 dark:text-slate-800 group-hover/tab:text-primary-500'} />
+              <tabDef.icon size={16} className={active ? 'text-white' : 'text-surface-300 dark:text-slate-400 group-hover/tab:text-primary-500'} />
               {TAB_LABELS[tabDef.id]}
             </button>
           )
         })}
         <div className="ml-auto hidden sm:flex items-center gap-4 pr-4">
-          <button type="button" onClick={handlePaste} className="flex items-center gap-3 px-5 py-2.5 rounded-xl bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 text-[9px] font-black text-surface-400 dark:text-slate-600 hover:text-primary-500 hover:border-primary-500/30 transition-all uppercase tracking-widest italic shadow-sm active:scale-95">
+          <button type="button" onClick={handlePaste} className="flex items-center gap-3 px-5 py-2.5 rounded-xl bg-surface-card dark:bg-surface-900 border-2 border-surface-100 dark:border-surface-800 text-xs font-semibold text-surface-400 dark:text-slate-400 hover:text-primary-500 hover:border-primary-500/30 transition-all shadow-sm active:scale-95">
             <Clipboard size={12} /> {tr('ingest.paste', 'Paste')}
           </button>
         </div>
@@ -299,22 +299,22 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
       <div className="p-8 lg:p-12 min-h-[350px] relative flex flex-col justify-center">
         <AnimatePresence mode="wait">
           {busy ? (
-            <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-20 bg-surface-page/80 dark:bg-surface-950/80 backdrop-blur-md flex flex-col items-center justify-center gap-6 rounded-b-[3.5rem]">
+            <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-20 bg-surface-page/80 dark:bg-surface-950/80 backdrop-blur-md flex flex-col items-center justify-center gap-6 rounded-b-2xl">
                <div className="relative">
-                  <div className="w-24 h-24 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin" />
+                  <div className="w-24 h-24 rounded-full border-2 border-primary-500/20 border-t-primary-500 animate-spin" />
                   <div className="absolute inset-0 flex items-center justify-center">
                      <Cloud size={32} className="text-primary-500 animate-pulse" />
                   </div>
                </div>
                <div className="text-center space-y-2">
-                  <p className="text-sm font-black text-surface-900 dark:text-white uppercase tracking-[0.4em] italic">
+                  <p className="text-sm font-semibold text-surface-900 dark:text-white">
                     {progress != null ? tr('ingest.uploading', 'Uploading {percent}%', { percent: progress }) : tr('ingest.processing', 'Processing…')}
                   </p>
-                  <p className="text-[10px] font-black text-surface-400 uppercase tracking-widest italic">Keep this tab open</p>
+                  <p className="text-xs font-semibold text-surface-400">{tr('ingest.keepTabOpen', 'Keep this tab open')}</p>
                </div>
                {progress != null && (
-                 <div className="w-64 h-2 bg-surface-card dark:bg-surface-900 rounded-full overflow-hidden shadow-inner border border-surface-100 dark:border-surface-800">
-                    <m.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} className="h-full bg-primary-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] transition-[width] duration-300" />
+                 <div className="w-64 h-2 bg-surface-card dark:bg-surface-900 rounded-full overflow-hidden border border-surface-100 dark:border-surface-800">
+                    <m.div initial={{ width: 0 }} animate={{ width: `${progress}%` }} className="h-full bg-primary-500 transition-[width] duration-300" />
                  </div>
                )}
             </m.div>
@@ -322,20 +322,20 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
             <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={tab} className="w-full">
               {tab === 'file' && (
                 <div onDragOver={(e) => { e.preventDefault(); setDragOver(true) }} onDragLeave={() => setDragOver(false)} onDrop={onDrop}
-                  className={`rounded-[3rem] border-4 border-dashed transition-all p-12 lg:p-16 flex flex-col items-center justify-center text-center gap-8 shadow-inner ${
+                  className={`rounded-2xl border-2 border-dashed transition-all p-12 lg:p-16 flex flex-col items-center justify-center text-center gap-8 ${
                     dragOver ? 'border-primary-500 bg-primary-500/5' : 'border-surface-100 dark:border-surface-800 bg-surface-page/50 dark:bg-surface-950/40 hover:border-primary-500/30'
                   }`}
                 >
-                  <div className="w-20 h-20 rounded-[2rem] bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-1000">
+                  <div className="w-20 h-20 rounded-2xl bg-primary-500/10 border-2 border-primary-500/20 flex items-center justify-center group-hover:rotate-12 transition-transform duration-1000">
                     <Upload size={36} className="text-primary-600 dark:text-primary-400" />
                   </div>
                   <div>
-                    <h3 className="text-3xl font-black text-surface-900 dark:text-white uppercase tracking-tighter italic leading-none mb-4">{tr('ingest.dropTitle', 'Drop a video here')}</h3>
-                    <p className="text-[11px] font-bold text-surface-400 dark:text-slate-600 uppercase tracking-widest italic leading-relaxed max-w-sm mx-auto">{tr('ingest.dropHint', 'Or pick a file from your computer. MP4, MOV, WebM up to 500MB.')}</p>
+                    <h3 className="text-xl font-semibold text-surface-900 dark:text-white mb-4">{tr('ingest.dropTitle', 'Drop a video here')}</h3>
+                    <p className="text-xs font-bold text-surface-400 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">{tr('ingest.dropHint', 'Or pick a file from your computer. MP4, MOV, WebM up to 500MB.')}</p>
                   </div>
                   <input ref={fileInputRef} type="file" accept="video/*" title="Choose file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f) }} />
                   <button type="button" onClick={() => fileInputRef.current?.click()}
-                    className="px-10 py-5 rounded-2xl bg-surface-900 dark:bg-white text-white dark:text-black text-[12px] font-black uppercase tracking-[0.4em] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-2xl active:scale-95 italic border-none">
+                    className="px-10 py-5 rounded-2xl bg-surface-900 dark:bg-white text-white dark:text-black text-xs font-semibold hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all active:scale-95 border-none">
                     {tr('ingest.chooseFile', 'Choose file')}
                   </button>
                 </div>
@@ -344,22 +344,22 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
               {tab === 'link' && (
                 <div className="space-y-8 p-4">
                   <div className="space-y-4">
-                    <label className="text-[11px] font-black uppercase tracking-[0.6em] text-surface-400 dark:text-slate-600 italic pl-4 flex items-center gap-4">
+                    <label className="text-xs font-semibold text-surface-400 dark:text-slate-400 pl-4 flex items-center gap-4">
                        <LinkIcon size={16} className="text-primary-500" /> {tr('ingest.linkLabel', 'Video URL')}
                     </label>
                     <div className="flex flex-col sm:flex-row items-center gap-4">
                       <input value={linkValue} onChange={(e) => setLinkValue(e.target.value)} placeholder="https://tiktok.com/@user/video/..."
-                        className="w-full bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] px-8 py-6 text-sm font-black italic text-surface-900 dark:text-white placeholder:text-surface-200 dark:placeholder:text-slate-900 focus:border-primary-500/40 outline-none shadow-inner transition-all"
+                        className="w-full bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-8 py-6 text-sm font-semibold text-surface-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-primary-500/40 outline-none transition-all"
                       />
                       <button type="button" onClick={() => ingestUrl(linkValue)}
-                        className="w-full sm:w-auto px-12 py-6 rounded-[2rem] bg-primary-600 text-white text-[12px] font-black uppercase tracking-[0.6em] shadow-2xl hover:bg-primary-500 transition-all italic border-none active:scale-95">
+                        className="w-full sm:w-auto px-12 py-6 rounded-2xl bg-primary-600 text-white text-xs font-semibold hover:bg-primary-500 transition-all border-none active:scale-95">
                         {tr('ingest.linkAction', 'Ingest')}
                       </button>
                     </div>
                   </div>
-                  <div className="rounded-[2rem] border-2 border-surface-100 dark:border-surface-800 bg-surface-page/30 dark:bg-surface-950/20 p-8 flex gap-6 items-start shadow-inner backdrop-blur-xl">
+                  <div className="rounded-2xl border-2 border-surface-100 dark:border-surface-800 bg-surface-page/30 dark:bg-surface-950/20 p-8 flex gap-6 items-start backdrop-blur-xl">
                     <VideoIcon size={20} className="text-primary-500 flex-shrink-0 mt-1" />
-                    <p className="text-[11px] font-bold text-surface-400 dark:text-slate-600 leading-relaxed uppercase tracking-widest italic"
+                    <p className="text-xs font-bold text-surface-400 dark:text-slate-400 leading-relaxed"
                        dangerouslySetInnerHTML={{ __html: tr('ingest.linkSupports',
                          'Supports {platforms}. Platform downloads need {ytdlp} on the server.',
                          { platforms: `<span class="text-primary-500 font-black">${platforms}</span>` }) }}
@@ -370,7 +370,7 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
 
               {tab === 'record' && (
                 <div className="space-y-8 p-4">
-                  <div className="relative group/camera overflow-hidden rounded-[2.5rem] border-2 border-surface-100 dark:border-surface-800 bg-black shadow-2xl aspect-video">
+                  <div className="relative group/camera overflow-hidden rounded-2xl border-2 border-surface-100 dark:border-surface-800 bg-black aspect-video">
                      <video ref={recordVideoRef} className="w-full h-full object-cover" muted playsInline />
                      {!recording && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
@@ -382,24 +382,24 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
                     <div className="flex gap-4">
                        {!recording ? (
                          <button type="button" onClick={startRecording}
-                           className="px-10 py-5 rounded-[1.8rem] bg-rose-600 text-white text-[11px] font-black uppercase tracking-[0.4em] hover:bg-rose-500 transition-all shadow-2xl flex items-center gap-4 italic border-none active:scale-95">
-                           <div className="w-3 h-3 rounded-full bg-white animate-pulse shadow-[0_0_8px_white]" /> {tr('ingest.recordStart', 'Start recording')}
+                           className="px-10 py-5 rounded-2xl bg-rose-600 text-white text-xs font-semibold hover:bg-rose-500 transition-all flex items-center gap-4 border-none active:scale-95">
+                           <div className="w-3 h-3 rounded-full bg-white animate-pulse" /> {tr('ingest.recordStart', 'Start recording')}
                          </button>
                        ) : (
                          <button type="button" onClick={stopRecording}
-                           className="px-10 py-5 rounded-[1.8rem] bg-white text-black text-[11px] font-black uppercase tracking-[0.4em] hover:bg-emerald-500 hover:text-white transition-all shadow-2xl flex items-center gap-4 italic border-none active:scale-95">
+                           className="px-10 py-5 rounded-2xl bg-white text-black text-xs font-semibold hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-4 border-none active:scale-95">
                            <Check size={18} /> {tr('ingest.recordStop', 'Stop & upload')}
                          </button>
                        )}
                     </div>
-                    <p className="text-[11px] font-bold text-surface-400 dark:text-slate-600 uppercase tracking-widest italic">{tr('ingest.recordHint', 'Camera + mic — saved as WebM, then uploaded to your library.')}</p>
+                    <p className="text-xs font-bold text-surface-400 dark:text-slate-400">{tr('ingest.recordHint', 'Camera + mic — saved as WebM, then uploaded to your library.')}</p>
                   </div>
                 </div>
               )}
 
               {tab === 'screen' && (
                 <div className="space-y-8 p-4">
-                  <div className="relative group/screen overflow-hidden rounded-[2.5rem] border-2 border-surface-100 dark:border-surface-800 bg-black shadow-2xl aspect-video">
+                  <div className="relative group/screen overflow-hidden rounded-2xl border-2 border-surface-100 dark:border-surface-800 bg-black aspect-video">
                      <video ref={recordVideoRef} className="w-full h-full object-cover" muted playsInline />
                      {!recording && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
@@ -411,34 +411,34 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
                     <div className="flex gap-4">
                        {!recording ? (
                          <button type="button" onClick={startScreenRecording}
-                           className="px-10 py-5 rounded-[1.8rem] bg-primary-600 text-white text-[11px] font-black uppercase tracking-[0.4em] hover:bg-primary-500 transition-all shadow-2xl flex items-center gap-4 italic border-none active:scale-95">
+                           className="px-10 py-5 rounded-2xl bg-primary-600 text-white text-xs font-semibold hover:bg-primary-500 transition-all flex items-center gap-4 border-none active:scale-95">
                            <Monitor size={18} /> {tr('ingest.screenStart', 'Share screen')}
                          </button>
                        ) : (
                          <button type="button" onClick={stopRecording}
-                           className="px-10 py-5 rounded-[1.8rem] bg-white text-black text-[11px] font-black uppercase tracking-[0.4em] hover:bg-emerald-500 hover:text-white transition-all shadow-2xl flex items-center gap-4 italic border-none active:scale-95">
+                           className="px-10 py-5 rounded-2xl bg-white text-black text-xs font-semibold hover:bg-emerald-500 hover:text-white transition-all flex items-center gap-4 border-none active:scale-95">
                            <Check size={18} /> {tr('ingest.screenStop', 'Stop and upload')}
                          </button>
                        )}
                     </div>
-                    <p className="text-[11px] font-bold text-surface-400 dark:text-slate-600 uppercase tracking-widest italic max-w-md">{tr('ingest.screenHint', 'Record a browser tab, a window or your whole screen, with audio.')}</p>
+                    <p className="text-xs font-bold text-surface-400 dark:text-slate-400 max-w-md">{tr('ingest.screenHint', 'Record a browser tab, a window or your whole screen, with audio.')}</p>
                   </div>
                 </div>
               )}
 
               {tab === 'cloud' && (
                 <div className="space-y-8 p-4">
-                  <p className="text-[12px] font-bold text-surface-400 dark:text-slate-600 leading-relaxed uppercase tracking-tight italic pl-4 border-l-4 border-primary-500/20"
+                  <p className="text-xs font-bold text-surface-400 dark:text-slate-400 leading-relaxed pl-4 border-l-4 border-primary-500/20"
                      dangerouslySetInnerHTML={{ __html: tr('ingest.cloudHint',
                        'Paste a Google Drive, Dropbox, or S3 share link below. We download the file server-side, so the share must be set to {visibility}.',
                        { visibility: `<span class="text-primary-500 font-black">${tr('ingest.cloudVisibility', 'Anyone with the link → can view')}</span>` }) }}
                   />
                   <div className="flex flex-col sm:flex-row items-center gap-4">
                     <input value={linkValue} onChange={(e) => setLinkValue(e.target.value)} placeholder="https://drive.google.com/..."
-                      className="w-full bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] px-8 py-6 text-sm font-black italic text-surface-900 dark:text-white focus:border-primary-500/40 outline-none shadow-inner transition-all"
+                      className="w-full bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 rounded-2xl px-8 py-6 text-sm font-semibold text-surface-900 dark:text-white focus:border-primary-500/40 outline-none transition-all"
                     />
                     <button type="button" onClick={() => ingestUrl(linkValue, 'cloud')}
-                      className="w-full sm:w-auto px-12 py-6 rounded-[2rem] bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-[12px] font-black uppercase tracking-[0.6em] shadow-2xl hover:bg-sky-400 transition-all italic border-none active:scale-95">
+                      className="w-full sm:w-auto px-12 py-6 rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-xs font-semibold hover:bg-sky-400 transition-all border-none active:scale-95">
                       {tr('ingest.cloudAction', 'Pull')}
                     </button>
                   </div>
@@ -448,14 +448,14 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
               {tab === 'remix' && (
                 <div className="space-y-6 p-2">
                   <div className="flex items-center justify-between px-4">
-                    <p className="text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4em] italic">{tr('ingest.remixHint', 'Pick a previous project to clone into a fresh edit.')}</p>
+                    <p className="text-xs font-semibold text-surface-400 dark:text-slate-400">{tr('ingest.remixHint', 'Pick a previous project to clone into a fresh edit.')}</p>
                     <button type="button" onClick={loadRecents}
-                      className="text-[10px] font-black uppercase tracking-[0.2em] text-primary-500 hover:text-primary-400 flex items-center gap-3 transition-all">
+                      className="text-xs font-semibold text-primary-500 hover:text-primary-400 flex items-center gap-3 transition-all">
                       <RefreshCw size={14} className="hover:rotate-180 transition-transform duration-700" /> {tr('ingest.remixRefresh', 'Refresh')}
                     </button>
                   </div>
                   {recents.length === 0 ? (
-                    <div className="rounded-[2.5rem] border-4 border-dashed border-surface-100 dark:border-surface-800 bg-surface-page/50 dark:bg-surface-950/20 p-16 text-center text-[12px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic shadow-inner">
+                    <div className="rounded-2xl border-2 border-dashed border-surface-100 dark:border-surface-800 bg-surface-page/50 dark:bg-surface-950/20 p-16 text-center text-xs font-semibold text-surface-300 dark:text-slate-400">
                       {tr('ingest.remixEmpty', 'No previous ingests yet — upload your first video to start a remix-able library.')}
                     </div>
                   ) : (
@@ -468,12 +468,12 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
                               <RefreshCw size={20} className="text-primary-600 dark:text-primary-400" />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-black text-surface-900 dark:text-white truncate uppercase italic tracking-tighter group-hover/item:text-primary-500 transition-colors">{r.title}</p>
-                              <p className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest mt-1">
+                              <p className="text-sm font-semibold text-surface-900 dark:text-white truncate group-hover/item:text-primary-500 transition-colors">{r.title}</p>
+                              <p className="text-xs font-semibold text-surface-300 dark:text-slate-400 mt-1">
                                 {r.createdAt ? new Date(r.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).toUpperCase() : '—'}
                               </p>
                             </div>
-                            <ChevronRight size={18} className="text-surface-200 dark:text-slate-900 group-hover/item:text-primary-500 transition-all" />
+                            <ChevronRight size={18} className="text-surface-200 dark:text-slate-400 group-hover/item:text-primary-500 transition-all" />
                           </button>
                         </li>
                       ))}
@@ -486,12 +486,12 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
         </AnimatePresence>
 
         {error && (
-          <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8 rounded-2xl border-2 border-rose-500/30 bg-rose-500/10 p-6 flex items-start gap-4 shadow-xl backdrop-blur-xl relative overflow-hidden group/error">
+          <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-8 rounded-2xl border-2 border-rose-500/30 bg-rose-500/10 p-6 flex items-start gap-4 backdrop-blur-xl relative overflow-hidden group/error">
              <div className="absolute inset-0 bg-rose-500/5 animate-pulse pointer-events-none" />
              <AlertCircle size={22} className="text-rose-500 flex-shrink-0 mt-1 relative z-10" />
              <div className="flex-1 relative z-10">
-                <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest italic mb-1">Something went wrong</p>
-                <p className="text-sm font-black text-rose-200 leading-relaxed italic uppercase tracking-tighter">{error}</p>
+                <p className="text-xs font-semibold text-rose-500 mb-1">{tr('ingest.errorTitle', 'Something went wrong')}</p>
+                <p className="text-sm font-medium text-rose-700 dark:text-rose-200 leading-relaxed">{error}</p>
              </div>
              <button type="button" onClick={() => setError(null)} aria-label="Dismiss error" title="Dismiss error" className="text-rose-400 hover:text-white transition-all relative z-10 hover:rotate-90">
                <X size={20} />
@@ -503,19 +503,19 @@ export default function IngestPanel({ redirectTo, compact = false }: Props) {
       {!compact && (
         <div className="px-8 py-5 bg-surface-page dark:bg-surface-950/60 border-t-2 border-surface-100 dark:border-surface-800 flex flex-wrap items-center justify-between gap-6">
            <div className="flex items-center gap-4">
-              <div className="w-2.5 h-2.5 rounded-full bg-primary-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
-              <p className="text-[10px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4em] italic leading-none">
+              <div className="w-2.5 h-2.5 rounded-full bg-primary-500" />
+              <p className="text-xs font-semibold text-surface-400 dark:text-slate-400">
                 <span className="text-primary-500">Tip:</span> {tr('ingest.tipPaste', '⌘V on this page to paste a clipboard URL.')}
               </p>
            </div>
            <div className="flex items-center gap-6">
               <div className="flex items-center gap-3">
                  <ShieldCheck size={14} className="text-emerald-500" />
-                 <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.3em] italic">Secure upload</span>
+                 <span className="text-xs font-semibold text-surface-300 dark:text-slate-400">{tr('ingest.secureUpload', 'Secure upload')}</span>
               </div>
               <div className="flex items-center gap-3">
                  <Zap size={14} className="text-amber-500" />
-                 <span className="text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.3em] italic">MP4, MOV or WebM</span>
+                 <span className="text-xs font-semibold text-surface-300 dark:text-slate-400">{tr('ingest.formats', 'MP4, MOV or WebM')}</span>
               </div>
            </div>
         </div>

@@ -3,35 +3,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  Zap,
-  Sparkles,
-  ArrowRight,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-  Brain,
-  Target,
-  Globe,
-  Terminal,
-  Fingerprint,
-  Layers,
-  Orbit,
-  Command,
-  Film,
-  RefreshCw,
-  Sparkle,
-  Waves,
-  Mic2,
-  Box,
-  Binary,
-  Shield,
-  Database
+  Zap, Sparkles, ArrowRight, Loader2, CheckCircle2, AlertCircle, Brain, Target,
+  Globe, Terminal, Layers, Orbit, Command, Film, RefreshCw, Sparkle, Waves,
+  Mic2, Shield, Database, Copy,
 } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
 import { apiPost } from '../lib/api'
 import { useHardenedRequest } from '../hooks/useHardenedRequest'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
+import { Button, IconButton, Input, Textarea } from './ui'
 
 const STAGES = [
   { id: 'intelligence', labelKey: 'autonomousCreator.stageResearching', icon: Brain },
@@ -131,516 +112,314 @@ export default function AutonomousCreator() {
     }
   }
 
+  const chip = (active: boolean) =>
+    `h-9 px-3 rounded-lg text-sm font-medium border transition-colors whitespace-nowrap disabled:opacity-50 ${active
+      ? 'bg-primary border-primary text-primary-foreground'
+      : 'border-input bg-background text-theme-muted hover:text-theme-primary hover:bg-accent'}`
+
   return (
-    <div className="space-y-16 lg:space-y-24">
-      {/* Dynamic Header Hub */}
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-12 mb-4 relative z-50">
-        <div className="flex flex-col md:flex-row items-center gap-10 text-center md:text-left">
-          <div className="w-24 h-24 md:w-32 md:h-32 bg-primary-500/10 border-2 border-primary-500/20 rounded-[3rem] md:rounded-[4rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
-             <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 to-transparent opacity-100" />
-             <Target size={48} className="text-primary-600 dark:text-primary-400 relative z-10 group-hover:scale-125 transition-transform duration-1000 animate-pulse" />
-          </div>
-          <div>
-            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 mb-5">
-              <div className="flex items-center gap-3">
-                 <Binary size={14} className="text-primary-500 animate-pulse shrink-0" />
-                 <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.5em] text-primary-600 dark:text-primary-400 italic leading-none truncate">{t('autonomousCreator.aiEngine')}</span>
+    <div className="flex flex-col gap-6">
+      {/* Idea */}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <label htmlFor="forge-idea" className="ds-text-label text-theme-primary inline-flex items-center gap-2">
+            <Terminal size={16} className="text-indigo-500" aria-hidden /> {t('autonomousCreator.yourIdea')}
+          </label>
+          {loading && (
+            <div className="flex items-center gap-3">
+              {(rateLimitCountdown ?? 0) > 0 ? (
+                <span className="ds-text-caption text-rose-500">{t('autonomousCreator.cooling', { seconds: rateLimitCountdown ?? 0 })}</span>
+              ) : (
+                <span role="status" className="ds-text-caption text-indigo-500">{t('autonomousCreator.working')}</span>
+              )}
+              {/* Indeterminate: the request reports no progress, so none is shown. */}
+              <div className="relative w-24 h-1.5 bg-accent rounded-full overflow-hidden" aria-hidden="true">
+                {(rateLimitCountdown ?? 0) > 0 ? (
+                  <div className="h-full w-full bg-rose-500" />
+                ) : (
+                  <m.div
+                    animate={{ x: ['-100%', '300%'] }}
+                    transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+                    className="absolute inset-y-0 left-0 w-1/3 bg-indigo-500"
+                  />
+                )}
               </div>
             </div>
-            <h2 className="text-[clamp(2rem,6vw,4.5rem)] font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-[0.95] mb-4 [overflow-wrap:anywhere]">{t('autonomousCreator.clickForge')}</h2>
-            <p className="text-surface-400 dark:text-slate-600 text-[10px] font-black uppercase tracking-[0.25em] italic leading-tight">{t('autonomousCreator.headerSubtitle')}</p>
+          )}
+        </div>
+        <Textarea
+          id="forge-idea"
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          disabled={loading}
+          placeholder={t('autonomousCreator.promptPlaceholder')}
+          className="min-h-[120px] text-base"
+        />
+        <div className="flex flex-col gap-2">
+          <label htmlFor="forge-keywords" className="ds-text-caption text-theme-muted inline-flex items-center gap-2">
+            <Database size={14} aria-hidden /> {t('autonomousCreator.keywordsOptional')}
+          </label>
+          <Input
+            id="forge-keywords"
+            type="text"
+            value={keywords}
+            onChange={(e) => setKeywords(e.target.value)}
+            disabled={loading}
+            placeholder={t('autonomousCreator.keywordsPlaceholder')}
+          />
+        </div>
+      </div>
+
+      {/* Platform + tone */}
+      <div className="grid grid-cols-1 gap-5 border-t border-[var(--border-subtle)] pt-5">
+        <fieldset className="flex flex-col gap-2">
+          <legend className="ds-text-label text-theme-primary mb-2 inline-flex items-center gap-2">
+            <Globe size={14} className="text-indigo-500" aria-hidden /> {t('autonomousCreator.platform')}
+          </legend>
+          <div className="flex flex-wrap gap-2">
+            {['tiktok', 'instagram_reels', 'youtube_shorts', 'linkedin', 'twitter'].map(p => (
+              <button type="button" key={p} onClick={() => setPlatform(p)} disabled={loading} aria-pressed={platform === p} className={chip(platform === p)}>
+                {t(`autonomousCreator.platformName.${p}`)}
+              </button>
+            ))}
           </div>
-        </div>
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-2">
+          <legend className="ds-text-label text-theme-primary mb-2 inline-flex items-center gap-2">
+            <Mic2 size={14} className="text-indigo-500" aria-hidden /> {t('autonomousCreator.tone')}
+          </legend>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {[
+              { id: 'educational', labelKey: 'autonomousCreator.toneAuthoritative', icon: Shield },
+              { id: 'motivational', labelKey: 'autonomousCreator.toneElevated', icon: Zap },
+              { id: 'storytelling', labelKey: 'autonomousCreator.toneNarrative', icon: Film },
+              { id: 'controversial', labelKey: 'autonomousCreator.toneDisruptive', icon: AlertCircle },
+            ].map(toneOption => (
+              <button
+                type="button"
+                key={toneOption.id}
+                onClick={() => setTone(toneOption.id)}
+                disabled={loading}
+                aria-pressed={tone === toneOption.id}
+                className={`${chip(tone === toneOption.id)} inline-flex items-center justify-center gap-2`}
+              >
+                <toneOption.icon size={14} aria-hidden />
+                <span className="truncate">{t(toneOption.labelKey)}</span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset className="flex flex-col gap-2">
+          <legend className="ds-text-label text-theme-primary mb-1 inline-flex items-center gap-2">
+            <Sparkle size={14} className="text-amber-500" aria-hidden /> {t('autonomousCreator.stylePivots')}
+          </legend>
+          <p className="ds-text-caption text-theme-muted mb-1">{t('autonomousCreator.pickVisualDirection')}</p>
+          <div className="flex flex-wrap gap-2">
+            {['HIGH ENERGY', 'MINIMALIST', 'CINEMATIC', 'DYNAMIC', 'VIRAL', 'PREMIUM', 'UGC_RAW'].map(p => (
+              <button type="button" key={p} onClick={() => setStylePivot(p)} aria-pressed={stylePivot === p} className={chip(stylePivot === p)}>
+                {t(`autonomousCreator.pivot.${p.replace(/ /g, '_')}`)}
+              </button>
+            ))}
+          </div>
+          {stylePivot === 'UGC_RAW' && (
+            <p className="mt-2 rounded-lg border border-amber-500/25 bg-amber-500/5 p-3 text-sm text-theme-secondary">
+              <span className="font-semibold text-amber-600 dark:text-amber-400">{t('autonomousCreator.authenticityBoostOn')}</span>{' '}
+              {t('autonomousCreator.ugcStyleDescription')}
+            </p>
+          )}
+        </fieldset>
       </div>
 
-      {/* Main Creation Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-16 relative z-10">
-        
-        {/* Input Chamber */}
-        <div className="xl:col-span-8 flex flex-col gap-12">
-           <div className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 p-10 lg:p-14 rounded-[4rem] sm:rounded-[5rem] space-y-12 relative overflow-hidden group shadow-2xl">
-              <div className="absolute -top-60 -right-60 w-[500px] h-[500px] bg-primary-500/10 blur-[150px] rounded-full pointer-events-none group-hover:bg-primary-500/20 transition-all duration-1000" />
-              
-              <div className="space-y-8 relative z-10">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-4">
-                  <label className="text-[10px] md:text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.3em] md:tracking-[0.6em] italic flex items-center gap-4">
-                    <Terminal size={16} className="text-primary-500 shrink-0" /> {t('autonomousCreator.yourIdea')}
-                  </label>
-                  {loading && (
-                    <div className="flex items-center gap-4 w-full sm:w-auto">
-                       {(rateLimitCountdown ?? 0) > 0 ? (
-                         <span className="text-[9px] font-black text-rose-500 uppercase italic tracking-widest animate-pulse">{t('autonomousCreator.cooling', { seconds: rateLimitCountdown ?? 0 })}</span>
-                       ) : (
-                         <span role="status" className="text-[9px] font-black text-primary-500 uppercase italic tracking-widest">{t('autonomousCreator.working')}</span>
-                       )}
-                       {/* Indeterminate: the request reports no progress, so none is shown. */}
-                       <div className="relative flex-1 sm:w-32 h-2 bg-surface-page dark:bg-surface-900 rounded-full overflow-hidden border border-surface-100 dark:border-surface-800 shadow-inner" aria-hidden="true">
-                          {(rateLimitCountdown ?? 0) > 0 ? (
-                            <div className="h-full w-full bg-rose-500" />
-                          ) : (
-                            <m.div
-                              animate={{ x: ['-100%', '300%'] }}
-                              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-                              className="absolute inset-y-0 left-0 w-1/3 bg-primary-500"
-                            />
-                          )}
-                       </div>
-                    </div>
-                  )}
-                </div>
-                <textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  disabled={loading}
-                  placeholder={t('autonomousCreator.promptPlaceholder')}
-                  className="w-full bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 rounded-[3rem] p-10 text-[1.5rem] font-black italic text-surface-900 dark:text-white placeholder:text-surface-200 dark:placeholder:text-slate-900 focus:outline-none focus:border-primary-500/40 transition-all resize-none h-48 shadow-inner leading-[1.2] uppercase tracking-tighter"
-                />
+      <Button
+        variant="gradient"
+        size="lg"
+        onClick={() => runFactory()}
+        disabled={loading || !prompt.trim()}
+        loading={loading}
+        leftIcon={!loading ? <Zap size={18} aria-hidden /> : undefined}
+        className="w-full"
+      >
+        {loading ? t('autonomousCreator.generating') : t('autonomousCreator.generate')}
+      </Button>
 
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4 px-4">
-                    <Database size={14} className="text-primary-500" />
-                    <span className="text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.4rem] italic">{t('autonomousCreator.keywordsOptional')}</span>
-                  </div>
-                  <input
-                    type="text"
-                    value={keywords}
-                    onChange={(e) => setKeywords(e.target.value)}
-                    disabled={loading}
-                    placeholder={t('autonomousCreator.keywordsPlaceholder')}
-                    className="w-full bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 rounded-full px-8 py-5 text-[12px] font-black italic text-surface-900 dark:text-white placeholder:text-surface-200 dark:placeholder:text-slate-900 focus:outline-none focus:border-primary-500/40 transition-all uppercase tracking-widest shadow-inner"
-                  />
-                </div>
-              </div>
-
-              {/* Dynamic Controls Lattice */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-12 relative z-10 border-t-2 border-surface-100 dark:border-surface-800 pt-12">
-                {/* Target Platform Logic */}
-                <div className="md:col-span-12 lg:col-span-8 space-y-8">
-                   <div className="flex items-center gap-6 px-4">
-                      <Globe size={14} className="text-primary-500 shrink-0" />
-                      <span className="text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.2em] md:tracking-[0.4rem] italic truncate">{t('autonomousCreator.platform')}</span>
-                   </div>
-                   <div className="flex flex-wrap gap-4 px-4 pb-4">
-                     {['tiktok', 'instagram_reels', 'youtube_shorts', 'linkedin', 'twitter'].map(p => (
-                       <button
-                         type="button"
-                         key={p}
-                         onClick={() => setPlatform(p)}
-                         disabled={loading}
-                          className={`px-4 py-3 sm:px-6 sm:py-3.5 rounded-[1.2rem] sm:rounded-[1.5rem] text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] transition-all border-2 italic relative group/btn shadow-md whitespace-nowrap ${
-                           platform === p 
-                           ? 'bg-surface-900 dark:bg-white text-white dark:text-black border-transparent shadow-2xl scale-105 z-20' 
-                           : 'bg-surface-page dark:bg-surface-900 text-surface-400 dark:text-slate-600 border-surface-100 dark:border-surface-800 hover:border-primary-500/30 hover:text-surface-900 dark:hover:text-white'
-                         }`}
-                       >
-                         {p.replace('_', ' ')}
-                       </button>
-                     ))}
-                   </div>
-                </div>
-
-                {/* Tone Nuance Matrix */}
-                <div className="md:col-span-12 space-y-8">
-                   <div className="flex items-center gap-6 px-4">
-                      <Mic2 size={14} className="text-primary-500 shrink-0" />
-                      <span className="text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.2em] md:tracking-[0.4rem] italic truncate">{t('autonomousCreator.tone')}</span>
-                   </div>
-                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 px-4">
-                     {[
-                       { id: 'educational', labelKey: 'autonomousCreator.toneAuthoritative', icon: Shield },
-                       { id: 'motivational', labelKey: 'autonomousCreator.toneElevated', icon: Zap },
-                       { id: 'storytelling', labelKey: 'autonomousCreator.toneNarrative', icon: Film },
-                       { id: 'controversial', labelKey: 'autonomousCreator.toneDisruptive', icon: AlertCircle },
-                     ].map(toneOption => (
-                       <button
-                         type="button"
-                         key={toneOption.id}
-                         onClick={() => setTone(toneOption.id)}
-                         disabled={loading}
-                         className={`flex items-center justify-between gap-2 px-4 py-3.5 sm:px-6 sm:py-4 rounded-[1.5rem] sm:rounded-[2rem] text-[8px] sm:text-[9px] font-black uppercase tracking-[0.08em] sm:tracking-[0.18em] transition-all border-2 italic shadow-md ${
-                           tone === toneOption.id
-                           ? 'bg-primary-600 text-white border-transparent shadow-2xl scale-105'
-                           : 'bg-surface-page dark:bg-surface-900 text-surface-400 dark:text-slate-600 border-surface-100 dark:border-surface-800 hover:border-primary-500/30 hover:text-surface-900 dark:hover:text-white'
-                         }`}
-                       >
-                         <span className="truncate whitespace-nowrap pr-1">{t(toneOption.labelKey)}</span>
-                         <toneOption.icon size={14} className={`shrink-0 ${tone === toneOption.id ? 'text-white' : 'text-surface-400 dark:text-slate-700'}`} />
-                       </button>
-                     ))}
-                   </div>
-                </div>
-              </div>
-
-              <div className="pt-8 border-t-2 border-surface-100 dark:border-surface-800">
-                <button
-                  type="button"
-                  onClick={() => runFactory()}
-                  disabled={loading || !prompt.trim()}
-                  className={`w-full py-10 rounded-[3rem] font-black text-2xl uppercase tracking-[0.5em] transition-all duration-1000 italic active:scale-95 group relative overflow-hidden flex items-center justify-center gap-6 border-none ${
-                    loading 
-                    ? 'bg-primary-600/30 cursor-wait text-primary-300' 
-                    : 'bg-surface-900 dark:bg-white text-white dark:text-black hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white shadow-2xl'
-                  }`}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
-                  {loading ? (
-                    <>
-                      <Loader2 size={32} className="animate-spin text-primary-400" />
-                      {t('autonomousCreator.generating')}
-                    </>
-                  ) : (
-                    <>
-                      <Zap size={32} className="group-hover:scale-125 transition-transform duration-[1.5s]" />
-                      {t('autonomousCreator.generate')}
-                    </>
-                  )}
-                </button>
-              </div>
-           </div>
+      {/* Steps */}
+      <div className="ds-surface-subtle p-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h3 className="ds-text-label text-theme-primary inline-flex items-center gap-2">
+            <Waves size={16} className="text-emerald-500" aria-hidden /> {t('autonomousCreator.liveProgress')}
+          </h3>
+          {loading && (
+            <span role="status" className="inline-flex items-center gap-2 ds-text-caption text-indigo-500">
+              <Loader2 size={14} className="animate-spin" aria-hidden /> {t('autonomousCreator.workingAllSteps')}
+            </span>
+          )}
         </div>
-
-        {/* Sidebar Intelligence & Presets */}
-        <div className="xl:col-span-4 space-y-12">
-           {/* Quick Style Pivots (Advanced) */}
-           <div className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 p-8 sm:p-10 rounded-[3rem] sm:rounded-[4rem] space-y-8 sm:space-y-10 shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none group-hover:opacity-[0.08] transition-opacity duration-1000"><Zap size={250} className="text-amber-500" /></div>
-              <div className="flex items-center gap-4 sm:gap-6 relative z-10">
-                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-amber-500/10 border-2 border-amber-500/20 flex items-center justify-center shadow-lg shrink-0"><Zap size={24} className="text-amber-600 dark:text-amber-400" /></div>
-                 <div className="min-w-0">
-                    <h3 className="text-xl sm:text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none whitespace-nowrap">{t('autonomousCreator.stylePivots')}</h3>
-                    <p className="text-[8px] sm:text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none whitespace-nowrap">{t('autonomousCreator.pickVisualDirection')}</p>
-                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 relative z-10">
-                 {['HIGH ENERGY', 'MINIMALIST', 'CINEMATIC', 'DYNAMIC', 'VIRAL', 'PREMIUM'].map(p => (
-                    <button
-                      type="button"
-                      key={p}
-                      onClick={() => setStylePivot(p)}
-                      className={`px-3 py-3 sm:px-4 sm:py-3.5 rounded-[1.2rem] sm:rounded-[1.5rem] text-[8px] sm:text-[9px] font-black uppercase tracking-[0.05em] sm:tracking-[0.15em] italic border-2 transition-all shadow-md whitespace-nowrap truncate ${
-                        stylePivot === p 
-                        ? 'bg-amber-500 text-black border-transparent shadow-2xl scale-105' 
-                        : 'bg-surface-page dark:bg-surface-900 text-surface-400 dark:text-slate-600 border-surface-100 dark:border-surface-800 hover:border-amber-500/30 hover:text-surface-900 dark:hover:text-white'
-                      }`}
-                    >
-                       {p}
-                    </button>
-                 ))}
-                 {/* Phase 8: UGC Raw Pivot */}
-                 <button
-                   type="button"
-                   onClick={() => setStylePivot('UGC_RAW')}
-                   className={`col-span-2 px-4 py-4 sm:px-6 sm:py-5 rounded-[1.5rem] sm:rounded-[2rem] text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] italic border-2 transition-all duration-700 flex items-center justify-between shadow-md ${
-                     stylePivot === 'UGC_RAW'
-                       ? 'bg-gradient-to-r from-orange-600 to-amber-500 border-transparent text-white shadow-[0_30px_60px_rgba(234,88,12,0.4)] scale-105'
-                       : 'bg-surface-page dark:bg-surface-900 text-surface-400 dark:text-slate-600 border-surface-100 dark:border-surface-800 hover:border-orange-500/30 hover:text-surface-900 dark:hover:text-white'
-                   }`}
-                 >
-                   <span className="flex items-center gap-2 truncate pr-1">
-                     <span className={`w-1.5 h-1.5 rounded-full bg-current shrink-0 ${stylePivot === 'UGC_RAW' ? 'animate-pulse' : ''}`} />
-                     <span className="truncate whitespace-nowrap">{t('autonomousCreator.ugcRawAuthentic')}</span>
-                   </span>
-                   <span className={`text-[7px] sm:text-[8px] font-black tracking-wider sm:tracking-widest px-2.5 py-1 rounded-full border shrink-0 ${
-                     stylePivot === 'UGC_RAW' ? 'text-white border-white/30 bg-white/10' : 'text-surface-300 dark:text-slate-800 border-surface-200 dark:border-surface-700'
-                   }`}>
-                     {t('autonomousCreator.humanize')}
-                   </span>
-                 </button>
-              </div>
-              {stylePivot === 'UGC_RAW' && (
-                <m.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-orange-500/5 border-2 border-orange-500/10 mt-6 relative z-10 backdrop-blur-xl shadow-inner"
-                >
-                  <p className="text-[9px] sm:text-[10px] font-black text-orange-500 uppercase tracking-widest italic mb-3">{t('autonomousCreator.authenticityBoostOn')}</p>
-                  <p className="text-[9px] sm:text-[10px] text-surface-400 dark:text-slate-500 font-bold uppercase tracking-widest italic">
-                    {t('autonomousCreator.ugcStyleDescription')}
-                  </p>
-                </m.div>
-              )}
-           </div>
-
-           {/* Pipeline Trace Visualizer */}
-           <div className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 p-8 sm:p-10 rounded-[3rem] sm:rounded-[4rem] shadow-2xl relative overflow-hidden group h-[450px]">
-              <div className="absolute inset-0 opacity-[0.03] pointer-events-none p-12 group-hover:opacity-[0.08] transition-opacity duration-1000"><Orbit size={400} className="text-primary-500 animate-spin-slow rotate-45" /></div>
-              <div className="flex flex-col h-full relative z-10">
-                 <div className="flex items-center gap-4 sm:gap-6 mb-8 sm:mb-12 border-b-2 border-surface-100 dark:border-surface-800 pb-6 sm:pb-8">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500/20 flex items-center justify-center shadow-lg shrink-0"><Waves size={24} className="text-emerald-600 dark:text-emerald-400 animate-pulse" /></div>
-                    <div className="min-w-0">
-                       <h3 className="text-xl sm:text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-none whitespace-nowrap">{t('autonomousCreator.liveProgress')}</h3>
-                       <p className="text-[8px] sm:text-[9px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-widest italic mt-1 leading-none whitespace-nowrap">{t('autonomousCreator.aiGenerationSteps')}</p>
-                    </div>
-                 </div>
-                 {loading && (
-                   <div role="status" className="flex items-center gap-3 mb-6 text-[10px] font-black text-primary-500 uppercase tracking-widest">
-                     <Loader2 size={14} className="animate-spin shrink-0" aria-hidden="true" /> {t('autonomousCreator.workingAllSteps')}
-                   </div>
-                 )}
-                 <div className="flex-1 space-y-8 sm:space-y-10 custom-scrollbar overflow-y-auto pr-4">
-                    {STAGES.map((s, i) => (
-                       <div key={s.id} className="flex items-center gap-6 sm:gap-8 relative group/stage min-w-0">
-                          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl border-2 flex items-center justify-center group-hover/stage:scale-110 transition-all shadow-md relative z-10 shrink-0 text-[10px] sm:text-[12px] ${
-                            completedStages.includes(s.id) ? 'bg-emerald-500 border-transparent text-white shadow-emerald-500/20' : 'bg-surface-page dark:bg-surface-950 border-surface-100 dark:border-surface-800 text-surface-300 dark:text-slate-600'
-                          }`}>
-                             {completedStages.includes(s.id) ? <CheckCircle2 size={16} /> : (i + 1)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                             <p className={`text-[11px] sm:text-[13px] font-black uppercase tracking-tighter italic leading-none transition-colors truncate ${completedStages.includes(s.id) ? 'text-surface-900 dark:text-white' : 'text-surface-300 dark:text-slate-600'}`}>{t(s.labelKey)}</p>
-                          </div>
-                          {i < STAGES.length - 1 && <div className={`absolute top-8 sm:top-10 left-4 sm:left-5 w-0.5 h-6 sm:h-8 transition-colors ${completedStages.includes(s.id) ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-surface-100 dark:bg-surface-800'}`} />}
-                       </div>
-                    ))}
-                 </div>
-              </div>
-           </div>
-        </div>
+        <ol className="flex flex-wrap gap-x-4 gap-y-2">
+          {STAGES.map((s, i) => {
+            const done = completedStages.includes(s.id)
+            return (
+              <li key={s.id} className="flex items-center gap-2">
+                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${done ? 'bg-emerald-500 text-white' : 'border border-[var(--border-subtle)] text-theme-muted'}`}>
+                  {done ? <CheckCircle2 size={14} aria-hidden /> : i + 1}
+                </span>
+                <span className={`text-sm ${done ? 'text-theme-primary font-medium' : 'text-theme-muted'}`}>{t(s.labelKey)}</span>
+              </li>
+            )
+          })}
+        </ol>
       </div>
 
-      {/* Synthesis Output Chamber */}
+      {/* Result */}
       <AnimatePresence mode="wait">
         {result && (
           <m.div
             key={result.id}
-            initial={{ opacity: 0, scale: 0.98, y: 100 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, y: -100 }}
-            transition={{ duration: 0.8, type: 'spring' }}
-            className="bg-surface-card backdrop-blur-3xl border-2 border-emerald-500/30 p-12 lg:p-20 rounded-[4rem] sm:rounded-[6rem] shadow-[0_100px_300px_rgba(0,0,0,0.6)] relative overflow-hidden group/result"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.03] p-5 flex flex-col gap-5"
           >
-            <div className="absolute top-0 right-0 p-24 opacity-[0.03] pointer-events-none rotate-12 group-hover/result:opacity-[0.1] transition-opacity duration-[2s]">
-               <Box size={500} className="text-emerald-500" />
-            </div>
-
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-16 border-b-2 border-surface-100 dark:border-surface-800 pb-16 relative z-10">
-              <div className="flex items-center gap-10">
-                <div className="w-24 h-24 rounded-[2.5rem] bg-emerald-500/10 border-2 border-emerald-500/20 flex items-center justify-center shadow-2xl group-hover/result:rotate-12 transition-transform duration-1000">
-                  <CheckCircle2 size={48} className="text-emerald-600 dark:text-emerald-400" />
-                </div>
-                 <div>
-                    <h3 className="text-4xl md:text-5xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-[0.85] mb-4">{t('autonomousCreator.ready')}</h3>
-                  <div className="flex flex-wrap gap-4">
-                     {savedIds.includes(result.id) && (
-                       <div className="px-5 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase italic tracking-[0.2em] shadow-inner leading-none">{t('autonomousCreator.savedBadge')}</div>
-                     )}
-                     <div className="px-5 py-2 rounded-xl bg-surface-page dark:bg-surface-950 border border-surface-100 dark:border-surface-800 text-[10px] font-black text-surface-400 dark:text-slate-600 uppercase italic tracking-[0.2em] shadow-inner leading-none">{t('autonomousCreator.variantNumber', { number: activeVariantIndex + 1 })}</div>
-                     <div className="px-5 py-2 rounded-xl bg-primary-500/10 border border-primary-500/20 text-[10px] font-black text-primary-600 dark:text-primary-400 uppercase italic tracking-[0.2em] shadow-inner leading-none">{t('autonomousCreator.styleLabel', { style: result.pivot || t('autonomousCreator.balanced') })}</div>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                  <CheckCircle2 size={20} aria-hidden />
+                </span>
+                <div>
+                  <h3 className="ds-text-h3 text-theme-primary">{t('autonomousCreator.ready')}</h3>
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    {savedIds.includes(result.id) && (
+                      <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">{t('autonomousCreator.savedBadge')}</span>
+                    )}
+                    <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-theme-muted">{t('autonomousCreator.variantNumber', { number: activeVariantIndex + 1 })}</span>
+                    <span className="rounded-md bg-indigo-500/10 px-2 py-0.5 text-xs font-medium text-indigo-600 dark:text-indigo-300">{t('autonomousCreator.styleLabel', { style: result.pivot ? t(`autonomousCreator.pivot.${String(result.pivot).replace(/ /g, '_')}`) : t('autonomousCreator.balanced') })}</span>
                   </div>
                 </div>
               </div>
-              
-              <div className="flex flex-wrap items-center gap-6 justify-center lg:justify-end">
-                 {variants.length > 1 && (
-                    <div className="flex gap-4 px-8 py-3 bg-surface-page dark:bg-surface-950/60 rounded-[2.5rem] border-2 border-surface-100 dark:border-surface-800 shadow-inner backdrop-blur-xl">
-                       {variants.map((v, i) => (
-                          <button
-                            type="button"
-                            key={v.id}
-                            onClick={() => {
-                              setActiveVariantIndex(i)
-                              setResult(variants[i])
-                            }}
-                            className={`w-12 h-12 rounded-xl border-2 font-black italic transition-all uppercase flex items-center justify-center text-[14px] ${
-                               activeVariantIndex === i 
-                               ? 'bg-primary-500 text-white border-transparent shadow-[0_0_20px_rgba(99,102,241,0.5)] scale-110' 
-                               : 'bg-surface-card dark:bg-surface-900 text-surface-400 dark:text-slate-600 border-surface-100 dark:border-surface-800 hover:border-primary-500/30 hover:text-primary-500'
-                            }`}
-                          >
-                             {['α', 'β', 'γ'][i] || i + 1}
-                          </button>
-                       ))}
-                    </div>
-                 )}
-                 <div className="flex items-center gap-3 bg-surface-page dark:bg-surface-950 px-6 py-3 rounded-2xl border-2 border-surface-100 dark:border-surface-800">
+              {variants.length > 1 && (
+                <div className="inline-flex gap-1 rounded-lg ds-surface-subtle p-1" role="group" aria-label={t('autonomousCreator.variants')}>
+                  {variants.map((v, i) => (
                     <button
                       type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(result.script || '')
-                        showToast(t('autonomousCreator.scriptCopied'), 'success')
-                      }}
-                      className="p-3 hover:bg-surface-100 dark:hover:bg-surface-900 rounded-xl transition-all text-surface-400 dark:text-slate-600 hover:text-primary-500"
-                      title={t('autonomousCreator.copyScript')}
+                      key={v.id}
+                      onClick={() => { setActiveVariantIndex(i); setResult(variants[i]) }}
+                      aria-pressed={activeVariantIndex === i}
+                      className={`h-8 min-w-8 px-2 rounded-md text-sm font-semibold transition-colors ${activeVariantIndex === i ? 'bg-primary text-primary-foreground' : 'text-theme-muted hover:text-theme-primary'}`}
                     >
-                      <Terminal size={18} />
+                      {i + 1}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPrompt(`Rewrite this script to make it more ${tone === 'educational' ? 'authoritative' : 'engaging'}: ${result.script?.slice(0, 500)}...`)
-                        window.scrollTo({ top: 0, behavior: 'smooth' })
-                        showToast(t('autonomousCreator.scriptLoadedIntoPrompt'), 'info')
-                      }}
-                      className="p-3 hover:bg-surface-100 dark:hover:bg-surface-900 rounded-xl transition-all text-surface-400 dark:text-slate-600 hover:text-primary-500"
-                      title={t('autonomousCreator.refineWithAi')}
-                    >
-                      <Sparkles size={18} />
-                    </button>
-                 </div>
-                 <button
-                  type="button"
-                  onClick={() => runFactory()}
-                  disabled={loading}
-                  className="px-8 py-5 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 text-surface-900 dark:text-white font-black text-[11px] uppercase tracking-widest hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white hover:border-transparent transition-all italic active:scale-95 flex items-center gap-4 shadow-inner"
-                 >
-                    {loading ? <RefreshCw className="animate-spin w-5 h-5" /> : <RefreshCw className="w-5 h-5" />} {t('autonomousCreator.regenerate')}
-                 </button>
-                 <button
-                  type="button"
-                  onClick={saveManifest}
-                  disabled={loading || !result}
-                  className="px-8 py-5 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 text-surface-900 dark:text-white font-black text-[11px] uppercase tracking-widest hover:bg-emerald-600 hover:text-white hover:border-transparent transition-all italic active:scale-95 flex items-center gap-4 shadow-inner"
-                 >
-                    <Database className="w-5 h-5" /> {t('autonomousCreator.saveToLibrary')}
-                 </button>
-                 <button
-                  type="button"
-                  onClick={() => router.push(`/dashboard/video`)}
-                  className="px-12 py-7 rounded-[2rem] bg-emerald-600 text-white font-black text-xs uppercase tracking-[0.6em] shadow-[0_30px_80px_rgba(16,185,129,0.5)] hover:bg-emerald-500 transition-all flex items-center gap-6 italic active:scale-95 border-none"
-                 >
-                    <Film size={24} /> {t('autonomousCreator.openInEditor')}
-                 </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <div className="flex flex-col gap-3">
+                <div>
+                  <p className="ds-text-caption text-theme-muted">{t('autonomousCreator.title')}</p>
+                  <p className="ds-text-h3 text-theme-primary">{result.stages?.script?.title || t('autonomousCreator.untitled')}</p>
+                </div>
+                <div>
+                  <p className="ds-text-caption text-theme-muted">{t('autonomousCreator.hook')}</p>
+                  <p className="border-l-2 border-emerald-500/50 pl-3 text-base text-theme-secondary">
+                    &quot;{result.stages?.script?.hook || result.stages?.script?.rawScript?.hook || t('autonomousCreator.hookFallback')}&quot;
+                  </p>
+                </div>
+                <dl className="grid grid-cols-2 gap-3">
+                  <div className="ds-surface-subtle p-3">
+                    <dt className="ds-text-caption text-theme-muted">{t('autonomousCreator.duration')}</dt>
+                    <dd className="text-lg font-semibold text-theme-primary tabular-nums">{result.stages?.blueprint?.totalDuration || result.stages?.anatomy?.totalDuration || '—'} {t('autonomousCreator.sec')}</dd>
+                  </div>
+                  <div className="ds-surface-subtle p-3">
+                    <dt className="ds-text-caption text-theme-muted">{t('autonomousCreator.platform')}</dt>
+                    <dd className="text-lg font-semibold text-theme-primary">{t(`autonomousCreator.platformName.${platform}`)}</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div className="ds-surface-subtle p-4 flex flex-col gap-3">
+                <p className="ds-text-label text-indigo-500 inline-flex items-center gap-2"><Sparkle size={14} aria-hidden /> {t('autonomousCreator.angleLabel')}</p>
+                <p className="text-base text-theme-primary">
+                  {result.stages?.intelligence?.positioning
+                    ? <>&quot;{result.stages.intelligence.positioning}&quot;</>
+                    : t('autonomousCreator.positioningUnavailable')}
+                </p>
+                <dl className="flex flex-wrap gap-x-6 gap-y-2">
+                  <div>
+                    <dt className="ds-text-caption text-theme-muted">{t('autonomousCreator.scoreLabel')}</dt>
+                    <dd className="text-lg font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">{Number.isFinite(Number(result.resonanceScore)) && result.resonanceScore !== null ? `${Math.round(Number(result.resonanceScore))}/100` : '—'}</dd>
+                  </div>
+                  <div>
+                    <dt className="ds-text-caption text-theme-muted">{t('autonomousCreator.postingWindow')}</dt>
+                    <dd className="text-lg font-semibold text-theme-primary">{result.stages?.blueprint?.postingWindow || '—'}</dd>
+                  </div>
+                </dl>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-16 relative z-10 pt-16">
-               {/* Script Detail Cluster */}
-               <div className="space-y-12">
-                  <div className="space-y-6">
-                     <p className="text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.8em] italic flex items-center gap-5">
-                        <Fingerprint size={16} className="text-emerald-500 animate-pulse" /> {t('autonomousCreator.title')}
-                     </p>
-                     <div className="text-4xl md:text-5xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-[0.9] drop-shadow-2xl">
-                       {result.stages?.script?.title || t('autonomousCreator.untitled')}
-                     </div>
-                  </div>
-                  <div className="space-y-6">
-                     <p className="text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.8em] italic flex items-center gap-5">
-                        <Command size={16} className="text-primary-500" /> {t('autonomousCreator.hook')}
-                     </p>
-                     <p className="text-2xl md:text-3xl text-surface-500 dark:text-slate-400 leading-tight italic border-l-[8px] border-emerald-500/30 pl-10 font-bold uppercase tracking-tight group-hover/result:text-surface-900 dark:group-hover/result:text-white transition-colors duration-1000">
-                        &quot;{result.stages?.script?.hook || result.stages?.script?.rawScript?.hook || t('autonomousCreator.hookFallback')}&quot;
-                     </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-8 pt-8">
-                    <div className="p-8 rounded-[3rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 space-y-4 shadow-inner group/data hover:border-emerald-500/30 transition-all">
-                       <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.4em] italic group-hover/data:text-emerald-500 transition-colors">{t('autonomousCreator.duration')}</p>
-                       <p className="text-4xl font-black text-surface-900 dark:text-white italic tabular-nums leading-none tracking-tighter">
-                         {result.stages?.blueprint?.totalDuration || result.stages?.anatomy?.totalDuration || '—'} <span className="text-xl text-surface-200 dark:text-slate-900 border-none">{t('autonomousCreator.sec')}</span>
-                       </p>
-                    </div>
-                    <div className="p-8 rounded-[3rem] bg-surface-page dark:bg-surface-950/40 border-2 border-surface-100 dark:border-surface-800 space-y-4 shadow-inner group/data hover:border-emerald-500/30 transition-all">
-                       <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 uppercase tracking-[0.4em] italic group-hover/data:text-emerald-500 transition-colors">{t('autonomousCreator.platform')}</p>
-                       <p className="text-4xl font-black text-surface-900 dark:text-white italic uppercase leading-none tracking-tighter">{platform.replace('reels', 'RLS').toUpperCase()}</p>
-                    </div>
-                  </div>
-               </div>
-
-               {/* Oracle Mastery Cluster */}
-               <div className="space-y-10">
-                  <div className="bg-surface-page dark:bg-surface-950/40 p-10 lg:p-12 rounded-[4rem] border-2 border-primary-500/20 space-y-8 shadow-2xl relative overflow-hidden group/advice backdrop-blur-3xl">
-                     <div className="absolute top-0 right-0 p-12 opacity-0 group-hover/advice:opacity-10 transition-opacity duration-1000">
-                        <Brain size={180} className="text-primary-500" />
-                     </div>
-                     <div className="flex items-center justify-between relative z-10">
-                        <p className="text-[11px] font-black text-primary-500 uppercase tracking-[0.6em] italic flex items-center gap-5">
-                           <Sparkle size={18} /> {t('autonomousCreator.angleLabel')}
-                        </p>
-                     </div>
-                     <div className="space-y-6 relative z-10">
-                        <p className="text-xl md:text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-tight group-hover/advice:scale-[1.02] transition-transform duration-700">
-                           {result.stages?.intelligence?.positioning
-                             ? <>&quot;{result.stages.intelligence.positioning}&quot;</>
-                             : t('autonomousCreator.positioningUnavailable')}
-                        </p>
-                        <div className="flex flex-wrap gap-8 pt-4">
-                           <div className="flex flex-col gap-2">
-                              <span className="text-[9px] font-black text-surface-400 dark:text-slate-500 uppercase italic">{t('autonomousCreator.scoreLabel')}</span>
-                              <span className="text-3xl font-black text-emerald-500 italic tabular-nums leading-none">{Number.isFinite(Number(result.resonanceScore)) && result.resonanceScore !== null ? `${Math.round(Number(result.resonanceScore))}/100` : '—'}</span>
-                           </div>
-                           <div className="flex flex-col gap-2 border-l-2 border-surface-100 dark:border-surface-800 pl-8">
-                              <span className="text-[9px] font-black text-surface-400 dark:text-slate-500 uppercase italic">{t('autonomousCreator.postingWindow')}</span>
-                              <span className="text-xl font-black text-surface-900 dark:text-white italic leading-none tracking-tighter">{result.stages?.blueprint?.postingWindow || '—'}</span>
-                           </div>
-                           <div className="flex flex-col gap-2 border-l-2 border-surface-100 dark:border-surface-800 pl-8">
-                              <span className="text-[9px] font-black text-surface-400 dark:text-slate-500 uppercase italic">{t('autonomousCreator.style')}</span>
-                              <span className="text-2xl font-black text-primary-500 italic leading-none uppercase tracking-widest">{stylePivot}</span>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-
-                  {/* Post-Generation Action: Go to Editor */}
-                  <div className="p-10 rounded-[4rem] bg-gradient-to-br from-primary-500/10 via-primary-900/10 to-transparent border-2 border-primary-500/20 flex flex-col md:flex-row items-center text-center md:text-left gap-10 shadow-2xl relative overflow-hidden group/deploy backdrop-blur-xl">
-                     <div className="absolute inset-0 bg-white/5 animate-shimmer opacity-10 pointer-events-none" />
-                     <div className="w-20 h-20 rounded-[2rem] bg-primary-500/20 border-2 border-primary-500/40 flex items-center justify-center shadow-2xl group-hover/deploy:scale-110 transition-transform duration-1000 group-hover/deploy:rotate-12">
-                        <Film size={36} className="text-primary-600 dark:text-primary-400" />
-                     </div>
-                     <div className="flex-1 space-y-2">
-                        <p className="text-2xl font-black text-surface-900 dark:text-white uppercase tracking-tight italic leading-none">{t('autonomousCreator.scriptReady')}</p>
-                        <p className="text-[10px] font-black text-primary-400 dark:text-primary-600 uppercase tracking-[0.4em] italic leading-relaxed opacity-60">{t('autonomousCreator.continueInEditor')}</p>
-                     </div>
-                     <button
-                        type="button"
-                        onClick={() => router.push('/dashboard/video')}
-                        className="px-10 py-6 rounded-[2rem] bg-surface-900 dark:bg-white text-white dark:text-black font-black text-xs uppercase tracking-[0.5em] italic shadow-2xl hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all flex items-center justify-center gap-4 border-none active:scale-95 shrink-0"
-                     >
-                        {t('autonomousCreator.openEditorShort')} <ArrowRight size={20} />
-                     </button>
-                  </div>
-               </div>
+            <div className="flex flex-wrap items-center gap-2 border-t border-[var(--border-subtle)] pt-4">
+              <IconButton
+                variant="ghost"
+                size="md"
+                onClick={() => { navigator.clipboard.writeText(result.script || ''); showToast(t('autonomousCreator.scriptCopied'), 'success') }}
+                title={t('autonomousCreator.copyScript')}
+                aria-label={t('autonomousCreator.copyScript')}
+              >
+                <Copy size={16} aria-hidden />
+              </IconButton>
+              <IconButton
+                variant="ghost"
+                size="md"
+                onClick={() => {
+                  setPrompt(`Rewrite this script to make it more ${tone === 'educational' ? 'authoritative' : 'engaging'}: ${result.script?.slice(0, 500)}...`)
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                  showToast(t('autonomousCreator.scriptLoadedIntoPrompt'), 'info')
+                }}
+                title={t('autonomousCreator.refineWithAi')}
+                aria-label={t('autonomousCreator.refineWithAi')}
+              >
+                <Sparkles size={16} aria-hidden />
+              </IconButton>
+              <Button variant="secondary" size="md" onClick={() => runFactory()} disabled={loading} leftIcon={<RefreshCw size={16} className={loading ? 'animate-spin' : ''} aria-hidden />}>
+                {t('autonomousCreator.regenerate')}
+              </Button>
+              <Button variant="secondary" size="md" onClick={saveManifest} disabled={loading || !result} leftIcon={<Database size={16} aria-hidden />}>
+                {t('autonomousCreator.saveToLibrary')}
+              </Button>
+              <Button variant="primary" size="md" className="sm:ml-auto" onClick={() => router.push('/dashboard/video')} leftIcon={<Film size={16} aria-hidden />} rightIcon={<ArrowRight size={16} aria-hidden />}>
+                {t('autonomousCreator.openInEditor')}
+              </Button>
             </div>
           </m.div>
         )}
       </AnimatePresence>
 
-      {/* Error Hub */}
       {error && (
-        <m.div
-          initial={{ opacity: 0, scale: 0.95, y: 50 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          className="p-12 sm:p-16 rounded-[4rem] bg-rose-500/5 border-2 border-rose-500/20 flex flex-col md:flex-row items-center gap-10 shadow-2xl backdrop-blur-3xl relative z-50 overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-rose-500/[0.02] animate-pulse pointer-events-none" />
-          <div className="w-20 h-20 rounded-[2rem] bg-rose-500/20 flex items-center justify-center shadow-xl border-2 border-rose-500/30 relative z-10">
-             <AlertCircle size={40} className="text-rose-500 animate-pulse" />
+        <div role="alert" className="flex flex-col sm:flex-row items-start sm:items-center gap-3 rounded-xl border border-rose-500/30 bg-rose-500/5 p-4">
+          <AlertCircle size={20} className="shrink-0 text-rose-500" aria-hidden />
+          <div className="flex-1 min-w-0">
+            <p className="ds-text-label text-rose-600 dark:text-rose-400">{t('autonomousCreator.errorHeading')}</p>
+            <p className="text-sm text-theme-secondary">{error}</p>
           </div>
-          <div className="flex-1 relative z-10">
-            <p className="text-[11px] font-black text-rose-500 uppercase tracking-[0.8em] italic mb-3">{t('autonomousCreator.errorHeading')}</p>
-            <p className="text-3xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter leading-tight drop-shadow-2xl">{error}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setError(null)}
-            className="px-12 py-6 rounded-[2.5rem] bg-rose-600 text-white font-black text-xs uppercase tracking-[0.4em] italic shadow-xl hover:bg-rose-500 transition-all active:scale-95 border-none relative z-10"
-          >
-            {t('autonomousCreator.dismiss')}
-          </button>
-        </m.div>
+          <Button variant="secondary" size="sm" onClick={() => setError(null)}>{t('autonomousCreator.dismiss')}</Button>
+        </div>
       )}
 
-      {/* Heuristic Wisdom Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 relative opacity-40 hover:opacity-100 transition-opacity duration-1000 pt-16">
+      {/* Tips */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           { icon: Brain,  titleKey: 'autonomousCreator.tipPolishTitle',   descKey: 'autonomousCreator.tipPolishDesc' },
-          { icon: Target, titleKey: 'autonomousCreator.tipPlatformTitle',   descKey: 'autonomousCreator.tipPlatformDesc' },
-          { icon: Sparkle, titleKey: 'autonomousCreator.tipVoiceTitle',    descKey: 'autonomousCreator.tipVoiceDesc' },
+          { icon: Target, titleKey: 'autonomousCreator.tipPlatformTitle', descKey: 'autonomousCreator.tipPlatformDesc' },
+          { icon: Sparkle, titleKey: 'autonomousCreator.tipVoiceTitle',   descKey: 'autonomousCreator.tipVoiceDesc' },
         ].map(tip => (
-          <div key={tip.titleKey} className="bg-surface-card backdrop-blur-3xl border-2 border-surface-100 dark:border-surface-800 p-10 rounded-[3.5rem] group hover:bg-surface-page transition-all cursor-crosshair shadow-xl">
-             <div className="w-16 h-16 rounded-2xl bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 flex items-center justify-center mb-8 shadow-inner group-hover:rotate-12 group-hover:scale-110 transition-all duration-1000">
-                <tip.icon size={32} className="text-surface-300 dark:text-slate-800 group-hover:text-primary-500 transition-colors" />
-             </div>
-             <p className="text-2xl font-black text-surface-900 dark:text-white italic uppercase tracking-tighter mb-4 group-hover:text-primary-500 transition-colors leading-none">{t(tip.titleKey)}</p>
-             <p className="text-[11px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-[0.3em] leading-relaxed italic opacity-60 group-hover:opacity-100 transition-opacity duration-1000">{t(tip.descKey)}</p>
+          <div key={tip.titleKey} className="ds-surface-subtle p-4">
+            <tip.icon size={18} className="mb-2 text-indigo-500" aria-hidden />
+            <p className="text-sm font-semibold text-theme-primary">{t(tip.titleKey)}</p>
+            <p className="mt-1 ds-text-caption text-theme-muted">{t(tip.descKey)}</p>
           </div>
         ))}
       </div>
-
-      <style jsx global>{`
-        .animate-spin-slow { animation: spin 30s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .animate-shimmer { animation: shimmer 3s infinite linear; }
-        @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
-      `}</style>
     </div>
   )
 }
