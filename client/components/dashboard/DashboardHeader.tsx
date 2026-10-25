@@ -76,6 +76,28 @@ const SEGMENT_LABEL_KEY: Record<string, string> = {
   achievements: 'nav.achievements',
   jobs: 'nav.jobs',
   posts: 'nav.posts',
+  // The app-bar title for these read "Clicklearning", "Brandkit", "Hookab"…
+  labs: 'nav.labs',
+  recurring: 'nav.recurring',
+  membership: 'nav.membership',
+  infrastructure: 'nav.infrastructure',
+  autopilot: 'nav.autopilot',
+  'click-learning': 'nav.clickLearning',
+  'creator-dna': 'nav.creatorDna',
+  'hook-ab': 'nav.hookAb',
+  keywords: 'nav.keywords',
+  outliers: 'nav.outliers',
+  channel: 'nav.channelAudit',
+  seo: 'nav.seoScorecard',
+  repurpose: 'nav.trendRepurpose',
+  toolbox: 'nav.toolbox',
+  neural: 'nav.neural',
+  suggestions: 'nav.suggestions',
+  ops: 'nav.ops',
+  collaborate: 'nav.approvalThreads',
+  capacity: 'nav.capacity',
+  engagement: 'nav.engagement',
+  auto: 'nav.autoClips',
 }
 
 function segmentLabel(t: (k: string) => string, seg: string): string {
@@ -83,7 +105,9 @@ function segmentLabel(t: (k: string) => string, seg: string): string {
   // When a key exists, t() returns the translated value; when it doesn't,
   // pass the raw segment so t()'s humanise() turns e.g. "marketing-ai" into
   // a readable label rather than leaking the slug.
-  return key ? t(key) : t(seg.replace(/-/g, ''))
+  // kebab → camel so humanise() splits the words ("dead-letter" → "Dead letter",
+  // not "Deadletter").
+  return key ? t(key) : t(seg.replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase()))
 }
 
 export default function DashboardHeader() {
