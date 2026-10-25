@@ -447,6 +447,11 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                     if (deviceView === 'mobile') setMobileMenuOpen(false)
                   }}
                   disabled={isLocked}
+                  // Collapsed, the button is just an icon — name it for screen
+                  // readers and give sighted users a tooltip.
+                  aria-label={isCollapsed ? catLabel(category) : undefined}
+                  title={isCollapsed ? catLabel(category) : undefined}
+                  aria-current={isActive ? 'page' : undefined}
                   className={cn('w-full group relative overflow-hidden rounded-xl transition-colors text-left border',
                     isActive
                       ? 'bg-primary text-primary-foreground border-transparent'
