@@ -72,9 +72,24 @@ jobs:
       run: cd client && npm test -- --ci --watchAll=false
 
     - name: Run unit tests
-      run: npm run test:unit
+      # Collects coverage as it runs (merged and threshold-checked in "Check
+      # coverage" below) instead of re-running every suite a second time just
+      # to measure it. Retried once, only on a V8 crash (133 inspector
+      # assertion nodejs/node#58460, 134 abort/heap) — never on a test failure.
+      run: |
+        set +e
+        run() { npm run test:unit -- --coverage --coverageDirectory=coverage/unit --coverageReporters=json --coverageThreshold='{}' "$@"; }
+        run
+        code=$?
+        if [ "$code" -eq 133 ] || [ "$code" -eq 134 ]; then
+          echo "::warning::Unit run killed by a V8 crash (exit $code), not a test result. Retrying once against a fresh database."
+          MONGODB_URI=mongodb://localhost:27017/click-test-retry run
+          code=$?
+        fi
+        exit $code
       env:
         NODE_ENV: test
+        NODE_OPTIONS: --max-old-space-size=6144
         MONGODB_URI: mongodb://localhost:27017/click-test
         JWT_SECRET: test-secret-key
         REDIS_URL: redis://localhost:6379
@@ -87,62 +102,33 @@ jobs:
       # race entirely. Also fixed: stale subscription/verify assertion, scheduler
       # spinning its own MongoMemoryServer (404s on the runner), and spawned prod
       # servers now get a test OAUTH_ENCRYPTION_KEY so they boot.
-      run: npm run test:integration -- --runInBand
-      env:
-        NODE_ENV: test
-        MONGODB_URI: mongodb://localhost:27017/click-test
-        JWT_SECRET: test-secret-key
-        REDIS_URL: redis://localhost:6379
-
-    - name: Generate test coverage
-      # GATING against a ratchet. This was non-gating because coverage always
-      # reported 0/0 — not because of --selectProjects (the old theory here) but
-      # because the tree-wide `minimatch: ^10` security override broke
-      # test-exclude@6 inside babel-plugin-istanbul, so every suite failed to run
-      # under --coverage. jest.config.js now uses the v8 provider, the script is
-      # scoped to unit+integration, and coverageThreshold holds the real measured
-      # numbers so coverage can't silently regress.
-      #
-      # Retried ONCE, and ONLY on exit 133. The v8 provider collects coverage
-      # through an in-process inspector session with the Debugger domain enabled
-      # (collect-v8-coverage), and Node 20's V8 11.3 has an unfixed assertion in
-      # its scope iterator that can fire when that debugger pauses:
-      #   Check failed: needs_context && current_scope_ == closure_scope_ ...
-      # (nodejs/node#58460). It killed this step with SIGTRAP (exit 133) on one
-      # run and not on an otherwise identical one, and it is not a test result.
-      # Also retried ONCE on exit 134 (SIGABRT). On the #316 merge commit every
-      # unit and integration test passed, then this --runInBand coverage process
-      # died at V8's default heap cap ("Ineffective mark-compacts near heap limit
-      # … JavaScript heap out of memory") — skipping `build` and holding the
-      # Render deploy. NODE_OPTIONS below raises the cap so that should not
-      # recur; the retry covers a one-off abort.
-      # Every real outcome still fails the step with no retry: a failing test or
-      # a missed coverageThreshold exits 1. The retry gets a fresh database so it
-      # does not inherit rows from the crashed partial run.
+      # Also collects coverage (see "Run unit tests").
       run: |
         set +e
-        npm run test:coverage
+        run() { npm run test:integration -- --runInBand --coverage --coverageDirectory=coverage/integration --coverageReporters=json --coverageThreshold='{}' "$@"; }
+        run
         code=$?
         if [ "$code" -eq 133 ] || [ "$code" -eq 134 ]; then
-          echo "::warning::Coverage run was killed by a V8 crash, not a test result (exit $code: 133 = inspector assertion nodejs/node#58460, 134 = abort / heap out of memory). Retrying once against a fresh database."
-          MONGODB_URI=mongodb://localhost:27017/click-test-coverage-retry npm run test:coverage
+          echo "::warning::Integration run killed by a V8 crash (exit $code), not a test result. Retrying once against a fresh database."
+          MONGODB_URI=mongodb://localhost:27017/click-test-int-retry run
           code=$?
         fi
         exit $code
       env:
         NODE_ENV: test
-        # All ~314 suites run in ONE process (--runInBand) while V8 accumulates
-        # coverage data, which outgrew Node's default heap cap. 6 GB fits the
-        # ubuntu-latest runner alongside the Mongo and Redis service containers.
         NODE_OPTIONS: --max-old-space-size=6144
-        # Its OWN database. This step re-runs the unit + integration suites a
-        # second time, and --runInBand puts all of them in a single
-        # …-w1 database — the same one the earlier "Run unit tests" step just
-        # filled. Any suite asserting a collection-wide count then sees the
-        # first pass's rows too (useridFlipMigration counted 20 convertible
-        # instead of 10 and failed only here).
-        MONGODB_URI: mongodb://localhost:27017/click-test-coverage
+        MONGODB_URI: mongodb://localhost:27017/click-test
         JWT_SECRET: test-secret-key
+        REDIS_URL: redis://localhost:6379
+
+    - name: Check coverage
+      # GATING ratchet: merges the coverage the two test steps collected and
+      # enforces jest.config.js coverageThreshold on the merged numbers.
+      # This used to be a THIRD full run of every unit + integration suite,
+      # serially in one process, only to measure coverage — 75 to 190 minutes,
+      # and long enough that GitHub lost contact with the runner and failed
+      # the job (#330). Fails if either step produced no coverage.
+      run: node scripts/coverage-merge-check.js coverage/unit coverage/integration
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
