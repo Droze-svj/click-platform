@@ -194,7 +194,53 @@ async function cancelWhopMembership(membershipId, { mode = 'at_period_end' } = {
   });
 }
 
+/**
+ * Create a Whop checkout for one plan with the Click user id in its metadata.
+ * Payments/memberships created from it inherit that metadata, so the webhook
+ * matches the buyer by id instead of by email (a buyer who pays with another
+ * email used to get no plan).
+ * https://docs.whop.com/api-reference/checkout-configurations/create-checkout-configuration
+ * Resolves { success, purchaseUrl?, reason? } — never throws.
+ */
+async function createWhopCheckout({ whopPlanId, userId, redirectUrl }) {
+  const WHOP_API_KEY = process.env.WHOP_API_KEY;
+  if (!WHOP_API_KEY) return { success: false, configured: false, reason: 'WHOP_API_KEY is not configured.' };
+  if (!/^plan_/.test(String(whopPlanId || ''))) return { success: false, configured: true, reason: 'Unknown Whop plan.' };
+  const base = (process.env.WHOP_API_V1_URL || 'https://api.whop.com/api/v1').replace(/\/+$/, '');
+  const payload = JSON.stringify({
+    plan_id: whopPlanId,
+    metadata: { passthrough: String(userId), click_user_id: String(userId) },
+    ...(redirectUrl ? { redirect_url: redirectUrl } : {}),
+  });
+  return new Promise((resolve) => {
+    const request = https.request(new URL(`${base}/checkout_configurations`), {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${WHOP_API_KEY}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(payload), accept: 'application/json' },
+      timeout: 15000,
+    }, (res) => {
+      let data = '';
+      res.on('data', (c) => { data += c; });
+      res.on('end', () => {
+        let body = {};
+        try { body = JSON.parse(data || '{}'); } catch { /* non-JSON */ }
+        if (res.statusCode >= 200 && res.statusCode < 300 && body.purchase_url) {
+          const url = /^https?:/i.test(body.purchase_url) ? body.purchase_url : `https://whop.com${body.purchase_url}`;
+          return resolve({ success: true, configured: true, purchaseUrl: url });
+        }
+        const reason = (body.error && (body.error.message || body.error)) || body.message || `Whop checkout failed with HTTP ${res.statusCode}`;
+        logger.error('Whop checkout creation failed', { statusCode: res.statusCode, reason });
+        resolve({ success: false, configured: true, reason: String(reason) });
+      });
+    });
+    request.on('timeout', () => request.destroy(new Error('Whop checkout request timed out')));
+    request.on('error', (err) => resolve({ success: false, configured: true, reason: err.message }));
+    request.write(payload);
+    request.end();
+  });
+}
+
 module.exports = {
+  createWhopCheckout,
   fetchWhopProducts,
   refundWhopPayment,
   cancelWhopMembership

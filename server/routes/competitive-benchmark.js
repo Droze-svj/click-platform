@@ -11,7 +11,6 @@ const logger = require('../utils/logger')
 const {
   getCompetitiveBenchmarks,
   getNextWeekRecommendations,
-  trackCompetitors,
   compareWithCompetitors
 } = require('../services/competitiveBenchmarkingService')
 
@@ -51,11 +50,16 @@ router.get('/next-week', authenticateToken, requireFeature('creator_analytics'),
 // Body: { competitorUsernames: string[], platform: string }
 router.post('/track', authenticateToken, requireFeature('creator_analytics'), async (req, res) => {
   try {
-    const { competitorUsernames = [], platform = 'tiktok' } = req.body
-    if (!competitorUsernames.length) return res.status(400).json({ error: 'competitorUsernames is required' })
-    const userId = req.user?.id || req.user?._id
-    const data = await trackCompetitors(userId, competitorUsernames, platform)
-    res.json({ success: true, data })
+    const { competitorUsernames = [] } = req.body || {}
+    if (!Array.isArray(competitorUsernames) || !competitorUsernames.length) return res.status(400).json({ error: 'competitorUsernames is required' })
+    // Nothing ingests competitor data (see getCompetitorData) and nothing was
+    // ever stored here, yet this answered 200 and the editor said "Now
+    // tracking @x — their metrics will appear". Say what is true instead.
+    return res.status(501).json({
+      success: false,
+      available: false,
+      error: 'Competitor tracking is not available yet: Click has no source for other accounts\' metrics, so nothing would be collected.',
+    })
   } catch (err) {
     
     res.status(500).json({ error: 'Failed to track competitors' })

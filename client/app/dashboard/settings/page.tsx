@@ -470,9 +470,15 @@ export default function SettingsPage() {
                 settings={settings} setField={setField}
                 saving={savingSection === 'appearance'}
                 onSave={async () => {
+                  // Only the fields this form edits. `settings.preferences` is
+                  // the snapshot loaded with the page, so it also carries the
+                  // pinnedNav / defaultLanding of that moment — sending it back
+                  // reverted every pin made since (WorkspaceSection saves those
+                  // itself through useWorkspacePrefs).
+                  const { theme, language, timezone } = settings.preferences
                   await saveSection('appearance', {
                     appearance: settings.appearance,
-                    preferences: settings.preferences,
+                    preferences: { theme, language, timezone },
                   })
                   applyAppearance(settings.appearance)
                   // Keep ThemeProvider in sync (auto → system).

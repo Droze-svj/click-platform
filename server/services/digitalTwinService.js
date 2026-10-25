@@ -64,6 +64,14 @@ class DigitalTwinService {
       const UserSettings = require('../models/UserSettings');
       if (UserSettings && typeof UserSettings.findOne === 'function') {
         const settings = await UserSettings.findOne({ userId }).lean().catch(() => null);
+        // HeyGen/Sora keys are encrypted at rest; legacy plaintext passes
+        // through decryptToken unchanged.
+        if (settings?.agentic) {
+          const { decryptToken } = require('../utils/dataEncryption');
+          for (const field of ['heygenApiKey', 'soraApiKey']) {
+            if (settings.agentic[field]) settings.agentic[field] = decryptToken(settings.agentic[field]);
+          }
+        }
         return settings;
       }
     } catch (_) {

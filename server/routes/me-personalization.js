@@ -18,11 +18,21 @@ const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const logger = require('../utils/logger');
+const User = require('../models/User');
 const UserPreferences = require('../models/UserPreferences');
 const UserStyleProfile = require('../models/UserStyleProfile');
 const personalizationService = require('../services/personalizationService');
+const { resolveNiche, userIdVariants } = require('../services/nicheSync');
 
 const router = express.Router();
+
+// The onboarding wizard's first goal ids, mapped onto the signup goal ids
+// (routes/niche.js VALID_GOALS) so every store speaks one vocabulary.
+const GOAL_ALIASES = {
+  viral: 'more_views',
+  engagement: 'grow_audience',
+  brand_awareness: 'build_brand',
+};
 
 // Prefer the real ObjectId so UserStyleProfile writes cast cleanly (the dev
 // user's `id` is a non-hex string); UserPreferences.userId is Mixed either way.
@@ -141,7 +151,7 @@ router.get(
   asyncHandler(async (req, res) => {
     let mi = {};
     try {
-      const prefs = await UserPreferences.findOne({ userId: uid(req) }).lean();
+      const prefs = await UserPreferences.findOne({ userId: { $in: userIdVariants(uid(req)) } }).lean();
       mi = prefs?.marketingIntelligence || {};
     } catch (e) {
       logger.warn('[me] recommendations read failed', { error: e.message });
@@ -179,7 +189,7 @@ router.get(
   '/ai-preferences',
   auth,
   asyncHandler(async (req, res) => {
-    const prefs = await UserPreferences.findOne({ userId: uid(req) }).lean();
+    const prefs = await UserPreferences.findOne({ userId: { $in: userIdVariants(uid(req)) } }).lean();
     const ve = prefs?.videoEditing || {};
     const bk = prefs?.brandKit || {};
     const mi = prefs?.marketingIntelligence || {};
@@ -215,7 +225,7 @@ router.put(
     const userId = uid(req);
     const body = req.body || {};
 
-    let prefs = await UserPreferences.findOne({ userId });
+    let prefs = await UserPreferences.findOne({ userId: { $in: userIdVariants(userId) } });
     if (!prefs) prefs = new UserPreferences({ userId });
     prefs.videoEditing = prefs.videoEditing || {};
     prefs.brandKit = prefs.brandKit || {};
@@ -236,12 +246,21 @@ router.put(
     if (str(b.colorGrade, 40) !== undefined) prefs.videoEditing.aestheticColorGrade = str(b.colorGrade, 40);
 
     const d = body.defaults || {};
-    if (str(d.niche, 40) !== undefined) prefs.marketingIntelligence.niche = str(d.niche, 40);
+    // The niche is resolved to a playbook key when it names one ("fitness" →
+    // health) and mirrored onto User.niche, so both stores agree.
+    let userNiche;
+    if (str(d.niche, 40) !== undefined) {
+      const resolved = resolveNiche(str(d.niche, 40));
+      prefs.marketingIntelligence.niche = resolved ? resolved.label : '';
+      userNiche = resolved ? resolved.canonical : 'other';
+    }
     if (strArray(d.platformFocus, 10, 30) !== undefined) prefs.marketingIntelligence.platformFocus = strArray(d.platformFocus, 10, 30);
     // `goals` is on the model and feeds the marketing brain, but there was no
     // path to write it here — so the creator goal captured during onboarding
     // could never reach the server and lived only in the browser.
-    if (strArray(d.goals, 10, 40) !== undefined) prefs.marketingIntelligence.goals = strArray(d.goals, 10, 40);
+    if (strArray(d.goals, 10, 40) !== undefined) {
+      prefs.marketingIntelligence.goals = [...new Set(strArray(d.goals, 10, 40).map((g) => GOAL_ALIASES[g] || g))];
+    }
 
     prefs.markModified('videoEditing');
     prefs.markModified('brandKit');
@@ -250,6 +269,13 @@ router.put(
       await prefs.save();
     } catch (e) {
       return sendError(res, 'Could not save preferences', 500);
+    }
+    if (userNiche !== undefined && mongoose.Types.ObjectId.isValid(String(userId))) {
+      try {
+        await User.updateOne({ _id: String(userId) }, { $set: { niche: userNiche } });
+      } catch (e) {
+        logger.warn('[me] User.niche mirror failed', { error: e.message });
+      }
     }
     personalizationService.invalidatePersona(userId); // so the next generation sees the change immediately
 

@@ -16,7 +16,8 @@ import {
   Sparkles
 } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
-import { apiGet, apiPost } from '../../../lib/api'
+import { apiPost, handleApiError } from '../../../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface RemediationAction {
   type: string
@@ -24,17 +25,23 @@ interface RemediationAction {
   timestamp?: number
 }
 
+// What POST /phase16_18/remediation/process returns (server/services/remediationService.js).
 interface RemediationStatus {
   success: boolean
-  status: 'IDLE' | 'SCHEDULED' | 'EVOLVED'
+  status: 'IDLE' | 'CLEAN' | 'SCHEDULED' | 'EVOLVED'
   actionPlan?: RemediationAction[]
+  applied?: string[]
+  commentsChecked?: number
   finalUrl?: string
   window?: { start: number, end: number }
 }
 
+type ToastFn = (message: string, type?: 'success' | 'error' | 'info' | 'warning') => unknown
+
 const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
 
-export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) => {
+export const RemediationHUD: React.FC<{ contentId: string; showToast?: ToastFn }> = ({ contentId, showToast }) => {
+    const { t } = useTranslation()
     const [status, setStatus] = useState<RemediationStatus | null>(null)
     const [loading, setLoading] = useState(false)
     const [isEvolutionWindow, setIsEvolutionWindow] = useState(false)
@@ -48,10 +55,15 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
     const triggerRemediation = async () => {
         setLoading(true)
         try {
-            const data = await apiPost('/phase16_18/remediation/process', { contentId })
+            const res: any = await apiPost('/phase16_18/remediation/process', { contentId })
+            const data: RemediationStatus = res?.data ?? res
             setStatus(data)
+            const count = data?.actionPlan?.length || 0
+            if (data?.status === 'CLEAN') showToast?.(t('editorPanels.remediation.noFixesToast'), 'info')
+            else if (data?.status === 'SCHEDULED') showToast?.(t('editorPanels.remediation.scheduledToast', { count }), 'info')
+            else if (data?.status === 'EVOLVED') showToast?.(t('editorPanels.remediation.appliedToast', { applied: data.applied?.length || 0, count }), 'success')
         } catch (err) {
-            console.error('Remediation trigger failed')
+            showToast?.(t('editorPanels.remediation.failedToast', { error: handleApiError(err) }), 'error')
         } finally {
             setLoading(false)
         }
@@ -94,7 +106,7 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                     </div>
 
                     <div className="space-y-4">
-                        {status?.actionPlan ? (
+                        {status?.actionPlan && status.actionPlan.length > 0 ? (
                             status.actionPlan.map((action, i) => (
                                 <m.div 
                                     key={i}
@@ -118,13 +130,23 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                                             </span>
                                         </div>
                                     </div>
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                    {status.status === 'EVOLVED' && status.applied?.includes(action.type) ? (
+                                        <CheckCircle2 className="w-4 h-4 text-emerald-500" aria-label={t('editorPanels.remediation.applied')} />
+                                    ) : (
+                                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                                            {status.status === 'EVOLVED' ? t('editorPanels.remediation.notApplied') : t('editorPanels.remediation.planned')}
+                                        </span>
+                                    )}
                                 </m.div>
                             ))
                         ) : (
                             <div className="h-48 flex flex-col items-center justify-center space-y-4 opacity-30 italic">
                                 <AlertCircle className="w-8 h-8" />
-                                <span className="text-[10px] font-black uppercase tracking-widest">Not checked yet</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest">
+                                    {status?.status === 'CLEAN'
+                                        ? t('editorPanels.remediation.noFixesNeeded', { count: status.commentsChecked ?? 0 })
+                                        : 'Not checked yet'}
+                                </span>
                             </div>
                         )}
                     </div>
@@ -162,7 +184,7 @@ export const RemediationHUD: React.FC<{ contentId: string }> = ({ contentId }) =
                             <History className="w-6 h-6 opacity-60" />
                             <div>
                                 <span className="text-[9px] font-black uppercase tracking-widest opacity-80 block mb-1 leading-none">Last run</span>
-                                <h6 className="text-sm font-black italic tracking-tighter uppercase leading-none">{status?.status === 'EVOLVED' ? 'Just now' : status?.status === 'SCHEDULED' ? 'Scheduled' : 'Not run yet'}</h6>
+                                <h6 className="text-sm font-black italic tracking-tighter uppercase leading-none">{status?.status === 'EVOLVED' || status?.status === 'CLEAN' ? 'Just now' : status?.status === 'SCHEDULED' ? 'Scheduled' : 'Not run yet'}</h6>
                             </div>
                         </div>
                         <ChevronRight className="w-5 h-5 opacity-40" />

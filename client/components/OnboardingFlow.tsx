@@ -253,10 +253,10 @@ function ProfileStep({ onComplete }: { onComplete: () => void }) {
   const { t } = useTranslation()
   const [selected, setSelected] = useState('')
   const niches = [
-    { id: 'tech', name: t('onboardingFlow.nicheTechnology'), icon: <Zap className="w-5 h-5 text-indigo-400" /> },
+    { id: 'technology', name: t('onboardingFlow.nicheTechnology'), icon: <Zap className="w-5 h-5 text-indigo-400" /> },
     { id: 'finance', name: t('onboardingFlow.nicheFinance'), icon: <ShieldCheck className="w-5 h-5 text-emerald-400" /> },
-    { id: 'media', name: t('onboardingFlow.nicheMedia'), icon: <Video className="w-5 h-5 text-rose-400" /> },
-    { id: 'creators', name: t('onboardingFlow.nicheCreators'), icon: <Users className="w-5 h-5 text-blue-400" /> }
+    { id: 'entertainment', name: t('onboardingFlow.nicheMedia'), icon: <Video className="w-5 h-5 text-rose-400" /> },
+    { id: 'other', name: t('onboardingFlow.nicheCreators'), icon: <Users className="w-5 h-5 text-blue-400" /> }
   ]
 
   return (

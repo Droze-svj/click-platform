@@ -555,7 +555,7 @@ export default function ContentDetailPage() {
             /api/phase16_18/remediation/process). It requires a contentId, which
             is why it belongs here rather than on the account-level ops page. */}
         <ErrorBoundary>
-          <RemediationHUD contentId={String(content._id)} />
+          <RemediationHUD contentId={String(content._id)} showToast={showToast} />
         </ErrorBoundary>
 
         {/* Five-part quality report — engagement, pacing, highlights, content and

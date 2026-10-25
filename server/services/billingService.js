@@ -5,7 +5,6 @@ const User = require('../models/User');
 const MembershipPackage = require('../models/MembershipPackage');
 const AddOn = require('../models/AddOn');
 const PromoCode = require('../models/PromoCode');
-const SubscriptionChange = require('../models/SubscriptionChange');
 const logger = require('../utils/logger');
 
 /**
@@ -138,9 +137,10 @@ async function claimPromoCode(code) {
 }
 
 /**
- * Process subscription upgrade/downgrade
+ * Quote a subscription upgrade/downgrade: price, proration, add-ons and a promo
+ * code PREVIEW. Read-only — it changes nothing and redeems nothing.
  */
-async function processSubscriptionChange(userId, newPackageId, newBillingCycle, promoCode = null, addOnIds = []) {
+async function quoteSubscriptionChange(userId, newPackageId, newBillingCycle, promoCode = null, addOnIds = []) {
   try {
     const user = await User.findById(userId).populate('membershipPackage');
     if (!user) {
@@ -216,6 +216,7 @@ async function processSubscriptionChange(userId, newPackageId, newBillingCycle, 
     const addOns = [];
     if (addOnIds.length > 0) {
       for (const addOnId of addOnIds) {
+        if (!mongooseLib.Types.ObjectId.isValid(String(addOnId))) continue;
         const addOn = await AddOn.findById(addOnId);
         if (addOn && addOn.isActive) {
           const addOnPrice = newBillingCycle === 'monthly' 
@@ -238,66 +239,55 @@ async function processSubscriptionChange(userId, newPackageId, newBillingCycle, 
 
     let totalAmount = baseAmount + addOnTotal + proration.proratedAmount;
 
-    // Apply promo code if provided
+    // Promo code: PREVIEW only. This used to claim a use of the code
+    // (claimPromoCode) and save a 'pending' SubscriptionChange — with no
+    // checkout behind it. Nothing ever completed that record (completion is
+    // retired; paid tiers come only from the signed Whop webhook), so every
+    // call burned a use of a single-use code and left a phantom row in
+    // /billing/history. A quote has no side effects.
     let discountAmount = 0;
     let promoCodeResult = null;
     if (promoCode) {
       promoCodeResult = await applyPromoCode(promoCode, newPackageId, totalAmount);
       if (promoCodeResult.valid) {
-        // Atomically claim one use. null → the code was exhausted between the
-        // validate read and here (a concurrent redemption won the race).
-        const claimed = await claimPromoCode(promoCode);
-        if (!claimed) {
-          promoCodeResult = { valid: false, error: 'Promo code usage limit reached' };
-        } else {
-          discountAmount = promoCodeResult.discountAmount;
-          totalAmount = promoCodeResult.finalAmount;
-        }
+        discountAmount = promoCodeResult.discountAmount;
+        totalAmount = promoCodeResult.finalAmount;
       }
     }
 
-    // Create subscription change record
     const isUpgrade = (targetPackage.price?.monthly || 0) >= (currentPackage.price?.monthly || 0);
-    const subscriptionChange = new SubscriptionChange({
-      userId,
-      changeType: isUpgrade ? 'upgrade' : 'downgrade',
-      fromPackage: currentPackage._id,
-      toPackage: targetPackage._id,
-      fromBillingCycle: currentCycle,
-      toBillingCycle: newBillingCycle,
-      proratedAmount: proration.proratedAmount,
-      proratedCredit: proration.credit,
-      effectiveDate: now,
-      billingDate: subscriptionEndDate,
-      addOns,
-      promoCode: promoCodeResult?.promoCode,
-      discountAmount,
-      totalAmount: Math.round(totalAmount * 100) / 100,
-      status: 'pending'
-    });
-
-    await subscriptionChange.save();
-
-    logger.info('Subscription change created', {
-      userId,
-      changeType: subscriptionChange.changeType,
-      totalAmount: subscriptionChange.totalAmount
-    });
+    const roundedTotal = Math.round(totalAmount * 100) / 100;
 
     return {
-      subscriptionChange,
+      quote: {
+        changeType: isUpgrade ? 'upgrade' : 'downgrade',
+        fromPackage: { id: currentPackage._id, name: currentPackage.name, slug: currentPackage.slug },
+        toPackage: { id: targetPackage._id, name: targetPackage.name, slug: targetPackage.slug },
+        fromBillingCycle: currentCycle,
+        toBillingCycle: newBillingCycle,
+        effectiveDate: now,
+        billingDate: subscriptionEndDate,
+        addOns,
+        totalAmount: roundedTotal,
+      },
+      promoCode: promoCodeResult
+        ? { valid: !!promoCodeResult.valid, error: promoCodeResult.valid ? undefined : promoCodeResult.error }
+        : null,
+      // Nothing changes until the user pays at checkout; the Whop webhook
+      // applies the plan.
+      checkoutRequired: true,
       breakdown: {
         baseAmount,
         addOnTotal,
         proratedAmount: proration.proratedAmount,
         credit: proration.credit,
         discountAmount,
-        totalAmount: subscriptionChange.totalAmount
+        totalAmount: roundedTotal
       },
       proration
     };
   } catch (error) {
-    logger.error('Error processing subscription change', { error: error.message, userId });
+    logger.error('Error quoting subscription change', { error: error.message, userId });
     throw error;
   }
 }
@@ -321,7 +311,10 @@ module.exports = {
   calculateProratedAmount,
   applyPromoCode,
   claimPromoCode,
-  processSubscriptionChange,
+  quoteSubscriptionChange,
+  // Former name, kept so existing imports keep working. It is the same
+  // read-only quote.
+  processSubscriptionChange: quoteSubscriptionChange,
   completeSubscriptionChange
 };
 

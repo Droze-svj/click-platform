@@ -35,6 +35,7 @@ import {
   type BillingPeriod,
   type PlanId,
 } from '../../lib/plans'
+import { accountCheckoutUrl } from '../../lib/checkout'
 
 // ── Catalog types (subset of the server publicCatalog() shape we consume) ────
 interface CatalogFeature {
@@ -176,7 +177,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
   const displayPrice = period === 'yearly' && yearly ? yearly : monthly
   const priceCadence = period === 'yearly' ? '/yr' : '/mo'
 
-  const handleUpgrade = () => {
+  const handleUpgrade = async () => {
     // buildCheckoutTarget wants a local Plan object + user. Map the server tier
     // id (free/creator/pro/agency) → the local Plan; ids are aligned.
     const plan = getPlan(targetTierId as PlanId)
@@ -191,7 +192,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
       onClose()
       return
     }
-    window.location.href = target.href
+    window.location.href = target.kind === 'whop' ? await accountCheckoutUrl(plan.id, period, target.href) : target.href
   }
 
   // ── Headline copy: motivating, honest, scoped to the reason ──

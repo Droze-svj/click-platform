@@ -47,10 +47,10 @@ describe('PUT /api/me/ai-preferences — onboarding answers', () => {
       .expect(200);
 
     const data = res.body.data ?? res.body;
-    expect(data.defaults.niche).toBe('fitness');
+    expect(data.defaults.niche).toBe('health'); // resolved to its playbook
     expect(data.defaults.platformFocus).toEqual(['tiktok']);
     // The field this test exists for — previously unwritable through the API.
-    expect(data.defaults.goals).toEqual(['viral']);
+    expect(data.defaults.goals).toEqual(['more_views']); // wizard id → signup goal id
     expect(data.voice.hookStyle).toBe('controversial-question');
   });
 
@@ -58,8 +58,8 @@ describe('PUT /api/me/ai-preferences — onboarding answers', () => {
     // The route keys UserPreferences by req.user._id (an ObjectId), not its hex
     // string — see server/utils/userKey.js on why the ObjectId is canonical.
     const prefs = await UserPreferences.findOne({ userId: user._id }).lean();
-    expect(prefs?.marketingIntelligence?.goals).toEqual(['viral']);
-    expect(prefs?.marketingIntelligence?.niche).toBe('fitness');
+    expect(prefs?.marketingIntelligence?.goals).toEqual(['more_views']);
+    expect(prefs?.marketingIntelligence?.niche).toBe('health');
   });
 
   it('a partial save does not wipe the other onboarding answers', async () => {
@@ -74,8 +74,8 @@ describe('PUT /api/me/ai-preferences — onboarding answers', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
     const data = res.body.data ?? res.body;
-    expect(data.defaults.goals).toEqual(['viral']);
-    expect(data.defaults.niche).toBe('fitness');
+    expect(data.defaults.goals).toEqual(['more_views']); // wizard id → signup goal id
+    expect(data.defaults.niche).toBe('health'); // resolved to its playbook
     expect(data.voice.tone).toBe('warm');
   });
 

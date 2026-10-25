@@ -12,7 +12,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { apiGet, apiPost } from '../../../lib/api'
-import { getAssetUrl } from '../../../utils/url'
+import { getAssetUrl, getMediaUrl } from '../../../utils/url'
 import {
   Asset,
   AUDIO_TRACKS,
@@ -120,8 +120,22 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
         createdAt: m.createdAt
       }))
 
+      // Uploaded images (server-indexed; URLs come back signed)
+      const imageRes: any = await apiGet('/assets/images').catch(() => null)
+      const imageData = imageRes?.data?.images || imageRes?.images || []
+      const imageAssets: Asset[] = (Array.isArray(imageData) ? imageData : []).map((img: any) => ({
+        id: img._id,
+        url: getMediaUrl(img.file?.url || ''),
+        title: img.title || 'Uploaded image',
+        type: 'image',
+        thumbnail: getMediaUrl(img.file?.url || ''),
+        source: 'upload',
+        createdAt: img.createdAt
+      }))
+
       setMyBroll(brollAssets)
       setMyMusic(musicAssets)
+      setMyImages(imageAssets)
     } catch (error) {
       console.error('Failed to fetch user assets:', error)
     }
@@ -220,6 +234,12 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
         formData.append('audio', file)
         formData.append('title', file.name.replace(/\.[^/.]+$/, ""))
         formData.append('licenseAttestation', 'true')
+      } else if (type === 'image') {
+        // Images have their own route — /video/upload only accepts video files
+        // and answered every image with a 400.
+        endpoint = '/assets/images'
+        formData.append('image', file)
+        formData.append('title', file.name.replace(/\.[^/.]+$/, ""))
       } else {
         formData.append('video', file)
         formData.append('title', file.name.replace(/\.[^/.]+$/, ""))
@@ -266,8 +286,10 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
   const handleDrop = (e: React.DragEvent, zone: 'music' | 'images' | 'broll' | 'sfx') => {
     e.preventDefault(); setDragOver(null);
     if (uploading) return;
-    const files = Array.from(e.dataTransfer.files || []);
-    showToast(`Ingesting ${files.length} file(s)`, 'info');
+    // Dropping used to toast "Ingesting N file(s)" and upload nothing.
+    const file = Array.from(e.dataTransfer.files || [])[0];
+    if (!file) return;
+    handleFileUpload(file, zone === 'images' ? 'image' : zone);
   }
 
   const FILTERS: { id: typeof filter; label: string; icon: LucideIcon }[] = [

@@ -106,7 +106,7 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
           throw new Error(startRes?.error || 'Dubbing is not available on this server.')
         }
 
-        const audioUrl: string | null = startRes.audioUrl || null
+        let audioUrl: string | null = startRes.audioUrl || null
         // A dev placeholder (Edge-TTS unavailable / no transcript) — NOT a real
         // playable file, so never poll it or add it to the timeline.
         const isMock = !!startRes.mock || (!!audioUrl && audioUrl.startsWith('/api/mock'))
@@ -132,6 +132,11 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
               setStep(p > 20 ? 'rendering' : 'syncing')
               setProgress(Math.round((i / langs.length) * 100 + ((st.progress || 0) / langs.length)))
             } else if (status === 'completed' || status === 'dubbed') {
+              // The server copies a finished provider dub into our own /uploads
+              // and returns that signed URL — the provider's URL needs an API
+              // key and can't be played in the browser.
+              audioUrl = st?.audioUrl || audioUrl
+              if (!audioUrl) throw new Error(st?.error || 'Dubbing finished but returned no audio.')
               done = true
             } else if (status === 'not_configured') {
               throw new Error(st.error || 'Dubbing is not configured on this server.')
@@ -147,6 +152,8 @@ const GenerativeDubbingView: React.FC<GenerativeDubbingViewProps> = ({ videoId, 
           continue // don't add a dead placeholder to the timeline/downloads
         }
         if (audioUrl) {
+          // Same-origin path (CSP media-src 'self'), signature query preserved.
+          audioUrl = getMediaUrl(audioUrl)
           const entry: DubResult = { code, name: meta?.name || code, flag: meta?.flag || '🌐', audioUrl }
           collected.push(entry)
           // Languages are ALTERNATE voice tracks — stacking them all on one track

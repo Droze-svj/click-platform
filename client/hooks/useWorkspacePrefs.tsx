@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { apiGet, apiPut } from '../lib/api'
 
 /**
@@ -13,6 +13,12 @@ import { apiGet, apiPut } from '../lib/api'
  * Local-first, like `usePreferences`: read the cache synchronously so the
  * sidebar paints in its arranged order on the first frame, then reconcile with
  * the server in the background and push changes back debounced.
+ *
+ * ONE store for every mounted instance. The sidebar, Settings → Appearance and
+ * the onboarding wizard all use this hook at the same time; with per-instance
+ * state each copy pushed its own (stale) `pinnedNav` whenever it changed
+ * anything, so pinning in the sidebar and then picking a start page in
+ * Settings silently reverted the pin.
  */
 
 const CACHE_KEY = 'click-workspace-prefs'
@@ -43,87 +49,143 @@ function readCache(): WorkspacePrefs {
   }
 }
 
+function hasToken(): boolean {
+  try {
+    return typeof localStorage !== 'undefined' && !!localStorage.getItem('token')
+  } catch {
+    return false
+  }
+}
+
+/* ── Shared store ─────────────────────────────────────────────────────────── */
+
+type Listener = (prefs: WorkspacePrefs) => void
+
+let current: WorkspacePrefs | null = null
+const listeners = new Set<Listener>()
+// What the server is known to hold, so a hydrate doesn't bounce straight back.
+let lastPushed: string | null = null
+let serverHydrateStarted = false
+// The user changed something before the server answered — their change wins.
+let changedLocally = false
+let pushTimer: ReturnType<typeof setTimeout> | null = null
+
+function publish(next: WorkspacePrefs) {
+  current = next
+  try {
+    window.localStorage.setItem(CACHE_KEY, JSON.stringify(next))
+  } catch {
+    /* private mode / quota — the in-memory state still works this session */
+  }
+  listeners.forEach((l) => l(next))
+}
+
+function schedulePush() {
+  if (!hasToken()) return
+  if (pushTimer) clearTimeout(pushTimer)
+  // Deliberately NOT cleared on unmount: leaving Settings within the debounce
+  // window used to drop the change on the floor.
+  pushTimer = setTimeout(() => {
+    pushTimer = null
+    const snapshot = current ?? readCache()
+    const desired = JSON.stringify(snapshot)
+    if (desired === lastPushed) return
+    // The settings route merges preferences field-by-field, so sending only
+    // these two keys will not clobber language/theme/timezone.
+    apiPut('/user/settings', { preferences: { ...snapshot } })
+      .then(() => { lastPushed = desired })
+      .catch(() => { /* best effort — local cache remains the source */ })
+  }, SYNC_DEBOUNCE_MS)
+}
+
+function update(mutate: (prev: WorkspacePrefs) => WorkspacePrefs) {
+  const prev = current ?? readCache()
+  const next = mutate(prev)
+  if (JSON.stringify(next) === JSON.stringify(prev)) return
+  changedLocally = true
+  publish(next)
+  schedulePush()
+}
+
+function hydrateFromServer() {
+  if (serverHydrateStarted || !hasToken()) return
+  serverHydrateStarted = true
+  apiGet<any>('/user/settings')
+    .then((res: any) => {
+      const server = res?.data?.preferences ?? res?.preferences
+      if (!server || typeof server !== 'object') return
+      if (changedLocally) return
+      const prev = current ?? readCache()
+      const next: WorkspacePrefs = {
+        pinnedNav: Array.isArray(server.pinnedNav)
+          ? server.pinnedNav.filter((p: unknown) => typeof p === 'string')
+          : prev.pinnedNav,
+        defaultLanding:
+          typeof server.defaultLanding === 'string' ? server.defaultLanding : prev.defaultLanding,
+      }
+      lastPushed = JSON.stringify(next)
+      publish(next)
+    })
+    .catch(() => {
+      /* offline / 401 / DB down — the local cache stays authoritative */
+      serverHydrateStarted = false
+    })
+}
+
+/** Test helper — forget the shared store so each test starts from the cache. */
+export function __resetWorkspacePrefsStore() {
+  current = null
+  lastPushed = null
+  serverHydrateStarted = false
+  changedLocally = false
+  if (pushTimer) clearTimeout(pushTimer)
+  pushTimer = null
+  listeners.clear()
+}
+
+/* ── Hook ─────────────────────────────────────────────────────────────────── */
+
 export function useWorkspacePrefs() {
+  // DEFAULTS on the first render so server and client markup agree.
   const [prefs, setPrefs] = useState<WorkspacePrefs>(DEFAULTS)
   const [hydrated, setHydrated] = useState(false)
-  // What we last pushed, so a server hydrate doesn't bounce straight back.
-  const lastPushedRef = useRef<string | null>(null)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    setPrefs(readCache())
+    if (!current) current = readCache()
+    listeners.add(setPrefs)
+    setPrefs(current)
     setHydrated(true)
+    hydrateFromServer()
 
-    // Without a token this is a guaranteed 401 on every page load.
-    const hasToken = typeof localStorage !== 'undefined' && !!localStorage.getItem('token')
-    if (!hasToken) return
-
-    let cancelled = false
-    apiGet<any>('/user/settings')
-      .then((res: any) => {
-        if (cancelled) return
-        const server = res?.data?.preferences ?? res?.preferences
-        if (!server || typeof server !== 'object') return
-        setPrefs((prev) => {
-          const next: WorkspacePrefs = {
-            pinnedNav: Array.isArray(server.pinnedNav) ? server.pinnedNav : prev.pinnedNav,
-            defaultLanding:
-              typeof server.defaultLanding === 'string' ? server.defaultLanding : prev.defaultLanding,
-          }
-          lastPushedRef.current = JSON.stringify(next)
-          return next
-        })
-      })
-      .catch(() => {
-        /* offline / 401 / DB down — the local cache stays authoritative */
-      })
-
-    return () => { cancelled = true }
-  }, [])
-
-  useEffect(() => {
-    if (!hydrated) return
-
-    try {
-      window.localStorage.setItem(CACHE_KEY, JSON.stringify(prefs))
-    } catch {
-      /* private mode / quota — the in-memory state still works this session */
+    return () => {
+      listeners.delete(setPrefs)
+      // Last one out: the next mount re-reads the cache (which every change
+      // was written to) and reconciles with the server again.
+      if (listeners.size === 0) {
+        current = null
+        serverHydrateStarted = false
+        changedLocally = false
+      }
     }
-
-    const desired = JSON.stringify(prefs)
-    if (desired === lastPushedRef.current) return
-    const hasToken = typeof localStorage !== 'undefined' && !!localStorage.getItem('token')
-    if (!hasToken) return
-
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => {
-      // The settings route merges preferences field-by-field, so sending only
-      // these two keys will not clobber language/theme/timezone.
-      apiPut('/user/settings', { preferences: { ...prefs } })
-        .then(() => { lastPushedRef.current = desired })
-        .catch(() => { /* best effort — local cache remains the source */ })
-    }, SYNC_DEBOUNCE_MS)
-
-    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
-  }, [prefs, hydrated])
+  }, [])
 
   const isPinned = useCallback((path: string) => prefs.pinnedNav.includes(path), [prefs.pinnedNav])
 
   const togglePin = useCallback((path: string) => {
-    setPrefs((prev) => {
-      const pinned = prev.pinnedNav.includes(path)
+    update((prev) => ({
+      ...prev,
+      pinnedNav: prev.pinnedNav.includes(path)
         ? prev.pinnedNav.filter((p) => p !== path)
-        : [...prev.pinnedNav, path].slice(0, MAX_PINS)
-      return { ...prev, pinnedNav: pinned }
-    })
+        : [...prev.pinnedNav, path].slice(0, MAX_PINS),
+    }))
   }, [])
 
   const setDefaultLanding = useCallback((path: string) => {
-    setPrefs((prev) => ({ ...prev, defaultLanding: path }))
+    update((prev) => ({ ...prev, defaultLanding: path }))
   }, [])
 
   const reorderPins = useCallback((next: string[]) => {
-    setPrefs((prev) => ({ ...prev, pinnedNav: next.slice(0, MAX_PINS) }))
+    update((prev) => ({ ...prev, pinnedNav: next.slice(0, MAX_PINS) }))
   }, [])
 
   return { prefs, hydrated, isPinned, togglePin, setDefaultLanding, reorderPins }

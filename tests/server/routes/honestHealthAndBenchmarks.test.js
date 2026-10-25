@@ -104,3 +104,20 @@ describe('GET /competitive/benchmarks never invents industry bands', () => {
     expect(res.body).toEqual({ success: true, data });
   });
 });
+
+describe('POST /api/competitive/track does not claim to track', () => {
+  // It answered 200 while storing nothing (no competitor data source exists),
+  // and the editor said "Now tracking @x — their metrics will appear".
+  const app = appWith('/api/competitive', require('../../../server/routes/competitive-benchmark'));
+
+  it('answers 501 with the reason', async () => {
+    const res = await request(app).post('/api/competitive/track').send({ competitorUsernames: ['rival'], platform: 'tiktok' });
+    expect(res.status).toBe(501);
+    expect(res.body).toMatchObject({ success: false, available: false });
+    expect(res.body.error).toMatch(/not available/i);
+  });
+
+  it('still validates the body', async () => {
+    await request(app).post('/api/competitive/track').send({}).expect(400);
+  });
+});

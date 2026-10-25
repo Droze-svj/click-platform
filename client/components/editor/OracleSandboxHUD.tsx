@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
 import { apiPost } from '../../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface OracleVariant {
   variantId: string
@@ -31,6 +32,7 @@ interface OracleSandboxHUDProps {
 const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
 
 export const OracleSandboxHUD: React.FC<OracleSandboxHUDProps> = ({ projectId, showToast }) => {
+  const { t } = useTranslation()
   const [isDeploying, setIsDeploying] = useState(false)
   const [sandbox, setSandbox] = useState<{
     sandboxId: string
@@ -41,9 +43,13 @@ export const OracleSandboxHUD: React.FC<OracleSandboxHUDProps> = ({ projectId, s
   const deploySandbox = async () => {
     setIsDeploying(true)
     try {
-      const data = await apiPost('/phase9/oracle-sandbox/deploy', { projectId: projectId || 'current' })
+      const res: any = await apiPost('/phase9/oracle-sandbox/deploy', { projectId: projectId || 'current' })
+      const data = res?.data ?? res
+      if (!data || !Array.isArray(data.variants)) throw new Error('no plan')
       setSandbox(data)
-      showToast('Oracle Concept Sandbox Deployed', 'success')
+      // The server drafts a plan; nothing is launched (no ad network is
+      // connected). This used to toast "Sandbox Deployed".
+      showToast(t('editorPanels.oracleSandbox.plannedToast'), 'info')
     } catch (err) {
       showToast('Sandbox Deployment Failed', 'error')
     } finally {
@@ -75,7 +81,7 @@ export const OracleSandboxHUD: React.FC<OracleSandboxHUDProps> = ({ projectId, s
                 disabled={isDeploying || !!sandbox}
                 className="px-10 py-4 bg-white/5 border border-white/10 hover:border-indigo-500/50 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] italic transition-all disabled:opacity-50"
             >
-                {isDeploying ? 'Processing Concept Matrix...' : sandbox ? 'Sandbox Active' : 'Deploy Concept Array'}
+                {isDeploying ? 'Processing Concept Matrix...' : sandbox ? t('editorPanels.oracleSandbox.planned') : 'Deploy Concept Array'}
             </button>
         </div>
 
@@ -149,10 +155,7 @@ export const OracleSandboxHUD: React.FC<OracleSandboxHUDProps> = ({ projectId, s
                     </div>
                 </div>
                 <div className="flex items-center gap-6">
-                    <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic animate-pulse">Scanning viral nodes...</span>
-                    <div className="h-4 w-40 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
-                        <div className="h-full bg-indigo-500/50 w-2/3 rounded-full animate-progress" />
-                    </div>
+                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">{t('editorPanels.oracleSandbox.notRunning')}</span>
                 </div>
             </div>
         )}

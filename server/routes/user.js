@@ -5,7 +5,7 @@ const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const UserSettings = require('../models/UserSettings');
-const { encrypt } = require('../utils/dataEncryption');
+const { encrypt, encryptToken, decryptToken, isEncryptedToken } = require('../utils/dataEncryption');
 const validator = require('validator');
 
 const router = express.Router();
@@ -49,12 +49,14 @@ const VIDEO_EDITING_DEFAULTS = {
 
 // agentic.heygenApiKey / soraApiKey are third-party secrets. GET used to
 // return them in plaintext; now the client only learns whether one is saved
-// and its last 4 characters.
+// and its last 4 characters. At rest they are encrypted (enc:v1:, the OAuth
+// token format); rows saved before that are plaintext and still read fine.
 const AGENTIC_SECRET_FIELDS = ['heygenApiKey', 'soraApiKey'];
 function maskAgentic(agentic) {
   const out = { ...(agentic || {}) };
   for (const field of AGENTIC_SECRET_FIELDS) {
-    const value = typeof out[field] === 'string' ? out[field] : '';
+    const stored = typeof out[field] === 'string' ? out[field] : '';
+    const value = stored ? String(decryptToken(stored) || '') : '';
     delete out[field];
     out[`${field}Set`] = value.length > 0;
     out[`${field}Last4`] = value.length >= 8 ? value.slice(-4) : '';
@@ -98,9 +100,24 @@ function agenticUpdates(a) {
   for (const field of AGENTIC_SECRET_FIELDS) {
     if (a[field] === null) out[`agentic.${field}`] = '';
     // Undo the input sanitizer's HTML-escaping: keys can contain `/` or `+`.
-    else if (typeof a[field] === 'string' && a[field].trim()) out[`agentic.${field}`] = validator.unescape(a[field].trim()).slice(0, 512);
+    else if (typeof a[field] === 'string' && a[field].trim()) {
+      out[`agentic.${field}`] = encryptToken(validator.unescape(a[field].trim()).slice(0, 512));
+    }
   }
   return out;
+}
+
+// A key saved before encryption at rest is plaintext. Any settings save
+// re-encrypts it, so old rows converge without a migration.
+function reencryptLegacySecrets(existingAgentic, update) {
+  for (const field of AGENTIC_SECRET_FIELDS) {
+    const path = `agentic.${field}`;
+    if (path in update) continue;
+    const stored = existingAgentic && existingAgentic[field];
+    if (typeof stored === 'string' && stored && !isEncryptedToken(stored)) {
+      update[path] = encryptToken(stored);
+    }
+  }
 }
 
 function getUserId(req) {
@@ -217,7 +234,13 @@ router.put('/settings', auth, asyncHandler(async (req, res) => {
     }
   }
   if (req.body.agentic && typeof req.body.agentic === 'object') {
-    Object.assign(update, agenticUpdates(req.body.agentic));
+    try {
+      Object.assign(update, agenticUpdates(req.body.agentic));
+    } catch (err) {
+      // encryptToken refuses to store a key in plaintext (production without
+      // a valid ENCRYPTION_KEY). Say so instead of a bare 500.
+      return sendError(res, 'API keys cannot be stored securely right now. Nothing was saved; try again later.', 503);
+    }
   }
   const { appearance, ai } = req.body;
   if (appearance && typeof appearance === 'object') {
@@ -234,6 +257,10 @@ router.put('/settings', auth, asyncHandler(async (req, res) => {
     }
     if (typeof ai.autoApply === 'boolean') update['ai.autoApply'] = ai.autoApply;
   }
+  try {
+    const existing = await UserSettings.findOne({ userId: String(userId) }).select('agentic.heygenApiKey agentic.soraApiKey').lean();
+    reencryptLegacySecrets(existing?.agentic, update);
+  } catch (_) { /* best-effort; the save itself still runs */ }
   // NOTE: integrations are intentionally NOT accepted here — they are managed
   // through the dedicated, validated POST/DELETE routes below so raw keys are
   // never blindly merged from a generic settings payload.

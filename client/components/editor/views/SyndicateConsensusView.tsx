@@ -17,7 +17,8 @@ import {
   Scale
 } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
-import { apiGet, apiPost } from '../../../lib/api'
+import { apiPost, handleApiError } from '../../../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface AgentVote {
   agent: string
@@ -28,7 +29,8 @@ interface AgentVote {
 
 interface ConsensusResult {
   consensus: boolean
-  executionStatus: 'PENDING' | 'AUTO_LOCKED' | 'AWAITING_REVIEW' | 'REJECTED'
+  // server/services/syndicateService.js getCouncilConsensus
+  executionStatus: 'PENDING' | 'AUTONOMOUS_LOCKED' | 'AWAITING_HUMAN_OVERRIDE' | 'REJECTED'
   isBudgetImpacting: boolean
   approvals: number
   votes: AgentVote[]
@@ -37,7 +39,10 @@ interface ConsensusResult {
 
 const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
 
-export const SyndicateConsensusView: React.FC = () => {
+type ToastFn = (message: string, type?: 'success' | 'error' | 'info' | 'warning') => unknown
+
+export const SyndicateConsensusView: React.FC<{ showToast?: ToastFn }> = ({ showToast }) => {
+    const { t } = useTranslation()
     const [result, setResult] = useState<ConsensusResult | null>(null)
     const [loading, setLoading] = useState(false)
     const [proposal, setProposal] = useState({
@@ -50,10 +55,12 @@ export const SyndicateConsensusView: React.FC = () => {
     const triggerConsensus = async () => {
         setLoading(true)
         try {
-            const data = await apiPost('/click/syndicate-consensus', { proposal })
+            const res: any = await apiPost('/click/syndicate-consensus', { proposal })
+            const data = res?.data ?? res
+            if (!data || !Array.isArray(data.votes)) throw new Error(t('editorPanels.syndicate.noResult'))
             setResult(data)
         } catch (err) {
-            console.error('Consensus trigger failed')
+            showToast?.(t('editorPanels.syndicate.failedToast', { error: handleApiError(err) }), 'error')
         } finally {
             setLoading(false)
         }

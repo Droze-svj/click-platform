@@ -31,6 +31,7 @@ import {
   type Plan as CanonicalPlan,
   type CatalogFeature,
 } from '../../../lib/plans'
+import { accountCheckoutUrl } from '../../../lib/checkout'
 import { cn } from '../../../lib/utils'
 import {
   Panel,
@@ -263,7 +264,7 @@ export default function BillingPage() {
     try {
       const target = buildCheckoutTarget(plan, billingPeriod, user || null)
       if (target.kind === 'whop') {
-        window.location.href = target.href
+        window.location.href = await accountCheckoutUrl(plan.id, billingPeriod, target.href)
         return
       }
       // No checkout link for this plan/period. Plans change only through a

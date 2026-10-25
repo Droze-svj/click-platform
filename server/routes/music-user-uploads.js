@@ -24,7 +24,9 @@ const upload = multer({
     fileSize: 100 * 1024 * 1024 // 100MB
   },
   fileFilter: (req, file, cb) => {
-    const allowedMimes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'audio/aac'];
+    // Browsers label the same formats differently (macOS: audio/x-m4a; some: audio/x-wav,
+    // audio/wave, audio/mp4). The extension allowlist in the handler still guards.
+    const allowedMimes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/wave', 'audio/m4a', 'audio/x-m4a', 'audio/mp4', 'audio/aac'];
     if (allowedMimes.includes(file.mimetype)) {
       cb(null, true);
     } else {

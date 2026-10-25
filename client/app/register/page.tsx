@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { apiGet, apiPost, apiPut, handleApiError, setTokens } from '@/lib/api'
 import { getPlan, buildCheckoutTarget, type BillingPeriod, type PlanId } from '@/lib/plans'
+import { accountCheckoutUrl } from '@/lib/checkout'
 import { NICHE_OPTIONS, PLATFORM_OPTIONS, GOAL_OPTIONS, nicheLabel } from '@/lib/nicheCatalog'
 import { ACCENT_PALETTES, resolveAccentKey } from '@/lib/swarmTheme'
 import { useTranslation } from '../../hooks/useTranslation'
@@ -223,7 +224,7 @@ export default function Register() {
         if (planForCheckout && planForCheckout.id !== 'free') {
           const target = buildCheckoutTarget(planForCheckout, periodFromUrl, response.data?.user || { email })
           if (target.kind === 'whop') {
-            window.location.href = target.href
+            window.location.href = await accountCheckoutUrl(planForCheckout.id, periodFromUrl, target.href)
             return
           }
         }

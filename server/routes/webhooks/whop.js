@@ -19,7 +19,7 @@ const express = require('express');
 const logger = require('../../utils/logger');
 const User = require('../../models/User');
 const WebhookEvent = require('../../models/WebhookEvent');
-const { verifyWebhookRequest, processEvent } = require('../../services/whopWebhookService');
+const { verifyWebhookRequest, processEvent, holdUnmatchedEvent } = require('../../services/whopWebhookService');
 
 const router = express.Router();
 
@@ -117,6 +117,15 @@ router.post('/', async (req, res) => {
       // non-2xx, and we don't want to retry forever for an event that
       // truly has no matching user.
       logger.info('[whop-webhook] event-skipped', result);
+      if (result.reason === 'user-not-found') {
+        // Keep it: the buyer may not have an account yet (or bought with a
+        // different email). It's applied when that account registers/signs in.
+        try { result.held = await holdUnmatchedEvent(event, eventId); } catch (holdErr) {
+          logger.error('[whop-webhook] could not hold unmatched event', { eventId, error: holdErr.message });
+          return res.status(500).json({ error: 'processing-error' }); // let Whop retry
+        }
+      }
+      await markProcessed('whop', eventId, result);
       return res.json({ received: true, ...result });
     }
     // Apply succeeded → mark processed so retries of this exact event no-op.

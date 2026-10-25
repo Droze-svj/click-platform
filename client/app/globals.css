@@ -1274,6 +1274,16 @@ select {
   transition: border-color var(--transition-fast);
 }
 
+/* Native selects centre their value; vertical padding only shrinks the text
+   box. With a fixed-height class (h-10) the 16px top + bottom padding above
+   left an 8px box for 14px text, so every dropdown's value rendered as
+   unreadable fragments in Chromium. Classes that set padding still win. */
+select {
+  padding-top: 0;
+  padding-bottom: 0;
+  min-height: 2.5rem;
+}
+
 input:focus,
 textarea:focus,
 select:focus {

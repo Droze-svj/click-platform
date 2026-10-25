@@ -2,6 +2,7 @@
 // Keyed by string userId (Supabase UUID or dev id) for compatibility.
 
 const mongoose = require('mongoose');
+const { encryptToken } = require('../utils/dataEncryption');
 
 const userSettingsSchema = new mongoose.Schema({
   userId: { type: String, required: true, unique: true },
@@ -57,8 +58,12 @@ const userSettingsSchema = new mongoose.Schema({
     slaAutoFulfill: { type: Boolean, default: true },
     predictiveThreshold: { type: Number, default: 85 },
     digitalTwinProvider: { type: String, enum: ['heygen', 'sora', 'both'], default: 'both' },
-    heygenApiKey: { type: String, default: '' },
-    soraApiKey: { type: String, default: '' }
+    // Third-party API keys, encrypted at rest in the same `enc:v1:` form as
+    // OAuth tokens (utils/dataEncryption encryptToken). The setter is a safety
+    // net for any writer that forgets; it is idempotent on ciphertext. Readers
+    // decrypt with decryptToken, which passes legacy plaintext through.
+    heygenApiKey: { type: String, default: '', set: encryptToken },
+    soraApiKey: { type: String, default: '', set: encryptToken }
   },
   // Appearance / display preferences (2026 settings overhaul)
   appearance: {

@@ -37,7 +37,9 @@ const validateContentGenerate = [
     .isArray()
     .withMessage('Platforms must be an array')
     .custom((platforms) => {
-      const allowed = ['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok'];
+      // youtube: the generator writes a post per platform name (aiService
+      // generateSocialContent), and the content page offers it — it used to 400.
+      const allowed = ['twitter', 'linkedin', 'instagram', 'facebook', 'tiktok', 'youtube'];
       if (platforms.some(p => !allowed.includes(p))) {
         throw new Error(`Platforms must be one of: ${allowed.join(', ')}`);
       }

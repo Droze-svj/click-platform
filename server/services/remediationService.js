@@ -39,14 +39,17 @@ class RemediationService {
     // Logic: If 'music is too loud' appears in multiple comments OR sentiment indicates audio issues
     const actionPlan = this.deriveActionPlan(comments, sentiment);
 
+    // Every response carries the plan it derived, so the UI can show what will
+    // (or did) change. It used to be computed and then dropped from SCHEDULED /
+    // EVOLVED alike, so "Planned fixes" never showed anything.
     if (actionPlan.length === 0) {
-      return { success: true, message: 'No high-consensus remediation required' };
+      return { success: true, status: 'CLEAN', actionPlan: [], commentsChecked: comments.length, message: 'No comment asks for a fix' };
     }
 
     // 2. Window Check (Phase 18 logic)
     if (!this.isWithinEvolutionWindow() && !forceEvolution) {
       logger.info('Remediation: Outside evolution window. Scheduling for maintenance cycle.');
-      return { success: true, status: 'SCHEDULED', window: this.maintenanceWindow };
+      return { success: true, status: 'SCHEDULED', actionPlan, commentsChecked: comments.length, window: this.maintenanceWindow };
     }
 
     // 3. Execute Fully Autonomous Rendering
@@ -58,7 +61,7 @@ class RemediationService {
    */
   deriveActionPlan(comments, sentiment) {
     const plan = [];
-    const text = comments.map(c => c.text.toLowerCase()).join(' ');
+    const text = comments.map(c => String(c?.text || '').toLowerCase()).join(' ');
 
     if (text.includes('music too loud') || text.includes('audio too loud')) {
       plan.push({ type: 'ADJUST_VOLUME', value: 30 }); // Lower volume to 30%
@@ -84,6 +87,7 @@ class RemediationService {
 
     logger.info(`Remediation: Executing recursive render for ${contentId}`, { actionPlan });
 
+    const applied = [];
     try {
       for (const action of actionPlan) {
         if (action.type === 'ADJUST_VOLUME') {
@@ -104,22 +108,30 @@ class RemediationService {
             userId
           });
           currentPath = result.resultUrl;
+          applied.push(action.type);
         }
 
         if (action.type === 'STABILIZE') {
           const result = await enhancedVideoProcessing.stabilizeVideo(currentPath, { userId });
           currentPath = result.resultUrl;
+          applied.push(action.type);
         }
+        // ENLARGE_TEXT has no renderer step yet — reported as not applied.
       }
 
-      // Update content record with the new "evolved" version
-      content.status = 'evolved';
-      content.metadata.evolutionSource = 'recursive_loop';
-      content.metadata.remediationActions = actionPlan;
-      content.processedFile = { url: currentPath };
+      // Record the evolved version. (This used to set status 'evolved', which
+      // isn't in Content's status enum — every save threw — and processedFile,
+      // which isn't in the schema, so it was silently dropped.)
+      content.metadata = {
+        ...(content.metadata || {}),
+        evolutionSource: 'recursive_loop',
+        remediationActions: actionPlan,
+        remediation: { finalUrl: currentPath, applied, at: new Date() },
+      };
+      content.markModified('metadata');
       await content.save();
 
-      return { success: true, status: 'EVOLVED', finalUrl: currentPath };
+      return { success: true, status: 'EVOLVED', actionPlan, applied, finalUrl: currentPath };
     } catch (err) {
       logger.error('Remediation: Render loop failed', { error: err.message });
       throw err;

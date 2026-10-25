@@ -8,7 +8,8 @@ import {
   AlertCircle, CalendarDays, BrainCircuit, CheckCircle2
 } from 'lucide-react'
 import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, Cell } from 'recharts'
-import { apiGet, apiPost } from '../../../lib/api'
+import { apiGet, apiPost, handleApiError } from '../../../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 import { Panel, Button, Badge, Input, SectionHeader, EmptyState } from '../../ui'
 import { cn } from '../../../lib/utils'
 
@@ -35,14 +36,31 @@ interface BenchmarkData {
   recommendations: Array<{ type: string; priority: string; title: string; action: string; estimatedImpact: string }>
 }
 
+// One day of GET /competitive/next-week → data.weeklyPlan
+// (server/services/competitiveBenchmarkingService.js getNextWeekRecommendations).
 interface WeekPlanDay {
   day: string
-  platform?: string
-  contentType?: string
-  topic?: string
-  bestTime?: string
-  estimatedReach?: number
-  hook?: string
+  time?: string | null
+  targetEngagement?: number | null
+  content?: {
+    title?: string
+    idea?: string | null
+    type?: string
+    platforms?: string[]
+  }
+}
+
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+/** The date of `dayName` in the coming Monday–Sunday week, local time. */
+export function nextWeekDate(dayName: string, today: Date = new Date()): Date | null {
+  const idx = WEEKDAYS.indexOf(dayName)
+  if (idx < 0) return null
+  const base = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  const toMonday = ((8 - base.getDay()) % 7) || 7
+  const offsetInWeek = (idx + 6) % 7 // Monday = 0 … Sunday = 6
+  base.setDate(base.getDate() + toMonday + offsetInWeek)
+  return base
 }
 
 const PLATFORMS = ['tiktok', 'instagram', 'youtube', 'linkedin', 'twitter']
@@ -86,6 +104,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
   isOledTheme: _isOledTheme,
   platform: defaultPlatform = 'tiktok'
 }) => {
+  const { t } = useTranslation()
   const [platform, setPlatform] = useState(defaultPlatform)
   const [activeTab, setActiveTab] = useState<Tab>('benchmarks')
   const [loading, setLoading] = useState(true)
@@ -95,6 +114,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
   const [weekPlan, setWeekPlan] = useState<WeekPlanDay[]>([])
   const [weekLoading, setWeekLoading] = useState(false)
   const [weekError, setWeekError] = useState<string | null>(null)
+  const [weekFetched, setWeekFetched] = useState(false)
 
   // Competitor Tracker state
   const [trackHandle, setTrackHandle] = useState('')
@@ -132,6 +152,7 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
       const body = (res as any)?.data ?? res
       const plan = body?.weeklyPlan ?? body?.plan ?? body?.days ?? []
       setWeekPlan(Array.isArray(plan) ? plan : Object.values(plan))
+      setWeekFetched(true)
     } catch {
       setWeekError('Could not load weekly plan')
     } finally {
@@ -141,8 +162,10 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
 
   useEffect(() => { fetchBenchmark() }, [fetchBenchmark])
   useEffect(() => {
-    if (activeTab === 'nextweek' && weekPlan.length === 0) fetchWeekPlan()
-  }, [activeTab, fetchWeekPlan, weekPlan.length])
+    if (activeTab === 'nextweek' && weekPlan.length === 0 && !weekFetched) fetchWeekPlan()
+  }, [activeTab, fetchWeekPlan, weekPlan.length, weekFetched])
+  // A different platform needs its own plan.
+  useEffect(() => { setWeekPlan([]); setWeekFetched(false) }, [platform])
 
   const gapChartData = benchmark
     ? [
@@ -235,9 +258,11 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                   await apiPost('/competitive/track', { competitorUsernames: [trackHandle.trim().replace(/^@/, '')], platform })
                   setTrackResult({ handle: trackHandle.trim(), platform })
                   setTrackHandle('')
-                } catch {
+                } catch (err) {
+                  // The server answers 501 with the reason (no competitor data
+                  // source exists) — show it rather than a generic "try again".
                   setTrackResult(null)
-                  setTrackError(`Couldn't start tracking ${trackHandle.trim()}. Try again.`)
+                  setTrackError(handleApiError(err) || `Couldn't start tracking ${trackHandle.trim()}. Try again.`)
                 } finally {
                   setTrackLoading(false)
                 }
@@ -401,7 +426,9 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
               icon={CalendarDays}
               className="ds-surface-card"
               title="No plan yet"
-              description="Generate a 7-day content calendar tuned to your platform."
+              description={weekFetched
+                ? t('editorPanels.growthInsights.emptyPlan')
+                : 'Generate a 7-day content calendar tuned to your platform.'}
               action={<Button onClick={fetchWeekPlan}>Generate 7-Day Plan</Button>}
             />
           ) : (
@@ -413,7 +440,13 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                 <span className="ds-text-caption capitalize text-theme-muted">Platform: {platform}</span>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-7">
-                {weekPlan.map((day, i) => (
+                {weekPlan.map((day, i) => {
+                  // The server sends each day's idea under `content` and its
+                  // slot as `time`; this used to read fields that never existed
+                  // (topic/hook/bestTime/estimatedReach), so only the day name showed.
+                  const date = nextWeekDate(day.day)
+                  const platformName = day.content?.platforms?.[0]
+                  return (
                   <Panel key={i} variant="glass" className="relative overflow-hidden p-5 ds-hover-lift">
                     {/* Day colour accent — data-driven colour, must be inline */}
                     <div className="absolute left-0 top-0 h-0.5 w-full rounded-t-2xl"
@@ -422,28 +455,32 @@ const GrowthInsightsView: React.FC<GrowthInsightsViewProps> = ({
                       <span className="ds-text-caption"
                         style={{ color: DAY_COLORS[i % DAY_COLORS.length] }}>
                         {day.day ?? `Day ${i + 1}`}
+                        {date && <> · {date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</>}
                       </span>
-                      {day.bestTime && (
+                      {day.time && (
                         <div className="mt-1 flex items-center gap-1">
                           <Clock className="h-2.5 w-2.5 text-theme-muted" aria-hidden />
-                          <span className="text-xs text-theme-muted">{day.bestTime}</span>
+                          <span className="text-xs text-theme-muted">{day.time}</span>
                         </div>
                       )}
                     </div>
 
-                    {day.contentType && (
-                      <Badge variant="outline" className="mb-2 text-[10px] text-theme-secondary">{day.contentType}</Badge>
+                    {platformName && (
+                      <Badge variant="outline" className="mb-2 text-[10px] capitalize text-theme-secondary">{platformName}</Badge>
                     )}
-                    {day.topic && <p className="mb-2 ds-text-label text-theme-primary">{day.topic}</p>}
-                    {day.hook && <p className="text-xs leading-snug text-theme-muted">&quot;{day.hook}&quot;</p>}
-                    {day.estimatedReach != null && (
+                    {day.content?.title && <p className="mb-2 ds-text-label text-theme-primary">{day.content.title}</p>}
+                    {day.content?.idea && <p className="text-xs leading-snug text-theme-muted">{day.content.idea}</p>}
+                    {day.targetEngagement != null && day.targetEngagement > 0 && (
                       <div className="mt-3 flex items-center gap-1.5">
                         <TrendingUp className="h-2.5 w-2.5 text-emerald-500" aria-hidden />
-                        <span className="text-xs font-semibold text-emerald-500">{day.estimatedReach.toLocaleString()} est. reach</span>
+                        <span className="text-xs font-semibold text-emerald-500">
+                          {t('editorPanels.growthInsights.targetEngagement', { value: day.targetEngagement.toLocaleString() })}
+                        </span>
                       </div>
                     )}
                   </Panel>
-                ))}
+                  )
+                })}
               </div>
             </>
           )}

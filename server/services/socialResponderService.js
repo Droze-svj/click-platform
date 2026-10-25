@@ -197,6 +197,13 @@ async function sendApprovedReply(userId, id, sender = defaultSender) {
   if (doc.status !== 'approved') {
     const e = new Error(`Reply is ${doc.status}, not approved`); e.statusCode = 409; throw e;
   }
+  // Nothing to reply TO: drafts from pasted comments carry no platform comment
+  // id. Refuse before calling the platform, and leave the reply 'approved'
+  // (not 'failed') — it is still a good reply, just one to post by hand.
+  if (!doc.externalCommentId || !String(doc.externalCommentId).trim()) {
+    const e = new Error(`This reply is not linked to a ${doc.platform} comment, so it cannot be sent from Click. Copy it and post it on ${doc.platform}.`);
+    e.statusCode = 422; throw e;
+  }
   const text = finalReplyText(doc);
   try {
     await sender(String(userId), doc.platform, doc.externalCommentId, text);

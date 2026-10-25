@@ -700,7 +700,65 @@ async function processEvent(event, deps) {
   }
 }
 
+/**
+ * Hold an event that matched no account so a later sign-up can claim it.
+ * Idempotent on eventId.
+ */
+async function holdUnmatchedEvent(event, eventId) {
+  const PendingWhopEvent = require('../models/PendingWhopEvent');
+  const { id: whopUserId, email } = whopUserOf(event);
+  if (!eventId || (!email && !whopUserId)) return false;
+  const t = getEventTime(event);
+  await PendingWhopEvent.updateOne(
+    { eventId: String(eventId) },
+    { $setOnInsert: {
+      eventId: String(eventId),
+      eventType: event?.type || event?.action || 'unknown',
+      email: email ? String(email).toLowerCase().trim() : undefined,
+      whopUserId: whopUserId || undefined,
+      eventTime: t != null ? new Date(t) : new Date(),
+      event,
+    } },
+    { upsert: true },
+  );
+  logger.warn('[whop] held event for an account that does not exist yet', { eventId, hasEmail: !!email, hasWhopUser: !!whopUserId });
+  return true;
+}
+
+/**
+ * Apply any held events for this user (matched by email or Whop user id), in
+ * event order. Called after sign-up and sign-in. Never throws.
+ */
+async function claimPendingEvents(user, deps = {}) {
+  try {
+    if (!user || !user._id) return { claimed: 0 };
+    const PendingWhopEvent = require('../models/PendingWhopEvent');
+    const User = deps.User || require('../models/User');
+    const or = [];
+    if (user.email) or.push({ email: String(user.email).toLowerCase().trim() });
+    if (user.whopUserId) or.push({ whopUserId: String(user.whopUserId) });
+    if (!or.length) return { claimed: 0 };
+    const pending = await PendingWhopEvent.find({ claimedAt: null, $or: or }).sort({ eventTime: 1, createdAt: 1 }).lean();
+    let claimed = 0;
+    for (const p of pending) {
+      // The account now exists, so resolveUser finds it by email / whop id.
+      const result = await processEvent(p.event, { User });
+      if (result && result.ok) {
+        claimed += 1;
+        await PendingWhopEvent.updateOne({ _id: p._id }, { $set: { claimedAt: new Date(), claimedBy: user._id, result } });
+      }
+    }
+    if (claimed) logger.info('[whop] applied held events on sign-in', { userId: String(user._id), claimed });
+    return { claimed };
+  } catch (err) {
+    logger.error('[whop] claiming held events failed', { error: err.message, userId: user && String(user._id) });
+    return { claimed: 0, error: err.message };
+  }
+}
+
 module.exports = {
+  holdUnmatchedEvent,
+  claimPendingEvents,
   verifySignature,
   verifyWebhookRequest,
   planIdOf,

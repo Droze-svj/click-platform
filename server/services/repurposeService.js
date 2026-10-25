@@ -439,9 +439,16 @@ async function runVariants({ sourcePath, baseTree, variants, tier, userId, clean
 
   for (const variant of variants) {
     const intermediate = path.join(tmpRoot, `${variant.jobId}-${variant.ratio.replace(':', 'x')}.mp4`);
+    let reframed = false;
     try {
+      // Stamp the owner now, not when runRender starts: the status poll is
+      // owner-scoped and reports "processing" from this stamp, and a failure
+      // recorded below must be readable by the owner only.
+      if (typeof renderRoute._writeRenderOwner === 'function') renderRoute._writeRenderOwner(variant.jobId, userId);
+
       // 1. Smart reframe → intermediate at the target aspect.
       const framed = await smartReframe.reframe(sourcePath, intermediate, variant.ratio);
+      reframed = true;
       logger.info('[repurpose] reframed', { jobId: variant.jobId, ratio: variant.ratio, method: framed.method });
 
       // 2. Render the intermediate through the existing pipeline. smartReframe:true
@@ -461,6 +468,11 @@ async function runVariants({ sourcePath, baseTree, variants, tier, userId, clean
       variant.status = 'failed';
       variant.error = e.message;
       logger.error('[repurpose] variant failed', { jobId: variant.jobId, ratio: variant.ratio, error: e.message });
+      // runRender records its own failures; a reframe failure happens before it
+      // and was never persisted, so the status poll never said "failed".
+      if (!reframed && typeof renderRoute.markRenderFailed === 'function') {
+        renderRoute.markRenderFailed(variant.jobId, `Couldn't reframe the video to ${variant.ratio}: ${e.message}`);
+      }
     } finally {
       // Always remove the intermediate reframe file.
       fs.promises.unlink(intermediate).catch(() => {});
