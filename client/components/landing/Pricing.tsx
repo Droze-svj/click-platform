@@ -13,6 +13,7 @@ import {
   type Plan,
   type CatalogFeature,
 } from '../../lib/plans';
+import { accountCheckoutUrl } from '../../lib/checkout';
 import { PricingCard } from './PricingCard';
 import { PricingToggle } from './PricingToggle';
 import { Brain, Gauge, Globe, Crown, Zap, Target, Sparkles } from 'lucide-react';
@@ -84,7 +85,7 @@ export function Pricing() {
       try {
         sessionStorage.setItem('click.last_plan_select', JSON.stringify({ id: plan.id, period, ts: Date.now() }));
       } catch { }
-      window.location.href = target.href;
+      void accountCheckoutUrl(plan.id, period, target.href).then((url) => { window.location.href = url; });
       return;
     }
 

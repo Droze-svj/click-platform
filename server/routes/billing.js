@@ -368,6 +368,28 @@ router.get('/referral/stats', auth, asyncHandler(async (req, res) => {
 }));
 
 /**
+ * POST /api/billing/checkout  { planId: 'creator'|'pro'|'agency', period: 'monthly'|'yearly' }
+ * A checkout link tied to this account: with WHOP_API_KEY, a Whop checkout
+ * carrying the user id in metadata (the webhook then matches by id, not email);
+ * otherwise { url: null } and the client uses the plan's plain checkout link.
+ */
+router.post('/checkout', auth, asyncHandler(async (req, res) => {
+  const { planId, period } = req.body || {};
+  if (!['creator', 'pro', 'agency'].includes(planId) || !['monthly', 'yearly'].includes(period)) {
+    return sendError(res, 'planId (creator|pro|agency) and period (monthly|yearly) are required', 400);
+  }
+  const whopPlanId = process.env[`WHOP_PRODUCT_ID_${planId.toUpperCase()}_${period.toUpperCase()}`];
+  const { createWhopCheckout } = require('../services/whopMonetizationService');
+  const appUrl = (process.env.FRONTEND_URL || process.env.APP_URL || '').replace(/\/+$/, '');
+  const out = await createWhopCheckout({
+    whopPlanId,
+    userId: req.user._id,
+    redirectUrl: appUrl ? `${appUrl}/dashboard/billing?checkout=done` : undefined,
+  });
+  sendSuccess(res, out.success ? 'Checkout created' : 'Use the plan checkout link', 200, { url: out.success ? out.purchaseUrl : null });
+}));
+
+/**
  * POST /api/billing/cancel
  * Self-service cancellation endpoint
  * Cancels recurring renewal while honoring prepaid access until the period end.

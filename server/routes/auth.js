@@ -155,6 +155,8 @@ router.post('/register',
         });
 
         await newUser.save();
+        // A purchase made on Whop before this account existed is applied now.
+        await require('../services/whopWebhookService').claimPendingEvents(newUser);
 
         const { token, refreshToken, expiresIn } = issueTokenPair(newUser._id.toString());
 
@@ -583,6 +585,8 @@ async function respondMongoLogin(req, res, user, password) {
   }
 
   await sec.recordSuccessfulLogin(user);
+  // Whop purchases made with this email before the account existed.
+  await require('../services/whopWebhookService').claimPendingEvents(user);
   const { token, refreshToken, expiresIn } = issueTokenPair(user._id.toString());
   return res.json({ success: true, message: 'Login successful', data: { token, refreshToken, expiresIn, user: publicUser } });
 }
@@ -1564,6 +1568,7 @@ const mongoTwoFactor = {
       await User.updateOne({ _id: user._id }, { $set: { twoFactorBackupCodes: check.remaining } });
     }
     await sec.recordSuccessfulLogin(user);
+    await require('../services/whopWebhookService').claimPendingEvents(user);
     const { token: accessToken, refreshToken, expiresIn } = issueTokenPair(String(user._id));
     return res.json({
       success: true,
