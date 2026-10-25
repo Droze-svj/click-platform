@@ -21,6 +21,12 @@ import {
 import { apiGet, apiPost } from '../../lib/api'
 import { useDialogBehavior } from '../ui/modal'
 import { useTranslation } from '@/hooks/useTranslation'
+import { Panel, SectionHeader, StatCard, Button } from '../ui'
+
+const BRAND_NAMES: Record<string, string> = {
+  tiktok: 'TikTok', instagram: 'Instagram', youtube: 'YouTube', twitter: 'X', x: 'X',
+  linkedin: 'LinkedIn', facebook: 'Facebook',
+}
 
 interface ScheduledPost {
   _id: string;
@@ -52,7 +58,6 @@ interface SchedulerAnalytics {
 
 type Tab = 'timeline' | 'recurring' | 'export'
 
-const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-500'
 
 export default function AdvancedSchedulingHub() {
   const { t } = useTranslation()
@@ -180,158 +185,133 @@ export default function AdvancedSchedulingHub() {
     { id: 'export', label: t('advancedSchedulingHub.tabExport') },
   ]
 
+  const brand = (p: string) => BRAND_NAMES[String(p).toLowerCase()] || p
   const platformLabel = (tpl: RecurringTemplateRow) =>
-    tpl.platforms && tpl.platforms.length > 0 ? tpl.platforms.join(' + ') : t('advancedSchedulingHub.allPlatforms')
+    tpl.platforms && tpl.platforms.length > 0 ? tpl.platforms.map(brand).join(' + ') : t('advancedSchedulingHub.allPlatforms')
 
   return (
-    <div className="space-y-12 font-inter text-white">
+    <div className="flex flex-col gap-6">
       {/* Stats row — every value comes from GET /api/scheduler/analytics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        {stats.map((stat, i) => (
-          <m.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className={`${glassStyle} p-6 rounded-[2.5rem] flex items-center gap-6 group hover:bg-white/[0.05]`}
-          >
-            <div className="w-16 h-16 rounded-3xl bg-white/[0.02] border border-white/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <stat.icon size={24} className={stat.color} />
-            </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1">{stat.label}</p>
-              <p className={`text-3xl font-black tracking-tighter ${stat.color}`}>{stat.val}</p>
-            </div>
-          </m.div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat) => (
+          <StatCard key={stat.label} className="ds-anim-rise" label={stat.label} value={stat.val} icon={stat.icon} />
         ))}
       </div>
 
       {notice && (
         <div
           role={notice.tone === 'error' ? 'alert' : 'status'}
-          className={`flex items-center justify-between gap-4 px-6 py-4 rounded-3xl border text-[13px] font-semibold ${notice.tone === 'error' ? 'bg-rose-500/10 border-rose-500/30 text-rose-300' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'}`}
+          className={`flex items-center justify-between gap-4 px-4 py-3 rounded-xl border text-sm font-medium ${notice.tone === 'error' ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-300' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-300'}`}
         >
           <span>{notice.text}</span>
-          <button type="button" onClick={() => setNotice(null)} aria-label={t('advancedSchedulingHub.dismiss')} className="p-1 rounded-full hover:bg-white/10">
+          <button type="button" onClick={() => setNotice(null)} aria-label={t('advancedSchedulingHub.dismiss')} className="p-1 rounded-full hover:bg-accent">
             <XCircle size={16} aria-hidden="true" />
           </button>
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Main Timeline Column */}
-        <div className="xl:col-span-2 space-y-8">
-          <div className="flex items-center justify-between">
-            <h2 className="text-4xl font-black uppercase tracking-tighter flex items-center gap-4">
-              <Calendar className="text-indigo-500" size={32} /> {t('advancedSchedulingHub.title')}
-            </h2>
-            <div className="flex items-center gap-4">
-              {selectedPosts.length > 0 && (
-                <m.button
-                  type="button"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  onClick={() => setShowBulkModal(true)}
-                  className="px-8 py-3 bg-indigo-500 text-white rounded-full text-[12px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-colors shadow-[0_0_30px_rgba(99,102,241,0.4)]"
-                >
-                  {t('advancedSchedulingHub.moveSelected', { count: String(selectedPosts.length) })}
-                </m.button>
-              )}
-            </div>
-          </div>
+        <Panel className="xl:col-span-2 flex flex-col gap-4">
+          <SectionHeader
+            as="h2"
+            title={<span className="inline-flex items-center gap-2"><Calendar className="text-indigo-500" size={22} aria-hidden /> {t('advancedSchedulingHub.title')}</span>}
+            actions={selectedPosts.length > 0 ? (
+              <Button variant="primary" size="sm" onClick={() => setShowBulkModal(true)}>
+                {t('advancedSchedulingHub.moveSelected', { count: String(selectedPosts.length) })}
+              </Button>
+            ) : undefined}
+          />
 
-          <div className="flex items-center gap-4 bg-white/5 p-2 rounded-3xl border border-white/10">
+          <div role="tablist" className="inline-flex self-start items-center gap-1 rounded-xl ds-surface-subtle p-1">
             {tabs.map((tab) => (
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === tab.id}
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-indigo-500 text-white' : 'text-slate-500 hover:text-white'}`}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.id ? 'bg-primary text-primary-foreground' : 'text-theme-muted hover:text-theme-primary'}`}
               >
                 {tab.label}
               </button>
             ))}
           </div>
 
-          <div className="space-y-6">
+          <div className="flex flex-col gap-3">
             {loadError && (
-              <div role="alert" className={`${glassStyle} p-8 rounded-[3rem] flex flex-col sm:flex-row items-center justify-between gap-4 border-rose-500/30`}>
-                <p className="text-[13px] font-semibold text-rose-300">{t('advancedSchedulingHub.loadFailed')}</p>
-                <button type="button" onClick={loadData} className="px-6 py-2 bg-white text-black rounded-full text-[11px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all">
-                  {t('advancedSchedulingHub.retry')}
-                </button>
+              <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p className="text-sm font-medium text-rose-600 dark:text-rose-300">{t('advancedSchedulingHub.loadFailed')}</p>
+                <Button variant="secondary" size="sm" onClick={loadData}>{t('advancedSchedulingHub.retry')}</Button>
               </div>
             )}
 
             <AnimatePresence mode="popLayout">
               {activeTab === 'timeline' && !loading && !loadError && posts.length === 0 && (
-                <m.div key="timeline-empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-16 text-center text-slate-500 text-[13px] font-semibold">
+                <m.div key="timeline-empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-12 text-center text-theme-muted text-sm">
                   {t('advancedSchedulingHub.noPosts')}
                 </m.div>
               )}
 
-              {activeTab === 'timeline' && posts.map((post, i) => (
+              {activeTab === 'timeline' && posts.map((post, i) => {
+                const selected = selectedPosts.includes(post._id)
+                return (
                 <m.div
                   key={post._id}
                   layout
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ delay: i * 0.05 }}
-                  className={`${glassStyle} p-6 rounded-[3rem] group relative overflow-hidden flex items-center gap-8 ${selectedPosts.includes(post._id) ? 'border-indigo-500/50 bg-indigo-500/[0.02]' : ''}`}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ delay: i * 0.03 }}
+                  className={`ds-surface-subtle p-3 sm:p-4 flex items-center gap-3 sm:gap-4 ${selected ? 'ring-2 ring-indigo-500/50' : ''} ${post.status === 'failed' ? 'border-rose-500/30' : ''}`}
                 >
-                  {post.status === 'failed' && <div className="absolute inset-0 bg-rose-500/5 pointer-events-none" />}
-
                   <button
                     type="button"
                     onClick={() => toggleSelect(post._id)}
-                    title={selectedPosts.includes(post._id) ? t('advancedSchedulingHub.deselectPost') : t('advancedSchedulingHub.selectPost')}
-                    aria-pressed={selectedPosts.includes(post._id)}
-                    className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${selectedPosts.includes(post._id) ? 'bg-indigo-500 border-indigo-500' : 'border-white/10 bg-white/5'}`}
+                    title={selected ? t('advancedSchedulingHub.deselectPost') : t('advancedSchedulingHub.selectPost')}
+                    aria-label={selected ? t('advancedSchedulingHub.deselectPost') : t('advancedSchedulingHub.selectPost')}
+                    aria-pressed={selected}
+                    className={`h-6 w-6 shrink-0 rounded-md border-2 flex items-center justify-center transition-colors ${selected ? 'bg-indigo-500 border-indigo-500 text-white' : 'border-[var(--border-subtle)] hover:border-indigo-500'}`}
                   >
-                    {selectedPosts.includes(post._id) && <CheckCircle size={14} aria-hidden="true" />}
+                    {selected && <CheckCircle size={14} aria-hidden="true" />}
                   </button>
 
-                  <div className="w-20 font-black text-slate-500 tabular-nums text-right">
+                  <div className="w-14 shrink-0 text-sm font-semibold text-theme-muted tabular-nums">
                     {new Date(post.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                   </div>
 
-                  <div className="w-1 bg-white/10 h-12 rounded-full hidden md:block" />
-
-                  <div className="flex-1 min-w-0 space-y-2">
-                    <div className="flex items-center gap-4">
-                      <span className="text-[11px] font-black uppercase tracking-widest bg-white/5 px-4 py-1 rounded-full border border-white/10 text-indigo-400">
-                        {String(post.platform || '').toUpperCase()}
+                  <div className="flex-1 min-w-0">
+                    <div className="mb-1 flex items-center gap-2">
+                      <span className="rounded-md bg-indigo-500/10 px-2 py-0.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
+                        {brand(String(post.platform || ''))}
                       </span>
                       {post.status === 'failed' && (
-                        <span className="flex items-center gap-2 text-rose-400 text-[10px] font-black uppercase">
-                          <AlertTriangle size={12} /> {t('advancedSchedulingHub.statusFailed')}
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-500">
+                          <AlertTriangle size={12} aria-hidden /> {t('advancedSchedulingHub.statusFailed')}
                         </span>
                       )}
                     </div>
-                    <h3 className="text-xl font-bold truncate pr-10 tracking-tight">{post.content?.text || t('advancedSchedulingHub.untitledPost')}</h3>
+                    <h3 className="text-sm font-medium text-theme-primary truncate">{post.content?.text || t('advancedSchedulingHub.untitledPost')}</h3>
                   </div>
 
-                  <div className="text-right hidden sm:block">
-                    <p className="text-[10px] font-black uppercase text-slate-600 tracking-widest">{t('advancedSchedulingHub.date')}</p>
-                    <p className="text-[13px] font-black uppercase">{new Date(post.scheduledTime).toLocaleDateString()}</p>
+                  <div className="text-right hidden sm:block shrink-0">
+                    <p className="ds-text-caption text-theme-muted">{t('advancedSchedulingHub.date')}</p>
+                    <p className="text-sm font-medium text-theme-primary">{new Date(post.scheduledTime).toLocaleDateString()}</p>
                   </div>
                 </m.div>
-              ))}
+                )
+              })}
 
               {activeTab === 'recurring' && (
-                <m.div key="recurring" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                <m.div key="recurring" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-3">
                   {templates.length === 0 ? (
-                    <div className="py-16 text-center text-slate-500 text-[13px] font-semibold">{t('advancedSchedulingHub.noRecurring')}</div>
+                    <div className="py-10 text-center text-theme-muted text-sm">{t('advancedSchedulingHub.noRecurring')}</div>
                   ) : (
                     templates.map((tpl) => (
-                      <div
-                        key={tpl._id}
-                        className={`${glassStyle} p-6 rounded-[3rem] flex flex-col sm:flex-row sm:items-center justify-between gap-4`}
-                      >
+                      <div key={tpl._id} className="ds-surface-subtle p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-lg font-black uppercase tracking-tight">{platformLabel(tpl)}</p>
-                          <p className="text-[11px] text-slate-500 font-semibold">
+                          <p className="text-sm font-semibold text-theme-primary">{platformLabel(tpl)}</p>
+                          <p className="ds-text-caption text-theme-muted">
                             {tpl.active && tpl.nextFireAt
                               ? t('advancedSchedulingHub.nextRun', { when: new Date(tpl.nextFireAt).toLocaleString() })
                               : t('advancedSchedulingHub.paused')}
@@ -339,68 +319,59 @@ export default function AdvancedSchedulingHub() {
                             {t('advancedSchedulingHub.postsSent', { count: String(tpl.usageCount ?? 0) })}
                           </p>
                         </div>
-                        <button
-                          type="button"
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => toggleTemplate(tpl)}
                           disabled={busyTemplate === tpl._id}
-                          className="px-6 py-2 bg-white/[0.05] border border-white/10 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 transition-all flex items-center gap-2 disabled:opacity-50"
+                          leftIcon={tpl.active ? <Pause size={14} aria-hidden="true" /> : <Play size={14} aria-hidden="true" />}
                         >
-                          {tpl.active ? <Pause size={12} aria-hidden="true" /> : <Play size={12} aria-hidden="true" />}
                           {tpl.active ? t('advancedSchedulingHub.pause') : t('advancedSchedulingHub.resume')}
-                        </button>
+                        </Button>
                       </div>
                     ))
                   )}
 
                   <Link
                     href="/dashboard/recurring"
-                    className="w-full py-8 rounded-[3rem] border-2 border-dashed border-white/10 text-slate-500 hover:border-indigo-500 hover:text-white transition-all flex flex-col items-center gap-4 group"
+                    className="w-full py-6 rounded-xl border-2 border-dashed border-[var(--border-subtle)] text-theme-muted hover:border-indigo-500 hover:text-theme-primary transition-colors flex flex-col items-center gap-2"
                   >
-                    <Plus size={32} className="group-hover:rotate-90 transition-transform duration-500" />
-                    <span className="text-[11px] font-black uppercase tracking-[0.3em]">{t('advancedSchedulingHub.createRecurring')}</span>
+                    <Plus size={22} aria-hidden />
+                    <span className="text-sm font-medium">{t('advancedSchedulingHub.createRecurring')}</span>
                   </Link>
                 </m.div>
               )}
 
               {activeTab === 'export' && (
-                <m.div key="export" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`${glassStyle} p-12 rounded-[4rem] bg-gradient-to-br from-indigo-500/10 to-transparent flex flex-col sm:flex-row items-center gap-8`}>
-                  <div className="w-20 h-20 rounded-[2.5rem] bg-white/[0.05] border border-white/10 flex items-center justify-center flex-shrink-0">
-                    <Download size={32} className="text-indigo-400" />
-                  </div>
+                <m.div key="export" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="ds-surface-subtle p-5 flex flex-col sm:flex-row items-center gap-4">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
+                    <Download size={22} aria-hidden />
+                  </span>
                   <div className="flex-1 text-center sm:text-left">
-                    <h3 className="text-2xl font-black uppercase tracking-tighter">{t('advancedSchedulingHub.exportTitle')}</h3>
-                    <p className="text-slate-400 text-[13px] font-medium">{t('advancedSchedulingHub.exportBody')}</p>
+                    <h3 className="ds-text-h3 text-theme-primary">{t('advancedSchedulingHub.exportTitle')}</h3>
+                    <p className="text-sm text-theme-muted">{t('advancedSchedulingHub.exportBody')}</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={downloadCalendar}
-                    disabled={exporting}
-                    className="px-8 py-4 bg-white text-black rounded-[2rem] text-[12px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all disabled:opacity-50"
-                  >
+                  <Button variant="primary" onClick={downloadCalendar} disabled={exporting} loading={exporting}>
                     {exporting ? t('advancedSchedulingHub.exporting') : t('advancedSchedulingHub.exportButton')}
-                  </button>
+                  </Button>
                 </m.div>
               )}
             </AnimatePresence>
           </div>
-        </div>
+        </Panel>
 
         {/* Sidebar */}
-        <div className="space-y-12">
-          <div className={`${glassStyle} p-8 rounded-[4rem] relative overflow-hidden bg-gradient-to-br from-indigo-500/[0.03] to-transparent`}>
-            <div className="absolute top-0 right-0 p-8 opacity-[0.03] rotate-12"><RefreshCw size={150} /></div>
-            <h3 className="text-2xl font-black uppercase tracking-tighter mb-8 flex items-center gap-4">
-              <Sparkle className="text-indigo-400" size={24} /> {t('advancedSchedulingHub.recurringTitle')}
-            </h3>
-            <p className="text-slate-400 text-[13px] mb-8 leading-relaxed font-medium">{t('advancedSchedulingHub.recurringBody')}</p>
-            <Link
-              href="/dashboard/recurring"
-              className="w-full py-4 bg-white text-black rounded-[2rem] text-[13px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-4 hover:bg-indigo-500 hover:text-white transition-all duration-700 group"
-            >
-              <Plus size={20} className="group-hover:rotate-90 transition-transform" /> {t('advancedSchedulingHub.manageRecurring')}
-            </Link>
-          </div>
-        </div>
+        <Panel className="self-start flex flex-col gap-3">
+          <h3 className="ds-text-h3 text-theme-primary flex items-center gap-2">
+            <Sparkle className="text-indigo-500" size={18} aria-hidden /> {t('advancedSchedulingHub.recurringTitle')}
+          </h3>
+          <p className="text-sm text-theme-muted">{t('advancedSchedulingHub.recurringBody')}</p>
+          <Link href="/dashboard/recurring" className="mt-1">
+            <Button variant="secondary" className="w-full" leftIcon={<Plus size={16} aria-hidden />}>
+              {t('advancedSchedulingHub.manageRecurring')}
+            </Button>
+          </Link>
+        </Panel>
       </div>
 
       {/* Bulk move modal */}
@@ -412,13 +383,13 @@ export default function AdvancedSchedulingHub() {
                initial={{ opacity: 0, scale: 0.9, y: 20 }}
                animate={{ opacity: 1, scale: 1, y: 0 }}
                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-               className={`${glassStyle} w-full max-w-xl p-12 rounded-[5rem] bg-black/90 relative`}
+               className="ds-surface-elevated w-full max-w-xl p-6 sm:p-8 rounded-2xl relative"
              >
-                <button type="button" onClick={() => setShowBulkModal(false)} aria-label={t('advancedSchedulingHub.close')} className="absolute top-10 right-10 p-4 hover:bg-white/10 rounded-full transition-all text-slate-500 hover:text-white"><XCircle size={32}/></button>
-                <h2 className="text-4xl font-black uppercase tracking-tighter mb-4">{t('advancedSchedulingHub.moveTitle')}</h2>
-                <p className="text-[14px] font-semibold text-slate-400 mb-12">{t('advancedSchedulingHub.moveBody', { count: String(selectedPosts.length) })}</p>
+                <button type="button" onClick={() => setShowBulkModal(false)} aria-label={t('advancedSchedulingHub.close')} className="absolute top-4 right-4 p-2 hover:bg-accent rounded-lg transition-colors text-theme-muted hover:text-theme-primary"><XCircle size={20}/></button>
+                <h2 className="ds-text-h2 text-theme-primary mb-2 pr-10">{t('advancedSchedulingHub.moveTitle')}</h2>
+                <p className="text-sm text-theme-muted mb-6">{t('advancedSchedulingHub.moveBody', { count: String(selectedPosts.length) })}</p>
 
-                <div className="grid grid-cols-2 gap-6 mb-12">
+                <div className="grid grid-cols-2 gap-3 mb-6">
                    {[
                      { label: t('advancedSchedulingHub.shift1h'), ms: 3600000 },
                      { label: t('advancedSchedulingHub.shift6h'), ms: 21600000 },
@@ -430,16 +401,16 @@ export default function AdvancedSchedulingHub() {
                        key={opt.ms}
                        disabled={rescheduling}
                        onClick={() => handleBulkReschedule(opt.ms)}
-                       className="py-6 rounded-[2.5rem] bg-white/[0.03] border-2 border-white/5 text-[15px] font-black uppercase tracking-widest hover:border-indigo-500/50 hover:bg-indigo-500/10 transition-all group flex items-center justify-center gap-4 disabled:opacity-50"
+                       className="h-12 rounded-xl border border-[var(--border-subtle)] text-sm font-semibold text-theme-primary hover:border-indigo-500/50 hover:bg-indigo-500/10 transition-colors group flex items-center justify-center gap-2 disabled:opacity-50"
                      >
-                        {opt.label} <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
+                        {opt.label} <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" aria-hidden />
                      </button>
                    ))}
                 </div>
 
-                <div className="p-8 bg-amber-500/5 border border-amber-500/20 rounded-3xl flex items-start gap-6">
-                  <AlertTriangle className="text-amber-400 mt-1 flex-shrink-0" size={24} />
-                  <p className="text-[12px] font-semibold text-slate-400 leading-relaxed">{t('advancedSchedulingHub.moveWarning')}</p>
+                <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl flex items-start gap-3">
+                  <AlertTriangle className="text-amber-500 mt-0.5 flex-shrink-0" size={18} aria-hidden />
+                  <p className="text-sm text-theme-muted leading-relaxed">{t('advancedSchedulingHub.moveWarning')}</p>
                 </div>
              </m.div>
           </div>
