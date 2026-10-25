@@ -64,7 +64,9 @@ export default function CommentTriageInbox() {
     const key = cm.text
     setDrafting((d) => ({ ...d, [key]: true }))
     try {
-      await draftReply({ platform, inboundText: cm.text, author: cm.author })
+      // The platform comment id is what a reply is posted against; pasted
+      // comments have none, and the inbox then offers copy instead of send.
+      await draftReply({ platform, inboundText: cm.text, author: cm.author, ...(cm.id ? { externalCommentId: cm.id } : {}) })
       setDrafted((d) => ({ ...d, [key]: true }))
       return true
     } finally {

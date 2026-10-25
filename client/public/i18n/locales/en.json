@@ -10234,5 +10234,9 @@
     "planCreated": "Recycling plan created.",
     "createFailed": "Couldn't create the recycling plan.",
     "toggleFailed": "Couldn't update the recycling plan."
+  },
+  "responderInbox": {
+    "copyReply": "Copy reply",
+    "sendNeedsComment": "Click can't post this one for you: it isn't linked to a comment on {{platform}}. Copy it and reply there yourself."
   }
 }

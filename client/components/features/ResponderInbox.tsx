@@ -5,6 +5,7 @@ import {
   getPendingReplies, approveReply, rejectReply, sendReply, getResponderPlatforms,
   type SocialReply,
 } from '@/lib/featuresApi'
+import { useTranslation } from '@/hooks/useTranslation'
 
 /**
  * Human-approval inbox for the AI Comment/DM Responder. Lists pending drafts,
@@ -14,6 +15,7 @@ import {
  * is always enforced server-side.
  */
 export default function ResponderInbox() {
+  const { t } = useTranslation()
   const [replies, setReplies] = useState<SocialReply[]>([])
   const [edits, setEdits] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState<Record<string, boolean>>({})
@@ -47,6 +49,21 @@ export default function ResponderInbox() {
   }, [])
 
   const draftFor = (r: SocialReply) => (r._id in edits ? edits[r._id] : (r.editedReply ?? r.draftReply))
+
+  // A reply can only be posted as a reply TO something: the platform comment
+  // id. Drafts made from pasted comments (Comment triage) have none, and the
+  // send used to fail on the platform with an opaque error.
+  const canSend = (r: SocialReply) => !!(r.externalCommentId && String(r.externalCommentId).trim())
+
+  async function copyAndClose(r: SocialReply) {
+    try {
+      await navigator.clipboard?.writeText(draftFor(r))
+    } catch {
+      /* clipboard blocked — the text is still visible to copy by hand */
+      return
+    }
+    setReplies((rs) => rs.filter((x) => x._id !== r._id))
+  }
 
   // Run an action; `keep` leaves the item in the list (e.g. approve when sending
   // is enabled, so the creator can then Send it), otherwise it drops out.
@@ -101,7 +118,7 @@ export default function ResponderInbox() {
             className="w-full rounded-lg bg-zinc-950 border border-zinc-800 p-2 text-sm text-zinc-200"
           />
           <div className="flex gap-2">
-            {approved[r._id] ? (
+            {approved[r._id] && canSend(r) ? (
               <button
                 type="button"
                 data-testid="responder-send"
@@ -111,6 +128,26 @@ export default function ResponderInbox() {
               >
                 {busy[r._id] ? 'Sending…' : 'Send now'}
               </button>
+            ) : approved[r._id] ? (
+              <>
+                <button
+                  type="button"
+                  data-testid="responder-send"
+                  disabled
+                  aria-describedby={`responder-no-target-${r._id}`}
+                  className="rounded-lg bg-blue-500/90 px-3 py-1 text-sm font-medium text-black disabled:opacity-50"
+                >
+                  Send now
+                </button>
+                <button
+                  type="button"
+                  data-testid="responder-copy"
+                  onClick={() => copyAndClose(r)}
+                  className="rounded-lg bg-zinc-800 px-3 py-1 text-sm text-zinc-300"
+                >
+                  {t('responderInbox.copyReply')}
+                </button>
+              </>
             ) : (
               <button
                 type="button"
@@ -132,6 +169,11 @@ export default function ResponderInbox() {
               Reject
             </button>
           </div>
+          {approved[r._id] && !canSend(r) && (
+            <p id={`responder-no-target-${r._id}`} data-testid="responder-send-unavailable" className="text-xs text-zinc-500">
+              {t('responderInbox.sendNeedsComment', { platform: r.platform })}
+            </p>
+          )}
         </div>
       ))}
     </div>

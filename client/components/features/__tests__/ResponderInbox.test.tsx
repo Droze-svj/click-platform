@@ -3,6 +3,7 @@ import ResponderInbox from '../ResponderInbox'
 import * as api from '@/lib/featuresApi'
 
 jest.mock('@/lib/featuresApi')
+jest.mock('@/hooks/useTranslation', () => ({ useTranslation: () => ({ t: (k: string) => k }) }))
 const mGet = api.getPendingReplies as jest.MockedFunction<typeof api.getPendingReplies>
 const mApprove = api.approveReply as jest.MockedFunction<typeof api.approveReply>
 const mReject = api.rejectReply as jest.MockedFunction<typeof api.rejectReply>
@@ -72,6 +73,28 @@ describe('ResponderInbox', () => {
     fireEvent.click(screen.getByTestId('responder-send'))
     await waitFor(() => expect(screen.queryByTestId('responder-item')).not.toBeInTheDocument())
     expect(mSend).toHaveBeenCalledWith('a')
+  })
+
+  it('a reply with no platform comment id cannot be sent: Send is disabled with the reason, Copy is offered', async () => {
+    const pasted = { ...reply('a'), externalCommentId: null }
+    mGet.mockResolvedValue({ replies: [pasted] })
+    mApprove.mockResolvedValue({ reply: pasted })
+    mPlatforms.mockResolvedValue({ platforms: [{ name: 'twitter', canSend: true }], sendEnabled: true } as any)
+    const writeText = jest.fn().mockResolvedValue(undefined)
+    Object.assign(navigator, { clipboard: { writeText } })
+
+    render(<ResponderInbox />)
+    await waitFor(() => expect(screen.getByTestId('responder-item')).toBeInTheDocument())
+    fireEvent.click(screen.getByTestId('responder-approve'))
+
+    await waitFor(() => expect(screen.getByTestId('responder-send')).toBeDisabled())
+    expect(screen.getByTestId('responder-send-unavailable')).toHaveTextContent('responderInbox.sendNeedsComment')
+    fireEvent.click(screen.getByTestId('responder-send'))
+    expect(mSend).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByTestId('responder-copy'))
+    await waitFor(() => expect(screen.queryByTestId('responder-item')).not.toBeInTheDocument())
+    expect(writeText).toHaveBeenCalledWith('Thanks so much!')
   })
 
   it('surfaces a load error', async () => {
