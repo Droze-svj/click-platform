@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
 import Toast from '../components/Toast'
 
 interface Toast {
@@ -40,6 +40,23 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const error = useCallback((message: string, title?: string) => showToast(message, 'error', title), [showToast])
   const info = useCallback((message: string, title?: string) => showToast(message, 'info', title), [showToast])
   const warning = useCallback((message: string, title?: string) => showToast(message, 'warning', title), [showToast])
+
+  // Screens outside React's tree of hooks (settings, profile, projects,
+  // templates, clips) announce results with
+  //   window.dispatchEvent(new CustomEvent('toast', { detail: { message, type } }))
+  // Nothing listened for that event, so every one of those "Saved" / "Couldn't
+  // save" messages was silently dropped. Route it into the same toast stack.
+  useEffect(() => {
+    const onToastEvent = (event: Event) => {
+      const detail = (event as CustomEvent).detail || {}
+      const message = typeof detail.message === 'string' ? detail.message : ''
+      if (!message) return
+      const type = ['success', 'error', 'info', 'warning'].includes(detail.type) ? detail.type : 'info'
+      showToast(message, type, detail.title, detail.duration)
+    }
+    window.addEventListener('toast', onToastEvent)
+    return () => window.removeEventListener('toast', onToastEvent)
+  }, [showToast])
 
   return (
     <ToastContext.Provider value={{ toasts, showToast, success, error, info, warning, removeToast }}>
