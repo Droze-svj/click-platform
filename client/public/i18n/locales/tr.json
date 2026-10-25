@@ -9149,7 +9149,14 @@
       "viewClipsTitle": "Oluşturulan klipleri gör",
       "viewClips": "Klipleri gör",
       "dismissTitle": "Bu sonucu kapat",
-      "dismiss": "Kapat"
+      "dismiss": "Kapat",
+      "clipsTitle": "Kliplerin",
+      "clipsBody": "Düzenlenen videonun en güçlü anlarından, aynı düzenlemelerle kesildi.",
+      "clipN": "Klip {{n}}",
+      "downloadClip": "Klip {{n}} indir",
+      "formatsTitle": "Diğer formatlar",
+      "downloadFormat": "{{ratio}} sürümünü indir",
+      "formatsFailed": "Diğer formatlar dışa aktarılamadı. Bunları daha sonra klipten dışa aktarabilirsin."
     },
     "diag": {
       "title": "Tanılama",

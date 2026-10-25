@@ -9149,7 +9149,14 @@
       "viewClipsTitle": "Ver los clips generados",
       "viewClips": "Ver clips",
       "dismissTitle": "Descartar este resultado",
-      "dismiss": "Descartar"
+      "dismiss": "Descartar",
+      "clipsTitle": "Tus clips",
+      "clipsBody": "Cortados del video editado en sus mejores momentos, con las mismas ediciones.",
+      "clipN": "Clip {{n}}",
+      "downloadClip": "Descargar clip {{n}}",
+      "formatsTitle": "Otros formatos",
+      "downloadFormat": "Descargar la versión {{ratio}}",
+      "formatsFailed": "No se pudieron exportar los otros formatos. Puedes exportarlos desde el clip más tarde."
     },
     "diag": {
       "title": "Diagnóstico",

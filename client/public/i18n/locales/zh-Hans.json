@@ -9149,7 +9149,14 @@
       "viewClipsTitle": "查看生成的片段",
       "viewClips": "查看片段",
       "dismissTitle": "关闭此结果",
-      "dismiss": "关闭"
+      "dismiss": "关闭",
+      "clipsTitle": "你的片段",
+      "clipsBody": "从剪辑后的视频中最精彩的时刻截取，保留相同的编辑。",
+      "clipN": "片段 {{n}}",
+      "downloadClip": "下载片段 {{n}}",
+      "formatsTitle": "其他格式",
+      "downloadFormat": "下载 {{ratio}} 版本",
+      "formatsFailed": "其他格式未能导出。你可以稍后从片段中导出。"
     },
     "diag": {
       "title": "诊断",

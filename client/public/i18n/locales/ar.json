@@ -9149,7 +9149,14 @@
       "viewClipsTitle": "اعرض المقاطع المُنشأة",
       "viewClips": "عرض المقاطع",
       "dismissTitle": "تجاهل هذه النتيجة",
-      "dismiss": "تجاهل"
+      "dismiss": "تجاهل",
+      "clipsTitle": "مقاطعك",
+      "clipsBody": "مقتطعة من الفيديو المعدّل في أقوى لحظاته، بنفس التعديلات.",
+      "clipN": "المقطع {{n}}",
+      "downloadClip": "تنزيل المقطع {{n}}",
+      "formatsTitle": "صيغ أخرى",
+      "downloadFormat": "تنزيل نسخة {{ratio}}",
+      "formatsFailed": "تعذّر تصدير الصيغ الأخرى. يمكنك تصديرها من المقطع لاحقًا."
     },
     "diag": {
       "title": "التشخيص",

@@ -9149,7 +9149,14 @@
       "viewClipsTitle": "Zobacz wygenerowane klipy",
       "viewClips": "Zobacz klipy",
       "dismissTitle": "Zamknij ten wynik",
-      "dismiss": "Zamknij"
+      "dismiss": "Zamknij",
+      "clipsTitle": "Twoje klipy",
+      "clipsBody": "Wycięte z edytowanego wideo w najmocniejszych momentach, z tymi samymi poprawkami.",
+      "clipN": "Klip {{n}}",
+      "downloadClip": "Pobierz klip {{n}}",
+      "formatsTitle": "Inne formaty",
+      "downloadFormat": "Pobierz wersję {{ratio}}",
+      "formatsFailed": "Nie udało się wyeksportować pozostałych formatów. Możesz je wyeksportować z klipu później."
     },
     "diag": {
       "title": "Diagnostyka",

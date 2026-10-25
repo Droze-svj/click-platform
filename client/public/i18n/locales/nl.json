@@ -9149,7 +9149,14 @@
       "viewClipsTitle": "Gemaakte clips bekijken",
       "viewClips": "Clips bekijken",
       "dismissTitle": "Dit resultaat sluiten",
-      "dismiss": "Sluiten"
+      "dismiss": "Sluiten",
+      "clipsTitle": "Je clips",
+      "clipsBody": "Uit de bewerkte video geknipt op de sterkste momenten, met dezelfde bewerkingen.",
+      "clipN": "Clip {{n}}",
+      "downloadClip": "Clip {{n}} downloaden",
+      "formatsTitle": "Andere formaten",
+      "downloadFormat": "De {{ratio}}-versie downloaden",
+      "formatsFailed": "De andere formaten konden niet worden geëxporteerd. Je kunt ze later vanuit de clip exporteren."
     },
     "diag": {
       "title": "Diagnose",

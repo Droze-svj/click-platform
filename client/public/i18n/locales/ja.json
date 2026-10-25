@@ -9149,7 +9149,14 @@
       "viewClipsTitle": "生成されたクリップを見る",
       "viewClips": "クリップを見る",
       "dismissTitle": "この結果を閉じる",
-      "dismiss": "閉じる"
+      "dismiss": "閉じる",
+      "clipsTitle": "あなたのクリップ",
+      "clipsBody": "編集済み動画の一番の見どころから、同じ編集のまま切り出しました。",
+      "clipN": "クリップ {{n}}",
+      "downloadClip": "クリップ {{n}} をダウンロード",
+      "formatsTitle": "その他の形式",
+      "downloadFormat": "{{ratio}} 版をダウンロード",
+      "formatsFailed": "その他の形式を書き出せませんでした。あとでクリップから書き出せます。"
     },
     "diag": {
       "title": "診断",

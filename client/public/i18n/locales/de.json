@@ -9149,7 +9149,14 @@
       "viewClipsTitle": "Erstellte Clips ansehen",
       "viewClips": "Clips ansehen",
       "dismissTitle": "Dieses Ergebnis schließen",
-      "dismiss": "Schließen"
+      "dismiss": "Schließen",
+      "clipsTitle": "Deine Clips",
+      "clipsBody": "Aus dem bearbeiteten Video an den stärksten Stellen geschnitten, mit denselben Bearbeitungen.",
+      "clipN": "Clip {{n}}",
+      "downloadClip": "Clip {{n}} herunterladen",
+      "formatsTitle": "Weitere Formate",
+      "downloadFormat": "Die {{ratio}}-Version herunterladen",
+      "formatsFailed": "Die weiteren Formate konnten nicht exportiert werden. Du kannst sie später aus dem Clip exportieren."
     },
     "diag": {
       "title": "Diagnose",

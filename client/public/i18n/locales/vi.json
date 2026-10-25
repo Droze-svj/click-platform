@@ -9149,7 +9149,14 @@
       "viewClipsTitle": "Xem các clip đã tạo",
       "viewClips": "Xem clip",
       "dismissTitle": "Bỏ qua kết quả này",
-      "dismiss": "Bỏ qua"
+      "dismiss": "Bỏ qua",
+      "clipsTitle": "Clip của bạn",
+      "clipsBody": "Cắt từ video đã chỉnh sửa ở những khoảnh khắc hay nhất, giữ nguyên các chỉnh sửa.",
+      "clipN": "Clip {{n}}",
+      "downloadClip": "Tải clip {{n}}",
+      "formatsTitle": "Định dạng khác",
+      "downloadFormat": "Tải phiên bản {{ratio}}",
+      "formatsFailed": "Không thể xuất các định dạng khác. Bạn có thể xuất chúng từ clip sau."
     },
     "diag": {
       "title": "Chẩn đoán",

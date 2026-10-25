@@ -9149,7 +9149,14 @@
       "viewClipsTitle": "Vedi le clip generate",
       "viewClips": "Vedi clip",
       "dismissTitle": "Chiudi questo risultato",
-      "dismiss": "Chiudi"
+      "dismiss": "Chiudi",
+      "clipsTitle": "I tuoi clip",
+      "clipsBody": "Tagliati dal video montato nei momenti migliori, con le stesse modifiche.",
+      "clipN": "Clip {{n}}",
+      "downloadClip": "Scarica il clip {{n}}",
+      "formatsTitle": "Altri formati",
+      "downloadFormat": "Scarica la versione {{ratio}}",
+      "formatsFailed": "Non è stato possibile esportare gli altri formati. Puoi esportarli dal clip più tardi."
     },
     "diag": {
       "title": "Diagnostica",

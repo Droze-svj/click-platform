@@ -9149,7 +9149,14 @@
       "viewClipsTitle": "생성된 클립 보기",
       "viewClips": "클립 보기",
       "dismissTitle": "이 결과 닫기",
-      "dismiss": "닫기"
+      "dismiss": "닫기",
+      "clipsTitle": "내 클립",
+      "clipsBody": "편집된 영상의 가장 강렬한 순간에서 같은 편집으로 잘라냈어요.",
+      "clipN": "클립 {{n}}",
+      "downloadClip": "클립 {{n}} 다운로드",
+      "formatsTitle": "다른 형식",
+      "downloadFormat": "{{ratio}} 버전 다운로드",
+      "formatsFailed": "다른 형식을 내보내지 못했어요. 나중에 클립에서 내보낼 수 있어요."
     },
     "diag": {
       "title": "진단",

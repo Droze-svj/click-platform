@@ -9149,7 +9149,14 @@
       "viewClipsTitle": "Lihat klip yang dibuat",
       "viewClips": "Lihat Klip",
       "dismissTitle": "Tutup hasil ini",
-      "dismiss": "Tutup"
+      "dismiss": "Tutup",
+      "clipsTitle": "Klip kamu",
+      "clipsBody": "Dipotong dari video yang sudah diedit pada momen terbaiknya, dengan editan yang sama.",
+      "clipN": "Klip {{n}}",
+      "downloadClip": "Unduh klip {{n}}",
+      "formatsTitle": "Format lain",
+      "downloadFormat": "Unduh versi {{ratio}}",
+      "formatsFailed": "Format lain tidak dapat diekspor. Kamu bisa mengekspornya dari klip nanti."
     },
     "diag": {
       "title": "Diagnostik",

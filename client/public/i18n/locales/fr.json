@@ -9149,7 +9149,14 @@
       "viewClipsTitle": "Voir les clips générés",
       "viewClips": "Voir les clips",
       "dismissTitle": "Fermer ce résultat",
-      "dismiss": "Fermer"
+      "dismiss": "Fermer",
+      "clipsTitle": "Vos clips",
+      "clipsBody": "Découpés dans la vidéo montée à ses meilleurs moments, avec les mêmes retouches.",
+      "clipN": "Clip {{n}}",
+      "downloadClip": "Télécharger le clip {{n}}",
+      "formatsTitle": "Autres formats",
+      "downloadFormat": "Télécharger la version {{ratio}}",
+      "formatsFailed": "Les autres formats n'ont pas pu être exportés. Vous pourrez les exporter depuis le clip plus tard."
     },
     "diag": {
       "title": "Diagnostic",
