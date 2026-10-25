@@ -174,7 +174,7 @@ if (typeof window !== 'undefined' && typeof window.fetch === 'function' && !(win
 // Request queuing with concurrency limits to prevent timeouts
 let activeRequests = 0
 const MAX_CONCURRENT_REQUESTS = 3
-let requestQueue: Array<{ fn: () => Promise<any>, resolve: (value: any) => void, reject: (error: any) => void }> = []
+let requestQueue: Array<{ fn: () => Promise<any>, resolve: (value: any) => void, reject: (error: any) => void, retry: boolean }> = []
 
 // Retry configuration
 const MAX_RETRIES = 2
@@ -186,9 +186,15 @@ const RATE_LIMIT_STATUS_CODE = 429
 // In development, use shorter delay; in production, respect server's retry-after header
 const RATE_LIMIT_RETRY_DELAY_MS = process.env.NODE_ENV === 'development' ? 5000 : 60000 // 5s dev, 60s prod
 
-function rateLimitRequest<T>(requestFn: () => Promise<T>): Promise<T> {
+/**
+ * `retry` is true only for reads (GET). Writes are never re-sent: a POST that
+ * timed out client-side (renders, auto-edit and publishing can run for
+ * minutes) or got a 5xx may already have taken effect on the server, and
+ * sending it again duplicated renders, posts and uploads.
+ */
+function rateLimitRequest<T>(requestFn: () => Promise<T>, { retry = false }: { retry?: boolean } = {}): Promise<T> {
   return new Promise((resolve, reject) => {
-    requestQueue.push({ fn: requestFn, resolve, reject })
+    requestQueue.push({ fn: requestFn, resolve, reject, retry })
     processQueue()
   })
 }
@@ -200,11 +206,11 @@ async function processQueue() {
   }
 
   // Process the next request
-  const { fn, resolve, reject } = requestQueue.shift()!
+  const { fn, resolve, reject, retry } = requestQueue.shift()!
   activeRequests++
 
-  // Execute the request with retry logic
-  executeWithRetry(fn, 0)
+  // Execute the request (reads get retry logic; writes run once)
+  ;(retry ? executeWithRetry(fn, 0) : fn())
     .then(result => resolve(result))
     .catch(error => reject(error))
     .finally(() => {
@@ -733,7 +739,7 @@ export async function apiGet<T = any>(
     }
     
     return response.data
-  })
+  }, { retry: true })
 }
 
 /**
