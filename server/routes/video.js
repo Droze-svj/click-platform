@@ -684,6 +684,7 @@ async function processVideo(contentId, videoPath, user, options = {}) {
     content.captions = {
       text: transcript.text,
       language: transcript.language,
+      timingSource: transcript.timingSource,
       generatedAt: new Date(),
     };
     
@@ -998,7 +999,8 @@ async function generateTranscript(videoPath, language = 'auto', userId = 'unknow
         text: result.text,
         words: result.words,
         language: result.language,
-        provider: result.provider
+        provider: result.provider,
+        timingSource: result.timingSource,
       };
     }
 
@@ -1006,8 +1008,12 @@ async function generateTranscript(videoPath, language = 'auto', userId = 'unknow
     logger.warn('Transcription service returned unsuccessful result', { contentId });
     return { text: '', words: [], language: 'en' };
   } catch (error) {
+    // An empty transcript, never an error sentence: this text was saved as the
+    // video's transcript, so a failed transcription (e.g. AI quota spent)
+    // later surfaced as the caption "Transcript generation failed." and auto
+    // edit treated it as speech instead of retrying.
     logger.error('Transcript generation error', { error: error.message, videoPath, language });
-    return { text: 'Transcript generation failed.', words: [], language: 'en' };
+    return { text: '', words: [], language: 'en', failed: true };
   }
 }
 

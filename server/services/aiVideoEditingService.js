@@ -2236,6 +2236,9 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     let globalTimeOffset = 0;
     let globalDuration = duration;
     let transcript = content.captions?.text || (typeof content.transcript === 'string' ? content.transcript : content.transcript?.text) || content.metadata?.transcript || null;
+    // Older uploads stored this error sentence as the transcript when
+    // transcription failed; treat it as no transcript so we transcribe again.
+    if (typeof transcript === 'string' && /^transcript generation failed\.?$/i.test(transcript.trim())) transcript = null;
     // Word timing now lives in the Caption collection (read-through to embedded).
     const _capWords = await captionStore.getWords(videoId, { content });
     let transcriptWords = (_capWords && _capWords.length) ? _capWords : (content.transcript?.words || null);
@@ -6193,6 +6196,16 @@ async function exportAspectRatios(videoId, aspectRatios = ['9:16', '1:1', '16:9'
     throw new Error(`No supported aspect ratios in: ${aspectRatios.join(', ')}`);
   }
 
+  // Source shape decides crop vs blurred fit per ratio.
+  let srcAspect = null;
+  if (!/^https?:\/\//i.test(inputPath)) {
+    try {
+      const meta = await new Promise((resolve, reject) => ffmpeg.ffprobe(inputPath, (e, m) => (e ? reject(e) : resolve(m))));
+      const vs = (meta.streams || []).find((st) => st.codec_type === 'video');
+      if (vs && vs.width && vs.height) srcAspect = vs.width / vs.height;
+    } catch (_) { srcAspect = null; }
+  }
+
   const exports = await Promise.all(ratios.map(async (ratio) => {
     const cfg = RATIO_CONFIGS[ratio];
     const safeRatio = ratio.replace(':', 'x');
@@ -6202,12 +6215,21 @@ async function exportAspectRatios(videoId, aspectRatios = ['9:16', '1:1', '16:9'
     // crop = centered crop to the target ratio, scale = pad to canonical
     // resolution, setsar = correct aspect metadata for downstream readers.
     const cropFilter = `crop='min(iw,ih*${cfg.w}/${cfg.h}):min(ih,iw*${cfg.h}/${cfg.w})',scale=${cfg.w}:${cfg.h}:flags=lanczos,setsar=1`;
+    // A centre crop across an orientation flip (9:16 → 16:9 keeps ~1/3 of the
+    // frame) cuts off faces and burned-in captions. When more than ~35% would
+    // be lost, fit the whole picture over a blurred fill of itself instead.
+    const keepShare = (srcAspect && srcAspect > 0)
+      ? Math.min(srcAspect / (cfg.w / cfg.h), (cfg.w / cfg.h) / srcAspect)
+      : 1;
+    const useBlurFit = keepShare < 0.65;
+    const blurFit = `[0:v]split[bgsrc][fgsrc];[bgsrc]scale=${cfg.w}:${cfg.h}:force_original_aspect_ratio=increase,crop=${cfg.w}:${cfg.h},boxblur=20:10[bg];[fgsrc]scale=${cfg.w}:${cfg.h}:force_original_aspect_ratio=decrease:flags=lanczos[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1[vout]`;
 
     await new Promise((resolve, reject) => {
       const cmd = ffmpeg(inputPath);
       if (seek) cmd.seekInput(seek.start).duration(seek.duration);
+      if (useBlurFit) cmd.complexFilter(blurFit).outputOptions(['-map', '[vout]', '-map', '0:a?']);
+      else cmd.videoFilters(cropFilter);
       cmd
-        .videoFilters(cropFilter)
         .videoCodec('libx264')
         .audioCodec('aac')
         .outputOptions(['-preset', 'veryfast', '-crf', '21', '-pix_fmt', 'yuv420p', '-movflags', '+faststart'])
