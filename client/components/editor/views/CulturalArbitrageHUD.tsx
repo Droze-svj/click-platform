@@ -19,7 +19,8 @@ import {
   Timer
 } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
-import { apiGet, apiPost } from '../../../lib/api'
+import { apiGet, apiPost, handleApiError } from '../../../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ArbitrageTrigger {
     niche: string
@@ -40,7 +41,10 @@ interface ResurrectionCandidate {
 
 const glassStyle = "backdrop-blur-3xl bg-white/[0.02] border border-white/5 shadow-2xl"
 
-export const CulturalArbitrageHUD: React.FC = () => {
+type ToastFn = (message: string, type?: 'success' | 'error' | 'info' | 'warning') => unknown
+
+export const CulturalArbitrageHUD: React.FC<{ showToast?: ToastFn }> = ({ showToast }) => {
+    const { t } = useTranslation()
     const [triggers, setTriggers] = useState<ArbitrageTrigger[]>([])
     const [candidates, setCandidates] = useState<ResurrectionCandidate[]>([])
     const [loading, setLoading] = useState(false)
@@ -49,30 +53,39 @@ export const CulturalArbitrageHUD: React.FC = () => {
     const scanMarket = async () => {
         setLoading(true)
         try {
-            const [triggersData, candidatesData] = await Promise.all([
+            const [triggersRes, candidatesRes]: any[] = await Promise.all([
                 apiGet('/click/arbitrage-triggers'),
                 apiGet('/click/resurrection-candidates')
             ])
-            setTriggers(triggersData)
-            setCandidates(candidatesData)
+            const triggersData = triggersRes?.data ?? triggersRes
+            const candidatesData = candidatesRes?.data ?? candidatesRes
+            setTriggers(Array.isArray(triggersData) ? triggersData : [])
+            setCandidates(Array.isArray(candidatesData) ? candidatesData : [])
         } catch (err) {
-            console.error('Market scan failed')
+            showToast?.(t('editorPanels.culturalArbitrage.scanFailedToast', { error: handleApiError(err) }), 'error')
         } finally {
             setLoading(false)
         }
     }
 
     const triggerResurrection = async (candidate: ResurrectionCandidate) => {
-        setResurrecting(candidate.contentId)
+        // Keyed by the post: many candidates have no contentId (null), which
+        // used to disable every button at once.
+        setResurrecting(candidate.originalPostId)
         try {
-            await apiPost('/click/trigger-resurrection', { 
+            const res: any = await apiPost('/click/trigger-resurrection', {
                 originalPostId: candidate.originalPostId,
                 contentId: candidate.contentId
             })
+            const plan = res?.data ?? res
+            const next = plan?.repostSchedule?.nextRepostDate
+            showToast?.(next
+                ? t('editorPanels.culturalArbitrage.repostScheduledToast', { date: new Date(next).toLocaleString() })
+                : t('editorPanels.culturalArbitrage.repostPlannedToast'), 'success')
             // Refresh list
             scanMarket()
         } catch (err) {
-            console.error('Resurrection failed')
+            showToast?.(t('editorPanels.culturalArbitrage.repostFailedToast', { error: handleApiError(err) }), 'error')
         } finally {
             setResurrecting(null)
         }
@@ -198,6 +211,8 @@ export const CulturalArbitrageHUD: React.FC = () => {
                                 [1, 2, 3, 4].map(i => (
                                     <div key={i} className="h-64 bg-white/5 animate-pulse rounded-3xl" />
                                 ))
+                            ) : candidates.length === 0 ? (
+                                <p className="md:col-span-2 text-xs font-bold text-slate-500">{t('editorPanels.culturalArbitrage.noCandidates')}</p>
                             ) : candidates.map((asset, i) => (
                                 <m.div 
                                     key={i}
@@ -243,14 +258,14 @@ export const CulturalArbitrageHUD: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={() => triggerResurrection(asset)}
-                                        disabled={resurrecting === asset.contentId}
+                                        disabled={resurrecting === asset.originalPostId}
                                         className={`w-full py-4 mt-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] italic shadow-xl transition-all flex items-center justify-center gap-4 ${
-                                            resurrecting === asset.contentId 
+                                            resurrecting === asset.originalPostId 
                                                 ? 'bg-slate-800 text-slate-500' 
                                                 : 'bg-white text-black hover:bg-violet-500 hover:text-white'
                                         }`}
                                     >
-                                        {resurrecting === asset.contentId ? (
+                                        {resurrecting === asset.originalPostId ? (
                                             <>
                                                 <Timer className="w-3 h-3 animate-spin" />
                                                 DEPLOING...
