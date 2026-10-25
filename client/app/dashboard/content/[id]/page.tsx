@@ -26,7 +26,7 @@ import {
 import { m, AnimatePresence } from 'framer-motion'
 import ToastContainer from '../../../../components/ToastContainer'
 import { ContentSkeleton } from '../../../../components/LoadingSkeleton'
-import { PageShell } from '../../../../components/ui'
+import { PageShell, PageHeader, DetailLayout, Panel, SectionHeader, Button, IconButton, Input, EmptyState } from '../../../../components/ui'
 import ContentBenchmarking from '../../../../components/ContentBenchmarking'
 
 // Lazy load heavy components
@@ -52,7 +52,6 @@ interface Content {
   createdAt: string; updatedAt: string;
 }
 
-const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shadow-2xl transition-all duration-500'
 
 export default function ContentDetailPage() {
   const router = useRouter()
@@ -78,12 +77,12 @@ export default function ContentDetailPage() {
       if (contentData) setContent(contentData)
     } catch (error) {
       const errorObj = extractApiError(error)
-      showToast(typeof errorObj === 'string' ? errorObj : errorObj?.message || 'Failed to load content', 'error')
+      showToast(typeof errorObj === 'string' ? errorObj : errorObj?.message || t('contentDetailPage.loadFailed'), 'error')
       router.push('/dashboard/content')
     } finally {
       setLoading(false)
     }
-  }, [params.id, router, showToast])
+  }, [params.id, router, showToast, t])
 
   useEffect(() => {
     if (authLoading) return // user is null until /auth/me answers
@@ -173,8 +172,8 @@ export default function ContentDetailPage() {
     try {
       await axios.put(`${API_URL}/library/content/${content._id}/organize`, { isFavorite: !content.isFavorite })
       setContent({ ...content, isFavorite: !content.isFavorite })
-      showToast(!content.isFavorite ? 'Added to favorites' : 'Removed from favorites', 'success')
-    } catch { showToast("Couldn't update favorite", 'error') }
+      showToast(!content.isFavorite ? t('contentDetailPage.favoriteAdded') : t('contentDetailPage.favoriteRemoved'), 'success')
+    } catch { showToast(t('contentDetailPage.favoriteFailed'), 'error') }
   }
 
   const handleAddTag = async (tag: string) => {
@@ -183,356 +182,366 @@ export default function ContentDetailPage() {
     try {
       await axios.put(`${API_URL}/library/content/${content._id}/organize`, { tags: newTags })
       setContent({ ...content, tags: newTags })
-      showToast('Tag added', 'success')
-    } catch { showToast("Couldn't add tag", 'error') }
+      showToast(t('contentDetailPage.tagAdded'), 'success')
+    } catch { showToast(t('contentDetailPage.tagFailed'), 'error') }
   }
 
   if (loading) return (
-    <PageShell width="wide" className="min-h-screen bg-[var(--page-bg)]" aria-busy="true" aria-label="Loading">
+    <PageShell width="wide" aria-busy="true" aria-label={t('common.loading')}>
       <ContentSkeleton />
     </PageShell>
   )
 
   if (!content) return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--page-bg)]">
-      <div className="text-center space-y-8 p-20 rounded-[4rem] border border-white/5 bg-white/[0.02]">
-        <AlertCircle size={100} className="text-rose-500 mx-auto" />
-        <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Content not found</h2>
-        <button type="button" onClick={() => router.push('/dashboard/content')} className="px-12 py-5 bg-indigo-600 text-white rounded-[2rem] font-black uppercase tracking-widest italic hover:bg-indigo-500 transition-all">Back to content</button>
-      </div>
-    </div>
+    <PageShell width="narrow">
+      <EmptyState
+        icon={AlertCircle}
+        title={t('contentDetailPage.notFound')}
+        description={t('contentDetailPage.notFoundDesc')}
+        action={
+          <Button variant="primary" onClick={() => router.push('/dashboard/content')} leftIcon={<ArrowLeft size={16} aria-hidden />}>
+            {t('contentDetailPage.backToContent')}
+          </Button>
+        }
+      />
+    </PageShell>
+  )
+
+  const TABS = [
+    { id: 'overview', label: t('contentDetailPage.tabOverview'), icon: LayoutGrid },
+    { id: 'versions', label: t('contentDetailPage.tabVersions'), icon: History },
+    { id: 'comments', label: t('contentDetailPage.tabComments'), icon: MessageSquare },
+    { id: 'performance', label: t('contentDetailPage.tabPerformance'), icon: BarChart3 },
+    { id: 'translations', label: t('contentDetailPage.tabTranslations'), icon: Languages },
+  ] as const
+
+  const statusKey = (content.status || 'draft').toLowerCase()
+  const spinner = (
+    <div className="flex justify-center p-12"><RefreshCw size={28} className="animate-spin text-indigo-500" aria-hidden /></div>
   )
 
   return (
     <ErrorBoundary>
-      {/* flush: this page is deliberately airy (space-y-24, pb-48) and owns its
-          own rhythm, so it takes the shell's width and centring but not the
-          density stack's much tighter gap. */}
-      <PageShell width="wide" flush className="min-h-screen relative z-10 px-10 pt-16 pb-48 space-y-24">
+      <PageShell width="wide">
         <ToastContainer />
-        <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
-           <Fingerprint size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
-        </div>
 
-        {/* Diagnostic Header */}
-        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-16 relative z-50">
-           <div className="flex items-center gap-12">
-              <button type="button" onClick={() => router.push('/dashboard/content')} title="Back"
-                className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-2xl">
-                <ArrowLeft size={36} />
-              </button>
-              <div className="w-24 h-24 bg-indigo-500/5 border border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-2xl relative group overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-100" />
-                <CircuitBoard size={48} className="text-indigo-400 relative z-10 group-hover:rotate-90 transition-transform duration-300" />
-              </div>
-              <div>
-                 <div className="flex items-center gap-6 mb-3">
-                   <div className="flex items-center gap-3">
-                      <Network size={16} className="text-indigo-400 animate-pulse" />
-                      <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">Content details</span>
-                   </div>
-                   <div className="flex items-center gap-3 px-6 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-inner">
-                       <Radio size={14} className="text-emerald-400 animate-pulse" />
-                       <span className="text-[10px] font-black text-emerald-400 tracking-widest uppercase italic leading-none">{content.status}</span>
-                   </div>
-                 </div>
-                 <h1 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">{content.title || 'Untitled'}</h1>
-                 <p className="text-slate-400 text-[16px] uppercase font-black tracking-[0.5em] italic leading-none">Content ID: {content._id}</p>
-              </div>
-           </div>
+        <PageHeader
+          as="h2"
+          breadcrumbs={[
+            { label: t('contentDetailPage.breadcrumbContent'), href: '/dashboard/content' },
+            { label: content.title || t('contentDetailPage.untitled') },
+          ]}
+          title={<span className="break-words">{content.title || t('contentDetailPage.untitled')}</span>}
+          meta={
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+              {t(`dashboard.recent.status.${statusKey}`)}
+            </span>
+          }
+          description={t('contentDetailPage.subtitle', { type: content.type || 'content', date: new Date(content.createdAt).toLocaleDateString() })}
+          actions={
+            <>
+              <Button variant="ghost" size="md" onClick={() => router.push('/dashboard/content')} leftIcon={<ArrowLeft size={16} aria-hidden />}>
+                {t('common.back')}
+              </Button>
+              <IconButton
+                variant="secondary"
+                size="md"
+                onClick={handleToggleFavorite}
+                aria-pressed={content.isFavorite}
+                aria-label={content.isFavorite ? t('contentDetailPage.unfavorite') : t('contentDetailPage.favorite')}
+                title={content.isFavorite ? t('contentDetailPage.unfavorite') : t('contentDetailPage.favorite')}
+              >
+                <Star size={18} className={content.isFavorite ? 'fill-amber-400 text-amber-400' : ''} aria-hidden />
+              </IconButton>
+              <Button variant="secondary" size="md" onClick={() => router.push('/dashboard/library')} leftIcon={<Box size={16} aria-hidden />}>
+                {t('contentDetailPage.organize')}
+              </Button>
+            </>
+          }
+        />
 
-           <div className="flex items-center gap-8">
-              <button type="button" onClick={handleToggleFavorite}
-                className={`w-20 h-20 rounded-[2.2rem] flex items-center justify-center transition-all duration-300 shadow-2xl ${content.isFavorite ? 'bg-amber-500 text-white' : 'bg-white/[0.03] border border-white/10 text-slate-400 hover:text-white'}`}>
-                <Star size={36} className={content.isFavorite ? 'fill-current' : ''} />
+        {/* Tabs */}
+        <nav aria-label={t('contentDetailPage.sections')} className="-mx-1 flex gap-1 overflow-x-auto border-b border-[var(--border-subtle)] px-1">
+          {TABS.map(tab => {
+            const active = activeTab === tab.id
+            return (
+              <button
+                type="button"
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                aria-current={active ? 'page' : undefined}
+                className={`-mb-px inline-flex shrink-0 items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${active ? 'border-indigo-500 text-theme-primary' : 'border-transparent text-theme-muted hover:text-theme-primary'}`}
+              >
+                <tab.icon size={16} aria-hidden />
+                {tab.label}
               </button>
-              <button type="button" onClick={() => router.push('/dashboard/library')}
-                className="px-16 py-8 bg-white text-black hover:bg-indigo-500 hover:text-white rounded-[3.5rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-2xl transition-all duration-300 flex items-center gap-8 italic active:scale-95 group border-none">
-                <Box size={28} className="group-hover:rotate-12 transition-transform" />
-                Organize
-              </button>
-           </div>
-        </header>
-
-        {/* Diagnostic Tabs */}
-        <nav className="flex gap-12 relative z-10 border-b border-white/5 pb-8 overflow-x-auto custom-scrollbar">
-           {[
-             { id: 'overview', label: 'Overview', icon: LayoutGrid },
-             { id: 'versions', label: 'Versions', icon: History },
-             { id: 'comments', label: 'Comments', icon: MessageSquare },
-             { id: 'performance', label: 'Performance', icon: BarChart3 },
-             { id: 'translations', label: 'Translations', icon: Languages },
-           ].map(t => (
-             <button type="button" key={t.id} onClick={() => setActiveTab(t.id as any)}
-               className={`flex items-center gap-6 px-10 py-6 rounded-[2.5rem] transition-all duration-300 relative overflow-hidden group ${activeTab === t.id ? 'bg-white text-black shadow-[0_30px_60px_rgba(255,255,255,0.1)]' : 'bg-white/[0.02] border border-white/5 text-slate-400 hover:text-white hover:border-white/20'}`}>
-               <t.icon size={28} className={activeTab === t.id ? 'text-black' : 'text-slate-500 group-hover:text-white transition-colors'} />
-               <span className="text-[14px] font-black uppercase tracking-[0.2em] italic">{t.label}</span>
-               {activeTab === t.id && <m.div layoutId="tab-glow" className="absolute inset-0 bg-white/10" />}
-             </button>
-           ))}
+            )
+          })}
         </nav>
 
         {/* Tab Content */}
-        <div className="relative z-10 min-h-[1000px]">
+        <div>
            <AnimatePresence mode="wait">
              {activeTab === 'overview' && (
-               <m.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} className="grid grid-cols-1 lg:grid-cols-3 gap-20">
-                  <div className="lg:col-span-2 space-y-16">
-                     {content.description && (
-                        <div className={`${glassStyle} rounded-[5rem] p-16 space-y-10 group bg-black/40`}>
-                           <div className="flex items-center gap-6 mb-4">
-                              <Info size={32} className="text-indigo-400" />
-                              <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Description</h2>
+               <m.div key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
+                 <DetailLayout
+                   aside={
+                     <>
+                       <Panel>
+                         <SectionHeader as="h3" title={t('contentDetailPage.quickActions')} className="mb-4" />
+                         <div className="flex flex-wrap gap-2">
+                           <ContentDuplicator contentId={content._id} onDuplicate={(newId) => router.push(`/dashboard/content/${newId}`)} className="flex-1" />
+                           <OneClickPublish contentId={content._id} />
+                         </div>
+                       </Panel>
+
+                       <ContentHealthChecker
+                          content={{
+                             text: content.transcript || content.description || '',
+                             title: content.title,
+                             tags: content.tags,
+                             description: content.description,
+                             type: content.type,
+                          }}
+                          onFix={(issue, suggestion) => showToast(t('contentDetailPage.suggestionToast', { suggestion }), 'info')}
+                       />
+
+                       <ContentInsights contentId={content._id} compact={true} />
+
+                       <ContentSchedulingAssistant
+                          contentId={content._id}
+                          content={{ text: content.transcript || content.description, type: content.type, platform: (content as any).platform || (content as any).platforms?.[0] }}
+                       />
+
+                       <Panel>
+                         <SectionHeader as="h3" title={t('contentDetailPage.details')} className="mb-4" />
+                         <dl className="space-y-3">
+                           {[
+                             { label: t('contentDetailPage.fieldType'), val: content.type, icon: Box },
+                             { label: t('contentDetailPage.fieldStatus'), val: t(`dashboard.recent.status.${statusKey}`), icon: Radio },
+                             { label: t('contentDetailPage.fieldCategory'), val: content.category || t('contentDetailPage.categoryGeneral'), icon: Target },
+                             { label: t('contentDetailPage.fieldCreated'), val: new Date(content.createdAt).toLocaleString(), icon: History },
+                             { label: t('contentDetailPage.fieldUpdated'), val: new Date(content.updatedAt).toLocaleString(), icon: RefreshCw },
+                           ].map((s, i) => (
+                             <div key={i} className="flex items-center justify-between gap-4">
+                               <dt className="flex items-center gap-2 ds-text-caption text-theme-muted">
+                                 <s.icon size={14} aria-hidden />
+                                 {s.label}
+                               </dt>
+                               <dd className="text-sm font-medium text-theme-primary text-right first-letter:uppercase">{s.val}</dd>
+                             </div>
+                           ))}
+                         </dl>
+                       </Panel>
+
+                       <Panel>
+                         <SectionHeader as="h3" title={t('contentDetailPage.tags')} className="mb-4" />
+                         {content.tags && content.tags.length > 0 ? (
+                           <div className="mb-4 flex flex-wrap gap-2">
+                             {content.tags.map((tag, index) => (
+                               <span key={index} className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-600 dark:text-indigo-300">
+                                 #{tag}
+                               </span>
+                             ))}
                            </div>
-                           <p className="text-2xl font-black text-slate-300 italic leading-relaxed uppercase tracking-tighter opacity-70 group-hover:opacity-100 transition-opacity duration-300">{content.description}</p>
-                        </div>
+                         ) : (
+                           <p className="mb-4 ds-text-caption text-theme-muted">{t('contentDetailPage.noTags')}</p>
+                         )}
+                         <div className="relative">
+                           <Hash size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted" aria-hidden />
+                           <Input
+                             type="text"
+                             aria-label={t('contentDetailPage.addTag')}
+                             placeholder={t('contentDetailPage.addTag')}
+                             className="pl-9"
+                             onKeyDown={(e) => { if (e.key === 'Enter') { handleAddTag(e.currentTarget.value); e.currentTarget.value = '' } }}
+                           />
+                         </div>
+                       </Panel>
+                     </>
+                   }
+                 >
+                   <div className="flex flex-col gap-6">
+                     {content.description && (
+                       <Panel>
+                         <SectionHeader as="h3" title={t('contentDetailPage.description')} className="mb-3" />
+                         <p className="ds-text-body text-theme-secondary whitespace-pre-wrap">{content.description}</p>
+                       </Panel>
                      )}
 
                      {content.transcript && (
-                        <div className={`${glassStyle} rounded-[5rem] p-16 space-y-10 group bg-black/40`}>
-                           <div className="flex items-center gap-6 mb-4">
-                              <CircuitBoard size={32} className="text-emerald-400" />
-                              <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Transcript</h2>
-                           </div>
-                           <p className="text-xl font-black text-slate-400 italic leading-relaxed uppercase tracking-tighter opacity-40 group-hover:opacity-80 transition-opacity duration-300 whitespace-pre-wrap">{content.transcript}</p>
-                        </div>
+                       <Panel>
+                         <SectionHeader as="h3" title={t('contentDetailPage.transcript')} className="mb-3" />
+                         <p className="ds-text-body text-theme-secondary whitespace-pre-wrap max-h-96 overflow-y-auto">{content.transcript}</p>
+                       </Panel>
                      )}
 
                      {content.generatedContent && (
-                        <div className={`${glassStyle} rounded-[6rem] p-16 space-y-16 group bg-black/40 border-indigo-500/10`}>
-                           <div className="flex items-center justify-between border-b border-white/5 pb-10">
-                              <div className="flex items-center gap-8">
-                                 <Sparkles size={44} className="text-indigo-400" />
-                                 <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Generated content</h2>
-                              </div>
-                              <div className="px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-widest italic">AI generated</div>
-                           </div>
-                           {content.generatedContent.socialPosts && (
-                              <div className="space-y-12">
-                                 {content.generatedContent.socialPosts.map((post: any, idx: number) => (
-                                    <div key={idx} className="p-10 bg-white/[0.02] border border-white/5 rounded-[4rem] group/post hover:bg-white/[0.04] transition-all duration-300 shadow-2xl relative overflow-hidden">
-                                       <div className="absolute top-0 right-0 p-10 opacity-[0.02] group-hover/post:opacity-5 transition-opacity rotate-12"><Share2 size={150} /></div>
-                                       <div className="flex justify-between items-center mb-10 relative z-10">
-                                          <div className="flex items-center gap-6">
-                                             <span className="px-8 py-3 bg-indigo-500 text-white rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.4em] italic shadow-2xl">{post.platform}</span>
-                                             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_15px_rgba(16,185,129,1)]" />
-                                          </div>
-                                          <button type="button" onClick={() => { navigator.clipboard.writeText(post.content); showToast('Copied', 'success') }}
-                                             className="w-16 h-16 rounded-[1.5rem] bg-white/[0.03] border border-white/10 flex items-center justify-center hover:bg-white hover:text-black transition-all">
-                                             <Copy size={24} />
-                                          </button>
-                                       </div>
-                                       <p className="text-3xl font-black text-slate-200 italic leading-tight uppercase tracking-tighter mb-10 group-hover:text-indigo-400 transition-colors duration-300 relative z-10">{post.content}</p>
-                                       {post.hashtags && post.hashtags.length > 0 && (
-                                          <div className="flex flex-wrap gap-4 relative z-10">
-                                             {post.hashtags.map((tag: string, i: number) => (
-                                                <span key={i} className="text-[12px] font-black text-indigo-400 bg-indigo-500/10 px-6 py-2 rounded-2xl border border-indigo-500/20 italic">#{tag.toUpperCase()}</span>
-                                             ))}
-                                          </div>
-                                       )}
-                                    </div>
-                                 ))}
-                              </div>
-                           )}
-                        </div>
-                     )}
-                  </div>
-
-                  <aside className="space-y-12">
-                     {/* Resonance Injection Control */}
-                     <div className={`${glassStyle} rounded-[4.5rem] p-10 space-y-6 bg-black/60 shadow-[0_60px_100px_rgba(0,0,0,0.6)] border-indigo-500/10`}>
-                        <div className="flex items-center gap-6 mb-4 px-4">
-                           <Zap size={32} className="text-amber-400" />
-                           <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Quick actions</h3>
-                        </div>
-                        <div className="flex gap-4">
-                           <ContentDuplicator contentId={content._id} onDuplicate={(newId) => router.push(`/dashboard/content/${newId}`)} className="flex-1" />
-                           <OneClickPublish contentId={content._id} />
-                        </div>
-                     </div>
-
-                     {/* Integrity Auditor HUD */}
-                     <ContentHealthChecker
-                        content={{
-                           text: content.transcript || content.description || '',
-                           title: content.title,
-                           tags: content.tags,
-                           description: content.description,
-                           type: content.type,
-                        }}
-                        onFix={(issue, suggestion) => showToast(`Suggestion: ${suggestion}`, 'info')}
-                     />
-
-                     {/* Spectral Insights */}
-                     <ContentInsights contentId={content._id} compact={true} />
-
-                     {/* Temporal Deployment Sync */}
-                     <ContentSchedulingAssistant
-                        contentId={content._id}
-                        content={{ text: content.transcript || content.description, type: content.type, platform: (content as any).platform || (content as any).platforms?.[0] }}
-                     />
-
-                     {/* Node Metadata Diagnostic */}
-                     <div className={`${glassStyle} rounded-[5rem] p-16 space-y-12 bg-black/40`}>
-                        <div className="flex items-center gap-6 mb-4">
-                           <Settings size={32} className="text-slate-400" />
-                           <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Details</h2>
-                        </div>
-                        <div className="space-y-10">
-                           {[
-                              { label: 'Type', val: content.type, icon: Box },
-                              { label: 'Status', val: content.status, icon: Radio },
-                              { label: 'Category', val: content.category || 'General', icon: Target },
-                              { label: 'Created', val: new Date(content.createdAt).toLocaleString(), icon: History },
-                              { label: 'Last updated', val: new Date(content.updatedAt).toLocaleString(), icon: RefreshCw },
-                           ].map((s, i) => (
-                              <div key={i} className="flex items-center justify-between group/stat">
-                                 <div className="flex items-center gap-5">
-                                    <s.icon size={18} className="text-slate-500 group-hover/stat:text-indigo-400 transition-colors" />
-                                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em] italic leading-none">{s.label}</p>
+                       <Panel>
+                         <SectionHeader
+                           as="h3"
+                           title={t('contentDetailPage.generatedContent')}
+                           actions={<span className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-0.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300">{t('contentDetailPage.aiGenerated')}</span>}
+                           className="mb-4"
+                         />
+                         {Array.isArray(content.generatedContent.socialPosts) && content.generatedContent.socialPosts.length > 0 ? (
+                           <div className="space-y-3">
+                             {content.generatedContent.socialPosts.map((post: any, idx: number) => (
+                               <div key={idx} className="ds-surface-subtle p-4">
+                                 <div className="mb-2 flex items-center justify-between gap-3">
+                                   <span className="rounded-md bg-indigo-500/10 px-2 py-0.5 text-xs font-semibold capitalize text-indigo-600 dark:text-indigo-300">{post.platform}</span>
+                                   <IconButton
+                                     variant="ghost"
+                                     size="sm"
+                                     aria-label={t('contentDetailPage.copy')}
+                                     title={t('contentDetailPage.copy')}
+                                     onClick={() => { navigator.clipboard.writeText(post.content); showToast(t('contentDetailPage.copied'), 'success') }}
+                                   >
+                                     <Copy size={16} aria-hidden />
+                                   </IconButton>
                                  </div>
-                                 <p className="text-[14px] font-black text-white uppercase tracking-widest italic group-hover/stat:text-indigo-400 transition-colors leading-none">{s.val}</p>
-                              </div>
-                           ))}
-                        </div>
-                     </div>
+                                 <p className="ds-text-body text-theme-primary whitespace-pre-wrap">{post.content}</p>
+                                 {post.hashtags && post.hashtags.length > 0 && (
+                                   <div className="mt-3 flex flex-wrap gap-1.5">
+                                     {post.hashtags.map((tag: string, i: number) => (
+                                       <span key={i} className="text-xs font-medium text-indigo-600 dark:text-indigo-300">#{tag}</span>
+                                     ))}
+                                   </div>
+                                 )}
+                               </div>
+                             ))}
+                           </div>
+                         ) : (
+                           <p className="ds-text-caption text-theme-muted">{t('contentDetailPage.noGenerated')}</p>
+                         )}
+                       </Panel>
+                     )}
 
-                     {/* Axiom Mapping */}
-                     <div className={`${glassStyle} rounded-[5rem] p-16 space-y-12 bg-black/40`}>
-                        <div className="flex items-center gap-6 mb-4">
-                           <Hash size={32} className="text-indigo-400" />
-                           <h2 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">Tags</h2>
-                        </div>
-                        <div className="flex flex-wrap gap-4">
-                           {content.tags && content.tags.map((tag, index) => (
-                              <span key={index} className="px-8 py-3 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-3xl text-[12px] font-black italic tracking-widest uppercase shadow-2xl hover:bg-indigo-500 hover:text-white transition-all duration-700">
-                                 #{tag.toUpperCase()}
-                              </span>
-                           ))}
-                        </div>
-                        <div className="relative group/tag-in">
-                           <input type="text" placeholder="Add a tag and press Enter" onKeyPress={(e) => { if (e.key === 'Enter') { handleAddTag(e.currentTarget.value); e.currentTarget.value = '' } }}
-                              className="w-full bg-black/60 border-2 border-white/5 rounded-[2.5rem] px-10 py-6 text-xl font-black text-white uppercase italic tracking-tighter focus:border-indigo-500/50 transition-all placeholder:text-slate-600 shadow-inner" />
-                           <Search size={24} className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within/tag-in:text-indigo-500 transition-colors" />
-                        </div>
-                     </div>
-                  </aside>
+                     {!content.description && !content.transcript && !content.generatedContent && (
+                       <Panel>
+                         <EmptyState icon={FileText} title={t('contentDetailPage.emptyBodyTitle')} description={t('contentDetailPage.emptyBodyDesc')} />
+                       </Panel>
+                     )}
+                   </div>
+                 </DetailLayout>
                </m.div>
              )}
 
              {activeTab === 'versions' && (
-               <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
-                  <Suspense fallback={<div className="flex justify-center p-48"><RefreshCw size={64} className="animate-spin text-indigo-500" /></div>}>
+               <m.div key="versions" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
+                 <Panel>
+                   <Suspense fallback={spinner}>
                      <VersionHistory contentId={content._id} onRestore={loadContent} />
-                  </Suspense>
+                   </Suspense>
+                 </Panel>
                </m.div>
              )}
 
              {activeTab === 'comments' && (
-               <m.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
-                  <Suspense fallback={<div className="flex justify-center p-48"><RefreshCw size={64} className="animate-spin text-indigo-500" /></div>}>
+               <m.div key="comments" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
+                 <Panel>
+                   <Suspense fallback={spinner}>
                      <CommentsSection entityType="content" entityId={content._id} />
-                  </Suspense>
+                   </Suspense>
+                 </Panel>
                </m.div>
              )}
 
              {activeTab === 'performance' && (
-               <m.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -50 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
-                  <Suspense fallback={<div className="flex justify-center p-48"><RefreshCw size={64} className="animate-spin text-indigo-500" /></div>}>
+               <m.div key="performance" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
+                 <Panel>
+                   <Suspense fallback={spinner}>
                      <ContentPerformanceAnalytics contentId={content._id} />
-                  </Suspense>
+                   </Suspense>
+                 </Panel>
                </m.div>
              )}
 
              {activeTab === 'translations' && (
-               <m.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} className="space-y-16">
-                  <div className={`${glassStyle} rounded-[6rem] p-20 space-y-16 bg-black/40 border-purple-500/10`}>
-                     <div className="flex items-center justify-between border-b border-white/5 pb-12">
-                        <div className="flex items-center gap-10">
-                           <div className="w-20 h-20 rounded-[2.5rem] bg-purple-500/10 flex items-center justify-center border border-purple-500/20 shadow-2xl relative group overflow-hidden">
-                              <Languages size={40} className="text-purple-400 group-hover:rotate-180 transition-transform duration-300" />
-                           </div>
-                           <div>
-                              <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3">{t('translation.title')}</h2>
-                              <p className="text-[14px] font-black text-slate-400 uppercase tracking-[0.5em] italic leading-none">{t('translation.translateTo')} another language.</p>
-                           </div>
-                        </div>
-                        <div className="flex gap-8">
-                           <select value={targetLanguage} onChange={(e) => setTargetLanguage(e.target.value)}
-                              className="px-8 py-5 bg-black/60 border-2 border-white/5 rounded-[2rem] text-xl font-black text-white uppercase italic tracking-tighter focus:border-purple-500/50 transition-all shadow-inner outline-none">
-                              {(supportedLangs.length > 0 ? supportedLangs : [{ code: 'es', name: 'Spanish' }, { code: 'fr', name: 'French' }, { code: 'de', name: 'German' }]).map((l) => (
-                                 <option key={l.code} value={l.code}>{l.name.toUpperCase()}</option>
-                              ))}
-                           </select>
-                           <button type="button" onClick={handleTranslate} disabled={isTranslating}
-                              className="px-16 py-8 bg-purple-600 text-white rounded-[3rem] text-[15px] font-black uppercase tracking-[0.6em] shadow-[0_40px_100px_rgba(147,51,234,0.3)] hover:bg-white hover:text-black transition-all duration-300 italic disabled:opacity-20 active:scale-95 group">
-                              {isTranslating ? t('translation.translating') : <span><Zap className="inline mr-4 group-hover:scale-125 transition-transform" /> {t('translation.translate')}</span>}
-                           </button>
-                        </div>
-                     </div>
-                     
-                     <div className="flex flex-wrap gap-6 items-center">
-                        <span className="text-[11px] font-black text-slate-400 uppercase tracking-[1em] italic leading-none mr-6">Translations:</span>
-                        {viewingLang && (
-                           <button type="button" onClick={() => setViewingLang(null)}
-                              className="px-10 py-5 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic shadow-inner hover:bg-amber-500 hover:text-white transition-all">
-                              {t('translation.viewOriginal')}
-                           </button>
-                        )}
-                        {translationList.map((tr) => (
-                           <button type="button" key={tr._id} onClick={() => handleViewInLanguage(tr.language)}
-                              className={`px-10 py-5 rounded-[2rem] text-[12px] font-black uppercase tracking-widest italic transition-all duration-300 ${viewingLang === tr.language ? 'bg-purple-600 text-white shadow-2xl' : 'bg-white/[0.02] border border-white/5 text-slate-400 hover:text-white hover:border-white/20 shadow-inner'}`}>
-                              {t('translation.viewIn')} {tr.language.toUpperCase()}
-                           </button>
-                        ))}
-                     </div>
-                  </div>
+               <m.div key="translations" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="flex flex-col gap-6">
+                 <Panel>
+                   <SectionHeader
+                     as="h3"
+                     title={t('translation.title')}
+                     description={t('contentDetailPage.translateDesc')}
+                     actions={
+                       <div className="flex flex-wrap items-center gap-2">
+                         <select
+                           value={targetLanguage}
+                           onChange={(e) => setTargetLanguage(e.target.value)}
+                           aria-label={t('translation.targetLanguage')}
+                           className="h-10 rounded-lg border border-input bg-background px-3 text-sm text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                         >
+                           {(supportedLangs.length > 0 ? supportedLangs : [{ code: 'es', name: 'Spanish' }, { code: 'fr', name: 'French' }, { code: 'de', name: 'German' }]).map((l) => (
+                             <option key={l.code} value={l.code}>{l.name}</option>
+                           ))}
+                         </select>
+                         <Button variant="primary" onClick={handleTranslate} disabled={isTranslating} loading={isTranslating} leftIcon={!isTranslating ? <Languages size={16} aria-hidden /> : undefined}>
+                           {isTranslating ? t('translation.translating') : t('translation.translate')}
+                         </Button>
+                       </div>
+                     }
+                   />
+                   <div className="mt-5 flex flex-wrap items-center gap-2">
+                     <span className="ds-text-label text-theme-muted mr-1">{t('translation.translations')}:</span>
+                     {translationList.length === 0 && !viewingLang && (
+                       <span className="ds-text-caption text-theme-muted">{t('translation.noTranslations')}</span>
+                     )}
+                     {viewingLang && (
+                       <Button variant="secondary" size="sm" onClick={() => setViewingLang(null)}>
+                         {t('translation.viewOriginal')}
+                       </Button>
+                     )}
+                     {translationList.map((tr) => (
+                       <Button key={tr._id} variant={viewingLang === tr.language ? 'primary' : 'secondary'} size="sm" onClick={() => handleViewInLanguage(tr.language)}>
+                         {t('translation.viewIn')} {tr.language.toUpperCase()}
+                       </Button>
+                     ))}
+                   </div>
+                 </Panel>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-                     {(() => {
-                        const display = viewingLang && translatedContent
-                           ? { ...translatedContent, _lang: viewingLang }
-                           : { title: content.title, description: content.description, body: content.body || content.transcript, transcript: content.transcript, tags: content.tags || [], _lang: null }
-                        return (
-                           <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/60 shadow-[0_80px_200px_rgba(0,0,0,0.8)] border-purple-500/10 group`}>
-                              <div className="flex items-center gap-6 mb-12 border-l-8 border-purple-500 pl-8">
-                                 <div>
-                                    <h3 className="text-6xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4 group-hover:text-purple-400 transition-colors duration-300">{display.title || 'Untitled'}</h3>
-                                    {display._lang && <span className="text-[12px] font-black text-purple-500 uppercase tracking-[0.8em] italic leading-none">{t('translation.viewIn')} {display._lang.toUpperCase()}</span>}
-                                 </div>
-                              </div>
-                              <div className="space-y-16">
-                                 {display.description && (
-                                    <div className="space-y-6">
-                                       <h4 className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none border-b border-white/5 pb-4">Description</h4>
-                                       <p className="text-3xl font-black text-slate-300 italic leading-relaxed uppercase tracking-tighter drop-shadow-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-300">{display.description}</p>
-                                    </div>
-                                 )}
-                                 {display.body && (
-                                    <div className="space-y-6">
-                                       <h4 className="text-[14px] font-black text-slate-400 uppercase tracking-[0.8em] italic leading-none border-b border-white/5 pb-4">Body</h4>
-                                       <p className="text-2xl font-black text-slate-400 italic leading-relaxed uppercase tracking-tighter opacity-60 group-hover:opacity-90 transition-opacity duration-300 whitespace-pre-wrap">{display.body}</p>
-                                    </div>
-                                 )}
-                                 {display.tags && display.tags.length > 0 && (
-                                    <div className="flex flex-wrap gap-5 pt-10 border-t border-white/5">
-                                       {display.tags.map((tag: string, i: number) => (
-                                          <span key={i} className="px-10 py-4 bg-purple-500/10 border border-purple-500/20 text-purple-400 rounded-3xl text-[14px] font-black italic tracking-widest uppercase shadow-inner">#{tag.toUpperCase()}</span>
-                                       ))}
-                                    </div>
-                                 )}
-                              </div>
-                           </m.div>
-                        )
-                     })()}
-                  </div>
+                 {(() => {
+                   const display = viewingLang && translatedContent
+                     ? { ...translatedContent, _lang: viewingLang }
+                     : { title: content.title, description: content.description, body: content.body || content.transcript, transcript: content.transcript, tags: content.tags || [], _lang: null }
+                   return (
+                     <Panel>
+                       <div className="mb-4 border-l-4 border-indigo-500 pl-4">
+                         <h3 className="ds-text-h3 text-theme-primary">{display.title || t('contentDetailPage.untitled')}</h3>
+                         {display._lang && <span className="ds-text-caption text-indigo-500">{t('translation.viewIn')} {display._lang.toUpperCase()}</span>}
+                       </div>
+                       <div className="space-y-5">
+                         {display.description && (
+                           <div>
+                             <h4 className="ds-text-label text-theme-muted mb-1">{t('contentDetailPage.description')}</h4>
+                             <p className="ds-text-body text-theme-secondary whitespace-pre-wrap">{display.description}</p>
+                           </div>
+                         )}
+                         {display.body && (
+                           <div>
+                             <h4 className="ds-text-label text-theme-muted mb-1">{t('contentDetailPage.body')}</h4>
+                             <p className="ds-text-body text-theme-secondary whitespace-pre-wrap">{display.body}</p>
+                           </div>
+                         )}
+                         {display.tags && display.tags.length > 0 && (
+                           <div className="flex flex-wrap gap-2 border-t border-[var(--border-subtle)] pt-4">
+                             {display.tags.map((tag: string, i: number) => (
+                               <span key={i} className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-600 dark:text-indigo-300">#{tag}</span>
+                             ))}
+                           </div>
+                         )}
+                       </div>
+                     </Panel>
+                   )
+                 })()}
                </m.div>
              )}
            </AnimatePresence>
         </div>
 
         {/* Real-time Synergetic Matrix */}
-        <Suspense fallback={<div className="fixed bottom-10 right-10 w-24 h-24 rounded-full bg-white/[0.03] animate-pulse" />}>
+        <Suspense fallback={null}>
            <LiveCollaboration contentId={content._id} onContentChange={() => {}} />
         </Suspense>
 
@@ -574,14 +583,6 @@ export default function ContentDetailPage() {
           </ErrorBoundary>
         ) : null}
 
-        <style jsx global>{`
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          html.dark body { font-family: 'Inter', sans-serif; background: #020205; color: white; overflow-x: hidden; }
-          .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-          .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
-          .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.4); }
-        `}</style>
       </PageShell>
     </ErrorBoundary>
   )

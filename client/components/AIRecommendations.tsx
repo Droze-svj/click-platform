@@ -36,7 +36,8 @@ interface RecommendationsData {
   };
 }
 
-export default function AIRecommendations() {
+/** `embedded`: no card chrome or heading — the host panel already has both. */
+export default function AIRecommendations({ embedded = false }: { embedded?: boolean } = {}) {
   const [loading, setLoading] = useState(false);
   const [recommendations, setRecommendations] = useState<RecommendationsData | null>(null);
   const [type, setType] = useState<string>('');
@@ -133,14 +134,14 @@ export default function AIRecommendations() {
 
   return (
     // <ErrorBoundary> // Temporarily disabled for build
-    <Card className="transition-shadow hover:shadow-lg animate-in fade-in duration-300">
-        <CardHeader>
+    <Card className={embedded ? 'border-0 bg-transparent shadow-none' : 'transition-shadow hover:shadow-lg animate-in fade-in duration-300'}>
+        {!embedded && <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5 text-yellow-500" />
             {t('aiRecommendations.title')}
           </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        </CardHeader>}
+        <CardContent className={cn('space-y-4', embedded && 'p-0')}>
           {error && (
             <ErrorDisplay
               error={error}
@@ -149,7 +150,7 @@ export default function AIRecommendations() {
             />
           )}
         {recommendations && (
-          <div className="mb-4 p-4 bg-muted rounded">
+          <div className="mb-4 p-4 ds-surface-subtle">
             <p className="text-sm text-muted-foreground mb-2">
               {t('aiRecommendations.basedOnContent', { count: recommendations.basedOn?.contentAnalyzed ?? 0 })}
             </p>

@@ -132,7 +132,7 @@ export default function OneClickPublish({ contentId, platforms }: OneClickPublis
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white rounded-2xl hover:scale-105 transition-all shadow-lg shadow-indigo-600/20 font-black uppercase tracking-widest text-[10px]"
+        className="inline-flex h-10 items-center justify-center gap-2 px-4 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <Send className="w-4 h-4" />
         <span>{t('oneClickPublish.deployContent')}</span>

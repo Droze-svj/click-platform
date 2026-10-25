@@ -66,11 +66,11 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
 
   if (compact) {
     return (
-      <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+      <div className="ds-surface-card p-5">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <h4 className="font-medium text-sm text-gray-900 dark:text-[var(--text-main)]">{t('contentInsights.quickInsights')}</h4>
+            <BarChart3 className="w-4 h-4 text-indigo-500" />
+            <h4 className="ds-text-h3 text-theme-primary">{t('contentInsights.quickInsights')}</h4>
           </div>
           {insights.trend === 'up' ? (
             <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -81,19 +81,19 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
         
         <div className="grid grid-cols-4 gap-2 text-center">
           <div>
-            <div className="text-lg font-bold text-gray-900 dark:text-white">{insights.views}</div>
+            <div className="text-lg font-bold text-gray-900 dark:text-white">{(insights.views ?? 0).toLocaleString()}</div>
             <div className="text-xs text-gray-600 dark:text-gray-400">{t('contentInsights.views')}</div>
           </div>
           <div>
-            <div className="text-lg font-bold text-gray-900 dark:text-white">{insights.engagement}%</div>
+            <div className="text-lg font-bold text-gray-900 dark:text-white">{insights.engagement ?? 0}%</div>
             <div className="text-xs text-gray-600 dark:text-gray-400">{t('contentInsights.engagement')}</div>
           </div>
           <div>
-            <div className="text-lg font-bold text-gray-900 dark:text-white">{insights.likes}</div>
+            <div className="text-lg font-bold text-gray-900 dark:text-white">{(insights.likes ?? 0).toLocaleString()}</div>
             <div className="text-xs text-gray-600 dark:text-gray-400">{t('contentInsights.likes')}</div>
           </div>
           <div>
-            <div className="text-lg font-bold text-gray-900 dark:text-white">{insights.shares}</div>
+            <div className="text-lg font-bold text-gray-900 dark:text-white">{(insights.shares ?? 0).toLocaleString()}</div>
             <div className="text-xs text-gray-600 dark:text-gray-400">{t('contentInsights.shares')}</div>
           </div>
         </div>
@@ -102,10 +102,10 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+    <div className="ds-surface-card p-5">
       <div className="flex items-center gap-2 mb-4">
         <BarChart3 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-        <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
+        <h3 className="ds-text-h3 text-theme-primary">
           {t('contentInsights.title')}
         </h3>
         {insights.trend === 'up' && (
@@ -120,12 +120,12 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <Eye className="w-5 h-5 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">{insights.views}</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">{(insights.views ?? 0).toLocaleString()}</div>
           <div className="text-xs text-gray-600 dark:text-gray-400">{t('contentInsights.views')}</div>
         </div>
         <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <Heart className="w-5 h-5 text-red-600 dark:text-red-400 mx-auto mb-2" />
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">{insights.likes}</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">{(insights.likes ?? 0).toLocaleString()}</div>
           <div className="text-xs text-gray-600 dark:text-gray-400">{t('contentInsights.likes')}</div>
         </div>
         <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
@@ -135,7 +135,7 @@ export default function ContentInsights({ contentId, compact = false }: ContentI
         </div>
         <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <Share2 className="w-5 h-5 text-purple-600 dark:text-purple-400 mx-auto mb-2" />
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">{insights.shares}</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-white">{(insights.shares ?? 0).toLocaleString()}</div>
           <div className="text-xs text-gray-600 dark:text-gray-400">{t('contentInsights.shares')}</div>
         </div>
       </div>

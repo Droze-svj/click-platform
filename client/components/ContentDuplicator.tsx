@@ -56,27 +56,27 @@ export default function ContentDuplicator({ contentId, onDuplicate, className = 
       type="button"
       onClick={handleDuplicate}
       disabled={isDuplicating || isDuplicated}
-      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+      className={`inline-flex h-10 items-center justify-center gap-2 px-4 rounded-lg border text-sm font-medium whitespace-nowrap transition-colors ${
         isDuplicated
-          ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
-          : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
+          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+          : 'border-input bg-background text-theme-primary hover:bg-accent'
       } ${className}`}
       title={t('contentDuplicator.duplicateTitle')}
     >
       {isDuplicating ? (
         <>
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span className="text-sm">{t('contentDuplicator.duplicating')}</span>
+          <span>{t('contentDuplicator.duplicating')}</span>
         </>
       ) : isDuplicated ? (
         <>
           <Check className="w-4 h-4" />
-          <span className="text-sm">{t('contentDuplicator.duplicated')}</span>
+          <span>{t('contentDuplicator.duplicated')}</span>
         </>
       ) : (
         <>
           <Copy className="w-4 h-4" />
-          <span className="text-sm">{t('contentDuplicator.duplicate')}</span>
+          <span>{t('contentDuplicator.duplicate')}</span>
         </>
       )}
     </button>

@@ -34,8 +34,8 @@ describe('RemediationHUD', () => {
     mPost.mockResolvedValue({ success: true, status: 'SCHEDULED', actionPlan: [{ type: 'ADJUST_VOLUME', value: 30 }], window: { start: 2, end: 6 } })
     const toast = jest.fn()
     render(<RemediationHUD contentId="c1" showToast={toast} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Run auto-fix' }))
-    await waitFor(() => expect(screen.getByText('ADJUST VOLUME')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: 'editorPanels.remediation.run' }))
+    await waitFor(() => expect(screen.getByText('editorPanels.remediation.actionVolume')).toBeInTheDocument())
     expect(screen.getByText('editorPanels.remediation.planned')).toBeInTheDocument()
     expect(toast).toHaveBeenCalledWith(expect.stringContaining('editorPanels.remediation.scheduledToast'), 'info')
   })
@@ -43,7 +43,7 @@ describe('RemediationHUD', () => {
   it('says no fix is needed instead of "not checked yet"', async () => {
     mPost.mockResolvedValue({ success: true, status: 'CLEAN', actionPlan: [], commentsChecked: 4 })
     render(<RemediationHUD contentId="c1" showToast={jest.fn()} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Run auto-fix' }))
+    fireEvent.click(screen.getByRole('button', { name: 'editorPanels.remediation.run' }))
     await waitFor(() => expect(screen.getByText(/editorPanels\.remediation\.noFixesNeeded/)).toBeInTheDocument())
   })
 
@@ -51,7 +51,7 @@ describe('RemediationHUD', () => {
     mPost.mockRejectedValue(new Error('Content not found'))
     const toast = jest.fn()
     render(<RemediationHUD contentId="c1" showToast={toast} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Run auto-fix' }))
+    fireEvent.click(screen.getByRole('button', { name: 'editorPanels.remediation.run' }))
     await waitFor(() => expect(toast).toHaveBeenCalledWith(expect.stringContaining('Content not found'), 'error'))
   })
 })

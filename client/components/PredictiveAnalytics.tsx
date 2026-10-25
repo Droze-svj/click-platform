@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
+import { Input, Textarea } from './ui/form-field';
 import { Badge } from './ui/badge';
 import { Loader2, TrendingUp, Clock, BarChart3, Info } from 'lucide-react';
 import { Skeleton, CardSkeleton } from './LoadingSkeleton';
@@ -25,7 +26,12 @@ interface PerformancePrediction {
   recommendations: string[];
 }
 
-export default function PredictiveAnalytics() {
+/**
+ * `embedded` drops the card chrome and heading — for hosts (the content page)
+ * that already frame this in a titled panel, where a card-in-a-card with a
+ * second heading read as clutter.
+ */
+export default function PredictiveAnalytics({ embedded = false }: { embedded?: boolean } = {}) {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [prediction, setPrediction] = useState<PerformancePrediction | null>(null);
@@ -66,10 +72,10 @@ export default function PredictiveAnalytics() {
   return (
     // <ErrorBoundary> // Temporarily disabled for build
     <div className="space-y-6 animate-in fade-in duration-300">
-        <Card className="transition-shadow hover:shadow-lg">
-          <CardHeader>
+        <Card className={embedded ? 'border-0 bg-transparent shadow-none' : 'transition-shadow hover:shadow-lg'}>
+          {!embedded && <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-blue-600" />
+              <BarChart3 className="h-5 w-5 text-indigo-500" />
               {t('predictiveAnalytics.performancePrediction')}
               <TooltipProvider>
                 <Tooltip>
@@ -82,39 +88,37 @@ export default function PredictiveAnalytics() {
                 </Tooltip>
               </TooltipProvider>
             </CardTitle>
-          </CardHeader>
-        <CardContent className="space-y-4">
+          </CardHeader>}
+        <CardContent className={cn('space-y-4', embedded && 'p-0')}>
           <div>
-            <label className="text-sm font-medium mb-2 block">{t('predictiveAnalytics.title')}</label>
-            <input
+            <label className="ds-text-label text-theme-secondary mb-2 block">{t('predictiveAnalytics.title')}</label>
+            <Input
               type="text"
               value={contentData.title}
               onChange={(e) => setContentData({ ...contentData, title: e.target.value })}
-              className="w-full p-2 border rounded"
               placeholder={t('predictiveAnalytics.contentTitlePlaceholder')}
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-2 block">{t('predictiveAnalytics.body')}</label>
-            <textarea
+            <label className="ds-text-label text-theme-secondary mb-2 block">{t('predictiveAnalytics.body')}</label>
+            <Textarea
               value={contentData.body}
               onChange={(e) => setContentData({ ...contentData, body: e.target.value })}
-              className="w-full p-2 border rounded"
               rows={4}
               placeholder={t('predictiveAnalytics.contentBodyPlaceholder')}
             />
           </div>
           <div>
-            <label className="text-sm font-medium mb-2 block">{t('predictiveAnalytics.platform')}</label>
+            <label className="ds-text-label text-theme-secondary mb-2 block">{t('predictiveAnalytics.platform')}</label>
             <select
               value={contentData.platform}
               onChange={(e) => setContentData({ ...contentData, platform: e.target.value })}
               aria-label={t('predictiveAnalytics.platform')}
               title={t('predictiveAnalytics.platform')}
-              className="w-full p-2 border rounded"
+              className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <option value="instagram">Instagram</option>
-              <option value="twitter">Twitter</option>
+              <option value="twitter">X (Twitter)</option>
               <option value="linkedin">LinkedIn</option>
               <option value="facebook">Facebook</option>
             </select>

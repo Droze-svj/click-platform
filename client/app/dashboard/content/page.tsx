@@ -238,7 +238,7 @@ export default function NeuralForgePage() {
                     const NodeIcon = node.icon
                     return (
                       <button type="button" key={node.id} onClick={() => toggleNode(node.id)}
-                        title={t('contentPage.toggleNode', { node: node.label })} aria-label={t('contentPage.toggleNode', { node: node.label })}
+                        title={t('contentPage.toggleNode', { node: node.label })} aria-label={t('contentPage.toggleNode', { node: node.label })} aria-pressed={active}
                         className={cn(
                           'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                           active
@@ -408,9 +408,9 @@ export default function NeuralForgePage() {
               description={t('contentPage.neuralHeuristicsDesc')}
               className="mb-6 pb-5 border-b border-[var(--border-subtle)]"
             />
-            <div className="min-h-[400px] flex-1">
+            <div className="flex-1">
               <Suspense fallback={<div className="flex items-center justify-center h-full gap-3 text-theme-muted"><RefreshCw size={24} className="animate-spin" aria-hidden /><p className="ds-text-label">{t('contentPage.decryptingHeuristics')}</p></div>}>
-                <AIRecommendations />
+                <AIRecommendations embedded />
               </Suspense>
             </div>
           </Panel>
@@ -421,9 +421,9 @@ export default function NeuralForgePage() {
               description={t('contentPage.predictiveTelemetryDesc')}
               className="mb-6 pb-5 border-b border-[var(--border-subtle)]"
             />
-            <div className="min-h-[400px] flex-1">
+            <div className="flex-1">
               <Suspense fallback={<div className="flex items-center justify-center h-full gap-3 text-theme-muted"><RefreshCw size={24} className="animate-spin" aria-hidden /><p className="ds-text-label">{t('contentPage.scanningTrajectories')}</p></div>}>
-                <PredictiveAnalytics />
+                <PredictiveAnalytics embedded />
               </Suspense>
             </div>
           </Panel>
