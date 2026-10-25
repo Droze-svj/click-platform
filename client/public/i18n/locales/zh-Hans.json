@@ -10202,7 +10202,8 @@
   },
   "forgotPasswordPage": {
     "rateLimited": "重置请求过多。请等几分钟后重试。",
-    "sendFailed": "暂时无法发送重置链接。请检查网络连接后重试。"
+    "sendFailed": "暂时无法发送重置链接。请检查网络连接后重试。",
+    "emailUnavailable": "目前无法发送重置邮件。请联系客服重置你的密码。"
   },
   "governanceDashboard": {
     "loadFailed": "无法加载审计日志。"

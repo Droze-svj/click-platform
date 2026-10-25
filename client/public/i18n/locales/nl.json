@@ -10202,7 +10202,8 @@
   },
   "forgotPasswordPage": {
     "rateLimited": "Te veel resetverzoeken. Wacht een paar minuten en probeer het dan opnieuw.",
-    "sendFailed": "We konden de resetlink nu niet versturen. Controleer je verbinding en probeer het opnieuw."
+    "sendFailed": "We konden de resetlink nu niet versturen. Controleer je verbinding en probeer het opnieuw.",
+    "emailUnavailable": "We kunnen nu geen resetmails versturen. Neem contact op met support om je wachtwoord te resetten."
   },
   "governanceDashboard": {
     "loadFailed": "Het auditlogboek kon niet worden geladen."

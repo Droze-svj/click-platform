@@ -10202,7 +10202,8 @@
   },
   "forgotPasswordPage": {
     "rateLimited": "Demasiadas solicitudes de restablecimiento. Espera unos minutos y vuelve a intentarlo.",
-    "sendFailed": "No pudimos enviar el enlace de restablecimiento ahora mismo. Revisa tu conexión e inténtalo de nuevo."
+    "sendFailed": "No pudimos enviar el enlace de restablecimiento ahora mismo. Revisa tu conexión e inténtalo de nuevo.",
+    "emailUnavailable": "Ahora mismo no podemos enviar correos de restablecimiento. Contacta con soporte para restablecer tu contraseña."
   },
   "governanceDashboard": {
     "loadFailed": "No se pudo cargar el registro de auditoría."

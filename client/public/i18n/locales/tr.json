@@ -10202,7 +10202,8 @@
   },
   "forgotPasswordPage": {
     "rateLimited": "Çok fazla sıfırlama isteği gönderildi. Birkaç dakika bekleyip tekrar dene.",
-    "sendFailed": "Sıfırlama bağlantısı şu anda gönderilemedi. Bağlantını kontrol edip tekrar dene."
+    "sendFailed": "Sıfırlama bağlantısı şu anda gönderilemedi. Bağlantını kontrol edip tekrar dene.",
+    "emailUnavailable": "Şu anda sıfırlama e-postası gönderemiyoruz. Şifreni sıfırlamak için destekle iletişime geç."
   },
   "governanceDashboard": {
     "loadFailed": "Denetim kaydı yüklenemedi."

@@ -828,6 +828,19 @@ router.post('/forgot-password',
         return res.status(400).json({ success: false, error: 'Email is required' });
       }
 
+      // No email provider configured (SENDGRID_API_KEY / MAILGUN_* / SMTP_*):
+      // nothing can be sent, so don't answer "a reset link has been sent" and
+      // leave the user waiting for an email that never comes. This depends
+      // only on server config, so it reveals nothing about the account.
+      if (!require('../services/emailService').isEmailServiceAvailable()) {
+        logger.error('[forgot-password] no email provider configured — reset emails cannot be sent');
+        return res.status(503).json({
+          success: false,
+          code: 'EMAIL_UNAVAILABLE',
+          error: "Password reset emails can't be sent right now. Please contact support to reset your password.",
+        });
+      }
+
       // Check if user exists
       let user;
       let findError;
