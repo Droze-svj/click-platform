@@ -1,7 +1,6 @@
 /**
  * server/services/sovereignToolboxService.js
- * Sovereign AI Toolbox - The Unified Hub for the 10 Elite Editing Tools.
- * Maps legacy "AI Tools" to Click's Sovereign Pipeline and upgrades them with Autonomous Logic.
+ * Toolbox: ten one-click editing tools, each run by an existing service.
  */
 
 const logger = require('../utils/logger');
@@ -14,77 +13,19 @@ const audioService = require('./audioService');
 
 class SovereignToolboxService {
   constructor() {
+    // Plain names and descriptions. These used to be other companies' product
+    // names ("Opus Sovereign", "Descript V3"…) with invented "upgrade" claims.
     this.tools = [
-      {
-        id: 'silence-removal',
-        name: 'Wisecut Elite',
-        description: 'Autonomous silence removal & ambient audio ducking.',
-        implementation: 'aiVideoEditingService.detectSilencePeriods',
-        upgrade: 'Neural Pacing: Syncs cuts to emotional energy levels of the transcript.'
-      },
-      {
-        id: 'viral-clips',
-        name: 'Opus Sovereign',
-        description: 'Long-form to high-retention viral short clips.',
-        implementation: 'openShortsService.generateShortContent',
-        upgrade: 'Sovereign Manifest: Gemini-driven multi-variant synthesis with anti-repetition logic.'
-      },
-      {
-        id: 'auto-cut',
-        name: 'Gling Neural',
-        description: 'Automatic mistake and retake removal via transcript mismatch detection.',
-        implementation: 'aiVideoEditingService.detectSilencePeriods + sceneDetection',
-        upgrade: 'Semantic Rejection: Automatically removes segments where the creator stutters or repeats concepts.'
-      },
-      {
-        id: 'bg-swap',
-        name: 'Runway Fusion',
-        description: 'Neural background removal and cinematic environment synthesis.',
-        implementation: 'creativeToolsService.swapBackground',
-        upgrade: 'Latent Diffusion: Generates a custom 3D background based on the video\'s niche DNA.'
-      },
-      {
-        id: 'blog-to-video',
-        name: 'Pictory Pulse',
-        description: 'Transform URLs/Blogs into high-impact marketing reels.',
-        implementation: 'contentSynthesisService',
-        upgrade: 'Pulse Synthesis: Extracts the highest-intent keywords and matches them to premium B-roll.'
-      },
-      {
-        id: 'auto-captions',
-        name: 'Veed Kinetic',
-        description: 'Dynamic, kinetic captions with real-time word-level animation.',
-        implementation: 'videoCaptionService',
-        upgrade: 'Emotional Emphasis: Automatically colors and sizes words based on sentiment intensity.'
-      },
-      {
-        id: 'text-editor',
-        name: 'Descript V3',
-        description: 'Edit video timeline by simply deleting words in the transcript.',
-        implementation: 'Click Editor V3',
-        upgrade: 'Lossless Ripple: Re-syncs background music beats when text is deleted to preserve flow.'
-      },
-      {
-        id: 'ai-avatar',
-        name: 'Synthesia Gaze',
-        description: 'Neural eye-contact correction and faceless avatar synthesis.',
-        implementation: 'creativeToolsService.fixEyeContact',
-        upgrade: 'Neural Gaze: Re-renders pupils to maintain engagement during script reading.'
-      },
-      {
-        id: 'cinematic-3d',
-        name: 'Luma Depth',
-        description: '3D style transfer and cinematic depth-of-field effects.',
-        implementation: 'visualSynthesisService',
-        upgrade: 'Neural Lattice: Applies regional Style-DNA (Cyberpunk, Minimalist) to raw footage.'
-      },
-      {
-        id: 'script-to-video',
-        name: 'Visla Flow',
-        description: 'Generate complete videos from scripts or abstract ideas.',
-        implementation: 'AutonomousCreator',
-        upgrade: 'Swarm Consensus: 3 AI agents debate the script before rendering for maximum quality.'
-      }
+      { id: 'silence-removal', name: 'Silence removal', description: 'Finds the pauses and dead air in a video so they can be cut.' },
+      { id: 'viral-clips', name: 'Short clips from long videos', description: 'Turns a long video into several short, vertical clips.' },
+      { id: 'auto-cut', name: 'Auto-cut', description: 'Finds silences and scene changes to suggest cut points.' },
+      { id: 'bg-swap', name: 'Background swap', description: 'Removes the background behind you and replaces it.' },
+      { id: 'blog-to-video', name: 'Article to video', description: 'Turns a blog post or web page into a short video script.' },
+      { id: 'auto-captions', name: 'Auto captions', description: 'Adds word-by-word captions synced to speech.' },
+      { id: 'text-editor', name: 'Edit by transcript', description: 'Cut the video by deleting words from its transcript.' },
+      { id: 'ai-avatar', name: 'Eye-contact fix', description: 'Adjusts your gaze so you look at the camera while reading a script.' },
+      { id: 'cinematic-3d', name: 'Cinematic look', description: 'Applies a stylised colour and depth look to footage.' },
+      { id: 'script-to-video', name: 'Script to video', description: 'Builds a video draft from a written script.' },
     ];
   }
 

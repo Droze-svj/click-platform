@@ -27,8 +27,8 @@ interface Tool {
   id: string;
   name: string;
   description: string;
-  implementation: string;
-  upgrade: string;
+  implementation?: string;
+  upgrade?: string;
   roi?: number;
 }
 
