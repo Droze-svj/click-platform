@@ -244,7 +244,7 @@ export default function SocialPage() {
         />
 
         {/* ── Platform Grid (auto-fit so cards reflow at any width) ── */}
-        <div className="ds-bento-grid">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {Object.entries(PLATFORM_CONFIG).map(([id, cfg]) => {
             // Multi-account: each platform's slot is now an array. The
             // first entry is rendered as the primary "active" account,
@@ -261,7 +261,7 @@ export default function SocialPage() {
             const Icon = cfg.icon
 
             return (
-              <Panel key={id} variant="bento" className="ds-bento-2x1 flex flex-col">
+              <Panel key={id} variant="bento" className="flex flex-col">
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-accent">
@@ -349,7 +349,7 @@ export default function SocialPage() {
                       disabled={isConnecting}
                       leftIcon={isConnecting ? <RefreshCw size={14} className="animate-spin" aria-hidden /> : <Plus size={14} aria-hidden />}
                     >
-                      {isConnecting ? t('socialPage.negotiatingShort') : t('socialPage.addAnotherAccount', { platform: id.toUpperCase() })}
+                      {isConnecting ? t('socialPage.negotiatingShort') : t('socialPage.addAnotherAccount', { platform: cfg.name || id })}
                     </Button>
                   </div>
                 ) : (
