@@ -342,7 +342,7 @@ export default function BillingPage() {
               )}
               <Panel variant="subtle" className="flex items-center gap-3 px-4 py-2.5">
                 <span className={cn('h-2.5 w-2.5 rounded-full',
-                  subStatus === 'active' ? 'bg-emerald-500' : subStatus === 'trial' ? 'bg-amber-500' : 'bg-theme-muted')} />
+                  subStatus === 'active' ? 'bg-emerald-500' : subStatus === 'trial' ? 'bg-amber-500' : 'bg-slate-400')} />
                 <div>
                   <p className="ds-text-caption">{t('billingPage.currentTier')}</p>
                   <p className="ds-text-label text-theme-primary capitalize">
@@ -398,7 +398,7 @@ export default function BillingPage() {
                       )}
                     </div>
                     {m.cap && m.cap > 0 ? (
-                      <div className="h-1.5 rounded-full bg-theme-muted/15 overflow-hidden">
+                      <div className="h-1.5 rounded-full bg-accent overflow-hidden">
                         <div
                           className={cn('h-full rounded-full transition-[width] duration-500 motion-reduce:transition-none', overage ? 'bg-rose-500' : m.bar)}
                           style={{ width: `${pct}%` }}
@@ -429,7 +429,7 @@ export default function BillingPage() {
               </div>
 
               {/* Monthly / Yearly Cadence Switcher */}
-              <div className="inline-flex items-center rounded-xl bg-theme-muted/15 p-1 border border-[var(--border-subtle)] self-start sm:self-auto">
+              <div className="inline-flex items-center rounded-xl bg-accent p-1 border border-[var(--border-subtle)] self-start sm:self-auto">
                 <button
                   type="button"
                   onClick={() => setBillingPeriod('monthly')}
@@ -813,7 +813,7 @@ export default function BillingPage() {
               </div>
 
               {/* Legal Terms Checkbox */}
-              <label className="flex items-start gap-2.5 p-3 rounded-xl bg-theme-muted/10 border border-[var(--border-subtle)] cursor-pointer select-none">
+              <label className="flex items-start gap-2.5 p-3 rounded-xl bg-accent border border-[var(--border-subtle)] cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={agreedToTerms}
@@ -882,7 +882,7 @@ export default function BillingPage() {
           >
             <div className="space-y-4 pt-3">
               {/* Tab Selector */}
-              <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-theme-muted/15 border border-[var(--border-subtle)]">
+              <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-accent border border-[var(--border-subtle)]">
                 <button
                   type="button"
                   onClick={() => setManageTab('cancel')}

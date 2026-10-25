@@ -83,18 +83,18 @@ export default function GetStartedStrip() {
   const pct = totalSteps ? Math.round((completedSteps / totalSteps) * 100) : 0
 
   return (
-    <div className="relative flex items-center justify-between gap-4 px-4 py-3 bg-gradient-to-r from-primary-500/10 to-purple-500/10 dark:from-primary-500/20 dark:to-purple-500/20 border-b border-gray-200 dark:border-gray-700">
+    <div className="relative flex items-center justify-between gap-4 rounded-2xl border border-[var(--tint-indigo-edge)] bg-[var(--tint-indigo-bg)] px-4 py-3 sm:px-5">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="flex-shrink-0 w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="hidden sm:block flex-shrink-0 w-24 h-2 bg-indigo-500/20 rounded-full overflow-hidden">
           <div
-            className="h-full bg-primary-500 dark:bg-primary-400 rounded-full transition-all duration-300"
+            className="h-full bg-indigo-500 rounded-full transition-all duration-300"
             style={{ width: `${pct}%` }}
           />
         </div>
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+        <span className="text-sm font-medium text-theme-primary truncate">
           {t('getStartedStrip.getStarted', { completed: completedSteps, total: totalSteps })}
           {currentStepData?.title && (
-            <span className="text-gray-500 dark:text-gray-400 font-normal"> — {currentStepData.title}</span>
+            <span className="text-theme-muted font-normal"> — {currentStepData.title}</span>
           )}
         </span>
       </div>
@@ -102,7 +102,7 @@ export default function GetStartedStrip() {
         <button
          type="button"
           onClick={handleContinue}
-          className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-500/10 rounded-lg transition"
+          className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-semibold text-[var(--tint-indigo-fg)] hover:bg-indigo-500/10 rounded-lg transition"
         >
           {t('getStartedStrip.continue')}
           <ChevronRight className="w-4 h-4" />
@@ -110,7 +110,7 @@ export default function GetStartedStrip() {
         <button
          type="button"
           onClick={handleDismiss}
-          className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg transition"
+          className="p-1.5 text-theme-muted hover:text-theme-primary rounded-lg transition"
           aria-label={t('getStartedStrip.dismiss')}
         >
           <X className="w-4 h-4" />
