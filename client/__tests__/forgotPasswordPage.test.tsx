@@ -11,8 +11,9 @@ jest.mock('../lib/api', () => ({
   handleApiError: (e: any) => e?.response?.data?.error ?? e?.message ?? '',
 }))
 jest.mock('../components/ClickLogo', () => () => null)
-const mockT = (k: string) => k
-jest.mock('@/hooks/useTranslation', () => ({ useTranslation: () => ({ t: mockT }) }))
+// Page copy now comes from t(); resolve keys against the real en.json.
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
+import { t as enT } from '../mocks/useTranslationEn'
 
 const mPost = api.apiPost as jest.Mock
 const apiError = (status?: number) => Object.assign(new Error('boom'), status ? { response: { status, data: { error: 'boom' } } } : {})
@@ -40,7 +41,7 @@ describe('Forgot password', () => {
     mPost.mockRejectedValueOnce(apiError(status as number | undefined))
     render(<ForgotPasswordPage />)
     submit()
-    expect(await screen.findByText(key)).toBeInTheDocument()
+    expect(await screen.findByText(enT(key))).toBeInTheDocument()
     expect(screen.queryByText('Check your email')).toBeNull()
     await waitFor(() => expect(screen.getByRole('button', { name: /Send reset link/ })).not.toBeDisabled())
   })

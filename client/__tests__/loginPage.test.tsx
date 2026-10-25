@@ -12,6 +12,8 @@ jest.mock('../lib/api', () => ({
 }))
 jest.mock('../components/LanguagePicker', () => () => null)
 jest.mock('../components/ClickLogo', () => () => null)
+// Page copy now comes from t(); resolve keys against the real en.json.
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
 
 const mPost = api.apiPost as jest.Mock
 const mSetTokens = api.setTokens as jest.Mock
