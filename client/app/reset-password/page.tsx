@@ -7,6 +7,7 @@ import { apiPost, handleApiError } from '../../lib/api'
 import { Button, Card, FormField, Input, Icon, AuthShell } from '../../components/ui'
 import { CheckCircle2, ArrowLeft, Lock } from 'lucide-react'
 import ClickLogo from '../../components/ClickLogo'
+import { useTranslation } from '@/hooks/useTranslation'
 
 /**
  * Reset-password flow. Reached from the link in the password-reset email
@@ -17,6 +18,7 @@ import ClickLogo from '../../components/ClickLogo'
 function ResetPasswordInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { t } = useTranslation()
   const token = searchParams.get('token') || ''
 
   const [password, setPassword] = useState('')
@@ -29,15 +31,15 @@ function ResetPasswordInner() {
     e.preventDefault()
     setError('')
     if (!token) {
-      setError('This reset link is missing its token. Request a new link from “Forgot password”.')
+      setError(t('resetPasswordPage.errNoToken'))
       return
     }
     if (password.length < 8) {
-      setError('Use at least 8 characters.')
+      setError(t('resetPasswordPage.errLength'))
       return
     }
     if (password !== confirm) {
-      setError('The two passwords don’t match.')
+      setError(t('resetPasswordPage.errMismatch'))
       return
     }
     setLoading(true)
@@ -46,7 +48,7 @@ function ResetPasswordInner() {
       setDone(true)
       setTimeout(() => router.push('/login'), 2500)
     } catch (err) {
-      setError(handleApiError(err) || 'That reset link is invalid or has expired. Request a new one.')
+      setError(handleApiError(err) || t('resetPasswordPage.errInvalid'))
     } finally {
       setLoading(false)
     }
@@ -58,7 +60,7 @@ function ResetPasswordInner() {
           href="/login"
           className="inline-flex items-center gap-2 ds-text-label text-theme-muted hover:text-theme-primary transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          <Icon icon={ArrowLeft} size="sm" /> Back to sign in
+          <Icon icon={ArrowLeft} size="sm" /> {t('forgotPasswordPage.backToSignIn')}
         </Link>
 
         <Card variant="elevated" className="p-8 sm:p-10 space-y-8">
@@ -67,12 +69,12 @@ function ResetPasswordInner() {
               <ClickLogo size={36} />
             </div>
             <h1 className="ds-text-h1 text-theme-primary">
-              {done ? 'Password updated' : 'Set a new password'}
+              {done ? t('resetPasswordPage.titleDone') : t('resetPasswordPage.title')}
             </h1>
             <p className="ds-text-body text-theme-secondary">
               {done
-                ? 'Your password has been reset. Redirecting you to sign in…'
-                : 'Choose a new password for your Click account.'}
+                ? t('resetPasswordPage.subtitleDone')
+                : t('resetPasswordPage.subtitle')}
             </p>
           </div>
 
@@ -84,12 +86,12 @@ function ResetPasswordInner() {
               >
                 <Icon icon={CheckCircle2} size="md" className="text-emerald-500 mt-0.5 shrink-0" />
                 <p className="text-sm text-emerald-700 dark:text-emerald-300 leading-relaxed">
-                  All set — you can now sign in with your new password.
+                  {t('resetPasswordPage.allSet')}
                 </p>
               </div>
               <Link href="/login" className="block">
                 <Button variant="primary" size="lg" className="w-full">
-                  Go to sign in
+                  {t('resetPasswordPage.goToSignIn')}
                 </Button>
               </Link>
             </div>
@@ -103,14 +105,14 @@ function ResetPasswordInner() {
                   {error}
                 </div>
               )}
-              <FormField label="New password" htmlFor="password" required>
+              <FormField label={t('resetPasswordPage.newPassword')} htmlFor="password" required>
                 <Input
                   id="password"
                   name="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 8 characters"
+                  placeholder={t('resetPasswordPage.newPasswordPlaceholder')}
                   autoComplete="new-password"
                   required
                   autoFocus
@@ -118,14 +120,14 @@ function ResetPasswordInner() {
                   aria-invalid={!!error}
                 />
               </FormField>
-              <FormField label="Confirm new password" htmlFor="confirm" required>
+              <FormField label={t('resetPasswordPage.confirm')} htmlFor="confirm" required>
                 <Input
                   id="confirm"
                   name="confirm"
                   type="password"
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
-                  placeholder="Re-enter your new password"
+                  placeholder={t('resetPasswordPage.confirmPlaceholder')}
                   autoComplete="new-password"
                   required
                   error={!!error}
@@ -140,15 +142,15 @@ function ResetPasswordInner() {
                 leftIcon={<Lock className="h-4 w-4" />}
                 className="w-full"
               >
-                {loading ? 'Updating…' : 'Update password'}
+                {loading ? t('resetPasswordPage.updating') : t('resetPasswordPage.update')}
               </Button>
               <p className="text-center text-sm text-theme-muted">
-                Need a new link?{' '}
+                {t('resetPasswordPage.needLink')}{' '}
                 <Link
                   href="/forgot-password"
                   className="font-medium text-primary hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  Request reset
+                  {t('resetPasswordPage.requestReset')}
                 </Link>
               </p>
             </form>

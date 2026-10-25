@@ -28,7 +28,7 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     setError('')
     if (!email.trim()) {
-      setError('Enter the email address on your Click account.')
+      setError(t('forgotPasswordPage.errEmpty'))
       return
     }
     setLoading(true)
@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
           href="/login"
           className="inline-flex items-center gap-2 ds-text-label text-theme-muted hover:text-theme-primary transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          <Icon icon={ArrowLeft} size="sm" /> Back to sign in
+          <Icon icon={ArrowLeft} size="sm" /> {t('forgotPasswordPage.backToSignIn')}
         </Link>
 
         <Card variant="elevated" className="p-8 sm:p-10 space-y-8">
@@ -62,12 +62,12 @@ export default function ForgotPasswordPage() {
               <ClickLogo size={36} />
             </div>
             <h1 className="ds-text-h1 text-theme-primary">
-              {submitted ? 'Check your email' : 'Reset your password'}
+              {submitted ? t('forgotPasswordPage.titleSent') : t('forgotPasswordPage.title')}
             </h1>
             <p className="ds-text-body text-theme-secondary">
               {submitted
-                ? 'If an account exists for that email, we just sent a reset link. It expires in 1 hour — check spam if it doesn’t show up.'
-                : 'Enter the email address on your Click account and we’ll send you a link to set a new password.'}
+                ? t('forgotPasswordPage.subtitleSent')
+                : t('forgotPasswordPage.subtitle')}
             </p>
           </div>
 
@@ -79,12 +79,12 @@ export default function ForgotPasswordPage() {
               >
                 <Icon icon={CheckCircle2} size="md" className="text-emerald-500 mt-0.5 shrink-0" />
                 <p className="text-sm text-emerald-700 dark:text-emerald-300 leading-relaxed">
-                  Reset link sent to <strong>{email}</strong>. Click the link in the email to set a new password.
+                  {t('forgotPasswordPage.sentTo', { email })}
                 </p>
               </div>
               <Link href="/login" className="block">
                 <Button variant="primary" size="lg" className="w-full">
-                  Back to sign in
+                  {t('forgotPasswordPage.backToSignIn')}
                 </Button>
               </Link>
             </div>
@@ -98,14 +98,14 @@ export default function ForgotPasswordPage() {
                   {error}
                 </div>
               )}
-              <FormField label="Email" htmlFor="email" required>
+              <FormField label={t('auth.email')} htmlFor="email" required>
                 <Input
                   id="email"
                   name="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t('loginPage.emailPlaceholder')}
                   autoComplete="email"
                   required
                   autoFocus
@@ -121,15 +121,15 @@ export default function ForgotPasswordPage() {
                 leftIcon={<Mail className="h-4 w-4" />}
                 className="w-full"
               >
-                {loading ? 'Sending…' : 'Send reset link'}
+                {loading ? t('forgotPasswordPage.sending') : t('forgotPasswordPage.send')}
               </Button>
               <p className="text-center text-sm text-theme-muted">
-                Remember it after all?{' '}
+                {t('forgotPasswordPage.remember')}{' '}
                 <Link
                   href="/login"
                   className="font-medium text-primary hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  Sign in
+                  {t('auth.signIn')}
                 </Link>
               </p>
             </form>

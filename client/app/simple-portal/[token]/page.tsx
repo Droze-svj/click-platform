@@ -3,8 +3,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import axios from 'axios'
+import { CheckCircle2, XCircle, MessageSquare, AlertCircle, Loader2 } from 'lucide-react'
 import { API_URL } from '@/lib/api'
-import { PageShell } from '@/components/ui'
+import { AuthShell, Button, Card, Icon, PageShell } from '@/components/ui'
+import ClickLogo from '@/components/ClickLogo'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface ApprovalView {
   approval: {
@@ -36,9 +39,18 @@ interface ApprovalView {
   token: string
 }
 
+/*
+ * The page an agency's client opens from an approval link — often the first
+ * (and only) Click screen they ever see. It used to be hardcoded light
+ * (bg-white cards, text-gray-900); globals.css remaps `.dark .bg-white` to dark
+ * grey, so in dark theme every card was dark text on a dark card, and a bad or
+ * expired link showed one line of red text on an empty page. It now uses the
+ * design-system surfaces, which work in both themes.
+ */
 export default function SimplePortalPage() {
   const params = useParams()
   const token = params.token as string
+  const { t } = useTranslation()
   const [view, setView] = useState<ApprovalView | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
@@ -53,11 +65,11 @@ export default function SimplePortalPage() {
         setView(res.data.data)
       }
     } catch (error: any) {
-      setMessage({ type: 'error', text: error.response?.data?.error || 'Failed to load approval' })
+      setMessage({ type: 'error', text: error.response?.data?.error || t('simplePortalPage.loadFailed') })
     } finally {
       setLoading(false)
     }
-  }, [token])
+  }, [token, t])
 
   useEffect(() => {
     loadApproval()
@@ -76,7 +88,7 @@ export default function SimplePortalPage() {
       if (res.data.success) {
         setMessage({
           type: 'success',
-          text: `Content ${action === 'approve' ? 'approved' : 'declined'} successfully!`
+          text: action === 'approve' ? t('simplePortalPage.approved') : t('simplePortalPage.declined'),
         })
         setTimeout(() => {
           window.location.href = '/simple-portal/success'
@@ -85,7 +97,7 @@ export default function SimplePortalPage() {
     } catch (error: any) {
       setMessage({
         type: 'error',
-        text: error.response?.data?.error || `Failed to ${action}`
+        text: error.response?.data?.error || (action === 'approve' ? t('simplePortalPage.approveFailed') : t('simplePortalPage.declineFailed')),
       })
     } finally {
       setActionLoading(false)
@@ -101,172 +113,188 @@ export default function SimplePortalPage() {
         setComment('')
         setShowCommentInput(false)
         await loadApproval() // Reload to show new comment
-        setMessage({ type: 'success', text: 'Comment added' })
+        setMessage({ type: 'success', text: t('simplePortalPage.commentAdded') })
       }
     } catch (error: any) {
       setMessage({
         type: 'error',
-        text: error.response?.data?.error || 'Failed to add comment'
+        text: error.response?.data?.error || t('simplePortalPage.commentFailed'),
       })
     }
   }
 
+  const fieldClass =
+    'w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-theme-primary placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+
   if (loading) {
     return (
-      // Framed, but deliberately NOT re-tokenised. This whole page is
-      // hardcoded light (bg-gray-50, bg-white cards, text-gray-900) with no
-      // dark variants, so the shell's text-theme-primary would put light text
-      // on a light card in dark theme. text-gray-900 is pinned here to keep it
-      // pixel-identical; the token migration is Wave 7e, and it has to convert
-      // the cards and copy in the same pass or not at all.
-      <PageShell width="full" flush className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-900" aria-busy="true">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading approval...</p>
+      <AuthShell width="md" aria-busy="true">
+        <div role="status" className="flex flex-col items-center gap-4 text-theme-secondary">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+          <p className="ds-text-body">{t('simplePortalPage.loading')}</p>
         </div>
-      </PageShell>
+      </AuthShell>
     )
   }
 
   if (!view) {
     return (
-      <PageShell width="full" flush className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-900">
-        <div className="text-center">
-          <p className="text-red-600">Failed to load approval</p>
-        </div>
-      </PageShell>
+      <AuthShell width="md">
+        <Card variant="elevated" className="p-8 sm:p-10 text-center space-y-5">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/20">
+            <Icon icon={AlertCircle} size="lg" className="text-rose-500" />
+          </div>
+          <h1 className="ds-text-h2 text-theme-primary">{t('simplePortalPage.unavailableTitle')}</h1>
+          <p className="ds-text-body text-theme-secondary">{t('simplePortalPage.unavailableBody')}</p>
+          {message?.text ? (
+            <p className="text-xs text-theme-muted">{message.text}</p>
+          ) : null}
+        </Card>
+      </AuthShell>
     )
   }
 
   return (
-    <PageShell width="full" flush className="min-h-screen bg-gray-50 text-gray-900 py-8 px-4">
-      <div className="max-w-2xl mx-auto">
+    <main className="min-h-screen ds-bg-mesh">
+      <PageShell width="narrow">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h1 className="text-2xl font-bold mb-2">Content Approval</h1>
-          <p className="text-gray-600">Stage: {view.approval.stage.name}</p>
-          <p className="text-sm text-gray-500">Created by {view.approval.createdBy}</p>
-        </div>
+        <Card variant="elevated" className="p-6 flex items-start gap-4">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ds-surface-subtle">
+            <ClickLogo size={28} />
+          </span>
+          <div className="min-w-0">
+            <p className="ds-text-label text-theme-muted">{t('simplePortalPage.kicker')}</p>
+            <h1 className="ds-text-h2 text-theme-primary break-words">{view.approval.title}</h1>
+            <p className="mt-1 text-sm text-theme-secondary">
+              {t('simplePortalPage.stage', { stage: view.approval.stage.name })} · {t('simplePortalPage.createdBy', { name: view.approval.createdBy })}
+            </p>
+          </div>
+        </Card>
 
         {/* Content Preview */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">{view.approval.title}</h2>
-          <div className="prose max-w-none">
-            <p className="whitespace-pre-wrap">{view.approval.content.text}</p>
-          </div>
+        <Card variant="glass" className="p-6">
+          <p className="whitespace-pre-wrap break-words ds-text-body text-theme-primary">{view.approval.content.text}</p>
           {view.approval.content.mediaUrl && (
-            <div className="mt-4">
-              <img
-                src={view.approval.content.mediaUrl}
-                alt="Content media"
-                className="max-w-full rounded-lg"
-              />
-            </div>
+            <img
+              src={view.approval.content.mediaUrl}
+              alt={t('simplePortalPage.mediaAlt')}
+              className="mt-4 max-w-full rounded-lg"
+            />
           )}
-        </div>
+        </Card>
 
         {/* Comments */}
         {view.comments.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
-            <h3 className="font-semibold mb-4">Comments</h3>
-            <div className="space-y-3">
+          <Card variant="glass" className="p-6">
+            <h2 className="ds-text-h3 text-theme-primary mb-4">{t('simplePortalPage.comments')}</h2>
+            <ul className="space-y-3">
               {view.comments.map((c) => (
-                <div key={c.id} className="border-l-4 border-blue-500 pl-4 py-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-sm">{c.author}</span>
-                    <span className="text-xs text-gray-500">
+                <li key={c.id} className="border-l-2 border-primary pl-4 py-1">
+                  <div className="flex items-center justify-between gap-3 mb-1">
+                    <span className="text-sm font-medium text-theme-primary">{c.author}</span>
+                    <span className="text-xs text-theme-muted">
                       {new Date(c.createdAt).toLocaleDateString()}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-700">{c.text}</p>
-                </div>
+                  <p className="text-sm text-theme-secondary break-words">{c.text}</p>
+                </li>
               ))}
-            </div>
-          </div>
+            </ul>
+          </Card>
         )}
 
         {/* Comment Input */}
         {showCommentInput && (
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <Card variant="glass" className="p-6 space-y-3">
+            <label htmlFor="portal-comment" className="ds-text-label text-theme-secondary">{t('simplePortalPage.addComment')}</label>
             <textarea
+              id="portal-comment"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Add a comment..."
-              className="w-full p-3 border rounded-lg mb-3"
+              placeholder={t('simplePortalPage.commentPlaceholder')}
+              className={`${fieldClass} min-h-[88px] resize-y`}
               rows={3}
             />
-            <div className="flex gap-2">
-              <button
-                onClick={handleAddComment}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Add Comment
-              </button>
-              <button
+            <div className="flex flex-wrap gap-2">
+              <Button variant="primary" onClick={handleAddComment} disabled={!comment.trim()}>
+                {t('simplePortalPage.addComment')}
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={() => {
                   setShowCommentInput(false)
                   setComment('')
                 }}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
               >
-                Cancel
-              </button>
+                {t('simplePortalPage.cancel')}
+              </Button>
             </div>
-          </div>
+          </Card>
         )}
 
         {/* Message */}
         {message && (
           <div
-            className={`mb-6 p-4 rounded-lg ${
-              message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+            role={message.type === 'error' ? 'alert' : 'status'}
+            className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-sm font-medium ${
+              message.type === 'success'
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300'
+                : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
             }`}
           >
-            {message.text}
+            <Icon icon={message.type === 'success' ? CheckCircle2 : AlertCircle} size="sm" className="mt-0.5 shrink-0" />
+            <span className="min-w-0 break-words">{message.text}</span>
           </div>
         )}
 
         {/* Actions */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button
-              onClick={() => handleAction('approve')}
-              disabled={actionLoading}
-              className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg"
-            >
-              {actionLoading ? 'Processing...' : '✓ Approve'}
-            </button>
-            <button
-              onClick={() => handleAction('decline')}
-              disabled={actionLoading}
-              className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg"
-            >
-              {actionLoading ? 'Processing...' : '✗ Decline'}
-            </button>
-            <button
-              onClick={() => setShowCommentInput(!showCommentInput)}
-              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-semibold"
-            >
-              💬 Comment
-            </button>
-          </div>
-
-          {/* Quick comment on action */}
+        <Card variant="elevated" className="p-6 space-y-4">
           {!showCommentInput && (
-            <div className="mt-4">
+            <div className="space-y-1.5">
+              <label htmlFor="portal-quick-comment" className="ds-text-label text-theme-secondary">
+                {t('simplePortalPage.optionalComment')}
+              </label>
               <input
+                id="portal-quick-comment"
                 type="text"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="Optional comment when approving/declining..."
-                className="w-full p-2 border rounded-lg text-sm"
+                placeholder={t('simplePortalPage.optionalCommentPlaceholder')}
+                className={`${fieldClass} h-10`}
               />
             </div>
           )}
-        </div>
-      </div>
-    </PageShell>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              size="lg"
+              onClick={() => handleAction('approve')}
+              disabled={actionLoading}
+              loading={actionLoading}
+              leftIcon={<CheckCircle2 className="h-5 w-5" />}
+              className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700"
+            >
+              {actionLoading ? t('simplePortalPage.processing') : t('simplePortalPage.approve')}
+            </Button>
+            <Button
+              size="lg"
+              onClick={() => handleAction('decline')}
+              disabled={actionLoading}
+              leftIcon={<XCircle className="h-5 w-5" />}
+              className="flex-1 bg-rose-600 text-white hover:bg-rose-700"
+            >
+              {actionLoading ? t('simplePortalPage.processing') : t('simplePortalPage.decline')}
+            </Button>
+            <Button
+              size="lg"
+              variant="secondary"
+              onClick={() => setShowCommentInput(!showCommentInput)}
+              leftIcon={<MessageSquare className="h-5 w-5" />}
+            >
+              {t('simplePortalPage.comment')}
+            </Button>
+          </div>
+        </Card>
+      </PageShell>
+    </main>
   )
 }
-
-

@@ -24,12 +24,14 @@ import { apiPost, setTokens } from '@/lib/api'
 import { Button, Card, Icon, Input, AuthShell } from '@/components/ui'
 import ClickLogo from '@/components/ClickLogo'
 import { clickVoice } from '@/lib/clickVoice'
+import { useTranslation } from '@/hooks/useTranslation'
 
 type Phase = 'verifying' | 'verified' | 'error' | 'missing-token'
 
 function VerifyEmailInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { t } = useTranslation()
   const token = searchParams?.get('token') || ''
   const [phase, setPhase] = useState<Phase>(token ? 'verifying' : 'missing-token')
   const [errorMessage, setErrorMessage] = useState<string>('')
@@ -99,9 +101,9 @@ function VerifyEmailInner() {
         {phase === 'verifying' && (
           <div role="status" aria-live="polite" className="space-y-5">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 ds-text-label text-primary">
-              <Loader2 className="w-4 h-4 animate-spin" /> Verifying you
+              <Loader2 className="w-4 h-4 animate-spin" /> {t('verifyEmailPage.verifyingBadge')}
             </div>
-            <h1 className="ds-text-h1 text-theme-primary">Confirming your account…</h1>
+            <h1 className="ds-text-h1 text-theme-primary">{t('verifyEmailPage.verifyingTitle')}</h1>
             <p className="ds-text-body text-theme-secondary max-w-sm mx-auto">
               {clickVoice('loading.thinking')}
             </p>
@@ -111,15 +113,15 @@ function VerifyEmailInner() {
         {phase === 'verified' && (
           <div role="status" aria-live="polite" className="space-y-5">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 ds-text-label text-emerald-500">
-              <Icon icon={ShieldCheck} size="sm" /> Verified
+              <Icon icon={ShieldCheck} size="sm" /> {t('verifyEmailPage.verifiedBadge')}
             </div>
-            <h1 className="ds-text-h1 text-theme-primary">You&apos;re in.</h1>
+            <h1 className="ds-text-h1 text-theme-primary">{t('verifyEmailPage.verifiedTitle')}</h1>
             <p className="ds-text-body text-theme-secondary max-w-sm mx-auto">
-              Click recognised your email. Taking you to the dashboard…
+              {t('verifyEmailPage.verifiedBody')}
             </p>
             <div className="flex items-center justify-center gap-2 ds-text-label text-emerald-500">
               <RefreshCw className="w-4 h-4 animate-spin" />
-              Redirecting
+              {t('verifyEmailPage.redirecting')}
             </div>
           </div>
         )}
@@ -127,13 +129,13 @@ function VerifyEmailInner() {
         {phase === 'error' && (
           <div className="space-y-5">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 ds-text-label text-rose-500">
-              <Icon icon={AlertCircle} size="sm" /> Verification failed
+              <Icon icon={AlertCircle} size="sm" /> {t('verifyEmailPage.failedBadge')}
             </div>
             <h1 className="ds-text-h1 text-theme-primary">
-              Click couldn&apos;t verify this link.
+              {t('verifyEmailPage.failedTitle')}
             </h1>
             <p className="ds-text-body text-theme-secondary max-w-sm mx-auto">
-              The token may have expired or already been used. Enter your email and we&apos;ll send a fresh verification link.
+              {t('verifyEmailPage.failedBody')}
             </p>
             {errorMessage && process.env.NODE_ENV === 'development' && (
               <p className="text-xs font-mono text-theme-muted break-all">{errorMessage}</p>
@@ -141,10 +143,10 @@ function VerifyEmailInner() {
             <div className="space-y-2 max-w-sm mx-auto text-left">
               <Input
                 type="email"
-                placeholder="you@example.com"
+                placeholder={t('loginPage.emailPlaceholder')}
                 value={resendEmail}
                 onChange={(e) => setResendEmail(e.target.value)}
-                aria-label="Email address to resend verification to"
+                aria-label={t('verifyEmailPage.emailAria')}
                 autoComplete="email"
               />
               <Button
@@ -155,18 +157,18 @@ function VerifyEmailInner() {
                 loading={resending}
                 disabled={resending || resent || !resendEmail}
               >
-                {resent ? 'Sent ✓ — check your inbox' : 'Resend verification email'}
+                {resent ? t('verifyEmailPage.sent') : t('verifyEmailPage.resend')}
               </Button>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-1">
               <Link href="/login" className="block">
                 <Button variant="secondary" size="lg" rightIcon={<ArrowRight className="h-4 w-4" />} className="w-full">
-                  Sign in instead
+                  {t('verifyEmailPage.signInInstead')}
                 </Button>
               </Link>
               <Link href="/register" className="block">
                 <Button variant="secondary" size="lg" className="w-full">
-                  Create a new account
+                  {t('verifyEmailPage.createNew')}
                 </Button>
               </Link>
             </div>
@@ -176,18 +178,18 @@ function VerifyEmailInner() {
         {phase === 'missing-token' && (
           <div className="space-y-5">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 ds-text-label text-amber-500">
-              <Icon icon={AlertTriangle} size="sm" /> No token in link
+              <Icon icon={AlertTriangle} size="sm" /> {t('verifyEmailPage.missingBadge')}
             </div>
             <h1 className="ds-text-h1 text-theme-primary">
-              That link is incomplete.
+              {t('verifyEmailPage.missingTitle')}
             </h1>
             <p className="ds-text-body text-theme-secondary max-w-sm mx-auto">
-              Your email link is missing the verification token. Try opening the email again, or sign in and request a fresh one.
+              {t('verifyEmailPage.missingBody')}
             </p>
             <div className="pt-1">
               <Link href="/login" className="inline-block">
                 <Button variant="primary" size="lg" rightIcon={<ArrowRight className="h-4 w-4" />}>
-                  Go to sign in
+                  {t('verifyEmailPage.goToSignIn')}
                 </Button>
               </Link>
             </div>
