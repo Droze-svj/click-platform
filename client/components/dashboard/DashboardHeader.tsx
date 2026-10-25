@@ -36,6 +36,7 @@ import NotificationBell from '../NotificationBell'
 import { useTranslation } from '../../hooks/useTranslation'
 import { useContainerWidth } from '../../hooks/useContainerWidth'
 import { cn } from '../../lib/utils'
+import { crumbHasPage } from '../../lib/breadcrumbRoutes'
 
 // Route segment → i18n key map. Keys resolve through the same nav.* catalog the
 // sidebar uses; anything unmapped falls back to t()'s humanise() so we never
@@ -131,7 +132,7 @@ export default function DashboardHeader() {
 
   // Build title + breadcrumb from the route segments after /dashboard.
   const { title, crumbs } = useMemo(() => {
-    if (!pathname) return { title: '', crumbs: [] as { label: string; href: string }[] }
+    if (!pathname) return { title: '', crumbs: [] as { label: string; href: string; linkable: boolean }[] }
     const segs = pathname.split('/').filter(Boolean) // e.g. ['dashboard','analytics','creator']
     if (segs.length <= 1) {
       return { title: t('nav.dashboard'), crumbs: [] }
@@ -139,12 +140,12 @@ export default function DashboardHeader() {
     const after = segs.slice(1) // drop the leading 'dashboard'
     const title = segmentLabel(t, after[after.length - 1])
     // Breadcrumb = the parent segments (everything before the last), each linkable.
-    const crumbs: { label: string; href: string }[] = []
+    const crumbs: { label: string; href: string; linkable: boolean }[] = []
     let acc = '/dashboard'
-    crumbs.push({ label: t('nav.dashboard'), href: acc })
+    crumbs.push({ label: t('nav.dashboard'), href: acc, linkable: true })
     for (let i = 0; i < after.length - 1; i++) {
       acc += '/' + after[i]
-      crumbs.push({ label: segmentLabel(t, after[i]), href: acc })
+      crumbs.push({ label: segmentLabel(t, after[i]), href: acc, linkable: crumbHasPage(acc) })
     }
     return { title, crumbs }
   }, [pathname, t])
@@ -174,12 +175,16 @@ export default function DashboardHeader() {
               {crumbs.map((c, i) => (
                 <span key={c.href} className="flex items-center gap-1 min-w-0">
                   {i > 0 && <ChevronRight size={11} className="opacity-40 flex-shrink-0" aria-hidden="true" />}
-                  <Link
-                    href={c.href}
-                    className="truncate hover:text-[var(--text-strong)] transition-colors focus-visible:outline-none focus-visible:underline"
-                  >
-                    {c.label}
-                  </Link>
+                  {c.linkable ? (
+                    <Link
+                      href={c.href}
+                      className="truncate hover:text-[var(--text-strong)] transition-colors focus-visible:outline-none focus-visible:underline"
+                    >
+                      {c.label}
+                    </Link>
+                  ) : (
+                    <span className="truncate">{c.label}</span>
+                  )}
                 </span>
               ))}
             </nav>
