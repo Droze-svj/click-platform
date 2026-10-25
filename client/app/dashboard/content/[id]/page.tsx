@@ -56,7 +56,7 @@ const glassStyle = 'backdrop-blur-xl bg-white/[0.03] border border-white/10 shad
 export default function ContentDetailPage() {
   const router = useRouter()
   const params = useParams()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { showToast } = useToast()
   const { t } = useTranslation()
   
@@ -85,15 +85,16 @@ export default function ContentDetailPage() {
   }, [params.id, router, showToast])
 
   useEffect(() => {
+    if (authLoading) return // user is null until /auth/me answers
     if (!user) { router.push('/login'); return }
     if (params.id) loadContent()
-  }, [user, router, params.id, loadContent])
+  }, [user, authLoading, router, params.id, loadContent])
 
   const loadTranslations = useCallback(async () => {
     if (!content?._id) return
     try {
       const [listRes, langsRes] = await Promise.all([
-        apiGet<{ translations?: { language: string; _id: string }[] }>('/translation/content/' + content._id + '/translations'),
+        apiGet<{ translations?: { language: string; _id: string }[] }>('/translation/content/' + content._id + '/translations', undefined, false),
         apiGet<{ languages?: { code: string; name: string }[] }>('/translation/languages')
       ])
       setTranslationList((listRes as any)?.translations || (listRes as any)?.data?.translations || [])
@@ -129,8 +130,10 @@ export default function ContentDetailPage() {
       const res = await apiPost<{ successful?: any[]; failed?: any[] }>('/translation/translate-multiple', {
         contentId: content._id, languages: ['es', 'fr', 'de']
       })
-      const ok = (res as any)?.successful?.length || 0
-      const fail = (res as any)?.failed?.length || 0
+      // The route answers the {success, data: {successful, failed, skipped}} envelope.
+      const summary = (res as any)?.data ?? res
+      const ok = (summary?.successful?.length || 0) + (summary?.skipped?.length || 0)
+      const fail = summary?.failed?.length || 0
       // Interpolated so RTL/word-order languages can position {{ok}} and
       // {{fail}} naturally in their sentence — concatenation broke Arabic.
       showToast(
@@ -365,7 +368,7 @@ export default function ContentDetailPage() {
                      {/* Temporal Deployment Sync */}
                      <ContentSchedulingAssistant
                         contentId={content._id}
-                        content={{ text: content.transcript || content.description, type: content.type }}
+                        content={{ text: content.transcript || content.description, type: content.type, platform: (content as any).platform || (content as any).platforms?.[0] }}
                      />
 
                      {/* Node Metadata Diagnostic */}
@@ -427,7 +430,7 @@ export default function ContentDetailPage() {
              {activeTab === 'comments' && (
                <m.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className={`${glassStyle} rounded-[6rem] p-20 bg-black/40 border-indigo-500/10`}>
                   <Suspense fallback={<div className="flex justify-center p-48"><RefreshCw size={64} className="animate-spin text-indigo-500" /></div>}>
-                     <CommentsSection entityType="content" entityId={content._id} teamId={undefined} />
+                     <CommentsSection entityType="content" entityId={content._id} />
                   </Suspense>
                </m.div>
              )}

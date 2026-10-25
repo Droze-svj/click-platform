@@ -9,33 +9,17 @@ const axios = axiosLib.create({ timeout: 15000 });
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 
-/** Get access token for a platform - SocialConnection (MongoDB) or platform_accounts (Supabase) */
+/**
+ * Access token for a connected platform, from the user's stored OAuth
+ * credentials (refreshed on read where the provider supports it).
+ *
+ * YouTube and TikTok used to be read only from a Supabase table, which
+ * production doesn't have — so their post analytics never synced.
+ */
 async function getAccessTokenForPlatform(userId, platform) {
   const plat = platform.toLowerCase();
-  if (['twitter', 'linkedin', 'facebook', 'instagram'].includes(plat)) {
+  if (['twitter', 'linkedin', 'facebook', 'instagram', 'youtube', 'tiktok'].includes(plat)) {
     return await getValidAccessToken(userId, plat);
-  }
-  if (['youtube', 'tiktok'].includes(plat)) {
-    const { createClient } = require('@supabase/supabase-js');
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error('Supabase not configured for platform analytics');
-    }
-    const supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
-    const { data, error } = await supabase
-      .from('platform_accounts')
-      .select('access_token, token_expires_at, refresh_token')
-      .eq('user_id', userId.toString())
-      .eq('platform', plat)
-      .eq('is_connected', true)
-      .limit(1)
-      .maybeSingle();
-    if (error || !data?.access_token) {
-      throw new Error(`No active ${plat} connection found`);
-    }
-    return data.access_token;
   }
   throw new Error(`Unsupported platform: ${platform}`);
 }

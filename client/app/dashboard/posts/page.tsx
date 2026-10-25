@@ -223,7 +223,7 @@ export default function PostsPage() {
                     <div className="flex items-center gap-1.5">
                       <IconButton
                         variant="ghost" size="sm"
-                        onClick={() => router.push(`/dashboard/posts/${post.id}/edit`)}
+                        onClick={() => router.push(`/dashboard/posts/create?id=${post.id}`)}
                         title={t('postsPage.editPost')} aria-label={t('postsPage.editPost')}
                       >
                         <Edit3 size={16} aria-hidden />

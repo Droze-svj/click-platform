@@ -103,13 +103,18 @@ router.post('/transcribe', auth, upload.single('video'), asyncHandler(async (req
 /**
  * POST /auto-reframe
  * Returns a deterministic center-crop plan for the requested aspect ratio.
- * The editor's renderer applies the FFmpeg crop at export time.
+ * Nothing is rendered or saved here: the editor applies the plan as its crop
+ * (which the preview and the export both use) and autosave persists it.
  */
 router.post('/auto-reframe', auth, express.json(), asyncHandler(async (req, res) => {
   const { videoId, aspectRatio } = req.body;
   if (!videoId) {
     return res.status(400).json({ success: false, error: 'No videoId provided' });
   }
+
+  // IDOR guard, same as every other creative tool on a videoId.
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   const result = await creativeTools.autoReframe(videoId, aspectRatio || '9:16', getUserId(req));
   res.json(result);
@@ -218,14 +223,19 @@ router.post('/thumbnail', auth, express.json({ limit: '15mb' }), asyncHandler(as
 
 /**
  * POST /speed-ramp
- * Beat-synced speed ramp plan. The editor's renderer applies setpts ramps at
- * the returned beat markers.
+ * Beat-synced speed ramp plan (times + speeds). Nothing is rendered or saved
+ * here: the editor drops the ramp points on the timeline as markers for the
+ * user to apply.
  */
 router.post('/speed-ramp', auth, express.json(), asyncHandler(async (req, res) => {
   const { videoId, intensity, preserveAudio, trackId, trackSource } = req.body;
   if (!videoId) {
     return res.status(400).json({ success: false, error: 'No videoId provided' });
   }
+
+  // IDOR guard, same as every other creative tool on a videoId.
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   const result = await creativeTools.applySpeedRamp(
     videoId,
@@ -245,6 +255,10 @@ router.post('/eye-contact', auth, express.json(), asyncHandler(async (req, res) 
   if (!videoId) {
     return res.status(400).json({ success: false, error: 'No videoId provided' });
   }
+
+  // IDOR: the service reads and re-encodes the source video by id.
+  const owned = await guardOwnership(req, res, videoId);
+  if (!owned) return;
 
   const result = await creativeTools.fixEyeContact(videoId, getUserId(req));
   res.json(result);

@@ -69,4 +69,31 @@ describe('/api/music/generate', () => {
     // the query must be scoped by userId
     expect(MusicGeneration.findOne.mock.calls[0][0]).toMatchObject({ userId: '6a3500000000000000000bbb' });
   });
+
+  const ownGen = (extra = {}) => MusicGeneration.findOne.mockReturnValue({ lean: () => Promise.resolve({ _id: 'gen1', status: 'processing', params: {}, ...extra }) });
+
+  it('completed but the download failed → an error, not completed with track:null', async () => {
+    ownGen();
+    svc.checkGenerationStatus.mockResolvedValue({ status: 'completed' });
+    svc.downloadAndStoreTrack.mockRejectedValue(new Error('provider 404'));
+    const res = await request(app()).get('/api/music/generate/gen1').set('x-uid', '6a3500000000000000000aaa');
+    expect(res.status).toBe(502);
+    expect(res.body.success).toBe(false);
+  });
+
+  it('completed with no stored track → an error', async () => {
+    ownGen();
+    svc.checkGenerationStatus.mockResolvedValue({ status: 'completed' });
+    svc.downloadAndStoreTrack.mockResolvedValue(null);
+    const res = await request(app()).get('/api/music/generate/gen1').set('x-uid', '6a3500000000000000000aaa');
+    expect(res.status).toBe(502);
+  });
+
+  it('a failed generation reports failed with the reason', async () => {
+    ownGen();
+    svc.checkGenerationStatus.mockResolvedValue({ status: 'failed', error: 'quota exceeded' });
+    const res = await request(app()).get('/api/music/generate/gen1').set('x-uid', '6a3500000000000000000aaa');
+    expect(res.status).toBe(200);
+    expect(res.body.data).toEqual({ status: 'failed', error: 'quota exceeded' });
+  });
 });

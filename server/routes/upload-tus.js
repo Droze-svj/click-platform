@@ -12,9 +12,10 @@
  *    id parsing).
  *  - `auth` runs first so req.user is set for the completion hook.
  *  - On completion we create the Content doc + enqueue processing, mirroring
- *    routes/video.js. The whole hook is defensive: if anything fails the chunk
- *    data is still safely stored and the client can fall back to the classic
- *    upload — uploads never hard-fail because of this hook.
+ *    routes/video.js (including its in-process fallback when the queue is
+ *    unavailable, which it always is without Redis). If the Content cannot be
+ *    saved the request fails (500) so the client falls back to the classic
+ *    upload instead of "finishing" an upload nobody can see.
  */
 
 const path = require('path');
@@ -138,17 +139,46 @@ const tusServer = new Server({
         title: upload?.metadata?.title || upload?.metadata?.filename || 'Uploaded Video',
         status: 'processing',
       });
-      await content.save();
+      try {
+        await content.save();
+      } catch (saveErr) {
+        // The upload must NOT report success when nothing was registered —
+        // it used to log this and finish normally, leaving a file with no
+        // video record the user could ever see. Remove the promoted file (it
+        // would be an orphan) and fail the request so the client falls back.
+        logger.error('[tus] could not save the Content for a finished upload', { error: saveErr.message, id: upload?.id });
+        if (videoPath !== tempPath) {
+          await fs.promises.unlink(videoPath).catch(() => {});
+        }
+        const e = new Error('Could not register the uploaded video');
+        e.tusResponse = { status_code: 500, body: 'Could not register the uploaded video. Please try again.' };
+        throw e;
+      }
 
+      const processingUser = { _id: userId, email: req.user?.email, name: req.user?.name };
       try {
         const { addVideoProcessingJob } = require('../queues');
         await addVideoProcessingJob({
           contentId: content._id.toString(),
           videoPath,
-          user: { _id: userId, email: req.user?.email, name: req.user?.name },
+          user: processingUser,
         });
       } catch (queueErr) {
-        logger.warn('[tus] processing queue unavailable; content saved as processing', { error: queueErr.message });
+        // No Redis in production → the queue is never available. Logging
+        // and moving on left every resumable upload on 'processing' forever.
+        // Run it in-process exactly like POST /video/upload does.
+        logger.warn('[tus] processing queue unavailable; processing in-process', { error: queueErr.message });
+        const { startInProcessVideoProcessing } = require('./video');
+        const started = startInProcessVideoProcessing({
+          contentId: content._id.toString(),
+          videoPath,
+          user: processingUser,
+        });
+        if (!started) {
+          content.status = 'failed';
+          content.errorMessage = 'The server was too busy to process this video. Please upload it again.';
+          await content.save().catch((e) => logger.error('[tus] could not mark Content failed', { error: e.message }));
+        }
       }
 
       // Surface the new contentId to the client (exposed CORS header below).
@@ -156,6 +186,8 @@ const tusServer = new Server({
       logger.info('[tus] resumable upload finished', { contentId: content._id.toString(), userId });
     } catch (err) {
       logger.error('[tus] onUploadFinish failed (chunk data is safe; client can fall back)', { error: err.message });
+      // A failed registration is an error for the client, not a finished upload.
+      if (err && err.tusResponse) throw err.tusResponse;
     }
     return res;
   },

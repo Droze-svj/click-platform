@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { m } from 'framer-motion'
 import {
   TrendingUp, Zap, Activity, ShieldCheck,
-  BarChart3, Orbit, Cpu
+  BarChart3, Orbit, Cpu, RefreshCw
 } from 'lucide-react'
-import { apiGet } from '../lib/api'
+import { apiGet, handleApiError } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
 
 const glassStyle = 'backdrop-blur-3xl bg-black/40 border border-white/10 shadow-[0_50px_100px_rgba(0,0,0,0.5)]'
@@ -23,31 +23,31 @@ export default function RevenueOracle() {
   const [loading, setLoading] = useState(true)
   const [insights, setInsights] = useState<OracleInsight[]>([])
   const [meta, setMeta] = useState<{ status?: string; niche?: string; analyzedVideos?: number }>({})
+  const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    let cancelled = false
-    async function fetchInsights() {
-      try {
-        // Real, authenticated insights derived from the user's own published-post
-        // performance (GET /api/sovereign/insights). No fabricated numbers.
-        const res: any = await apiGet('/sovereign/insights')
-        const payload = res?.data ?? res
-        if (!cancelled) {
-          setInsights(Array.isArray(payload?.insights) ? payload.insights : [])
-          setMeta({ status: payload?.status, niche: payload?.niche, analyzedVideos: payload?.analyzedVideos })
-        }
-      } catch (err) {
-        console.error('RevenueOracle: Failed to fetch insights', err)
-        if (!cancelled) setInsights([])
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
+  // Loaded once, refreshed on demand. Each uncached answer is one AI call from
+  // a shared daily quota — the old 15-second poll spent it for everyone. The
+  // server caches per user for 6 hours; "refresh" asks it to recompute.
+  const fetchInsights = useCallback(async (refresh = false) => {
+    if (refresh) setRefreshing(true)
+    setError(null)
+    try {
+      // Real, authenticated insights derived from the user's own published-post
+      // performance (GET /api/sovereign/insights). No fabricated numbers.
+      const res: any = await apiGet(`/sovereign/insights${refresh ? '?refresh=1' : ''}`, undefined, false)
+      const payload = res?.data ?? res
+      setInsights(Array.isArray(payload?.insights) ? payload.insights : [])
+      setMeta({ status: payload?.status, niche: payload?.niche, analyzedVideos: payload?.analyzedVideos })
+    } catch (err) {
+      setError(handleApiError(err) || t('revenueOracle.loadFailed'))
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
     }
+  }, [t])
 
-    fetchInsights()
-    const interval = setInterval(fetchInsights, 15000)
-    return () => { cancelled = true; clearInterval(interval) }
-  }, [])
+  useEffect(() => { fetchInsights(false) }, [fetchInsights])
 
   if (loading) {
     return (
@@ -150,7 +150,19 @@ export default function RevenueOracle() {
                  <h3 className="text-[12px] font-black text-[var(--text-main)] uppercase tracking-widest italic underline decoration-emerald-500/40 underline-offset-8">{t('revenueOracle.strategicInsightFeed')}</h3>
                  <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">{t('revenueOracle.feedSubtitle')}</p>
               </div>
+              <button
+                type="button"
+                onClick={() => fetchInsights(true)}
+                disabled={refreshing}
+                className="ml-auto inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 text-[10px] font-bold text-slate-300 hover:bg-white/5 disabled:opacity-50"
+              >
+                <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} aria-hidden />
+                {t('common.refresh')}
+              </button>
            </div>
+           {error && (
+             <p className="absolute top-28 left-12 right-12 text-[11px] text-rose-400" role="alert">{error}</p>
+           )}
 
            <div className="w-full mt-28 relative z-10 space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
               {insights.length === 0 ? (
@@ -174,9 +186,7 @@ export default function RevenueOracle() {
                          <p className="text-[9px] font-black text-emerald-500/60 uppercase tracking-widest mt-2 italic">{t('revenueOracle.impact', { impact: insight.expectedImpact })}</p>
                        )}
                      </div>
-                     {typeof insight.score === 'number' && (
-                       <span className="text-[10px] font-black text-emerald-400 italic tabular-nums shrink-0 mt-0.5">{Math.round(insight.score * 100)}%</span>
-                     )}
+
                   </div>
                 ))
               )}

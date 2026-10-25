@@ -47,8 +47,18 @@ export default function InfrastructureDashboard() {
         }
       });
       const data = await response.json();
-      if (data.success) {
-        setResources(data.data);
+      // The server answers { resources: { memory, cpu }, alerts, healthy };
+      // reading data.cpu directly crashed the page. Only render when the
+      // numbers are really there.
+      const payload = data?.data ?? {};
+      const metrics = payload.resources ?? payload;
+      if (data?.success && metrics?.cpu && metrics?.memory) {
+        setResources({
+          memory: metrics.memory,
+          cpu: metrics.cpu,
+          healthy: payload.healthy !== false,
+          alerts: Array.isArray(payload.alerts) ? payload.alerts : [],
+        });
       }
     } catch (error) {
       console.error('Fetch resources error:', error);

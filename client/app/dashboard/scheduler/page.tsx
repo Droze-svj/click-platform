@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { apiGet, apiPost } from '../../../lib/api'
+import { apiGet, apiPost, handleApiError } from '../../../lib/api'
+import { isQueued, isHistory, statusKind, statusLabelKey, type ScheduledPostStatus } from '../../../lib/scheduledPostStatus'
 import {
   Send, Calendar, Clock,
   CheckCircle, AlertCircle, RefreshCw,
@@ -36,7 +37,7 @@ interface ScheduledPost {
   platform: string
   content: { text: string; hashtags?: string[]; mediaUrl?: string }
   scheduledTime: string
-  status: 'scheduled' | 'posted' | 'failed' | 'draft'
+  status: ScheduledPostStatus
 }
 
 // Verified lucide@0.294.0 icons per platform (replaces emoji-as-icon).
@@ -153,8 +154,9 @@ export default function SchedulerPage() {
       })
       const translated = res?.data?.translatedText || res?.translatedText
       if (translated) setForm(f => ({ ...f, text: translated }))
-    } catch {
-      showToast(t('schedulerPage.toastTranslateFailed'), 'error')
+      else showToast(t('schedulerPage.toastTranslateFailed'), 'error')
+    } catch (err) {
+      showToast(handleApiError(err) || t('schedulerPage.toastTranslateFailed'), 'error')
     } finally {
       setTranslating(false)
     }
@@ -210,7 +212,8 @@ export default function SchedulerPage() {
   const loadPosts = useCallback(async () => {
     try {
       const res: any = await apiGet('/scheduler')
-      setPosts(res?.data || res || [])
+      const list = res?.data ?? res
+      setPosts(Array.isArray(list) ? list : [])
     } catch {
       showToast(t('schedulerPage.toastLoadFailed'), 'error')
     } finally {
@@ -231,7 +234,7 @@ export default function SchedulerPage() {
     onPostStatus: (payload) => {
       setPosts(prev => prev.map(p => (
         p._id === payload.postId
-          ? { ...p, status: payload.status === 'published' ? 'posted' : (payload.status === 'failed' ? 'failed' : p.status) }
+          ? { ...p, status: payload.status === 'published' ? 'posted' : (payload.status === 'failed' ? 'failed' : (payload.status || p.status) as ScheduledPostStatus) }
           : p
       )))
       if (payload.status === 'published') {
@@ -260,7 +263,9 @@ export default function SchedulerPage() {
       const baseTime = new Date(form.scheduledTime).getTime()
 
       if (queuedClipIds.length > 1) {
-        await Promise.all(queuedClipIds.map((clipId, i) =>
+        // allSettled, not all: one rejected clip used to report the whole batch
+        // as failed even though the others were already scheduled.
+        const results = await Promise.allSettled(queuedClipIds.map((clipId, i) =>
           apiPost('/scheduler/schedule', {
             platform: form.platform,
             accountId: form.accountId || undefined,
@@ -273,7 +278,25 @@ export default function SchedulerPage() {
             scheduledTime: new Date(baseTime + i * 5 * 60 * 1000).toISOString(),
           })
         ))
-        showToast(t('schedulerPage.toastScheduledMany', { count: queuedClipIds.length }), 'success')
+        const failedIds = queuedClipIds.filter((_, i) => results[i].status === 'rejected')
+        const okCount = queuedClipIds.length - failedIds.length
+        if (failedIds.length === 0) {
+          showToast(t('schedulerPage.toastScheduledMany', { count: okCount }), 'success')
+        } else {
+          const firstErr = results.find((r) => r.status === 'rejected') as PromiseRejectedResult | undefined
+          showToast(
+            t('schedulerPage.toastScheduledPartial', {
+              ok: okCount,
+              total: queuedClipIds.length,
+              error: firstErr ? handleApiError(firstErr.reason) : '',
+            }),
+            okCount > 0 ? 'info' : 'error'
+          )
+          // Keep only the clips that did not schedule so the user can retry them.
+          setQueuedClipIds(failedIds)
+          if (okCount > 0) loadPosts()
+          return
+        }
       } else {
         await apiPost('/scheduler/schedule', {
           platform: form.platform,
@@ -298,7 +321,7 @@ export default function SchedulerPage() {
     }
   }
 
-  const scheduledCount = posts.filter(p => p.status === 'scheduled').length
+  const scheduledCount = posts.filter(p => isQueued(p.status)).length
 
   if (loading) return (
     <div className="min-h-screen ds-bg-mesh-soft px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto" aria-busy="true" aria-label={t('schedulerPage.loading')}>
@@ -312,9 +335,7 @@ export default function SchedulerPage() {
   )
 
   const visiblePosts = posts.filter(p =>
-    activeTab === 'queue'
-      ? (p.status === 'scheduled' || p.status === 'draft')
-      : (p.status === 'posted' || p.status === 'failed')
+    activeTab === 'queue' ? isQueued(p.status) : isHistory(p.status)
   )
 
   return (
@@ -551,12 +572,17 @@ export default function SchedulerPage() {
                 {visiblePosts.map((p) => {
                   const pCfg = PLATFORMS.find(pl => pl.id === p.platform) || PLATFORMS[0]
                   const PIcon = pCfg.icon
-                  const statusCfg = {
-                    scheduled: { label: t('schedulerPage.statusScheduled'), icon: Clock, color: 'text-indigo-500 bg-indigo-500/10' },
-                    posted:    { label: t('schedulerPage.statusPublished'), icon: CheckCircle, color: 'text-emerald-500 bg-emerald-500/10' },
-                    failed:    { label: t('schedulerPage.statusFailed'),    icon: AlertCircle, color: 'text-rose-500 bg-rose-500/10' },
-                    draft:     { label: t('schedulerPage.statusDraft'),     icon: Timer, color: 'text-amber-500 bg-amber-500/10' },
-                  }[p.status]
+                  const kind = statusKind(p.status)
+                  const statusStyle = {
+                    scheduled:        { icon: Clock,       color: 'text-indigo-500 bg-indigo-500/10' },
+                    awaitingApproval: { icon: Timer,       color: 'text-amber-500 bg-amber-500/10' },
+                    publishing:       { icon: RefreshCw,   color: 'text-indigo-500 bg-indigo-500/10' },
+                    published:        { icon: CheckCircle, color: 'text-emerald-500 bg-emerald-500/10' },
+                    retrying:         { icon: RefreshCw,   color: 'text-amber-500 bg-amber-500/10' },
+                    failed:           { icon: AlertCircle, color: 'text-rose-500 bg-rose-500/10' },
+                    cancelled:        { icon: AlertCircle, color: 'text-slate-500 bg-slate-500/10' },
+                  }[kind]
+                  const statusCfg = { ...statusStyle, label: t(statusLabelKey(p.status)) }
                   const StatusIcon = statusCfg.icon
 
                   return (

@@ -6,6 +6,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const UserSettings = require('../models/UserSettings');
 const { encrypt } = require('../utils/dataEncryption');
+const validator = require('validator');
 
 const router = express.Router();
 
@@ -45,6 +46,62 @@ const VIDEO_EDITING_DEFAULTS = {
   enableSpeedRamping: true,
   enableBRoll: true,
 };
+
+// agentic.heygenApiKey / soraApiKey are third-party secrets. GET used to
+// return them in plaintext; now the client only learns whether one is saved
+// and its last 4 characters.
+const AGENTIC_SECRET_FIELDS = ['heygenApiKey', 'soraApiKey'];
+function maskAgentic(agentic) {
+  const out = { ...(agentic || {}) };
+  for (const field of AGENTIC_SECRET_FIELDS) {
+    const value = typeof out[field] === 'string' ? out[field] : '';
+    delete out[field];
+    out[`${field}Set`] = value.length > 0;
+    out[`${field}Last4`] = value.length >= 8 ? value.slice(-4) : '';
+  }
+  return out;
+}
+
+const NOTIFICATION_BOOLEANS = ['email', 'push', 'contentReady', 'weeklyDigest', 'achievements', 'mentions', 'comments'];
+const NOTIFICATION_CHANNELS = ['inApp', 'email'];
+const NOTIFICATION_CATEGORIES = ['task', 'project', 'content', 'approval', 'mention', 'system', 'workflow'];
+
+// Field-level $set paths for a notifications payload. Replacing the whole
+// sub-object meant any client holding stale or default values (e.g. after a
+// failed load) silently overwrote every other notification setting.
+function notificationUpdates(n) {
+  const out = {};
+  for (const k of NOTIFICATION_BOOLEANS) if (typeof n[k] === 'boolean') out[`notifications.${k}`] = n[k];
+  if (['high_only', 'high_medium', 'all'].includes(n.priorityTiers)) out['notifications.priorityTiers'] = n.priorityTiers;
+  if (['immediate', 'daily', 'weekly'].includes(n.digestMode)) out['notifications.digestMode'] = n.digestMode;
+  if (typeof n.digestTime === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(n.digestTime)) out['notifications.digestTime'] = n.digestTime;
+  if (n.channels && typeof n.channels === 'object') {
+    for (const k of NOTIFICATION_CHANNELS) if (typeof n.channels[k] === 'boolean') out[`notifications.channels.${k}`] = n.channels[k];
+  }
+  if (n.categories && typeof n.categories === 'object') {
+    for (const k of NOTIFICATION_CATEGORIES) if (typeof n.categories[k] === 'boolean') out[`notifications.categories.${k}`] = n.categories[k];
+  }
+  return out;
+}
+
+// Same for agentic. A secret is only written when a new non-empty value is
+// sent; omitting it (the client never has the saved key) keeps the stored one,
+// and null clears it.
+function agenticUpdates(a) {
+  const out = {};
+  if (typeof a.autonomousSwarm === 'boolean') out['agentic.autonomousSwarm'] = a.autonomousSwarm;
+  if (typeof a.slaAutoFulfill === 'boolean') out['agentic.slaAutoFulfill'] = a.slaAutoFulfill;
+  if (typeof a.predictiveThreshold === 'number' && Number.isFinite(a.predictiveThreshold)) {
+    out['agentic.predictiveThreshold'] = Math.min(100, Math.max(0, a.predictiveThreshold));
+  }
+  if (['heygen', 'sora', 'both'].includes(a.digitalTwinProvider)) out['agentic.digitalTwinProvider'] = a.digitalTwinProvider;
+  for (const field of AGENTIC_SECRET_FIELDS) {
+    if (a[field] === null) out[`agentic.${field}`] = '';
+    // Undo the input sanitizer's HTML-escaping: keys can contain `/` or `+`.
+    else if (typeof a[field] === 'string' && a[field].trim()) out[`agentic.${field}`] = validator.unescape(a[field].trim()).slice(0, 512);
+  }
+  return out;
+}
 
 function getUserId(req) {
   return req.user?.id || req.user?._id?.toString?.() || req.user?._id;
@@ -105,7 +162,7 @@ router.get('/settings', auth, asyncHandler(async (req, res) => {
     notifications: doc.notifications || {},
     privacy: doc.privacy || {},
     preferences: doc.preferences || {},
-    agentic: doc.agentic || {},
+    agentic: maskAgentic(doc.agentic),
     appearance: { ...APPEARANCE_DEFAULTS, ...(doc.appearance || {}) },
     ai: { ...AI_DEFAULTS, ...(doc.ai || {}) },
     // Integrations are masked — last4/label/provider only, never the key.
@@ -128,10 +185,12 @@ router.put('/settings', auth, asyncHandler(async (req, res) => {
   const { notifications, privacy, preferences, videoEditing } = req.body || {};
   const update = { updatedAt: new Date() };
   if (notifications && typeof notifications === 'object') {
-    update.notifications = notifications;
+    Object.assign(update, notificationUpdates(notifications));
   }
   if (privacy && typeof privacy === 'object') {
-    update.privacy = privacy;
+    for (const k of ['dataConsent', 'marketingConsent', 'analyticsConsent']) {
+      if (typeof privacy[k] === 'boolean') update[`privacy.${k}`] = privacy[k];
+    }
   }
   if (preferences && typeof preferences === 'object') {
     // Field-level merge, not wholesale replacement: `update.preferences = …`
@@ -158,7 +217,7 @@ router.put('/settings', auth, asyncHandler(async (req, res) => {
     }
   }
   if (req.body.agentic && typeof req.body.agentic === 'object') {
-    update.agentic = req.body.agentic;
+    Object.assign(update, agenticUpdates(req.body.agentic));
   }
   const { appearance, ai } = req.body;
   if (appearance && typeof appearance === 'object') {
@@ -193,7 +252,7 @@ router.put('/settings', auth, asyncHandler(async (req, res) => {
     notifications: doc.notifications || {},
     privacy: doc.privacy || {},
     preferences: doc.preferences || {},
-    agentic: doc.agentic || {},
+    agentic: maskAgentic(doc.agentic),
     appearance: { ...APPEARANCE_DEFAULTS, ...(doc.appearance || {}) },
     ai: { ...AI_DEFAULTS, ...(doc.ai || {}) },
     integrations: maskIntegrations(doc.integrations),

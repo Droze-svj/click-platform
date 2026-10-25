@@ -143,6 +143,7 @@ async function generateHashtags(input, deps) {
     });
   }
   const tags = shapeTags(rawOut, n);
+  if (tags.length === 0) throw require('../utils/aiUnavailable').aiUnavailable('hashtags');
   return { platform, count: tags.length, tags, groups: groupByTier(tags) };
 }
 

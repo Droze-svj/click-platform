@@ -92,3 +92,34 @@ describe('autopilot human-approve gate (E2E)', () => {
     expect(posts.every((p) => p.content.mediaUrl === '/uploads/c1.mp4')).toBe(true);
   });
 });
+
+describe('autopilot with no items (the Autopilot page sends none)', () => {
+  const Content = require('../../../server/models/Content');
+  const userId = '6a3500000000000000000bbb';
+
+  afterEach(async () => {
+    await ScheduledPost.deleteMany({});
+    await SocialConnection.deleteMany({});
+    await Content.deleteMany({ userId });
+  });
+
+  it('plans the most recent finished content instead of a 400', async () => {
+    await new SocialConnection({ userId, platform: 'tiktok', platformUserId: 'tt-1', accessToken: 'x', isActive: true }).save();
+    const done = await Content.create({
+      userId, type: 'video', status: 'completed', title: 'My video',
+      content: { text: 'Caption here', mediaUrl: '/uploads/v.mp4' },
+    });
+    await Content.create({ userId, type: 'video', status: 'processing', title: 'Not ready' });
+
+    const plan = await createAutopilotPlan(userId, { autonomyMode: 'human_approve' });
+    expect(plan.planId).toBeTruthy();
+    const posts = await ScheduledPost.find({ autopilotPlanId: plan.planId }).lean();
+    expect(posts).toHaveLength(1);
+    expect(String(posts[0].contentId)).toBe(String(done._id));
+    expect(posts[0].content).toMatchObject({ text: 'Caption here', mediaUrl: '/uploads/v.mp4' });
+  });
+
+  it('a clear 400 when the user has no finished content', async () => {
+    await expect(createAutopilotPlan(userId, {})).rejects.toMatchObject({ statusCode: 400, message: expect.stringMatching(/no finished content/i) });
+  });
+});

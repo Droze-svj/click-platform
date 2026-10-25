@@ -2,6 +2,7 @@
 // Enhanced side-by-side version comparison for legal/compliance
 
 const ContentVersion = require('../models/ContentVersion');
+const { escapeHtml } = require('../utils/escapeHtml');
 const PostVersion = require('../models/PostVersion');
 const logger = require('../utils/logger');
 
@@ -245,7 +246,7 @@ function generateHTMLComparison(comparison) {
 function formatTextDiff(diff) {
   return diff.map(part => {
     const className = part.added ? 'diff-added' : part.removed ? 'diff-removed' : 'diff-unchanged';
-    return `<span class="${className}">${part.value}</span>`;
+    return `<span class="${className}">${escapeHtml(part.value)}</span>`;
   }).join('');
 }
 

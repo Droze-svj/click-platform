@@ -108,7 +108,13 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
     monetize: { hookStyle: 'value-stat', flags: { click_show_rpm_insights: 'true' } },
   }
 
-  const saveNicheProfile = useCallback(() => {
+  // Set when syncing the answers to the account failed. The local cache still
+  // personalizes this device, so onboarding carries on; a small notice offers
+  // a retry instead of the failure being silently swallowed.
+  const [syncFailed, setSyncFailed] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+
+  const saveNicheProfile = useCallback(async () => {
     const profile = { nicheType, platformTarget, creatorGoal, configuredAt: Date.now() }
     const mapping = creatorGoal ? GOAL_DEFAULTS[creatorGoal] : undefined
 
@@ -132,25 +138,27 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
     try {
       document.documentElement.setAttribute('data-density', density)
     } catch {}
-    void apiPut('/user/settings', { appearance: { density } }).catch(() => {})
-
-    void apiPut('/me/ai-preferences', {
-      voice: mapping ? { hookStyle: mapping.hookStyle } : undefined,
-      defaults: {
-        niche: nicheType || undefined,
-        platformFocus: platformTarget ? [platformTarget] : undefined,
-        goals: creatorGoal ? [creatorGoal] : undefined,
-      },
-    }).catch(() => {
-      /* Best effort: the local cache above still personalizes this device. */
-    })
+    setSyncing(true)
+    const results = await Promise.allSettled([
+      apiPut('/user/settings', { appearance: { density } }),
+      apiPut('/me/ai-preferences', {
+        voice: mapping ? { hookStyle: mapping.hookStyle } : undefined,
+        defaults: {
+          niche: nicheType || undefined,
+          platformFocus: platformTarget ? [platformTarget] : undefined,
+          goals: creatorGoal ? [creatorGoal] : undefined,
+        },
+      }),
+    ])
+    setSyncing(false)
+    setSyncFailed(results.some((r) => r.status === 'rejected'))
   }, [nicheType, platformTarget, creatorGoal, landing, density, setDefaultLanding])
 
   const advanceQuiz = useCallback(() => {
     if (quizStep < 3) {
       setQuizStep(q => q + 1)
     } else {
-      saveNicheProfile()
+      void saveNicheProfile()
       setCurrentStep(-1)
     }
   }, [quizStep, saveNicheProfile])
@@ -208,6 +216,16 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
               transition={{ duration: 0.4 }}
             />
           </div>
+
+          {syncFailed && (
+            <div role="status" className="mx-6 mt-4 flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+              <span className="text-xs text-amber-200">{t('onboardingWizard.syncFailed')}</span>
+              <button type="button" onClick={() => void saveNicheProfile()} disabled={syncing}
+                className="text-xs font-semibold text-amber-100 underline disabled:opacity-50">
+                {t('common.retry')}
+              </button>
+            </div>
+          )}
 
           <AnimatePresence mode="wait">
 

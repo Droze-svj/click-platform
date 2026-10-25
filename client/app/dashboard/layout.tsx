@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useEffect } from 'react'
+// Side effect: lib/api attaches the session token to raw axios/fetch API calls.
+import '../../lib/api'
 import LogEmitter from '../../utils/logEmitter'
 import SidebarNav from '../../components/SidebarNav'
 import DashboardHeader from '../../components/dashboard/DashboardHeader'

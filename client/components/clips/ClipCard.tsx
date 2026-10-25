@@ -56,6 +56,9 @@ export interface Clip {
   variationsInPreset?: number | null
   published?: boolean
   publishedAt?: string | null
+  /** Where the clip sits in its source video (seconds), when known. */
+  startTime?: number | null
+  endTime?: number | null
   folder?: { id: string; name: string; color: string } | null
   captions?: Array<{
     start: number;
@@ -145,6 +148,12 @@ export default function ClipCard({ clip, onChange, onRemoved, onOpen, selected, 
     try {
       const res: any = await apiPost('/video/ai-editing/export-aspect-ratios', {
         videoId: clip.contentId,
+        // Scope the export to THIS clip — without it the server re-encoded
+        // the whole source video into every ratio.
+        clipId: clip.id,
+        ...(typeof clip.startTime === 'number' && typeof clip.endTime === 'number'
+          ? { startTime: clip.startTime, endTime: clip.endTime }
+          : {}),
         aspectRatios: ['9:16', '1:1', '16:9'],
       })
       const data = res?.data || res

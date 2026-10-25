@@ -70,6 +70,32 @@ function buildAutopilotPlan(items = [], options = {}) {
   return posts;
 }
 
+const RECENT_CONTENT_LIMIT = 5;
+
+/**
+ * The user's most recent finished, non-archived content, shaped as plan items
+ * ({ contentId, hook, caption, mediaUrl }). Owner-scoped.
+ */
+async function recentContentItems(userId, limit = RECENT_CONTENT_LIMIT) {
+  const Content = require('../models/Content');
+  const docs = await Content.find({ userId: String(userId), status: 'completed', isArchived: { $ne: true } })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .select('title description content generatedContent.shortVideos originalFile')
+    .lean()
+    .catch(() => []);
+  return (docs || []).map((c) => {
+    const clip = (c.generatedContent && Array.isArray(c.generatedContent.shortVideos))
+      ? c.generatedContent.shortVideos.find((v) => v && v.url) : null;
+    return {
+      contentId: String(c._id),
+      hook: c.title || '',
+      caption: (c.content && c.content.text) || (clip && clip.caption) || c.description || c.title || '',
+      mediaUrl: (c.content && c.content.mediaUrl) || (clip && clip.url) || (c.originalFile && c.originalFile.url) || null,
+    };
+  });
+}
+
 /**
  * Orchestrate: list the user's connected platforms, build the plan, and persist
  * each post as a ScheduledPost in `pending_approval` (human-approve default) or
@@ -78,10 +104,16 @@ function buildAutopilotPlan(items = [], options = {}) {
 async function createAutopilotPlan(userId, opts = {}) {
   const SocialConnection = require('../models/SocialConnection');
   const ScheduledPost = require('../models/ScheduledPost');
-  const { items = [], platforms = null, autonomyMode = 'human_approve', niche = null, dryRun = false } = opts;
+  const { platforms = null, autonomyMode = 'human_approve', niche = null, dryRun = false } = opts;
+  let items = Array.isArray(opts.items) ? opts.items : [];
 
-  if (!Array.isArray(items) || items.length === 0) {
-    const e = new Error('No content items to schedule'); e.statusCode = 400; throw e;
+  // The Autopilot page sends only { autonomyMode, niche }: plan the user's
+  // most recent finished content instead of rejecting every build.
+  if (items.length === 0) items = await recentContentItems(userId);
+  if (items.length === 0) {
+    const e = new Error('You have no finished content to plan yet. Create or upload something first, then build a plan.');
+    e.statusCode = 400;
+    throw e;
   }
 
   // Only schedule to CONNECTED platforms (never invent a connection).

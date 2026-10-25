@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiGet, apiPost } from '../../../lib/api'
+import { templateIdFromUrl, loadTemplatePrefill } from '../../../utils/templatePrefill'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { useSocket } from '../../../hooks/useSocket'
 import { useAuth } from '../../../hooks/useAuth'
@@ -47,7 +48,7 @@ const RESONANCE_NODES = [
 export default function NeuralForgePage() {
   const router = useRouter()
   const { t } = useTranslation()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { socket, connected, on, off } = useSocket(user?.id || null)
 
   const [logicSeed, setLogicSeed] = useState('')
@@ -60,7 +61,21 @@ export default function NeuralForgePage() {
   const [payloadId, setPayloadId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  useEffect(() => { if (!user) router.push('/login') }, [user, router])
+  useEffect(() => { if (!authLoading && !user) router.push('/login') }, [user, authLoading, router])
+
+  // Templates page → "Use template" lands here with ?template=<id>.
+  useEffect(() => {
+    const id = templateIdFromUrl()
+    if (!id) return
+    loadTemplatePrefill(id)
+      .then((p) => {
+        if (!p) return
+        if (p.text) setLogicSeed(p.text)
+        if (p.title) setDesignation(p.title)
+        if (p.platforms.length) setActiveNodes(p.platforms)
+      })
+      .catch(() => setError(t('contentPage.errorTemplateLoadFailed')))
+  }, [t])
 
   const loadPayload = useCallback(async (id: string) => {
     try {
@@ -97,14 +112,26 @@ export default function NeuralForgePage() {
         setPayloadId(id);
         setSuccess(t('contentPage.successTransmitting'));
         if (!connected) {
+           // The poll used to stop silently on a network error or after 120s,
+           // leaving "transmitting" on screen forever. Always end with a result
+           // or an error the user can see.
+           let finished = false
+           const stop = () => { finished = true; clearInterval(iv); clearTimeout(timeout) }
            const iv = setInterval(async () => {
              try {
-               const sRes: any = await apiGet(`/content/${id}/status`)
-               if (sRes?.status === 'completed' && sRes?.generatedContent) { clearInterval(iv); setManifest(sRes.generatedContent); setSuccess(t('contentPage.successForgingComplete')) }
-               else if (sRes?.status === 'failed') { clearInterval(iv); setError(t('contentPage.errorForgeFailed')) }
-             } catch { clearInterval(iv) }
+               const sRes: any = await apiGet(`/content/${id}/status`, undefined, false)
+               if (finished) return
+               if (sRes?.status === 'completed' && sRes?.generatedContent) { stop(); setManifest(sRes.generatedContent); setSuccess(t('contentPage.successForgingComplete')) }
+               else if (sRes?.status === 'failed') { stop(); setSuccess(''); setError(sRes?.errorMessage || t('contentPage.errorForgeFailed')) }
+             } catch {
+               if (finished) return
+               stop(); setSuccess(''); setError(t('contentPage.errorStatusCheckFailed'))
+             }
            }, 3000)
-           setTimeout(() => clearInterval(iv), 120000)
+           const timeout = setTimeout(() => {
+             if (finished) return
+             stop(); setSuccess(''); setError(t('contentPage.errorGenerationTimeout'))
+           }, 120000)
         }
       }
     } catch {

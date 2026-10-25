@@ -1,12 +1,19 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Sparkles, Send, Bot, User, Wand2 } from 'lucide-react'
+import { Sparkles, Send, Wand2 } from 'lucide-react'
+import { COLOR_GRADES } from '../../lib/colorGrades'
+import { useTranslation } from '../../hooks/useTranslation'
 
 interface AiTimelineChatProps {
-  onApplyLUT: (filterName: string) => void
-  onChangeAspectRatio: (ratio: string) => void
+  /** Apply a colour grade by registry id. Returns false when it couldn't. */
+  onApplyGrade: (gradeId: string) => boolean
+  /** Add a title at the playhead. */
   onAddText: (text: string) => void
+  /** Set the whole-clip playback speed. Returns false when it couldn't. */
+  onSetSpeed?: (speed: number) => boolean
+  /** Open the Export panel (where the frame shape / aspect ratio is chosen). */
+  onOpenExport?: () => void
 }
 
 interface Message {
@@ -16,16 +23,73 @@ interface Message {
   actionApplied?: string
 }
 
+export type TimelineIntent =
+  | { kind: 'grade'; gradeId: string; label: string }
+  | { kind: 'aspect'; ratio: string }
+  | { kind: 'text'; text: string | null }
+  | { kind: 'speed'; speed: number }
+  | { kind: 'none' }
+
+// Grades matched longest name first so "film noir" wins over "noir" and
+// "luma cinematic" over "cinematic".
+const GRADE_NAMES = COLOR_GRADES
+  .flatMap((g) => {
+    const names = new Set([g.id.replace(/-/g, ' '), g.label.toLowerCase().replace('&', 'and')])
+    if (g.id === 'bw') { names.add('black and white'); names.add('b&w'); names.add('monochrome') }
+    if (g.id === 'cinematic') { names.add('lut'); names.add('film look') }
+    return Array.from(names).map((name) => ({ name, id: g.id, label: g.label }))
+  })
+  .sort((a, b) => b.name.length - a.name.length)
+
+/**
+ * Map a request to one editor action. Deterministic keyword matching — no
+ * model is called — so the reply can say exactly what was (or wasn't) done.
+ */
+export function parseTimelineIntent(input: string): TimelineIntent {
+  const raw = input.trim()
+  const lower = raw.toLowerCase().replace('&', 'and')
+
+  // A title request first: its quoted text may itself mention "TikTok" etc.
+  if (/\b(title|text|caption)\b/.test(lower)) {
+    const quoted = raw.match(/"([^"]+)"|“([^”]+)”|'([^']+)'/)
+    const text = quoted ? (quoted[1] || quoted[2] || quoted[3]).trim() : null
+    return { kind: 'text', text: text || null }
+  }
+
+  const ratio = lower.match(/(^|[^\d])(9:16|16:9|1:1|4:5)([^\d]|$)/)?.[2]
+    || (/\b(vertical|tiktok|reels?|shorts|portrait)\b/.test(lower) ? '9:16'
+      : /\bsquare\b/.test(lower) ? '1:1'
+        : /\b(horizontal|landscape|widescreen)\b/.test(lower) ? '16:9' : null)
+  if (ratio) return { kind: 'aspect', ratio }
+
+  const speedX = lower.match(/(\d+(?:\.\d+)?)\s*x\b/)
+  if (speedX) {
+    const n = Number(speedX[1])
+    if (Number.isFinite(n) && n > 0) return { kind: 'speed', speed: Math.min(2, Math.max(0.25, n)) }
+  }
+  if (/\bslow[\s-]?mo(tion)?\b/.test(lower)) return { kind: 'speed', speed: 0.5 }
+  if (/\bnormal speed\b/.test(lower)) return { kind: 'speed', speed: 1 }
+  if (/\b(faster|speed (it )?up)\b/.test(lower)) return { kind: 'speed', speed: 1.25 }
+
+  for (const g of GRADE_NAMES) {
+    const re = new RegExp(`(^|[^a-z])${g.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^a-z]|$)`)
+    if (re.test(lower)) return { kind: 'grade', gradeId: g.id, label: g.label }
+  }
+
+  return { kind: 'none' }
+}
+
 export default function AiTimelineChat({
-  onApplyLUT,
-  onChangeAspectRatio,
-  onAddText
+  onApplyGrade,
+  onAddText,
+  onSetSpeed,
+  onOpenExport
 }: AiTimelineChatProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    { id: '1', role: 'assistant', text: "I'm your AI Copilot. How should we edit this timeline?" }
+  const { t } = useTranslation()
+  const [messages, setMessages] = useState<Message[]>(() => [
+    { id: 'greeting', role: 'assistant', text: t('aiTimelineChat.greeting') }
   ])
   const [input, setInput] = useState('')
-  const [isProcessing, setIsProcessing] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -34,44 +98,58 @@ export default function AiTimelineChat({
     }
   }, [messages])
 
-  const handleSend = async (e?: React.FormEvent) => {
+  const handleSend = (e?: React.FormEvent) => {
     e?.preventDefault()
-    if (!input.trim() || isProcessing) return
+    if (!input.trim()) return
 
     const userText = input.trim()
     setInput('')
-    setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', text: userText }])
-    setIsProcessing(true)
 
-    // Simulate LLM Function Calling Processing
-    setTimeout(() => {
-      const lower = userText.toLowerCase()
-      let actionStr = ''
-      let replyText = 'I made that change for you.'
+    // Each branch calls the real editor setter and reports what actually
+    // happened. (This used to wait 1.2s and reply "I made that change for
+    // you" — even for the aspect ratio, which only showed a toast.)
+    const intent = parseTimelineIntent(userText)
+    let reply = t('aiTimelineChat.notUnderstood')
+    let action: string | undefined
 
-      if (lower.includes('cinematic') || lower.includes('lut') || lower.includes('moody')) {
-        onApplyLUT('cinematic')
-        actionStr = 'Applied Cinematic LUT'
-      } else if (lower.includes('tiktok') || lower.includes('vertical') || lower.includes('9:16')) {
-        onChangeAspectRatio('9:16')
-        actionStr = 'Changed Aspect Ratio to 9:16'
-      } else if (lower.includes('title') || lower.includes('text') || lower.includes('caption')) {
-        const textMatch = userText.match(/\"([^\"]+)\"/) || userText.match(/\'([^\']+)\'/)
-        const textToAdd = textMatch ? textMatch[1] : 'Epic Title'
-        onAddText(textToAdd)
-        actionStr = `Added Text: "${textToAdd}"`
+    if (intent.kind === 'grade') {
+      if (onApplyGrade(intent.gradeId)) {
+        reply = t('aiTimelineChat.appliedGrade', { grade: intent.label })
+        action = t('aiTimelineChat.badgeGrade', { grade: intent.label })
       } else {
-        replyText = "I'm not sure how to do that yet. Try asking me to make it cinematic, format for TikTok, or add a title."
+        reply = t('aiTimelineChat.gradeNotApplied', { grade: intent.label })
       }
+    } else if (intent.kind === 'aspect') {
+      if (onOpenExport) {
+        onOpenExport()
+        reply = t('aiTimelineChat.aspectOpenExport', { ratio: intent.ratio })
+        action = t('aiTimelineChat.badgeExport')
+      } else {
+        reply = t('aiTimelineChat.aspectNoExport', { ratio: intent.ratio })
+      }
+    } else if (intent.kind === 'text') {
+      if (intent.text) {
+        onAddText(intent.text)
+        reply = t('aiTimelineChat.addedText', { text: intent.text })
+        action = t('aiTimelineChat.badgeText')
+      } else {
+        reply = t('aiTimelineChat.textNeedsQuotes')
+      }
+    } else if (intent.kind === 'speed') {
+      if (onSetSpeed && onSetSpeed(intent.speed)) {
+        reply = t('aiTimelineChat.speedSet', { speed: intent.speed })
+        action = t('aiTimelineChat.badgeSpeed', { speed: intent.speed })
+      } else {
+        reply = t('aiTimelineChat.notUnderstood')
+      }
+    }
 
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        role: 'assistant',
-        text: replyText,
-        actionApplied: actionStr
-      }])
-      setIsProcessing(false)
-    }, 1200)
+    const now = Date.now()
+    setMessages(prev => [
+      ...prev,
+      { id: `u-${now}`, role: 'user', text: userText },
+      { id: `a-${now}`, role: 'assistant', text: reply, actionApplied: action },
+    ])
   }
 
   return (
@@ -79,16 +157,16 @@ export default function AiTimelineChat({
       {/* Header */}
       <div className="px-4 py-3 bg-white/[0.02] border-b border-white/10 flex items-center gap-2">
         <Sparkles className="w-4 h-4 text-indigo-400" />
-        <span className="text-[10px] font-black uppercase tracking-widest text-white">Timeline Copilot</span>
+        <span className="text-[10px] font-black uppercase tracking-widest text-white">{t('aiTimelineChat.title')}</span>
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 flex flex-col gap-4" aria-live="polite">
         {messages.map(m => (
           <div key={m.id} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} max-w-[90%]`}>
             <div className={`px-3 py-2 rounded-2xl text-[11px] ${
-              m.role === 'user' 
-                ? 'bg-indigo-500/20 text-indigo-100 rounded-br-sm border border-indigo-500/30' 
+              m.role === 'user'
+                ? 'bg-indigo-500/20 text-indigo-100 rounded-br-sm border border-indigo-500/30'
                 : 'bg-white/5 text-slate-300 rounded-bl-sm border border-white/10'
             }`}>
               {m.text}
@@ -101,13 +179,6 @@ export default function AiTimelineChat({
             )}
           </div>
         ))}
-        {isProcessing && (
-          <div className="flex items-start max-w-[90%]">
-            <div className="px-3 py-2 rounded-2xl text-[11px] bg-white/5 text-slate-400 rounded-bl-sm border border-white/10 flex gap-1">
-              <span className="animate-bounce">.</span><span className="animate-bounce animation-delay-150">.</span><span className="animate-bounce animation-delay-300">.</span>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Input */}
@@ -117,13 +188,15 @@ export default function AiTimelineChat({
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder="e.g. Make it cinematic..."
+            placeholder={t('aiTimelineChat.placeholder')}
+            aria-label={t('aiTimelineChat.placeholder')}
             className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-3 pr-10 text-[11px] text-white placeholder-slate-500 outline-none focus:border-indigo-500/50 transition-colors"
           />
-          <button            type="submit"
-            disabled={!input.trim() || isProcessing}
-            title="Send Message"
-            aria-label="Send Message"
+          <button
+            type="submit"
+            disabled={!input.trim()}
+            title={t('aiTimelineChat.send')}
+            aria-label={t('aiTimelineChat.send')}
             className="absolute right-2 p-1.5 text-indigo-400 hover:text-indigo-300 disabled:opacity-50 transition-colors"
           >
             <Send className="w-3.5 h-3.5" />

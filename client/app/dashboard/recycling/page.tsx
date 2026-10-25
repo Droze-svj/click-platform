@@ -11,12 +11,13 @@ import { PageShell } from '../../../components/ui'
 
 export default function ContentRemixPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { t } = useTranslation()
 
   useEffect(() => {
+    if (authLoading) return // user is null until /auth/me answers
     if (!user) router.push('/login')
-  }, [user, router])
+  }, [user, authLoading, router])
 
   if (!user) return null
 

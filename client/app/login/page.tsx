@@ -23,10 +23,19 @@ interface LoginResponse {
   refreshToken?: string
 }
 
-/** Where to go after signing in: ?next= when it's a safe same-site path. */
+/**
+ * Where to go after signing in: ?next= when it's a safe same-site path;
+ * otherwise back to a team invitation the user opened while signed out
+ * (stored by /teams/accept), so the invite is still accepted.
+ */
 function destination(): string {
   if (typeof window === 'undefined') return '/dashboard'
-  return safeNextPath(new URLSearchParams(window.location.search).get('next'))
+  const next = new URLSearchParams(window.location.search).get('next')
+  if (next) return safeNextPath(next)
+  let pendingInvite: string | null = null
+  try { pendingInvite = sessionStorage.getItem('pendingInviteToken') } catch { /* storage blocked */ }
+  if (pendingInvite) return `/teams/accept?token=${encodeURIComponent(pendingInvite)}`
+  return '/dashboard'
 }
 
 function friendlyError(err: any): string {

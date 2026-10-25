@@ -56,6 +56,24 @@ function pickClipShape(parentId, clip) {
     variationIndex: typeof clip.variationIndex === 'number' ? clip.variationIndex : null,
     variationsInPreset: typeof clip.variationsInPreset === 'number' ? clip.variationsInPreset : null,
     rating: typeof clip.rating === 'number' ? clip.rating : null,
+    // Publish state — without these the card/lightbox never showed "Picked"
+    // after a reload and offered to publish the same clip again.
+    published: clip.published === true,
+    publishedAt: clip.publishedAt || null,
+    publishedPlatform: clip.publishedPlatform || null,
+    // Where the clip sits in its source video (seconds) — lets the
+    // multi-ratio export re-cut just this clip instead of the whole source.
+    startTime: typeof clip.startTime === 'number' ? clip.startTime : null,
+    endTime: typeof clip.endTime === 'number' ? clip.endTime : null,
+    // Editor option metadata for the lightbox's "AI edits applied" panel.
+    colorGrade: clip.colorGrade || null,
+    hookStyle: clip.hookStyle || null,
+    pacingIntensity: clip.pacingIntensity || null,
+    transitionStyle: clip.transitionStyle || null,
+    musicGenre: clip.musicGenre || null,
+    ctaStyle: clip.ctaStyle || null,
+    voiceTone: clip.voiceTone || null,
+    niche: clip.niche || null,
     editsApplied: Array.isArray(clip.editsApplied) ? clip.editsApplied : [],
     expiresAt: clip.expiresAt || null,
     createdAt: clip.createdAt || clip.generatedAt || clip.timestamp || null,
@@ -64,6 +82,7 @@ function pickClipShape(parentId, clip) {
     // auto-edit. The drawer renders these as editable defaults; capturing
     // any user edit feeds the learning loop on publish.
     recommendedCaptions: clip.recommendedCaptions || null,
+    recommendedCaptionVariants: clip.recommendedCaptionVariants || null,
     recommendedHashtags: clip.recommendedHashtags || null,
     recommendedSlots: Array.isArray(clip.recommendedSlots) ? clip.recommendedSlots : [],
     publishRationale: clip.publishRationale || null,

@@ -29,6 +29,7 @@ import {
   Mic2,
   Film
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { apiGet, apiPost } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -58,6 +59,7 @@ const VIDEO_DEPENDENT_TOOLS = new Set([
 
 export default function SovereignToolbox({ videoId }: { videoId?: string } = {}) {
   const { t } = useTranslation()
+  const router = useRouter()
   const { showToast } = useToast()
   const [tools, setTools] = useState<Tool[]>([])
   const [loading, setLoading] = useState(true)
@@ -85,9 +87,12 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
   }, [fetchTools])
 
   const executeTool = async (toolId: string) => {
-    // Video-dependent tools cannot run without a real source video.
+    // Video-dependent tools cannot run without a real source video. The
+    // toolbox page has no video picker, so send the user to pick one (these
+    // tools are in the editor) instead of a dead-end error toast.
     if (VIDEO_DEPENDENT_TOOLS.has(toolId) && !videoId) {
-      showToast(t('sovereignToolbox.selectVideoFirst'), 'error')
+      showToast(t('sovereignToolbox.selectVideoFirst'), 'info')
+      router.push('/dashboard/video')
       return
     }
 

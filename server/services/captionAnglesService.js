@@ -136,6 +136,7 @@ async function generateCaptions(input, deps) {
   // empties the result. Fall back to the (repeated) captions so a "regenerate"
   // click never returns an empty panel.
   const captions = (filtered.length === 0 && shaped.length > 0) ? shaped : filtered;
+  if (captions.length === 0) throw require('../utils/aiUnavailable').aiUnavailable('captions');
   return { platform, captions };
 }
 

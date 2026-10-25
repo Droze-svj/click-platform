@@ -80,6 +80,12 @@ interface Props {
   autoViralBusy?: boolean
   /** Optional toast callback so we can surface "Applied X" feedback. */
   showToast?: (msg: string, type?: 'info' | 'success' | 'error') => void
+  /**
+   * Receives the B-roll plan ({ startTime, duration, url, keyword }[]) so the
+   * editor can put the clips on the timeline. (The plan used to go out on a
+   * window event nothing listened to.)
+   */
+  onBrollPlan?: (plan: Array<{ startTime: number; duration: number; url: string; keyword?: string }>) => void
 }
 
 export default function QuickActionsBar({
@@ -92,6 +98,7 @@ export default function QuickActionsBar({
   onAutoViralEdit,
   autoViralBusy,
   showToast,
+  onBrollPlan,
 }: Props) {
   const { t } = useTranslation()
   const [insight, setInsight] = useState<StyleInsight | null>(null)
@@ -172,6 +179,9 @@ export default function QuickActionsBar({
       const plan = res?.data?.plan || res?.plan || []
       if (!Array.isArray(plan) || plan.length === 0) {
         showToast?.(t('quickActionsBar.noBrollGaps'), 'info')
+      } else if (onBrollPlan) {
+        onBrollPlan(plan)
+        showToast?.(t('creativeAI.brollAdded', { count: plan.length }), 'success')
       } else {
         showToast?.(t('quickActionsBar.brollSuggested', { count: plan.length }), 'success')
         if (typeof window !== 'undefined') {
@@ -196,13 +206,20 @@ export default function QuickActionsBar({
     setBusy('trending')
     try {
       const res: any = await apiGet('/trends/now?platform=tiktok')
-      const trends = res?.data || res
-      const sounds = trends?.sounds?.length || 0
-      const hashtags = trends?.hashtags?.length || 0
-      if (sounds === 0 && hashtags === 0) {
+      const trends = res?.data ?? res
+      // /trends/now returns items[{ kind, label }] (sound | hashtag | topic).
+      // This read trends.sounds / trends.hashtags, which never exist, so the
+      // feed always looked like it was still warming up.
+      const items: Array<{ kind?: string; label?: string }> = Array.isArray(trends?.items) ? trends.items : []
+      const labels = items
+        .filter((i) => i && typeof i.label === 'string' && i.label.trim())
+        .slice(0, 5)
+        .map((i) => (i.kind === 'hashtag' && !i.label!.startsWith('#') ? `#${i.label}` : i.label!))
+      if (labels.length === 0) {
         showToast?.(t('quickActionsBar.trendsWarmingUp'), 'info')
       } else {
-        showToast?.(t('quickActionsBar.trendsLoaded', { sounds, hashtags }), 'success')
+        // Show what is trending — there is no picker to open.
+        showToast?.(t('quickActionsBar.trendsList', { list: labels.join(' · ') }), 'success')
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('click:trends', { detail: { trends } }))
         }

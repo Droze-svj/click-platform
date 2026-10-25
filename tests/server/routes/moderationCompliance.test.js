@@ -129,4 +129,24 @@ describe('moderation compliance endpoints', () => {
     expect(r.totalTriggers).toBe(3);
     expect(r.byCategory.profanity.rules).toBe(1);
   });
+
+  it('a check that trips a rule is counted in the History report', async () => {
+    await new ComplianceRule({
+      workspaceId: ws._id, createdBy: String(owner._id), name: 'No competitors',
+      category: 'brand_safety', ruleType: 'keyword_block', keywords: ['acme'],
+    }).save();
+    await new ComplianceRule({
+      workspaceId: ws._id, createdBy: String(owner._id), name: 'Untouched',
+      category: 'custom', ruleType: 'keyword_block', keywords: ['zzz'],
+    }).save();
+
+    await as(token, request(app).post('/api/moderation/compliance-check')).send({ text: 'acme is great' });
+    await as(token, request(app).post('/api/moderation/compliance-check')).send({ text: 'ACME again' });
+
+    const res = await as(token, request(app).get('/api/moderation/report/workspace'));
+    const r = res.body.data ?? res.body;
+    expect(r.totalTriggers).toBe(2);
+    expect(r.recentTriggers).toHaveLength(1);
+    expect(r.recentTriggers[0]).toMatchObject({ name: 'No competitors', triggerCount: 2 });
+  });
 });

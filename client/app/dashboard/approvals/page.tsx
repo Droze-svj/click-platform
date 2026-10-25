@@ -59,7 +59,7 @@ const STATUS_BADGE: Record<string, string> = {
 export default function ApprovalsPage() {
   const router = useRouter()
   const { t } = useTranslation()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { showToast } = useToast()
 
   const [requests, setRequests] = useState<ApprovalRequest[]>([])
@@ -98,9 +98,10 @@ export default function ApprovalsPage() {
   }, [filter, showToast])
 
   useEffect(() => {
+    if (authLoading) return // user is null until /auth/me answers
     if (!user) { router.push('/login'); return }
     loadRequests()
-  }, [user, router, loadRequests])
+  }, [user, authLoading, router, loadRequests])
 
   const handleApprove = async (id: string) => {
     const log = prompt(t('approvalsPage.promptValidationLog'))

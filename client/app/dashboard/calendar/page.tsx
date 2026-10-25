@@ -16,6 +16,7 @@ import {
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import ToastContainer from '../../../components/ToastContainer'
 import { API_URL } from '../../../lib/api'
+import { isQueued, statusKind, statusLabelKey, type StatusKind } from '../../../lib/scheduledPostStatus'
 import { CardSkeleton } from '../../../components/LoadingSkeleton'
 import { cn } from '../../../lib/utils'
 import {
@@ -34,7 +35,7 @@ interface ScheduledPost {
   platform: string
   content: { text: string; hashtags?: string[]; mediaUrl?: string }
   scheduledTime: string
-  status: 'scheduled' | 'posted' | 'failed' | 'draft'
+  status: string
 }
 
 interface DragData { postId: string; platform: string; originalDate: Date }
@@ -48,11 +49,17 @@ const PC: Record<string, { label: string; gradient: string; icon: string }> = {
   youtube:   { label: 'YouTube',     gradient: 'from-red-600 to-red-800',     icon: '▶' },
 }
 
-const SC: Record<string, { label: string; cls: string; icon: any }> = {
-  scheduled: { label: 'Scheduled', cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',   icon: Timer },
-  posted:    { label: 'Published', cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', icon: CheckCircle },
-  failed:    { label: 'Failed',    cls: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',        icon: AlertCircle },
-  draft:     { label: 'Draft',     cls: 'ds-surface-subtle text-theme-muted',         icon: Focus },
+// Styles per status kind (lib/scheduledPostStatus maps the real ScheduledPost
+// enum — pending_approval, publishing, failed_retryable, failed_permanent,
+// cancelled used to fall through to a "Draft" label that no post ever has).
+const SC: Record<StatusKind, { cls: string; icon: any }> = {
+  scheduled:        { cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',     icon: Timer },
+  awaitingApproval: { cls: 'ds-surface-subtle text-theme-muted',                    icon: Focus },
+  publishing:       { cls: 'bg-primary/10 text-primary',                            icon: Timer },
+  published:        { cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400', icon: CheckCircle },
+  retrying:         { cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',     icon: AlertCircle },
+  failed:           { cls: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',        icon: AlertCircle },
+  cancelled:        { cls: 'ds-surface-subtle text-theme-muted',                    icon: AlertCircle },
 }
 
 
@@ -166,9 +173,9 @@ export default function ContentCalendarPage() {
         {/* Stats (real counts) */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard label={t('calendarPage.statTotalScheduled')} value={posts.length} icon={LayoutGrid} />
-          <StatCard label={t('calendarPage.statUpcoming')} value={posts.filter(p => p.status === 'scheduled').length} icon={Timer} />
-          <StatCard label={t('calendarPage.statPublished')} value={posts.filter(p => p.status === 'posted').length} icon={CheckCircle} />
-          <StatCard label={t('calendarPage.statErrors')} value={posts.filter(p => p.status === 'failed').length} icon={AlertCircle} />
+          <StatCard label={t('calendarPage.statUpcoming')} value={posts.filter(p => isQueued(p.status)).length} icon={Timer} />
+          <StatCard label={t('calendarPage.statPublished')} value={posts.filter(p => statusKind(p.status) === 'published').length} icon={CheckCircle} />
+          <StatCard label={t('calendarPage.statErrors')} value={posts.filter(p => statusKind(p.status) === 'failed').length} icon={AlertCircle} />
         </section>
 
         {/* Calendar */}
@@ -274,7 +281,7 @@ export default function ContentCalendarPage() {
         {/* Details Modal */}
         {selectedPost && (() => {
           const cfg = PC[selectedPost.platform] || { label: selectedPost.platform, gradient: 'from-slate-600 to-slate-800', icon: '?' }
-          const scc = SC[selectedPost.status] || SC.draft
+          const scc = SC[statusKind(selectedPost.status)]
           const StatusIcon = scc.icon
           return (
             <Modal open onClose={() => setSelectedPost(null)} className="max-w-2xl">
@@ -284,7 +291,7 @@ export default function ContentCalendarPage() {
                   <div>
                     <h3 className="ds-text-h3 text-theme-primary">{cfg.label}</h3>
                     <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                      <Badge className={cn('gap-1.5', scc.cls)}><StatusIcon size={13} aria-hidden /> {t(`calendarPage.status_${SC[selectedPost.status] ? selectedPost.status : 'draft'}`)}</Badge>
+                      <Badge className={cn('gap-1.5', scc.cls)}><StatusIcon size={13} aria-hidden /> {t(statusLabelKey(selectedPost.status))}</Badge>
                       <span className="ds-text-caption inline-flex items-center gap-1.5"><Clock size={13} aria-hidden /> {new Date(selectedPost.scheduledTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</span>
                     </div>
                   </div>

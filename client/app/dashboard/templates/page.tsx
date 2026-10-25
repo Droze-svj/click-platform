@@ -44,7 +44,7 @@ interface Template {
 
 export default function TemplatesPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { t } = useTranslation()
   const [templates, setTemplates] = useState<Template[]>([])
   const [loading, setLoading] = useState(true)
@@ -69,9 +69,10 @@ export default function TemplatesPage() {
   }, [selectedSector, selectedDomain, t])
 
   useEffect(() => {
+    if (authLoading) return // user is null until /auth/me answers
     if (!user) { router.push('/login'); return }
     loadTemplates()
-  }, [user, router, loadTemplates])
+  }, [user, authLoading, router, loadTemplates])
 
   const handleUseTemplate = async (templateId: string) => {
     try {

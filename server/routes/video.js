@@ -441,11 +441,30 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
         jobId: `video-${content._id}`,
       });
     } catch (queueError) {
-      if (activeProcessCount >= MAX_CONCURRENT_LOCAL_JOBS) {
-        logger.error('Job queue unavailable AND local concurrency limit reached. Rejecting job.', {
-          contentId: content._id.toString(),
-          activeProcessCount
-        });
+      logger.warn('Job queue unavailable; falling back to in-process video processing', {
+        error: queueError.message,
+        contentId: content._id.toString(),
+        userId: req.user._id.toString(),
+        activeProcessCount
+      });
+      const started = startInProcessVideoProcessing({
+        contentId: content._id.toString(),
+        videoPath: req.file.path,
+        user: {
+          _id: req.user._id.toString(),
+          email: req.user.email,
+          name: req.user.name,
+        },
+        // Final safety cleanup of original file if still present, ONLY if it has been uploaded to cloud storage
+        afterSettled: async () => {
+          if (storageType !== 'local') {
+            await fs.promises.unlink(req.file.path)
+              .then(() => logger.info('Cleaned up original local file in finally', { path: req.file.path }))
+              .catch(() => {});
+          }
+        },
+      });
+      if (!started) {
         content.status = 'failed';
         await content.save();
         return res.status(503).json({
@@ -453,82 +472,6 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
           error: 'Server load reached maximum capacity. Please try again later.'
         });
       }
-
-      logger.warn('Job queue unavailable; falling back to in-process video processing', {
-        error: queueError.message,
-        contentId: content._id.toString(),
-        userId: req.user._id.toString(),
-        activeProcessCount
-      });
-
-      activeProcessCount++;
-      const currentContentId = content._id.toString();
-      const watchdogUserId = safeId(req.user._id);
-
-      // Watchdog backstop. The in-process fallback below is fire-and-forget
-      // (setImmediate, not awaited). processVideo's own catch marks the doc
-      // 'failed' on a normal error — but a hard crash, OOM, or hang would
-      // leave the Content stuck on status:'processing' forever (infinite
-      // client spinner). This timer re-loads the doc after a generous window
-      // and, if it's STILL processing, marks it failed and emits the failure
-      // event. It's cleared on success/handled-failure so it never fires for
-      // a completed job.
-      const WATCHDOG_MS = 10 * 60 * 1000; // 10 minutes
-      let watchdogTimer = setTimeout(async () => {
-        watchdogTimer = null;
-        try {
-          const stuck = await Content.findById(currentContentId);
-          if (stuck && stuck.status === 'processing') {
-            logger.error('Video processing watchdog fired: job stuck in processing, marking failed', {
-              contentId: currentContentId,
-            });
-            stuck.status = 'failed';
-            await stuck.save();
-            safeEmitToUser(watchdogUserId, 'video-processed', {
-              contentId: safeId(stuck._id),
-              status: 'failed',
-              error: 'Processing timed out',
-            });
-          }
-        } catch (wdErr) {
-          logger.warn('Video processing watchdog check failed', {
-            error: wdErr.message,
-            contentId: currentContentId,
-          });
-        }
-      }, WATCHDOG_MS);
-      // Don't keep the event loop alive solely for the watchdog.
-      if (typeof watchdogTimer.unref === 'function') watchdogTimer.unref();
-
-      setImmediate(async () => {
-        try {
-          await processVideo(currentContentId, req.file.path, {
-            _id: req.user._id.toString(),
-            email: req.user.email,
-            name: req.user.name,
-          });
-        } catch (err) {
-          logger.error('In-process video processing failed', {
-            error: err.message,
-            contentId: currentContentId,
-            userId: req.user._id.toString(),
-          });
-        } finally {
-          // Processing settled (success or handled failure) — cancel the
-          // watchdog so it can't later clobber a completed job's status.
-          if (watchdogTimer) {
-            clearTimeout(watchdogTimer);
-            watchdogTimer = null;
-          }
-          activeProcessCount--;
-          // Final safety cleanup of original file if still present, ONLY if it has been uploaded to cloud storage
-          if (storageType !== 'local') {
-            await fs.promises.unlink(req.file.path)
-              .then(() => logger.info('Cleaned up original local file in finally', { path: req.file.path }))
-              .catch(() => {});
-          }
-        }
-      });
     }
 
     // Store music preference if provided
@@ -602,6 +545,89 @@ router.post('/upload', auth, requireActiveSubscription, uploadLimiter, upload.si
 // vs Manual on the configure page and choose clip count / style / format.
 // The user's submission then drives clip generation via the dedicated
 // /api/video/ai-editing/auto-edit endpoint with their chosen options.
+/**
+ * In-process fallback for when the BullMQ queue is unavailable (production has
+ * no Redis, so this is what actually runs). Fire-and-forget: processVideo marks
+ * the Content 'failed' on a normal error, and a watchdog marks it failed if a
+ * hard crash / hang leaves it on 'processing' (which would spin the client
+ * forever). Shared by POST /video/upload and the resumable tus upload.
+ *
+ * @returns {boolean} false when the local concurrency limit is reached (the
+ *   caller must then mark the Content failed / reject the request).
+ */
+function startInProcessVideoProcessing({ contentId, videoPath, user, afterSettled }) {
+  if (activeProcessCount >= MAX_CONCURRENT_LOCAL_JOBS) {
+    logger.error('Job queue unavailable AND local concurrency limit reached. Rejecting job.', {
+      contentId,
+      activeProcessCount
+    });
+    return false;
+  }
+
+  activeProcessCount++;
+  const currentContentId = String(contentId);
+  const watchdogUserId = safeId(user?._id);
+
+  // Watchdog backstop. The in-process fallback below is fire-and-forget
+  // (setImmediate, not awaited). processVideo's own catch marks the doc
+  // 'failed' on a normal error — but a hard crash, OOM, or hang would
+  // leave the Content stuck on status:'processing' forever (infinite
+  // client spinner). This timer re-loads the doc after a generous window
+  // and, if it's STILL processing, marks it failed and emits the failure
+  // event. It's cleared on success/handled-failure so it never fires for
+  // a completed job.
+  const WATCHDOG_MS = 10 * 60 * 1000; // 10 minutes
+  let watchdogTimer = setTimeout(async () => {
+    watchdogTimer = null;
+    try {
+      const stuck = await Content.findById(currentContentId);
+      if (stuck && stuck.status === 'processing') {
+        logger.error('Video processing watchdog fired: job stuck in processing, marking failed', {
+          contentId: currentContentId,
+        });
+        stuck.status = 'failed';
+        await stuck.save();
+        safeEmitToUser(watchdogUserId, 'video-processed', {
+          contentId: safeId(stuck._id),
+          status: 'failed',
+          error: 'Processing timed out',
+        });
+      }
+    } catch (wdErr) {
+      logger.warn('Video processing watchdog check failed', {
+        error: wdErr.message,
+        contentId: currentContentId,
+      });
+    }
+  }, WATCHDOG_MS);
+  // Don't keep the event loop alive solely for the watchdog.
+  if (typeof watchdogTimer.unref === 'function') watchdogTimer.unref();
+
+  setImmediate(async () => {
+    try {
+      await processVideo(currentContentId, videoPath, user);
+    } catch (err) {
+      logger.error('In-process video processing failed', {
+        error: err.message,
+        contentId: currentContentId,
+        userId: user?._id ? String(user._id) : undefined,
+      });
+    } finally {
+      // Processing settled (success or handled failure) — cancel the
+      // watchdog so it can't later clobber a completed job's status.
+      if (watchdogTimer) {
+        clearTimeout(watchdogTimer);
+        watchdogTimer = null;
+      }
+      activeProcessCount--;
+      if (typeof afterSettled === 'function') {
+        try { await afterSettled(); } catch (_) { /* best-effort */ }
+      }
+    }
+  });
+  return true;
+}
+
 async function processVideo(contentId, videoPath, user, options = {}) {
   const { generateClips = false } = options;
   // Track every clip/thumbnail/intermediate file we write to disk during the
@@ -2337,4 +2363,5 @@ router.post('/transcribe-editor', auth, aiLimiter, async (req, res) => {
 module.exports = router;
 // Worker import compatibility: allow `const { processVideo } = require('../routes/video')`
 module.exports.processVideo = processVideo;
+module.exports.startInProcessVideoProcessing = startInProcessVideoProcessing;
 

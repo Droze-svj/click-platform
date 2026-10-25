@@ -2,6 +2,7 @@
 // Execute automation rules
 
 const AutomationRule = require('../models/AutomationRule');
+const { textToHtml } = require('../utils/escapeHtml');
 const logger = require('../utils/logger');
 
 /**
@@ -467,7 +468,10 @@ async function sendEmail(config, context) {
   const result = await emailService.sendEmail({
     to,
     subject: config.subject,
-    html: config.html || config.body || config.text,
+    // Automation emails are plain text the user typed — never raw HTML from
+    // the automation config (that would let anyone send arbitrary HTML mail
+    // from our domain).
+    html: textToHtml(config.body || config.text || config.html || ''),
     text: config.text,
     cc: config.cc,
     bcc: config.bcc,

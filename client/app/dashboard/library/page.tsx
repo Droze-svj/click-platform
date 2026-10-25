@@ -44,7 +44,7 @@ interface FolderType {
 export default function LibraryPage() {
   const router = useRouter()
   const { t } = useTranslation()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { showToast } = useToast()
 
   const [content, setContent] = useState<Content[]>([])
@@ -101,9 +101,10 @@ export default function LibraryPage() {
   }, [selectedFolder, selectedTag, selectedCategory, showFavorites, searchQuery, showToast, t])
 
   useEffect(() => {
+    if (authLoading) return // user is null until /auth/me answers
     if (!user) { router.push('/login'); return }
     loadLibrary()
-  }, [user, router, loadLibrary])
+  }, [user, authLoading, router, loadLibrary])
 
   const handleTagInjection = async () => {
     if (!tagModalIds?.length || !tagInput.trim()) return

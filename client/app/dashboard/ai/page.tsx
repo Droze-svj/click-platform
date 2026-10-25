@@ -22,16 +22,17 @@ import { cn } from '../../../lib/utils';
 export default function CognitiveLogicMatrixPage() {
   const router = useRouter();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
+    if (authLoading) return; // user is null until /auth/me answers
     if (!user && typeof window !== 'undefined') {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   if (!isClient || !user) {
     return (

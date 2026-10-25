@@ -125,13 +125,83 @@ const contentSchema = new mongoose.Schema({
     default: null,
   },
   generatedContent: {
+    // One entry per generated clip. Every field the clip hub, lightbox and
+    // publish drawer read is declared here: strict mode silently drops
+    // undeclared paths, so a clip's rating, soft-delete flag, publish state,
+    // scores and Smart Publish suggestions used to vanish on save — a removed
+    // clip came back on reload and every clip read "Unrated".
+    // AI-derived values (style labels, strategies, suggestion maps) are Mixed
+    // so an unexpected shape can never fail the whole save with a CastError.
     shortVideos: [{
       url: String,
       thumbnail: String,
       duration: Number,
       caption: String,
       platform: String,
-      highlight: Boolean
+      highlight: Boolean,
+      // Where the clip sits in the source video (seconds), when known.
+      startTime: Number,
+      endTime: Number,
+      originalDuration: Number,
+      finalDuration: Number,
+      hookText: String,
+      style: String,
+      aiGenerated: Boolean,
+      source: String,
+      createdAt: Date,
+      // Legacy processing pipeline flags
+      hasMusic: Boolean,
+      effects: mongoose.Schema.Types.Mixed,
+      hasTextOverlay: Boolean,
+      hasWatermark: Boolean,
+      editsApplied: [mongoose.Schema.Types.Mixed],
+      creativeFeatures: mongoose.Schema.Types.Mixed,
+      keyMoments: mongoose.Schema.Types.Mixed,
+      // Score breakdown (clip lightbox)
+      viralScore: Number,
+      hookScore: Number,
+      sentimentEnergy: Number,
+      viralMomentCount: Number,
+      // Style attribution
+      stylePresetId: mongoose.Schema.Types.Mixed,
+      stylePresetLabel: mongoose.Schema.Types.Mixed,
+      variationId: mongoose.Schema.Types.Mixed,
+      variationLabel: mongoose.Schema.Types.Mixed,
+      variationIndex: Number,
+      variationsInPreset: Number,
+      colorGrade: mongoose.Schema.Types.Mixed,
+      transitionStyle: mongoose.Schema.Types.Mixed,
+      musicGenre: mongoose.Schema.Types.Mixed,
+      hookStyle: mongoose.Schema.Types.Mixed,
+      pacingIntensity: mongoose.Schema.Types.Mixed,
+      ctaStyle: mongoose.Schema.Types.Mixed,
+      voiceTone: mongoose.Schema.Types.Mixed,
+      niche: mongoose.Schema.Types.Mixed,
+      // Marketing strategy attached after the edit
+      marketingStrategy: mongoose.Schema.Types.Mixed,
+      optimalPublishTime: mongoose.Schema.Types.Mixed,
+      optimalPublishDay: mongoose.Schema.Types.Mixed,
+      algorithmRationale: mongoose.Schema.Types.Mixed,
+      suggestedTitles: mongoose.Schema.Types.Mixed,
+      suggestedCaptions: mongoose.Schema.Types.Mixed,
+      suggestedHashtags: mongoose.Schema.Types.Mixed,
+      // Smart Publish suggestions (smartPublishService)
+      recommendedCaptions: mongoose.Schema.Types.Mixed,
+      recommendedCaptionVariants: mongoose.Schema.Types.Mixed,
+      recommendedHashtags: mongoose.Schema.Types.Mixed,
+      recommendedSlots: mongoose.Schema.Types.Mixed,
+      publishRationale: mongoose.Schema.Types.Mixed,
+      // User actions
+      rating: { type: Number, min: 1, max: 5 },
+      expired: Boolean,
+      expiredAt: Date,
+      expiresAt: Date,
+      published: Boolean,
+      publishedAt: Date,
+      publishedPlatform: String,
+      publishedCaption: String,
+      captionDelta: mongoose.Schema.Types.Mixed,
+      timeDelta: mongoose.Schema.Types.Mixed,
     }],
     socialPosts: [{
       platform: String,

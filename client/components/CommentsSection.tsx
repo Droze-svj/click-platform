@@ -1,22 +1,20 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import axios from 'axios'
+import { apiGet, apiPost, handleApiError } from '../lib/api'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
-
+// Comment docs (server/models/Comment.js): userId is a raw id (not populated);
+// the display name is userName. reactions[] is toggled by
+// POST /comments/:id/reaction { type }.
 interface Comment {
   _id: string
-  userId: {
-    _id: string
-    name: string
-    email: string
-  }
+  userId: any
+  userName?: string
   text: string
-  reactions: Array<{
+  reactions?: Array<{
     userId: string
     type: string
   }>
@@ -31,32 +29,43 @@ interface CommentsSectionProps {
   teamId?: string
 }
 
-export default function CommentsSection({ entityType, entityId, teamId }: CommentsSectionProps) {
+export default function CommentsSection({ entityType, entityId, teamId: teamIdProp }: CommentsSectionProps) {
   const { user } = useAuth()
   const { showToast } = useToast()
   const { t } = useTranslation()
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
   const [loading, setLoading] = useState(true)
+  // Comments are team-scoped server-side. Callers that don't know the team
+  // (the content page) get the user's first team; with no team there's
+  // nowhere to post, which is said plainly instead of an always-empty thread.
+  const [teamId, setTeamId] = useState<string | null | undefined>(teamIdProp)
+  useEffect(() => {
+    if (teamIdProp) { setTeamId(teamIdProp); return }
+    let cancelled = false
+    apiGet<any>('/teams', undefined, false)
+      .then((res) => {
+        const list = res?.data ?? res
+        const first = Array.isArray(list) ? list[0] : null
+        if (!cancelled) setTeamId(first?._id ? String(first._id) : null)
+      })
+      .catch(() => { if (!cancelled) setTeamId(null) })
+    return () => { cancelled = true }
+  }, [teamIdProp])
 
   const loadComments = useCallback(async () => {
-    // Comments are team-scoped server-side; without a teamId the API rejects the
-    // request, so render the empty state instead of erroring.
+    if (teamId === undefined) return // still resolving the team
     if (!teamId) { setComments([]); setLoading(false); return }
     try {
-      const token = localStorage.getItem('token')
       const params = new URLSearchParams({
         entityType,
         entityId,
         teamId
       })
 
-      const response = await axios.get(`${API_URL}/comments?${params.toString()}`, {
-      })
-
-      if (response.data.success) {
-        setComments(response.data.data || [])
-      }
+      const res: any = await apiGet(`/comments?${params.toString()}`, undefined, false)
+      const list = res?.data ?? res
+      setComments(Array.isArray(list) ? list : [])
     } catch (error) {
       showToast(t('commentsSection.loadFailed'), 'error')
     } finally {
@@ -75,56 +84,62 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
     }
 
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.post(
-        `${API_URL}/comments`,
-        {
-          entityType,
-          entityId,
-          text: newComment,
-          teamId: teamId || null
-        },
-        {
-        }
-      )
-
-      if (response.data.success) {
-        setNewComment('')
-        await loadComments()
-        showToast(t('commentsSection.added'), 'success')
-      }
+      await apiPost('/comments', {
+        entityType,
+        entityId,
+        text: newComment,
+        teamId: teamId || null,
+        userName: (user as any)?.name || undefined,
+      })
+      setNewComment('')
+      await loadComments()
+      showToast(t('commentsSection.added'), 'success')
     } catch (error: any) {
-      showToast(error.response?.data?.error || t('commentsSection.addFailed'), 'error')
+      showToast(handleApiError(error) || t('commentsSection.addFailed'), 'error')
     }
   }
 
+  // The server toggles the caller's reaction of this type.
   const handleReaction = async (commentId: string, type: string) => {
     try {
-      const token = localStorage.getItem('token')
-      await axios.post(
-        `${API_URL}/comments/${commentId}/reaction`,
-        { type },
-        {
-        }
-      )
-      await loadComments()
+      const res: any = await apiPost(`/comments/${encodeURIComponent(commentId)}/reaction`, { type })
+      const updated = res?.data ?? null
+      if (updated && updated._id) {
+        setComments(prev => prev.map(c => (c._id === updated._id ? updated : c)))
+      } else {
+        await loadComments()
+      }
     } catch (error) {
       showToast(t('commentsSection.reactionFailed'), 'error')
     }
   }
 
+  const myId = String((user as any)?._id || user?.id || '')
+
   const getReactionCount = (comment: Comment, type: string) => {
-    return comment.reactions.filter(r => r.type === type).length
+    return (comment.reactions || []).filter(r => r.type === type).length
   }
 
   const hasUserReacted = (comment: Comment, type: string) => {
-    return comment.reactions.some(
-      r => r.userId === user?.id && r.type === type
+    return (comment.reactions || []).some(
+      r => String(r.userId) === myId && r.type === type
     )
   }
 
   if (loading) {
     return <div className="text-center py-4 text-gray-500">{t('commentsSection.loading')}</div>
+  }
+
+  if (teamId === null) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold mb-2">{t('commentsSection.title')}</h3>
+        <p className="text-sm text-gray-500">
+          {t('commentsSection.needsTeam')}{' '}
+          <a href="/dashboard/teams" className="text-indigo-500 underline">{t('commentsSection.needsTeamCta')}</a>
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -153,7 +168,7 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
           <div key={comment._id} className="border-b pb-4 last:border-0">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <p className="font-semibold text-sm">{comment.userId.name}</p>
+                <p className="font-semibold text-sm">{comment.userName || comment.userId?.name || '—'}</p>
                 <p className="text-xs text-gray-500">
                   {new Date(comment.createdAt).toLocaleString()}
                 </p>
@@ -168,7 +183,7 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => handleReaction(comment._id, hasUserReacted(comment, 'like') ? '' : 'like')}
+                onClick={() => handleReaction(comment._id, 'like')}
                 className={`text-xs px-2 py-1 rounded ${
                   hasUserReacted(comment, 'like')
                     ? 'bg-blue-100 text-blue-800'
@@ -179,7 +194,7 @@ export default function CommentsSection({ entityType, entityId, teamId }: Commen
               </button>
               <button
                 type="button"
-                onClick={() => handleReaction(comment._id, hasUserReacted(comment, 'helpful') ? '' : 'helpful')}
+                onClick={() => handleReaction(comment._id, 'helpful')}
                 className={`text-xs px-2 py-1 rounded ${
                   hasUserReacted(comment, 'helpful')
                     ? 'bg-green-100 text-green-800'

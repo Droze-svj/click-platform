@@ -124,6 +124,7 @@ async function generateHooks(input, deps) {
   // empties the result — returning nothing to a user who clicked "regenerate".
   // Better to hand back the (repeated) hooks than an empty panel.
   const hooks = (filtered.length === 0 && shaped.length > 0) ? shaped : filtered;
+  if (hooks.length === 0) throw require('../utils/aiUnavailable').aiUnavailable('hooks');
   return { platform, style: normalizeStyle(style), hooks };
 }
 

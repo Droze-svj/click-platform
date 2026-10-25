@@ -61,12 +61,19 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  // Saving is only allowed once the stored preferences have loaded: before,
+  // a failed load left the defaults on screen and the next save sent them,
+  // overwriting the user's real choices.
+  const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const [saveError, setSaveError] = useState(false)
 
   useEffect(() => {
     loadPreferences()
   }, [])
 
   const loadPreferences = async () => {
+    setLoadError(false)
     try {
       const res: any = await apiGet(API_USER_SETTINGS)
       const data = res?.data ?? res
@@ -80,13 +87,17 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
           priorityTiers: notif.priorityTiers ?? 'all'
         }))
       }
+      setLoaded(true)
     } catch (error) {
       console.error('Failed to load preferences:', error)
+      setLoadError(true)
     }
   }
 
   const savePreferences = async () => {
+    if (!loaded) return
     setSaving(true)
+    setSaveError(false)
     try {
       await apiPut(API_USER_SETTINGS, { notifications: preferences })
       setSaved(true)
@@ -94,6 +105,7 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
       onUpdate?.()
     } catch (error) {
       console.error('Failed to save preferences:', error)
+      setSaveError(true)
     } finally {
       setSaving(false)
     }
@@ -249,10 +261,24 @@ export default function NotificationPreferences({ onUpdate }: NotificationPrefer
         </section>
       </div>
 
+      {loadError && (
+        <div role="alert" className="mt-6 flex items-center justify-between gap-3 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
+          <span>{t('notificationPreferences.loadFailed')}</span>
+          <button type="button" onClick={loadPreferences} className="font-medium underline">
+            {t('common.retry')}
+          </button>
+        </div>
+      )}
+      {saveError && (
+        <p role="alert" className="mt-6 text-sm text-red-600 dark:text-red-400">
+          {t('notificationPreferences.saveFailed')}
+        </p>
+      )}
+
       <button
         type="button"
         onClick={savePreferences}
-        disabled={saving}
+        disabled={saving || !loaded}
         className="mt-6 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
       >
         {saving ? t('notificationPreferences.saving') : t('notificationPreferences.savePreferences')}

@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { handleApiError } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 import { generateHooks, type Platform, type HookStyle, type HookResult } from '@/lib/featuresApi'
 
 const PLATFORMS: Platform[] = ['instagram', 'tiktok', 'youtube', 'twitter', 'linkedin']
@@ -8,6 +10,7 @@ const STYLES: HookStyle[] = ['mix', 'curiosity', 'bold', 'story', 'question', 'c
 
 /** Generate scroll-stopping opening hooks for a topic/script. */
 export default function HookGeneratorPanel() {
+  const { t } = useTranslation()
   const [topic, setTopic] = useState('')
   const [platform, setPlatform] = useState<Platform>('instagram')
   const [style, setStyle] = useState<HookStyle>('mix')
@@ -22,7 +25,7 @@ export default function HookGeneratorPanel() {
     try {
       setResult(await generateHooks({ topic, platform, style }))
     } catch (e) {
-      setError((e as Error)?.message || 'Failed to generate hooks')
+      setError(handleApiError(e) || 'Failed to generate hooks')
     } finally {
       setLoading(false)
     }
@@ -71,7 +74,10 @@ export default function HookGeneratorPanel() {
 
       {error && <p data-testid="hooks-error" className="text-sm text-red-400">{error}</p>}
 
-      {result && (
+      {result && (result.hooks ?? []).length === 0 && (
+        <p data-testid="hooks-empty" className="text-sm text-zinc-400">{t('creatorTools.noResults')}</p>
+      )}
+      {result && (result.hooks ?? []).length > 0 && (
         <ul className="space-y-1" data-testid="hooks-results">
           {result.hooks.map((h, i) => (
             <li

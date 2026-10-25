@@ -85,7 +85,9 @@ async function generateSeries(input, deps) {
     });
   }
 
-  return { theme: safeTheme, niche, platform, parts: shapeSeries(raw, n) };
+  const partsOut = shapeSeries(raw, n);
+  if (partsOut.length === 0) throw require('../utils/aiUnavailable').aiUnavailable('a series plan');
+  return { theme: safeTheme, niche, platform, parts: partsOut };
 }
 
 /**

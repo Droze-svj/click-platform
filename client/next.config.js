@@ -32,6 +32,14 @@ const nextConfig = {
       { protocol: 'https', hostname: 'res.cloudinary.com' }
     ],
   },
+  // Retired routes. Config redirects answer before any page renders (a page
+  // that calls redirect() tripped a hook-order error in Next's dev router).
+  // /dashboard/agency showed fabricated metrics and has nothing real left;
+  // /dashboard/clips has no index view of its own.
+  redirects: async () => [
+    { source: '/dashboard/agency', destination: '/dashboard', permanent: false },
+    { source: '/dashboard/clips', destination: '/dashboard/clips/hub', permanent: false },
+  ],
   rewrites: async () => {
     return [
       {

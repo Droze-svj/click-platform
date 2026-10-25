@@ -36,6 +36,13 @@ async function assertSeatAvailable(team) {
   }
 }
 
+// ownerId / members.userId are plain Strings with no `ref`, so a bare
+// populate('ownerId') did nothing: the client got an id string, never saw
+// ownerId._id / userId._id / .name, hid every owner control and showed "?".
+// Naming the model makes populate resolve them.
+const OWNER_POPULATE = { path: 'ownerId', model: 'User', select: 'name email' };
+const MEMBERS_POPULATE = { path: 'members.userId', model: 'User', select: 'name email' };
+
 /**
  * Create team
  */
@@ -78,7 +85,7 @@ async function getUserTeams(userId) {
         { ownerId: userId },
         { 'members.userId': userId }
       ]
-    }).populate('ownerId', 'name email');
+    }).populate(OWNER_POPULATE);
 
     return teams;
   } catch (error) {
@@ -98,8 +105,8 @@ async function getTeamById(teamId, userId) {
         { ownerId: userId },
         { 'members.userId': userId }
       ]
-    }).populate('ownerId', 'name email')
-      .populate('members.userId', 'name email');
+    }).populate(OWNER_POPULATE)
+      .populate(MEMBERS_POPULATE);
 
     if (!team) {
       throw new Error('Team not found or access denied');
@@ -167,16 +174,24 @@ async function inviteByEmail(teamId, inviterId, { email, role }) {
 
   await invitation.save();
 
-  // Send invitation email
+  // Send invitation email. sendEmail reports failure (e.g. no mail provider
+  // configured) as { success: false } rather than throwing; either way the
+  // invitation is saved, so hand back the link for the inviter to share
+  // instead of claiming an email went out.
+  const inviteUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/teams/accept?token=${token}`;
+  let emailed = false;
   try {
-    await sendTeamInvitationEmail(normalized, inviterName, team.name, token, '');
-    logger.info('External team invitation sent', { email: normalized, teamId });
+    const sent = await sendTeamInvitationEmail(normalized, inviterName, team.name, token, '');
+    emailed = !!(sent && sent.success);
+    if (emailed) logger.info('External team invitation sent', { email: normalized, teamId });
+    else logger.warn('Team invitation email not sent', { email: normalized, teamId, error: sent && sent.error });
   } catch (error) {
     logger.error('Failed to send invitation email', { error: error.message, email: normalized });
-    // We don't throw here to avoid failing the whole request if email fails
   }
 
-  return { invitationSent: true, email: normalized };
+  return emailed
+    ? { invitationSent: true, email: normalized }
+    : { invitationSent: false, invitationCreated: true, email: normalized, inviteUrl };
 }
 
 /**

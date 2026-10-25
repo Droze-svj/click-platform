@@ -57,22 +57,29 @@ export function useAIHealth(pollMs: number = DEFAULT_POLL_MS): AIHealth {
   useEffect(() => {
     let cancelled = false
 
+    const apply = (ai: AIHealthResponse['ai']) => {
+      if (cancelled || !ai || typeof ai.configured !== 'boolean') return false
+      setHealth({
+        loaded: true,
+        configured: ai.configured,
+        mode: ai.mode ?? null,
+        degraded: ai.configured === false,
+        providers: ai.providers ?? null,
+        model: ai.model ?? null,
+      })
+      return true
+    }
+
     const check = async () => {
       try {
         const res = await apiGet<AIHealthResponse>('/health/ai', undefined, false)
-        const ai = res?.ai
-        if (cancelled || !ai || typeof ai.configured !== 'boolean') return
-        setHealth({
-          loaded: true,
-          configured: ai.configured,
-          mode: ai.mode ?? null,
-          degraded: ai.configured === false,
-          providers: ai.providers ?? null,
-          model: ai.model ?? null,
-        })
-      } catch {
-        // Network/server blip — keep any prior definitive state, otherwise
-        // stay at INITIAL (degraded:false). Never raise a false alarm.
+        apply(res?.ai)
+      } catch (err: any) {
+        // The probe answers "not configured" with a 503 + the same body, which
+        // apiGet throws on — so the banner could never appear. A body that
+        // carries `ai.configured` is a definitive answer; anything else is a
+        // blip: keep any prior state, never raise a false alarm.
+        if (apply(err?.response?.data?.ai)) return
         if (!cancelled) setHealth((h) => (h.loaded ? h : INITIAL))
       }
     }

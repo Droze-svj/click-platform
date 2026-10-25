@@ -302,7 +302,17 @@ router.get('/history', auth, asyncHandler(async (req, res) => {
 
   const total = await SubscriptionChange.countDocuments({ userId });
 
+  // The invoices themselves (BillingHistory, written by the Whop webhook).
+  // This endpoint used to return only `changes` — plan-change requests, not
+  // payments — so the billing page's invoice list was always empty.
+  let invoices = [];
+  if (isMongoUserId(userId)) {
+    const { getUserBillingHistory } = require('../services/billingHistoryService');
+    invoices = await getUserBillingHistory(userId, { limit: clampInt(limit, 20, 500) });
+  }
+
   sendSuccess(res, 'Billing history retrieved', 200, {
+    invoices,
     changes,
     pagination: {
       page: parseInt(page, 10),
@@ -387,6 +397,25 @@ router.post('/cancel', auth, asyncHandler(async (req, res) => {
     }
   }
 
+  // Stop the renewal at Whop — that's what actually stops the charges. This
+  // used to only flip the local status, so the user was told "cancelled" and
+  // kept being billed (and the next renewal webhook flipped it back).
+  const { cancelWhopMembership } = require('../services/whopMonetizationService');
+  const whop = await cancelWhopMembership(user.subscription?.whopSubscriptionId);
+  if (!whop.success) {
+    logger.warn('[billing] self-service cancel could not reach Whop', { userId: user._id?.toString(), reason: whop.reason });
+    return res.status(409).json({
+      success: false,
+      error: 'We couldn\'t cancel your subscription automatically. You can cancel it from your Whop account at https://whop.com/hub/ — your access stays until the end of the paid period.',
+      manageUrl: 'https://whop.com/hub/',
+    });
+  }
+  const periodEnd = whop.membership && whop.membership.renewal_period_end;
+  if (periodEnd) {
+    const d = new Date(typeof periodEnd === 'number' ? periodEnd * 1000 : periodEnd);
+    if (!Number.isNaN(d.getTime())) endDate = d;
+  }
+
   user.subscription = user.subscription || {};
   user.subscription.status = 'cancelled';
   user.subscription.endDate = endDate;
@@ -448,20 +477,30 @@ router.post('/refund-request', auth, asyncHandler(async (req, res) => {
 
   const ticketId = `REF-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
 
+  // Record the request (these fields weren't on the schema before, so nothing
+  // was saved) and tell the operator. Nobody was ever notified, though the
+  // reply said "billing@… has been notified" / "scheduled for processing".
+  user.subscription = user.subscription || {};
+  user.subscription.refundRequestedAt = new Date();
+  user.subscription.refundTicketId = ticketId;
+  await user.save();
+  try {
+    const alerting = require('../utils/alerting');
+    if (alerting && typeof alerting.handleAlert === 'function') {
+      await alerting.handleAlert({ type: 'refund_request', severity: 'warning', message: `Refund request ${ticketId} from ${user.email} (${daysSince} days, ${currentPlan})`, details: { reason: String(reason).slice(0, 300), details: String(details).slice(0, 1000), eligible: isEligible } });
+    }
+  } catch (alertErr) {
+    logger.warn('[billing] refund alert failed', { error: alertErr.message });
+  }
+
   if (!isEligible) {
     return sendSuccess(res, 'Refund request submitted for manual review', 200, {
       eligible: false,
       ticketId,
       daysSincePurchase: daysSince,
-      message: `Your initial purchase was ${daysSince} days ago, which exceeds our standard 14-day window. Our support team at billing@clickapp.io has been notified to review your request for extenuating circumstances.`,
+      message: `Your purchase was ${daysSince} days ago, outside the 14-day window, so this request will be reviewed by hand. Keep your reference: ${ticketId}.`,
     });
   }
-
-  // Mark subscription for cancellation/refund review
-  user.subscription = user.subscription || {};
-  user.subscription.refundRequestedAt = new Date();
-  user.subscription.refundTicketId = ticketId;
-  await user.save();
 
   logger.info('[billing] 14-day refund request approved & logged', {
     userId: user._id?.toString(),
@@ -474,7 +513,7 @@ router.post('/refund-request', auth, asyncHandler(async (req, res) => {
     eligible: true,
     ticketId,
     daysSincePurchase: daysSince,
-    message: 'Your 14-day full refund request has been verified and scheduled for processing via Whop. Please allow 2-3 business days for funds to appear on your original payment method.',
+    message: `Your request is within the 14-day window and has been recorded (reference ${ticketId}). Refunds are issued through Whop; you'll get an email from Whop when it's processed.`,
   });
 }));
 

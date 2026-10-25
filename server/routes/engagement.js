@@ -124,4 +124,17 @@ router.get('/activities', auth, asyncHandler(async (req, res) => {
   }
 }));
 
+/**
+ * GET /api/engagement/stats
+ * Achievements, streak, content counts and level for the signed-in user.
+ * The achievements page has always called this, but no route existed, so it
+ * fell back to the zero state for everyone.
+ */
+router.get('/stats', auth, asyncHandler(async (req, res) => {
+  const { getUserEngagementStats } = require('../services/engagementService');
+  const userId = req.user?._id || req.user?.id;
+  const stats = await getUserEngagementStats(userId);
+  sendSuccess(res, 'Engagement stats fetched', 200, stats);
+}));
+
 module.exports = router;

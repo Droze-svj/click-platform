@@ -25,14 +25,6 @@ const APP_DIR = path.join(__dirname, '..', 'app')
 // Pages that legitimately do not use a shell. Each needs a reason.
 const EXCLUDED = new Map<string, string>([
   ['page.tsx', 'the marketing landing page, which owns its own full-bleed layout'],
-  [
-    'dashboard/clips/page.tsx',
-    'calls redirect() and returns no JSX at all — there is nothing to frame',
-  ],
-  [
-    'dashboard/agency/page.tsx',
-    'calls redirect() and returns no JSX at all — there is nothing to frame',
-  ],
   // Dev/test scaffolding. middleware.ts returns 404 for all of these in
   // production, so styling them is wasted effort. Keep the two lists in step:
   // anything added here that is NOT in BLOCKED_IN_PROD is reachable by real

@@ -239,6 +239,7 @@ async function getEngagementMetrics(userId, startDate) {
           totalViews: { $sum: { $ifNull: ['$analytics.engagementBreakdown.views', 0] } },
           totalEngagement: { $sum: { $ifNull: ['$analytics.engagement', 0] } },
           totalReach: { $sum: { $ifNull: ['$analytics.reach', 0] } },
+          postCount: { $sum: 1 },
         },
       },
     ]);
@@ -246,6 +247,7 @@ async function getEngagementMetrics(userId, startDate) {
     const totalViews = r.totalViews || 0;
     const totalEngagement = r.totalEngagement || 0;
     const totalReach = r.totalReach || 0;
+    const postCount = r.postCount || 0;
     const averageEngagementRate = totalReach > 0
       ? parseFloat(((totalEngagement / totalReach) * 100).toFixed(2))
       : 0;
@@ -263,10 +265,10 @@ async function getEngagementMetrics(userId, startDate) {
       postedAt: p.postedAt,
     }));
 
-    return { totalViews, totalEngagement, totalReach, averageEngagementRate, topPerformingContent };
+    return { totalViews, totalEngagement, totalReach, averageEngagementRate, topPerformingContent, postCount };
   } catch (error) {
     logger.error('Get engagement metrics error', { error: error.message, userId });
-    return { totalViews: 0, totalEngagement: 0, totalReach: 0, averageEngagementRate: 0, topPerformingContent: [] };
+    return { totalViews: 0, totalEngagement: 0, totalReach: 0, averageEngagementRate: 0, topPerformingContent: [], postCount: 0 };
   }
 }
 

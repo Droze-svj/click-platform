@@ -86,7 +86,9 @@
     "openLabs": "Labs öffnen",
     "exploreLabs": "Labs entdecken",
     "earlyAccessOn": "Early Access – für dich verfügbar",
-    "earlyAccessAgencyOnly": "Exklusiv für Agency"
+    "earlyAccessAgencyOnly": "Exklusiv für Agency",
+    "checkoutUnavailable": "Der Checkout für diesen Plan ist gerade nicht verfügbar. Es wurde nichts geändert. Bitte versuch es später erneut oder kontaktiere den Support.",
+    "invoiceDownloadFailed": "Die Rechnung konnte nicht heruntergeladen werden. Bitte versuch es erneut."
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "Gefahrenzone",
     "irreversibleActions": "Unumkehrbare Handlungen",
     "deleteAccountWarning": "Löschen Sie Ihr Konto: Entfernen Sie dauerhaft alle Ihre Videos, Beiträge, verbundenen Konten und Abonnements. Dies kann nicht rückgängig gemacht werden.",
-    "deleteAccount": "Konto löschen"
+    "deleteAccount": "Konto löschen",
+    "loadFailedSaveBlocked": "Wir konnten deine gespeicherten Einstellungen nicht laden. Speichern ist deaktiviert, bis sie geladen sind, damit deine echten Einstellungen nicht durch Standardwerte ersetzt werden.",
+    "saveBlockedNotLoaded": "Deine gespeicherten Einstellungen sind noch nicht geladen. Versuch es erneut, bevor du speicherst.",
+    "apiKeySavedPlaceholder": "Gespeicherter Schlüssel endet auf {{last4}}. Gib einen neuen ein, um ihn zu ersetzen"
   },
   "common": {
     "save": "Speichern",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "Wird analysiert …",
     "predictiveTelemetry": "Performance-Prognose",
     "predictiveTelemetryDesc": "Prognosen, wie deine Inhalte ankommen könnten.",
-    "scanningTrajectories": "Trajektorien scannen..."
+    "scanningTrajectories": "Trajektorien scannen...",
+    "errorStatusCheckFailed": "Der Status deines Contents konnte nicht geprüft werden. Er kann trotzdem noch fertig werden – schau in deiner Bibliothek nach.",
+    "errorGenerationTimeout": "Das dauert länger als üblich. Es kann trotzdem noch fertig werden – schau in ein paar Minuten in deiner Bibliothek nach.",
+    "errorTemplateLoadFailed": "Diese Vorlage konnte nicht geladen werden. Du kannst trotzdem selbst schreiben."
   },
   "forgePage": {
     "documentTitle": "KI-Inhaltsersteller | Klicken",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "Öffnen",
     "resonanceAck": "Als gelesen markieren",
     "confirmPurgeSignal": "Diese Benachrichtigung löschen?",
-    "purgeSignal": "Löschen"
+    "purgeSignal": "Löschen",
+    "category_task": "Aufgaben",
+    "category_project": "Projekte",
+    "category_content": "Content",
+    "category_approval": "Freigaben",
+    "category_mention": "Erwähnungen",
+    "category_system": "System",
+    "category_workflow": "Workflows",
+    "category_publishing": "Veröffentlichung",
+    "category_recurring": "Wiederkehrende Posts",
+    "category_brief": "Tagesbriefing",
+    "bulkReadFailed": "{{failed}} von {{total}} konnten nicht als gelesen markiert werden.",
+    "bulkDeleteFailed": "{{failed}} von {{total}} konnten nicht gelöscht werden.",
+    "loadFailed": "Benachrichtigungen konnten nicht geladen werden."
   },
   "onboardingPage": {
     "loading": "Laden",
@@ -1721,7 +1742,8 @@
     "statusPublished": "Veröffentlicht",
     "statusFailed": "Fehlgeschlagen",
     "statusDraft": "Entwurf",
-    "viewSequenceDetails": "Details anzeigen"
+    "viewSequenceDetails": "Details anzeigen",
+    "toastScheduledPartial": "{{ok}} von {{total}} Posts geplant. Der Rest ist fehlgeschlagen: {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "Skripte konnten nicht geladen werden",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "Skript löschen?",
     "purgeNodeBody": "Das Skript wird dauerhaft gelöscht. Das lässt sich nicht rückgängig machen.",
     "abortPurge": "Abbrechen",
-    "commitPurge": "Löschen"
+    "commitPurge": "Löschen",
+    "toastTemplateLoadFailed": "Diese Vorlage konnte nicht geladen werden."
   },
   "searchPage": {
     "reconFailed": "Zeitüberschreitung bei der Suche. Versuch es noch mal.",
@@ -1929,7 +1952,8 @@
     "transmitting": "Erfrischend…",
     "transmit": "ÜBERTRAGEN",
     "terminateProtocol": "Aufgabe löschen",
-    "secureAndLeave": "SICHERN_&_VERLASSEN"
+    "secureAndLeave": "SICHERN_&_VERLASSEN",
+    "toastLoadFailed": "Deine Aufgaben konnten nicht geladen werden."
   },
   "templatesPage": {
     "toastSyncFailed": "Vorlagen konnten nicht geladen werden",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "Fortschritt",
     "anomalyIntercepted": "Fehler",
     "procTime": "Verarbeitungszeit: {{time}}",
-    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}"
+    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}",
+    "cancelled": "Auftrag abgebrochen.",
+    "cancelFailed": "Dieser Auftrag konnte nicht abgebrochen werden."
   },
   "strategistPage": {
     "clickIntelligence": "Klicken Sie auf Intelligenz",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "Emotionale Wirkung",
     "dominantLabel": "Dominant: {{emotion}}",
     "missingTriggerLabel": "Fehlender High-Impact-Trigger:",
-    "optimalPostingWindows": "Optimale Buchungsfenster"
+    "optimalPostingWindows": "Optimale Buchungsfenster",
+    "syncFailed": "Synchronisierung fehlgeschlagen. Versuch es erneut.",
+    "playbookFallbackNote": "Die KI ist gerade nicht verfügbar, daher stammen diese Ideen aus dem Nischen-Playbook.",
+    "trendHooks": "Hooks zum Ausprobieren",
+    "trendFormats": "Formate",
+    "trendSounds": "Sound-Ideen",
+    "trendHashtags": "Hashtags",
+    "momentumRising": "Im Aufwind",
+    "momentumSteady": "Stabil",
+    "momentumPeaking": "Am Höhepunkt",
+    "nicheVoice": "Tonfall",
+    "pitfalls": "Vermeiden",
+    "retentionFloorLabel": "Mindestens {{value}} % der Zuschauer halten",
+    "retentionTargetLabel": "Ziel: {{value}} %",
+    "retentionGuidelineNote": "Ein Richtwert für {{platform}} auf Basis des Hook-Fensters, keine Messung deiner Posts.",
+    "sequenceStepLabel": "Schritt {{step}} · {{timing}}",
+    "campaignVideoLabel": "Video {{num}} · {{mark}}",
+    "angleNumber": "Ansatz {{num}}",
+    "promptGroupSave": "Saves holen",
+    "promptGroupComment": "Kommentare holen",
+    "promptGroupShare": "Shares holen",
+    "promptGroupDm": "DMs holen",
+    "promptGroupFollow": "Follower holen",
+    "benchIdealLength": "Ideale Länge",
+    "benchHookWindow": "Hook-Fenster",
+    "benchCaptionStyle": "Caption-Stil",
+    "benchHashtags": "Hashtags",
+    "benchSoundStrategy": "Sound",
+    "benchAvoid": "Auf {{platform}} vermeiden",
+    "verdictPublishReady": "Bereit zur Veröffentlichung",
+    "verdictNeedsTightening": "Muss gestrafft werden",
+    "verdictRewrite": "Muss neu geschrieben werden",
+    "wordCountLabel": "{{count}} Wörter",
+    "scoreRuleBasedNote": "Regelbasierte Prüfung anhand des {{platform}}-Playbooks.",
+    "notesTitle": "Was du ändern solltest"
   },
   "teamDetailPage": {
     "toastLoadFailed": "Team konnte nicht geladen werden",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "Schreibgeschützte Einstellungen",
     "latticeMetadata": "Teamdetails",
     "clusterId": "Team-ID",
-    "ownerHash": "Inhaber"
+    "ownerHash": "Inhaber",
+    "inviteEmailFailed": "Die Einladung ist fertig, aber die E-Mail konnte nicht gesendet werden. Kopiere den Link und schick ihn selbst.",
+    "inviteLinkLabel": "Einladungslink",
+    "copyInviteLink": "Link kopieren",
+    "inviteLinkCopied": "✓ Link kopiert"
   },
   "teamsPage": {
     "toastLoadFailed": "Teams konnten nicht geladen werden",
@@ -4195,7 +4259,9 @@
     "postComment": "Kommentar posten",
     "resolved": "Gelöst",
     "helpful": "Hilfreich",
-    "empty": "Noch keine Kommentare. Seien Sie der Erste, der einen Kommentar abgibt!"
+    "empty": "Noch keine Kommentare. Seien Sie der Erste, der einen Kommentar abgibt!",
+    "needsTeam": "Kommentare werden mit einem Team geteilt.",
+    "needsTeamCta": "Team erstellen oder beitreten"
   },
   "complianceDashboard": {
     "outOf100": "/ 100",
@@ -4281,7 +4347,19 @@
     "colChecked": "Geprüft",
     "untitled": "(Ohne Titel)",
     "noHistory": "Noch kein Compliance-Verlauf.",
-    "noHistoryHint": "Führen Sie eine Überprüfung Ihrer Inhalte durch, um mit der Verfolgung zu beginnen."
+    "noHistoryHint": "Führen Sie eine Überprüfung Ihrer Inhalte durch, um mit der Verfolgung zu beginnen.",
+    "rulesLoadFailed": "Deine Regeln konnten nicht geladen werden.",
+    "ruleSaveFailed": "Die Regel konnte nicht gespeichert werden.",
+    "ruleDeleteFailed": "Die Regel konnte nicht gelöscht werden.",
+    "policiesLoadFailed": "Plattformrichtlinien konnten nicht geladen werden.",
+    "historyLoadFailed": "Compliance-Verlauf konnte nicht geladen werden.",
+    "totalRulesStat": "Regeln",
+    "activeRulesStat": "Aktive Regeln",
+    "totalTriggersStat": "Mal ausgelöst",
+    "colRule": "Regel",
+    "colTriggers": "Auslösungen",
+    "colLastTriggered": "Zuletzt ausgelöst",
+    "noTriggersYet": "Bisher wurde keine deiner Regeln ausgelöst."
   },
   "confirmDialog": {
     "confirm": "Bestätigen",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}}% optimal",
     "dayAtTime": "{{day}} bei {{time}}",
     "schedule": "Zeitplan",
-    "viewAllOptimalTimes": "Alle optimalen Zeiten anzeigen →"
+    "viewAllOptimalTimes": "Alle optimalen Zeiten anzeigen →",
+    "loadFailed": "Posting-Zeiten konnten nicht geladen werden."
   },
   "contentSuggestions": {
     "loadFailed": "Vorschläge konnten nicht geladen werden",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "Beschreiben Sie, was dieser Workflow bewirkt...",
     "trigger": "Auslösen",
     "enableWorkflow": "Workflow aktivieren",
-    "cancel": "Stornieren"
+    "cancel": "Stornieren",
+    "notExecuted": "Workflow wurde nicht ausgeführt: {{reason}}",
+    "someActionsFailed": "Workflow ausgeführt, aber diese Schritte sind fehlgeschlagen: {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "Unternehmensführung",
@@ -5710,7 +5791,9 @@
     "retrying": "Erneuter Versuch...",
     "retryJob": "Job erneut versuchen",
     "close": "Schließen",
-    "jobNotFound": "Job nicht gefunden"
+    "jobNotFound": "Job nicht gefunden",
+    "retryQueued": "Auftrag zur erneuten Ausführung eingereiht.",
+    "retryFailed": "Dieser Auftrag konnte nicht erneut gestartet werden."
   },
   "jobProgressViewer": {
     "loadingJobStatus": "Jobstatus wird geladen...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "Vorgeschlagene nächste Schritte",
     "nextStep": "Nächster Schritt",
-    "continueSetup": "Setzen Sie die Einrichtung fort"
+    "continueSetup": "Setzen Sie die Einrichtung fort",
+    "workflowFailed": "Dieser Workflow konnte nicht ausgeführt werden."
   },
   "multiClientRollupDashboard": {
     "title": "Multi-Client-Rollup-Dashboard",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "Ideengenerator",
     "autoFoley": "Auto-Foley",
     "brollAgent": "B-Roll-Agent",
-    "captionSwarm": "KI-Captions"
+    "captionSwarm": "KI-Captions",
+    "noTrendsYet": "Gerade keine Live-Trends. Versuch es später erneut.",
+    "kindSound": "Sound",
+    "kindHashtag": "Hashtag",
+    "kindTopic": "Thema"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "Veröffentlichen Sie Ihr nächstes Video heute Abend um 22:00 Uhr – Donnerstagabend liegt die Kurzform-Viralität um 23 % über dem Durchschnitt.",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "Alle als gelesen markieren",
     "loading": "Laden...",
     "noNotifications": "Keine Benachrichtigungen",
-    "view": "Sicht"
+    "view": "Sicht",
+    "markReadFailed": "Konnte nicht als gelesen markiert werden. Versuch es erneut."
   },
   "notificationPreferences": {
     "title": "Benachrichtigungseinstellungen",
@@ -6309,7 +6398,9 @@
     "push": "Drücken",
     "pushDescription": "Browser-Push-Benachrichtigungen",
     "saving": "Sparen...",
-    "savePreferences": "Einstellungen speichern"
+    "savePreferences": "Einstellungen speichern",
+    "loadFailed": "Wir konnten deine Benachrichtigungseinstellungen nicht laden. Speichern ist deaktiviert, bis sie geladen sind.",
+    "saveFailed": "Deine Benachrichtigungseinstellungen konnten nicht gespeichert werden. Bitte versuch es erneut."
   },
   "offlineIndicator": {
     "backOnline": "Wieder online",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ Profi-Tipp:",
     "allSet": "Sie sind bereit!",
     "clickTunedFor": "CLICK ist abgestimmt",
-    "makeFirstVideoViral": "Machen Sie Ihr erstes Video viral."
+    "makeFirstVideoViral": "Machen Sie Ihr erstes Video viral.",
+    "syncFailed": "Deine Antworten konnten nicht in deinem Konto gespeichert werden. Auf diesem Gerät gelten sie trotzdem."
   },
   "oneClickPublish": {
     "salvageLowCtr": "Niedrige frühe Klickrate auf TikTok. Probier doch eine andere Version aus.",
@@ -6477,7 +6569,9 @@
     "variantB": "Variante B",
     "ignore": "Ignorieren",
     "swapToVariantB": "Wechseln Sie zu Variante B",
-    "swapVariantB": "Variante B tauschen"
+    "swapVariantB": "Variante B tauschen",
+    "someFailed": "Nicht veröffentlicht auf: {{platforms}}",
+    "allFailed": "Veröffentlichung fehlgeschlagen auf: {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "Laden {{alt}}",
@@ -6688,7 +6782,10 @@
     "reach": "Erreichen",
     "virality": "Viralität",
     "keyInsights": "Wichtige Erkenntnisse",
-    "recommendations": "Empfehlungen"
+    "recommendations": "Empfehlungen",
+    "ruleBasedNote": "Regelbasierter Score aus Länge, Hashtags, Emojis und Fragen. Keine Prognose von Aufrufen oder Reichweite.",
+    "predictFailed": "Dieser Content konnte nicht bewertet werden. Versuch es erneut.",
+    "needsText": "Füg etwas Text hinzu, um ihn zu bewerten."
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "Analytics wurde erfolgreich synchronisiert",
@@ -6711,7 +6808,9 @@
     "expectedViews": "Erwartete Ansichten",
     "engagementRate": "Engagement-Rate",
     "positiveFactors": "Positive Faktoren",
-    "recommendations": "Empfehlungen"
+    "recommendations": "Empfehlungen",
+    "predictFailed": "Die Performance konnte nicht vorhergesagt werden. Versuch es erneut.",
+    "ruleBasedNote": "Die KI ist nicht verfügbar, daher ist das ein regelbasierter Score aus Länge, Hashtags, Fragen und Calls-to-Action. Es wird keine Aufrufschätzung angezeigt."
   },
   "phase8Dashboard": {
     "howItWorks": "So funktioniert es:",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "KI-analysiert // Aus der Leistung Ihrer veröffentlichten Beiträge",
     "coldStartHint": "Veröffentlichen Sie Beiträge, damit Click analysieren kann, was funktioniert",
     "noInsightsYet": "Noch keine Erkenntnisse",
-    "impact": "Auswirkung: {{impact}}"
+    "impact": "Auswirkung: {{impact}}",
+    "loadFailed": "Insights konnten nicht geladen werden."
   },
   "scalingHub": {
     "neuralThroughput": "Durchsatz",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "Beispiel-Tempo: {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "Bild auf {{ratio}} zugeschnitten. Exportiere mit einer {{ratio}}-Voreinstellung, damit das ganze Bild erhalten bleibt.",
+    "reframeNotApplied": "Der {{ratio}}-Zuschnitt konnte nicht angewendet werden, weil die Bildgröße des Videos noch nicht bekannt ist. Versuch es erneut, sobald es geladen ist.",
+    "resultAddedToTimeline": "{{tool}}: Die neue Version wurde zu deiner Timeline hinzugefügt.",
+    "resultReady": "{{tool}} ist fertig. Öffne das Ergebnis unten.",
+    "noOutput": "{{tool}} ist fertig, hat aber keine Datei geliefert. Bitte versuch es erneut.",
+    "speedRampMarker": "Tempo {{speed}}x",
+    "speedRampMarked": "{{count}} Speed-Ramp-Marker zu deiner Timeline hinzugefügt. Leg an jedem Marker das Tempo fest, um sie anzuwenden.",
+    "speedRampPlanOnly": "{{count}} Speed-Ramps geplant. Sie wurden noch nicht auf dein Video angewendet.",
+    "dubAddedToTimeline": "Die spanische Sprachspur wurde zu deiner Timeline hinzugefügt. Schalte den Originalton stumm, um nur die Synchronisation zu hören.",
+    "openResult": "Ergebnis öffnen",
     "reframeStarting": "Dein Video wird um das Hauptmotiv herum neu ausgerichtet …",
     "reframeDone": "Auto-Reframe abgeschlossen.",
     "reframeFailed": "Auto-Reframe hat nicht funktioniert. Bitte versuch es noch einmal.",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "Tastenkürzel schließen",
     "searchTools": "Tools suchen"
   },
+  "aiTimelineChat": {
+    "title": "Timeline-Assistent",
+    "greeting": "Sag mir, was ich ändern soll. Ich kann einen Farblook anwenden, einen Titel hinzufügen, das Wiedergabetempo ändern oder „Exportieren“ öffnen, um ein anderes Bildformat zu wählen.",
+    "placeholder": "z. B. Make it cinematic",
+    "send": "Nachricht senden",
+    "appliedGrade": "Farblook {{grade}} angewendet.",
+    "gradeNotApplied": "Ich konnte den Farblook {{grade}} nicht anwenden.",
+    "addedText": "Titel „{{text}}“ am Abspielkopf hinzugefügt.",
+    "textNeedsQuotes": "Setz den Titel in Anführungszeichen, zum Beispiel: add title \"Big news\".",
+    "speedSet": "Wiedergabetempo auf {{speed}}x gesetzt.",
+    "aspectOpenExport": "Das Bildformat wählst du beim Export. Ich habe „Exportieren“ geöffnet: Wähl dort eine {{ratio}}-Voreinstellung.",
+    "aspectNoExport": "Das Bildformat wählst du beim Export. Öffne „Exportieren“ und wähl eine {{ratio}}-Voreinstellung.",
+    "notUnderstood": "Ich habe nichts geändert. Ich kann einen Farblook anwenden (zum Beispiel cinematic, warm oder vintage), einen Titel in Anführungszeichen hinzufügen, das Tempo ändern (zum Beispiel 1.5x oder slow motion) oder „Exportieren“ für ein 9:16- oder 1:1-Format öffnen.",
+    "badgeGrade": "Farblook: {{grade}}",
+    "badgeText": "Titel hinzugefügt",
+    "badgeSpeed": "Tempo {{speed}}x",
+    "badgeExport": "Export geöffnet"
+  },
+  "repurposeView": {
+    "renderFailed": "Die {{format}}-Version ist fehlgeschlagen: {{error}}",
+    "renderFailedGeneric": "Das Rendern ist fehlgeschlagen.",
+    "renderTimedOut": "Das Rendern dauert zu lange und meldet sich nicht mehr. Bitte versuch es erneut."
+  },
+  "musicPicker": {
+    "generationFailed": "KI-Musikgenerierung fehlgeschlagen. Bitte versuch es erneut.",
+    "generationFailedReason": "KI-Musikgenerierung fehlgeschlagen: {{error}}",
+    "generationNoTrack": "Der Track wurde generiert, konnte aber nicht gespeichert werden. Bitte generiere ihn erneut."
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "Dieser Look konnte nicht gelöscht werden. Er ist weiterhin gespeichert."
+  },
   "editorHUD": {
+    "saveFailedRetry": "Noch nicht in deinem Konto gespeichert. Klicke, um es erneut zu versuchen.",
     "section": {
       "edit": "Bearbeiten",
       "color": "Farbe",
@@ -8846,6 +8988,7 @@
     "export": "Exportieren"
   },
   "quickActionsBar": {
+    "trendsList": "Gerade im Trend auf TikTok: {{list}}",
     "variantsNeedBase": "Füge zuerst einen Untertitel oder Hook hinzu, damit der Varianten-Generator etwas zum Arbeiten hat.",
     "noVariants": "Keine Varianten erhalten – versuch einen längeren Basis-Hook.",
     "variantsGenerated": "{{count}} Varianten erstellt – öffne die A/B-Auswahl für die Vorschau.",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "Wettbewerbs-Einblicke"
     },
     "err": {
+      "analyzeFailed": "Dieses Video konnte nicht analysiert werden. Versuch es gleich noch einmal.",
       "videoNotFound": "Keine Videodaten in der Antwort gefunden",
       "loadFailed": "Video konnte nicht geladen werden. Bitte versuch es noch einmal.",
       "missingSource": "Diesem Video fehlt die Quelldatei. Lade es erneut hoch und versuch es noch einmal.",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "Analysen zu Bindung, Hook-Stärke und Tempo erscheinen hier, sobald dein Video analysiert wurde.",
       "transcript": "Transkript"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "Deine Einladung wird verarbeitet…",
+    "body": "Wir fügen dich dem Team hinzu. Das dauert nur einen Moment.",
+    "noToken": "In diesem Einladungslink fehlt der Code. Bitte um eine neue Einladung.",
+    "joined": "✓ Du bist dem Team beigetreten",
+    "failed": "Die Einladung konnte nicht angenommen werden"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "Zu viele Anfragen zum Zurücksetzen. Warte ein paar Minuten und versuch es dann erneut.",
+    "sendFailed": "Wir konnten den Link zum Zurücksetzen gerade nicht senden. Prüf deine Verbindung und versuch es erneut."
+  },
+  "governanceDashboard": {
+    "loadFailed": "Das Audit-Log konnte nicht geladen werden."
+  },
+  "clickIsland": {
+    "chatEmpty": "Ich konnte gerade keine Antwort erstellen. Formuliere es anders oder sende es noch einmal.",
+    "chatRateLimited": "Du hast dein KI-Limit vorerst erreicht. Versuch es in Kürze noch einmal.",
+    "chatUnavailable": "Die KI konnte gerade nicht antworten. Versuch es gleich noch einmal.",
+    "chatOffline": "Ich kann den Assistenten gerade nicht erreichen. Prüf deine Verbindung und versuch es erneut."
+  },
+  "postStatus": {
+    "scheduled": "Geplant",
+    "awaitingApproval": "Wartet auf Freigabe",
+    "publishing": "Wird veröffentlicht",
+    "published": "Veröffentlicht",
+    "retrying": "Neuer Versuch",
+    "failed": "Fehlgeschlagen",
+    "cancelled": "Abgebrochen"
+  },
+  "creatorTools": {
+    "noResults": "Diesmal keine Ergebnisse. Versuch es erneut oder formuliere es anders.",
+    "variantNotAdapted": "Die KI konnte diese Variante nicht anpassen. Das ist dein Originaltext."
+  },
+  "contentRecycling": {
+    "loadFailed": "Recycling-Daten konnten nicht geladen werden.",
+    "planCreated": "Recycling-Plan erstellt.",
+    "createFailed": "Der Recycling-Plan konnte nicht erstellt werden.",
+    "toggleFailed": "Der Recycling-Plan konnte nicht aktualisiert werden."
   }
 }

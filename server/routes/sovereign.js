@@ -59,28 +59,47 @@ router.get('/status', auth, asyncHandler(async (req, res) => {
  * GET /api/sovereign/insights
  * Returns AI-generated creative and performance insights
  */
+// One Gemini call per uncached request (cognitiveLoopService) against a shared
+// daily quota, so answers are cached per user + niche for 6 hours. ?refresh=1
+// recomputes, but no more than once every 10 minutes per user. In-process:
+// production has no Redis, and a recompute after a restart is acceptable.
+const INSIGHTS_TTL_MS = 6 * 60 * 60 * 1000;
+const INSIGHTS_REFRESH_MIN_MS = 10 * 60 * 1000;
+const insightsCache = new Map();
+
 router.get('/insights', auth, asyncHandler(async (req, res) => {
   // Real insights derived from the user's ACTUAL published-post performance
   // via the cognitive loop (Gemini-analyzed). Honest cold-start message when
   // there's no performance data yet — no fabricated numbers.
   const { analyzeStrategicPivots } = require('../services/cognitiveLoopService');
+  const userId = String(req.user?._id || req.user?.id || '');
   const workspaceId = req.user?.workspaceId || req.user?._id || req.user?.id;
-  const niche = req.query.niche || req.user?.niche || 'General';
+  const niche = String(req.query.niche || req.user?.niche || 'General').slice(0, 60);
+  const key = `${userId}|${niche.toLowerCase()}`;
+  const now = Date.now();
+  const hit = insightsCache.get(key);
+  const wantsRefresh = req.query.refresh === '1' || req.query.refresh === 'true';
+  if (hit && (now - hit.at < INSIGHTS_TTL_MS) && (!wantsRefresh || now - hit.at < INSIGHTS_REFRESH_MIN_MS)) {
+    return sendSuccess(res, 'Sovereign insights retrieved', 200, { ...hit.value, cached: true });
+  }
 
   let insights = [];
   let meta = { status: 'active', niche };
+  let cacheable = true;
   try {
     const result = await analyzeStrategicPivots(workspaceId, niche, { userId: req.user?._id || req.user?.id });
     if (result?.status === 'cold_start' || result?.status === 'manual') {
       meta.status = result.status;
       insights = [{ type: 'onboarding', text: result.message, score: null }];
     } else if (result?.plan) {
+      // No per-insight confidence exists — the old 0.9 / 0.82 / 0.78 were
+      // constants shown as percentages. score stays null.
       const plan = result.plan;
-      if (plan.currentWins) insights.push({ type: 'creative', text: String(plan.currentWins).slice(0, 280), score: 0.9 });
+      if (plan.currentWins) insights.push({ type: 'creative', text: String(plan.currentWins).slice(0, 280), score: null });
       (plan.recommendedPivots || []).forEach((p) => {
-        insights.push({ type: 'distribution', text: `${p.pivot} — ${p.reason}`, expectedImpact: p.expectedImpact, score: 0.82 });
+        insights.push({ type: 'distribution', text: `${p.pivot} — ${p.reason}`, expectedImpact: p.expectedImpact, score: null });
       });
-      if (plan.suggestedToneAdjustment) insights.push({ type: 'monetization', text: `Tone: ${plan.suggestedToneAdjustment}`, score: 0.78 });
+      if (plan.suggestedToneAdjustment) insights.push({ type: 'monetization', text: `Tone: ${plan.suggestedToneAdjustment}`, score: null });
       meta.analyzedVideos = result.analyzedVideos;
     }
   } catch (e) {
@@ -88,9 +107,15 @@ router.get('/insights', auth, asyncHandler(async (req, res) => {
     logger.warn('sovereign insights failed', { error: e.message });
     insights = [{ type: 'onboarding', text: 'Insights are warming up — publish a few posts so Click can learn what works for you.', score: null }];
     meta.status = 'unavailable';
+    cacheable = false;
   }
 
-  sendSuccess(res, 'Sovereign insights retrieved', 200, { insights, ...meta, timestamp: new Date() });
+  const value = { insights, ...meta, timestamp: new Date() };
+  if (cacheable) {
+    if (insightsCache.size > 5000) insightsCache.clear();
+    insightsCache.set(key, { at: now, value });
+  }
+  sendSuccess(res, 'Sovereign insights retrieved', 200, value);
 }));
 
 /**

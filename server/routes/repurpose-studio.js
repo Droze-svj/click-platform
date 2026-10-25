@@ -56,6 +56,10 @@ router.post('/studio', auth, aiLimiter, costGuard(), asyncHandler(async (req, re
   }
 
   const variants = await buildVariantPreviews({ text, title, userId: req.user._id, platforms }, adaptForPlatform);
+  // Every adaptation fell back to the original text: nothing was repurposed.
+  if (variants.length > 0 && variants.every((v) => v.degraded)) {
+    return sendError(res, 'The AI could not repurpose this right now. Try again in a moment.', 503);
+  }
 
   await req.recordAiUsage({
     provider: 'gemini',

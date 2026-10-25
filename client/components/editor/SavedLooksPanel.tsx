@@ -5,6 +5,7 @@ import { Bookmark, Plus, Trash2, Check } from 'lucide-react'
 import type { VideoFilter } from '../../types/editor'
 import { apiGet, apiPost, apiDelete } from '../../lib/api'
 import { Panel, Button, SectionHeader } from '../ui'
+import { useTranslation } from '../../hooks/useTranslation'
 
 interface SavedLook {
   id: string
@@ -26,6 +27,7 @@ interface SavedLooksPanelProps {
  * later. Backed by /api/editor/presets (per-user, allowlisted). Best-effort UI.
  */
 export default function SavedLooksPanel({ currentFilters, onApply, showToast }: SavedLooksPanelProps) {
+  const { t } = useTranslation()
   const [looks, setLooks] = React.useState<SavedLook[]>([])
   const [name, setName] = React.useState('')
   const [busy, setBusy] = React.useState(false)
@@ -68,8 +70,24 @@ export default function SavedLooksPanel({ currentFilters, onApply, showToast }: 
   }
 
   const remove = async (id: string) => {
+    // Optimistic removal — but a failed delete puts the look back where it
+    // was and says so (it used to vanish, then reappear on the next load).
+    const index = looks.findIndex((l) => l.id === id)
+    const look = index === -1 ? null : looks[index]
     setLooks((prev) => prev.filter((l) => l.id !== id))
-    try { await apiDelete(`/editor/presets/${encodeURIComponent(id)}`) } catch { /* best effort */ }
+    try {
+      await apiDelete(`/editor/presets/${encodeURIComponent(id)}`)
+    } catch {
+      if (look) {
+        setLooks((prev) => {
+          if (prev.some((l) => l.id === look.id)) return prev
+          const next = prev.slice()
+          next.splice(Math.min(index, next.length), 0, look)
+          return next
+        })
+      }
+      showToast(t('savedLooksPanel.deleteFailed'), 'error')
+    }
   }
 
   return (

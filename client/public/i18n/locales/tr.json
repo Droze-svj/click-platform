@@ -86,7 +86,9 @@
     "openLabs": "Labs'i aç",
     "exploreLabs": "Labs'i keşfet",
     "earlyAccessOn": "Erken erişim — sana açık",
-    "earlyAccessAgencyOnly": "Ajanslara özel"
+    "earlyAccessAgencyOnly": "Ajanslara özel",
+    "checkoutUnavailable": "Bu plan için ödeme şu anda kullanılamıyor. Hiçbir şey değiştirilmedi. Daha sonra tekrar dene veya destekle iletişime geç.",
+    "invoiceDownloadFailed": "Fatura indirilemedi. Lütfen tekrar dene."
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "Tehlike bölgesi",
     "irreversibleActions": "Geri dönüşü olmayan eylemler",
     "deleteAccountWarning": "Hesabınızı silin: tüm videolarınızı, gönderilerinizi, bağlı hesaplarınızı ve aboneliğinizi kalıcı olarak kaldırın. Bu geri alınamaz.",
-    "deleteAccount": "Hesabı sil"
+    "deleteAccount": "Hesabı sil",
+    "loadFailedSaveBlocked": "Kayıtlı ayarların yüklenemedi. Gerçek ayarlarının varsayılanlarla değiştirilmemesi için yüklenene kadar kaydetme kapalı.",
+    "saveBlockedNotLoaded": "Kayıtlı ayarların henüz yüklenmedi. Kaydetmeden önce tekrar dene.",
+    "apiKeySavedPlaceholder": "Kayıtlı anahtar {{last4}} ile bitiyor. Değiştirmek için yeni bir anahtar gir"
   },
   "common": {
     "save": "Kaydetmek",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "Analiz ediliyor…",
     "predictiveTelemetry": "Performans tahmini",
     "predictiveTelemetryDesc": "İçeriğinin nasıl performans gösterebileceğine dair tahminler.",
-    "scanningTrajectories": "Yörüngeler Taranıyor..."
+    "scanningTrajectories": "Yörüngeler Taranıyor...",
+    "errorStatusCheckFailed": "İçeriğinin durumu kontrol edilemedi. Yine de tamamlanabilir; kütüphanene göz at.",
+    "errorGenerationTimeout": "Bu, normalden uzun sürüyor. Yine de tamamlanabilir; birkaç dakika sonra kütüphanene göz at.",
+    "errorTemplateLoadFailed": "Bu şablon yüklenemedi. Yine de kendin yazabilirsin."
   },
   "forgePage": {
     "documentTitle": "Yapay Zeka İçerik Oluşturucu | Tıklamak",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "Aç",
     "resonanceAck": "Okundu olarak işaretle",
     "confirmPurgeSignal": "Bu bildirim silinsin mi?",
-    "purgeSignal": "Sil"
+    "purgeSignal": "Sil",
+    "category_task": "Görevler",
+    "category_project": "Projeler",
+    "category_content": "İçerik",
+    "category_approval": "Onaylar",
+    "category_mention": "Bahsetmeler",
+    "category_system": "Sistem",
+    "category_workflow": "İş akışları",
+    "category_publishing": "Yayınlama",
+    "category_recurring": "Tekrarlanan gönderiler",
+    "category_brief": "Günlük özet",
+    "bulkReadFailed": "{{total}} bildirimden {{failed}} tanesi okundu olarak işaretlenemedi.",
+    "bulkDeleteFailed": "{{total}} bildirimden {{failed}} tanesi silinemedi.",
+    "loadFailed": "Bildirimler yüklenemedi."
   },
   "onboardingPage": {
     "loading": "Yükleniyor",
@@ -1721,7 +1742,8 @@
     "statusPublished": "Yayınlandı",
     "statusFailed": "Arızalı",
     "statusDraft": "Taslak",
-    "viewSequenceDetails": "Ayrıntıları görüntüle"
+    "viewSequenceDetails": "Ayrıntıları görüntüle",
+    "toastScheduledPartial": "{{total}} gönderiden {{ok}} tanesi planlandı. Geri kalanlar başarısız oldu: {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "Senaryolar yüklenemedi",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "Senaryo silinsin mi?",
     "purgeNodeBody": "Bu senaryo kalıcı olarak silinecek. Bu işlem geri alınamaz.",
     "abortPurge": "İptal",
-    "commitPurge": "Sil"
+    "commitPurge": "Sil",
+    "toastTemplateLoadFailed": "Bu şablon yüklenemedi."
   },
   "searchPage": {
     "reconFailed": "Arama zaman aşımına uğradı. Tekrar dene.",
@@ -1929,7 +1952,8 @@
     "transmitting": "Yenileniyor…",
     "transmit": "İLETİM",
     "terminateProtocol": "Görevi sil",
-    "secureAndLeave": "GÜVENLİ_&_AYRIL"
+    "secureAndLeave": "GÜVENLİ_&_AYRIL",
+    "toastLoadFailed": "Görevlerin yüklenemedi."
   },
   "templatesPage": {
     "toastSyncFailed": "Şablonlar yüklenemedi",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "İlerleme",
     "anomalyIntercepted": "Hata",
     "procTime": "İşleme süresi: {{time}}",
-    "retryThreshold": "Yeniden deneme #{{attempts}}"
+    "retryThreshold": "Yeniden deneme #{{attempts}}",
+    "cancelled": "İş iptal edildi.",
+    "cancelFailed": "Bu iş iptal edilemedi."
   },
   "strategistPage": {
     "clickIntelligence": "Zeka'yı tıklayın",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "Duygusal etki",
     "dominantLabel": "Baskın: {{emotion}}",
     "missingTriggerLabel": "Yüksek etkili tetikleyici eksik:",
-    "optimalPostingWindows": "Optimum Gönderim Pencereleri"
+    "optimalPostingWindows": "Optimum Gönderim Pencereleri",
+    "syncFailed": "Senkronize edilemedi. Tekrar dene.",
+    "playbookFallbackNote": "AI şu anda kullanılamıyor, bu yüzden bu fikirler niş oyun kitabından geliyor.",
+    "trendHooks": "Denenecek hook'lar",
+    "trendFormats": "Formatlar",
+    "trendSounds": "Ses fikirleri",
+    "trendHashtags": "Hashtag'ler",
+    "momentumRising": "Yükselişte",
+    "momentumSteady": "İstikrarlı",
+    "momentumPeaking": "Zirvede",
+    "nicheVoice": "Ses tonu",
+    "pitfalls": "Kaçın",
+    "retentionFloorLabel": "İzleyicilerin en az %{{value}} kadarını tut",
+    "retentionTargetLabel": "Hedef: %{{value}}",
+    "retentionGuidelineNote": "{{platform}} için hook süresine dayalı bir yönerge; gönderilerinin ölçümü değil.",
+    "sequenceStepLabel": "Adım {{step}} · {{timing}}",
+    "campaignVideoLabel": "Video {{num}} · {{mark}}",
+    "angleNumber": "Açı {{num}}",
+    "promptGroupSave": "Kaydedilme kazan",
+    "promptGroupComment": "Yorum kazan",
+    "promptGroupShare": "Paylaşım kazan",
+    "promptGroupDm": "DM kazan",
+    "promptGroupFollow": "Takipçi kazan",
+    "benchIdealLength": "İdeal uzunluk",
+    "benchHookWindow": "Hook süresi",
+    "benchCaptionStyle": "Altyazı stili",
+    "benchHashtags": "Hashtag'ler",
+    "benchSoundStrategy": "Ses",
+    "benchAvoid": "{{platform}} için kaçınılacaklar",
+    "verdictPublishReady": "Yayına hazır",
+    "verdictNeedsTightening": "Toparlanmalı",
+    "verdictRewrite": "Yeniden yazılmalı",
+    "wordCountLabel": "{{count}} kelime",
+    "scoreRuleBasedNote": "{{platform}} oyun kitabına göre kural tabanlı kontrol.",
+    "notesTitle": "Neler değişmeli"
   },
   "teamDetailPage": {
     "toastLoadFailed": "Ekip yüklenemedi",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "Salt okunur ayarlar",
     "latticeMetadata": "Ekip ayrıntıları",
     "clusterId": "Ekip ID'si",
-    "ownerHash": "Sahip"
+    "ownerHash": "Sahip",
+    "inviteEmailFailed": "Davet hazır ama e-posta gönderilemedi. Bağlantıyı kopyalayıp kendin gönder.",
+    "inviteLinkLabel": "Davet bağlantısı",
+    "copyInviteLink": "Bağlantıyı kopyala",
+    "inviteLinkCopied": "✓ Bağlantı kopyalandı"
   },
   "teamsPage": {
     "toastLoadFailed": "Ekipler yüklenemedi",
@@ -4195,7 +4259,9 @@
     "postComment": "Yorum Gönder",
     "resolved": "Çözüldü",
     "helpful": "Yardımsever",
-    "empty": "Henüz yorum yok. İlk yorum yapan siz olun!"
+    "empty": "Henüz yorum yok. İlk yorum yapan siz olun!",
+    "needsTeam": "Yorumlar bir ekiple paylaşılır.",
+    "needsTeamCta": "Ekip oluştur veya bir ekibe katıl"
   },
   "complianceDashboard": {
     "outOf100": "/ 100",
@@ -4281,7 +4347,19 @@
     "colChecked": "İşaretlendi",
     "untitled": "(Başlıksız)",
     "noHistory": "Henüz uyumluluk geçmişi yok.",
-    "noHistoryHint": "İzlemeye başlamak için içeriğinizi kontrol edin."
+    "noHistoryHint": "İzlemeye başlamak için içeriğinizi kontrol edin.",
+    "rulesLoadFailed": "Kuralların yüklenemedi.",
+    "ruleSaveFailed": "Kural kaydedilemedi.",
+    "ruleDeleteFailed": "Kural silinemedi.",
+    "policiesLoadFailed": "Platform politikaları yüklenemedi.",
+    "historyLoadFailed": "Uyumluluk geçmişi yüklenemedi.",
+    "totalRulesStat": "Kurallar",
+    "activeRulesStat": "Aktif kurallar",
+    "totalTriggersStat": "Tetiklenme sayısı",
+    "colRule": "Kural",
+    "colTriggers": "Tetiklenmeler",
+    "colLastTriggered": "Son tetiklenme",
+    "noTriggersYet": "Kurallarından hiçbiri henüz tetiklenmedi."
   },
   "confirmDialog": {
     "confirm": "Onaylamak",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}}% optimum",
     "dayAtTime": "{{day}}, {{time}}",
     "schedule": "Takvim",
-    "viewAllOptimalTimes": "Tüm optimum zamanları görüntüleyin →"
+    "viewAllOptimalTimes": "Tüm optimum zamanları görüntüleyin →",
+    "loadFailed": "Paylaşım saatleri yüklenemedi."
   },
   "contentSuggestions": {
     "loadFailed": "Öneriler yüklenemedi",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "Bu iş akışının ne yaptığını açıklayın...",
     "trigger": "Tetiklemek",
     "enableWorkflow": "İş akışını etkinleştir",
-    "cancel": "İptal etmek"
+    "cancel": "İptal etmek",
+    "notExecuted": "İş akışı çalışmadı: {{reason}}",
+    "someActionsFailed": "İş akışı çalıştı ama şu adımlar başarısız oldu: {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "Kurumsal Yönetişim",
@@ -5710,7 +5791,9 @@
     "retrying": "Yeniden deneniyor...",
     "retryJob": "İşi Yeniden Dene",
     "close": "Kapalı",
-    "jobNotFound": "İş bulunamadı"
+    "jobNotFound": "İş bulunamadı",
+    "retryQueued": "İş tekrar çalışmak üzere sıraya alındı.",
+    "retryFailed": "Bu iş yeniden denenemedi."
   },
   "jobProgressViewer": {
     "loadingJobStatus": "İş durumu yükleniyor...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "Önerilen Sonraki Adımlar",
     "nextStep": "Sonraki adım",
-    "continueSetup": "Kuruluma devam et"
+    "continueSetup": "Kuruluma devam et",
+    "workflowFailed": "Bu iş akışı çalıştırılamadı."
   },
   "multiClientRollupDashboard": {
     "title": "Çok İstemcili Toplama Kontrol Paneli",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "Fikir üretici",
     "autoFoley": "Otomatik Foley",
     "brollAgent": "B-Roll Temsilcisi",
-    "captionSwarm": "AI altyazıları"
+    "captionSwarm": "AI altyazıları",
+    "noTrendsYet": "Şu anda canlı trend yok. Daha sonra tekrar dene.",
+    "kindSound": "Ses",
+    "kindHashtag": "Hashtag",
+    "kindTopic": "Konu"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "Bir sonraki videonuzu bu akşam 22:00'de yayınlayın — Perşembe geceleri kısa süreli virallik açısından ortalamanın %23 üzerindedir.",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "Tümünü okundu olarak işaretle",
     "loading": "Yükleniyor...",
     "noNotifications": "Bildirim yok",
-    "view": "Görüş"
+    "view": "Görüş",
+    "markReadFailed": "Okundu olarak işaretlenemedi. Tekrar dene."
   },
   "notificationPreferences": {
     "title": "Bildirim Tercihleri",
@@ -6309,7 +6398,9 @@
     "push": "İtmek",
     "pushDescription": "Tarayıcı anlık bildirimleri",
     "saving": "Kaydediliyor...",
-    "savePreferences": "Tercihleri ​​Kaydet"
+    "savePreferences": "Tercihleri ​​Kaydet",
+    "loadFailed": "Bildirim tercihlerin yüklenemedi. Yüklenene kadar kaydetme kapalı.",
+    "saveFailed": "Bildirim tercihlerin kaydedilemedi. Lütfen tekrar dene."
   },
   "offlineIndicator": {
     "backOnline": "Tekrar çevrimiçi",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ Profesyonel ipucu:",
     "allSet": "Artık hazırsınız!",
     "clickTunedFor": "CLICK için ayarlandı",
-    "makeFirstVideoViral": "İlk videonuzun viral olmasını sağlayın."
+    "makeFirstVideoViral": "İlk videonuzun viral olmasını sağlayın.",
+    "syncFailed": "Yanıtların hesabına kaydedilemedi. Bu cihazda geçerli olmaya devam ediyor."
   },
   "oneClickPublish": {
     "salvageLowCtr": "TikTok'ta ilk tıklama oranı düşük. Başka bir sürüm denemeyi düşün.",
@@ -6477,7 +6569,9 @@
     "variantB": "Varyant B",
     "ignore": "Görmezden gelmek",
     "swapToVariantB": "B Varyantına Geç",
-    "swapVariantB": "B Varyantını Değiştir"
+    "swapVariantB": "B Varyantını Değiştir",
+    "someFailed": "Şuralarda yayınlanmadı: {{platforms}}",
+    "allFailed": "Şuralarda yayınlanamadı: {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "Yükleniyor {{alt}}",
@@ -6688,7 +6782,10 @@
     "reach": "Ulaşmak",
     "virality": "Virallik",
     "keyInsights": "Temel Bilgiler",
-    "recommendations": "Öneriler"
+    "recommendations": "Öneriler",
+    "ruleBasedNote": "Uzunluk, hashtag, emoji ve sorulara göre kural tabanlı puan. Görüntülenme veya erişim tahmini değildir.",
+    "predictFailed": "Bu içerik puanlanamadı. Tekrar dene.",
+    "needsText": "Puanlamak için biraz metin ekle."
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "Analytics başarıyla senkronize edildi",
@@ -6711,7 +6808,9 @@
     "expectedViews": "Beklenen Görüntülemeler",
     "engagementRate": "Etkileşim Oranı",
     "positiveFactors": "Olumlu Faktörler",
-    "recommendations": "Öneriler"
+    "recommendations": "Öneriler",
+    "predictFailed": "Performans tahmin edilemedi. Tekrar dene.",
+    "ruleBasedNote": "AI kullanılamıyor; bu, uzunluk, hashtag, soru ve harekete geçirici mesajlara göre kural tabanlı bir puan. Görüntülenme tahmini gösterilmez."
   },
   "phase8Dashboard": {
     "howItWorks": "Nasıl çalışır:",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "Yapay Zeka Analizi // Yayınlanan gönderi performansınızdan",
     "coldStartHint": "Click'in neyin işe yaradığını analiz edebilmesi için gönderiler yayınlayın",
     "noInsightsYet": "Henüz analiz yok",
-    "impact": "Etki: {{impact}}"
+    "impact": "Etki: {{impact}}",
+    "loadFailed": "İçgörüler yüklenemedi."
   },
   "scalingHub": {
     "neuralThroughput": "İş hacmi",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "Örnek tempo: {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "Kadraj {{ratio}} oranına kırpıldı. Tüm kadrajı korumak için {{ratio}} ön ayarıyla dışa aktar.",
+    "reframeNotApplied": "Videonun kadraj boyutu henüz bilinmediği için {{ratio}} kırpma uygulanamadı. Video yüklendikten sonra tekrar dene.",
+    "resultAddedToTimeline": "{{tool}}: yeni sürüm zaman çizelgene eklendi.",
+    "resultReady": "{{tool}} tamamlandı. Sonucu aşağıdan aç.",
+    "noOutput": "{{tool}} tamamlandı ama bir dosya döndürmedi. Lütfen tekrar dene.",
+    "speedRampMarker": "Hız {{speed}}x",
+    "speedRampMarked": "Zaman çizelgene {{count}} hız rampası işaretçisi eklendi. Uygulamak için her işaretçide hızı ayarla.",
+    "speedRampPlanOnly": "{{count}} hız rampası planlandı. Henüz videona uygulanmadı.",
+    "dubAddedToTimeline": "İspanyolca ses kanalı zaman çizelgene eklendi. Yalnızca dublajı duymak için orijinal sesi kapat.",
+    "openResult": "Sonucu aç",
     "reframeStarting": "Videon ana konuya göre yeniden çerçeveleniyor…",
     "reframeDone": "Otomatik yeniden çerçeveleme tamamlandı.",
     "reframeFailed": "Otomatik yeniden çerçeveleme çalışmadı. Lütfen tekrar dene.",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "Kısayolları kapat",
     "searchTools": "Araç ara"
   },
+  "aiTimelineChat": {
+    "title": "Zaman çizelgesi asistanı",
+    "greeting": "Neyi değiştirmemi istediğini söyle. Renk düzenlemesi uygulayabilir, başlık ekleyebilir, oynatma hızını değiştirebilir ya da farklı bir kadraj oranı seçmen için Dışa Aktar'ı açabilirim.",
+    "placeholder": "ör. Daha cinematic yap",
+    "send": "Mesaj gönder",
+    "appliedGrade": "{{grade}} renk düzenlemesi uygulandı.",
+    "gradeNotApplied": "{{grade}} renk düzenlemesini uygulayamadım.",
+    "addedText": "\"{{text}}\" başlığı oynatma kafasının olduğu yere eklendi.",
+    "textNeedsQuotes": "Başlığı tırnak içinde yaz, örneğin: add title \"Büyük haber\".",
+    "speedSet": "Oynatma hızı {{speed}}x olarak ayarlandı.",
+    "aspectOpenExport": "Kadraj oranı dışa aktarırken seçilir. Dışa Aktar'ı açtım: oradan bir {{ratio}} ön ayarı seç.",
+    "aspectNoExport": "Kadraj oranı dışa aktarırken seçilir. Dışa Aktar'ı aç ve bir {{ratio}} ön ayarı seç.",
+    "notUnderstood": "Hiçbir şeyi değiştirmedim. Renk düzenlemesi uygulayabilir (örneğin cinematic, warm veya vintage), tırnak içinde bir başlık ekleyebilir, hızı değiştirebilir (örneğin 1.5x veya slow motion) ya da 9:16 veya 1:1 kadraj için Dışa Aktar'ı açabilirim.",
+    "badgeGrade": "Renk düzenlemesi: {{grade}}",
+    "badgeText": "Başlık eklendi",
+    "badgeSpeed": "Hız {{speed}}x",
+    "badgeExport": "Dışa Aktar açıldı"
+  },
+  "repurposeView": {
+    "renderFailed": "{{format}} sürümü başarısız oldu: {{error}}",
+    "renderFailedGeneric": "İşleme başarısız oldu.",
+    "renderTimedOut": "İşleme çok uzun sürüyor ve artık durum bildirmiyor. Lütfen tekrar dene."
+  },
+  "musicPicker": {
+    "generationFailed": "AI müzik oluşturma başarısız oldu. Lütfen tekrar dene.",
+    "generationFailedReason": "AI müzik oluşturma başarısız oldu: {{error}}",
+    "generationNoTrack": "Parça oluşturuldu ama kaydedilemedi. Lütfen yeniden oluştur."
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "Bu görünüm silinemedi. Hâlâ kayıtlı."
+  },
   "editorHUD": {
+    "saveFailedRetry": "Henüz hesabına kaydedilmedi. Tekrar denemek için tıkla.",
     "section": {
       "edit": "Düzenleme",
       "color": "Renk",
@@ -8846,6 +8988,7 @@
     "export": "Dışa aktar"
   },
   "quickActionsBar": {
+    "trendsList": "Şu anda TikTok'ta trend: {{list}}",
     "variantsNeedBase": "Varyasyon oluşturucunun çalışabilmesi için önce bir altyazı veya hook ekle.",
     "noVariants": "Varyasyon dönmedi — daha uzun bir temel hook dene.",
     "variantsGenerated": "{{count}} varyasyon oluşturuldu — önizlemek için A/B seçiciyi aç.",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "Rekabet İçgörüleri"
     },
     "err": {
+      "analyzeFailed": "Bu video analiz edilemedi. Biraz sonra tekrar dene.",
       "videoNotFound": "Yanıtta video verisi bulunamadı",
       "loadFailed": "Video yüklenemedi. Lütfen tekrar dene.",
       "missingSource": "Bu videonun kaynak dosyası eksik. Yeniden yükleyip tekrar dene.",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "Videon analiz edildiğinde izleyici tutma, hook gücü ve tempo analizleri burada görünecek.",
       "transcript": "Transkript"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "Davetin işleniyor…",
+    "body": "Seni ekibe ekliyoruz. Bu çok kısa sürer.",
+    "noToken": "Bu davet bağlantısında kod eksik. Yeni bir davet iste.",
+    "joined": "✓ Ekibe katıldın",
+    "failed": "Davet kabul edilemedi"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "Çok fazla sıfırlama isteği gönderildi. Birkaç dakika bekleyip tekrar dene.",
+    "sendFailed": "Sıfırlama bağlantısı şu anda gönderilemedi. Bağlantını kontrol edip tekrar dene."
+  },
+  "governanceDashboard": {
+    "loadFailed": "Denetim kaydı yüklenemedi."
+  },
+  "clickIsland": {
+    "chatEmpty": "Şu anda bir yanıt oluşturamadım. Farklı şekilde sor veya tekrar gönder.",
+    "chatRateLimited": "Şimdilik AI limitine ulaştın. Biraz sonra tekrar dene.",
+    "chatUnavailable": "AI şu anda yanıt veremedi. Biraz sonra tekrar dene.",
+    "chatOffline": "Şu anda asistana ulaşamıyorum. Bağlantını kontrol edip tekrar dene."
+  },
+  "postStatus": {
+    "scheduled": "Planlandı",
+    "awaitingApproval": "Onay bekliyor",
+    "publishing": "Yayınlanıyor",
+    "published": "Yayınlandı",
+    "retrying": "Yeniden deneniyor",
+    "failed": "Başarısız",
+    "cancelled": "İptal edildi"
+  },
+  "creatorTools": {
+    "noResults": "Bu sefer sonuç çıkmadı. Tekrar dene veya farklı şekilde ifade et.",
+    "variantNotAdapted": "AI bunu uyarlayamadı. Bu, orijinal metnin."
+  },
+  "contentRecycling": {
+    "loadFailed": "Geri dönüşüm verileri yüklenemedi.",
+    "planCreated": "Geri dönüşüm planı oluşturuldu.",
+    "createFailed": "Geri dönüşüm planı oluşturulamadı.",
+    "toggleFailed": "Geri dönüşüm planı güncellenemedi."
   }
 }

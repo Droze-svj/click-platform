@@ -86,7 +86,9 @@
     "openLabs": "Buka Labs",
     "exploreLabs": "Jelajahi Labs",
     "earlyAccessOn": "Akses awal — tersedia untukmu",
-    "earlyAccessAgencyOnly": "Khusus Agency"
+    "earlyAccessAgencyOnly": "Khusus Agency",
+    "checkoutUnavailable": "Checkout untuk paket ini sedang tidak tersedia. Tidak ada yang diubah. Coba lagi nanti atau hubungi dukungan.",
+    "invoiceDownloadFailed": "Gagal mengunduh invoice. Silakan coba lagi."
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "Zona bahaya",
     "irreversibleActions": "Tindakan yang tidak dapat diubah",
     "deleteAccountWarning": "Hapus akun Anda: hapus secara permanen semua video, postingan, akun terhubung, dan langganan Anda. Hal ini tidak dapat dibatalkan.",
-    "deleteAccount": "Hapus akun"
+    "deleteAccount": "Hapus akun",
+    "loadFailedSaveBlocked": "Kami gagal memuat pengaturan tersimpanmu. Penyimpanan dinonaktifkan sampai pengaturan selesai dimuat, agar pengaturan aslimu tidak tertimpa nilai default.",
+    "saveBlockedNotLoaded": "Pengaturan tersimpanmu belum selesai dimuat. Coba lagi sebelum menyimpan.",
+    "apiKeySavedPlaceholder": "Kunci tersimpan berakhiran {{last4}}. Masukkan kunci baru untuk menggantinya"
   },
   "common": {
     "save": "Menyimpan",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "Menganalisis…",
     "predictiveTelemetry": "Prakiraan performa",
     "predictiveTelemetryDesc": "Prakiraan performa kontenmu.",
-    "scanningTrajectories": "Memindai Lintasan..."
+    "scanningTrajectories": "Memindai Lintasan...",
+    "errorStatusCheckFailed": "Gagal mengecek status kontenmu. Mungkin masih bisa selesai; cek pustakamu.",
+    "errorGenerationTimeout": "Prosesnya lebih lama dari biasanya. Mungkin masih bisa selesai; cek pustakamu beberapa menit lagi.",
+    "errorTemplateLoadFailed": "Gagal memuat template itu. Kamu tetap bisa menulis sendiri."
   },
   "forgePage": {
     "documentTitle": "Pembuat Konten AI | Klik",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "Buka",
     "resonanceAck": "Tandai sudah dibaca",
     "confirmPurgeSignal": "Hapus notifikasi ini?",
-    "purgeSignal": "Hapus"
+    "purgeSignal": "Hapus",
+    "category_task": "Tugas",
+    "category_project": "Proyek",
+    "category_content": "Konten",
+    "category_approval": "Persetujuan",
+    "category_mention": "Mention",
+    "category_system": "Sistem",
+    "category_workflow": "Alur kerja",
+    "category_publishing": "Publikasi",
+    "category_recurring": "Postingan berulang",
+    "category_brief": "Ringkasan harian",
+    "bulkReadFailed": "{{failed}} dari {{total}} gagal ditandai sebagai dibaca.",
+    "bulkDeleteFailed": "{{failed}} dari {{total}} gagal dihapus.",
+    "loadFailed": "Gagal memuat notifikasi."
   },
   "onboardingPage": {
     "loading": "Memuat",
@@ -1721,7 +1742,8 @@
     "statusPublished": "Diterbitkan",
     "statusFailed": "Gagal",
     "statusDraft": "Draf",
-    "viewSequenceDetails": "Lihat detailnya"
+    "viewSequenceDetails": "Lihat detailnya",
+    "toastScheduledPartial": "{{ok}} dari {{total}} postingan dijadwalkan. Sisanya gagal: {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "Gagal memuat skrip",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "Hapus skrip?",
     "purgeNodeBody": "Skrip ini akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.",
     "abortPurge": "Batal",
-    "commitPurge": "Hapus"
+    "commitPurge": "Hapus",
+    "toastTemplateLoadFailed": "Gagal memuat template itu."
   },
   "searchPage": {
     "reconFailed": "Waktu pencarian habis. Coba lagi.",
@@ -1929,7 +1952,8 @@
     "transmitting": "Menyegarkan…",
     "transmit": "MENGIRIMKAN",
     "terminateProtocol": "Hapus tugas",
-    "secureAndLeave": "AMAN_&_ TINGGALKAN"
+    "secureAndLeave": "AMAN_&_ TINGGALKAN",
+    "toastLoadFailed": "Gagal memuat tugasmu."
   },
   "templatesPage": {
     "toastSyncFailed": "Gagal memuat template",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "Progres",
     "anomalyIntercepted": "Kesalahan",
     "procTime": "Waktu pemrosesan: {{time}}",
-    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}"
+    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}",
+    "cancelled": "Job dibatalkan.",
+    "cancelFailed": "Gagal membatalkan job ini."
   },
   "strategistPage": {
     "clickIntelligence": "Klik Intelijen",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "Daya tarik emosional",
     "dominantLabel": "Dominan: {{emotion}}",
     "missingTriggerLabel": "Pemicu berdampak tinggi tidak ada:",
-    "optimalPostingWindows": "Jendela Posting Optimal"
+    "optimalPostingWindows": "Jendela Posting Optimal",
+    "syncFailed": "Gagal sinkronisasi. Coba lagi.",
+    "playbookFallbackNote": "AI sedang tidak tersedia, jadi ide-ide ini diambil dari playbook niche.",
+    "trendHooks": "Hook untuk dicoba",
+    "trendFormats": "Format",
+    "trendSounds": "Ide suara",
+    "trendHashtags": "Hashtag",
+    "momentumRising": "Naik",
+    "momentumSteady": "Stabil",
+    "momentumPeaking": "Di puncak",
+    "nicheVoice": "Gaya bicara",
+    "pitfalls": "Hindari",
+    "retentionFloorLabel": "Pertahankan minimal {{value}}% penonton",
+    "retentionTargetLabel": "Target {{value}}%",
+    "retentionGuidelineNote": "Panduan untuk {{platform}} berdasarkan durasi hook-nya, bukan hasil pengukuran postinganmu.",
+    "sequenceStepLabel": "Langkah {{step}} · {{timing}}",
+    "campaignVideoLabel": "Video {{num}} · {{mark}}",
+    "angleNumber": "Sudut pandang {{num}}",
+    "promptGroupSave": "Dapatkan save",
+    "promptGroupComment": "Dapatkan komentar",
+    "promptGroupShare": "Dapatkan share",
+    "promptGroupDm": "Dapatkan DM",
+    "promptGroupFollow": "Dapatkan follower",
+    "benchIdealLength": "Durasi ideal",
+    "benchHookWindow": "Durasi hook",
+    "benchCaptionStyle": "Gaya caption",
+    "benchHashtags": "Hashtag",
+    "benchSoundStrategy": "Suara",
+    "benchAvoid": "Hindari di {{platform}}",
+    "verdictPublishReady": "Siap dipublikasikan",
+    "verdictNeedsTightening": "Perlu dipadatkan",
+    "verdictRewrite": "Perlu ditulis ulang",
+    "wordCountLabel": "{{count}} kata",
+    "scoreRuleBasedNote": "Cek berbasis aturan dari playbook {{platform}}.",
+    "notesTitle": "Yang perlu diubah"
   },
   "teamDetailPage": {
     "toastLoadFailed": "Gagal memuat tim",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "Pengaturan hanya baca",
     "latticeMetadata": "Detail tim",
     "clusterId": "ID tim",
-    "ownerHash": "Pemilik"
+    "ownerHash": "Pemilik",
+    "inviteEmailFailed": "Undangan sudah siap, tapi email gagal dikirim. Salin link-nya dan kirim sendiri.",
+    "inviteLinkLabel": "Link undangan",
+    "copyInviteLink": "Salin link",
+    "inviteLinkCopied": "✓ Link disalin"
   },
   "teamsPage": {
     "toastLoadFailed": "Gagal memuat tim",
@@ -4195,7 +4259,9 @@
     "postComment": "Posting Komentar",
     "resolved": "Terselesaikan",
     "helpful": "Bermanfaat",
-    "empty": "Belum ada komentar. Jadilah yang pertama berkomentar!"
+    "empty": "Belum ada komentar. Jadilah yang pertama berkomentar!",
+    "needsTeam": "Komentar dibagikan ke tim.",
+    "needsTeamCta": "Buat atau gabung ke tim"
   },
   "complianceDashboard": {
     "outOf100": "/ 100",
@@ -4281,7 +4347,19 @@
     "colChecked": "Diperiksa",
     "untitled": "(Tanpa judul)",
     "noHistory": "Belum ada riwayat kepatuhan.",
-    "noHistoryHint": "Jalankan pemeriksaan pada konten Anda untuk mulai melacak."
+    "noHistoryHint": "Jalankan pemeriksaan pada konten Anda untuk mulai melacak.",
+    "rulesLoadFailed": "Gagal memuat aturanmu.",
+    "ruleSaveFailed": "Gagal menyimpan aturan.",
+    "ruleDeleteFailed": "Gagal menghapus aturan.",
+    "policiesLoadFailed": "Gagal memuat kebijakan platform.",
+    "historyLoadFailed": "Gagal memuat riwayat kepatuhan.",
+    "totalRulesStat": "Aturan",
+    "activeRulesStat": "Aturan aktif",
+    "totalTriggersStat": "Jumlah terpicu",
+    "colRule": "Aturan",
+    "colTriggers": "Pemicu",
+    "colLastTriggered": "Terakhir terpicu",
+    "noTriggersYet": "Belum ada aturanmu yang terpicu."
   },
   "confirmDialog": {
     "confirm": "Mengonfirmasi",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}}% optimal",
     "dayAtTime": "{{day}} pada {{time}}",
     "schedule": "Jadwal",
-    "viewAllOptimalTimes": "Lihat semua waktu optimal →"
+    "viewAllOptimalTimes": "Lihat semua waktu optimal →",
+    "loadFailed": "Gagal memuat waktu posting."
   },
   "contentSuggestions": {
     "loadFailed": "Gagal memuat saran",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "Jelaskan apa yang dilakukan alur kerja ini...",
     "trigger": "Pemicu",
     "enableWorkflow": "Aktifkan alur kerja",
-    "cancel": "Membatalkan"
+    "cancel": "Membatalkan",
+    "notExecuted": "Alur kerja tidak berjalan: {{reason}}",
+    "someActionsFailed": "Alur kerja berjalan, tapi langkah-langkah ini gagal: {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "Tata Kelola Perusahaan",
@@ -5710,7 +5791,9 @@
     "retrying": "Mencoba lagi...",
     "retryJob": "Coba lagi Pekerjaan",
     "close": "Menutup",
-    "jobNotFound": "Pekerjaan tidak ditemukan"
+    "jobNotFound": "Pekerjaan tidak ditemukan",
+    "retryQueued": "Job masuk antrean untuk dijalankan lagi.",
+    "retryFailed": "Gagal mencoba ulang job ini."
   },
   "jobProgressViewer": {
     "loadingJobStatus": "Memuat status pekerjaan...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "Langkah Berikutnya yang Disarankan",
     "nextStep": "Langkah selanjutnya",
-    "continueSetup": "Lanjutkan pengaturan"
+    "continueSetup": "Lanjutkan pengaturan",
+    "workflowFailed": "Gagal menjalankan alur kerja itu."
   },
   "multiClientRollupDashboard": {
     "title": "Dasbor Rollup Multiklien",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "Generator ide",
     "autoFoley": "Foley Otomatis",
     "brollAgent": "Agen B-Roll",
-    "captionSwarm": "Caption AI"
+    "captionSwarm": "Caption AI",
+    "noTrendsYet": "Belum ada tren live saat ini. Coba lagi nanti.",
+    "kindSound": "Suara",
+    "kindHashtag": "Hashtag",
+    "kindTopic": "Topik"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "Posting video Anda berikutnya malam ini pukul 22.00 — Kamis malam berada 23% di atas rata-rata untuk viralitas jangka pendek.",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "Tandai semua sebagai telah dibaca",
     "loading": "Memuat...",
     "noNotifications": "Tidak ada pemberitahuan",
-    "view": "Melihat"
+    "view": "Melihat",
+    "markReadFailed": "Gagal menandai sebagai dibaca. Coba lagi."
   },
   "notificationPreferences": {
     "title": "Preferensi Pemberitahuan",
@@ -6309,7 +6398,9 @@
     "push": "Dorongan",
     "pushDescription": "Pemberitahuan push peramban",
     "saving": "Penghematan...",
-    "savePreferences": "Simpan Preferensi"
+    "savePreferences": "Simpan Preferensi",
+    "loadFailed": "Kami gagal memuat preferensi notifikasimu. Penyimpanan dinonaktifkan sampai preferensi selesai dimuat.",
+    "saveFailed": "Gagal menyimpan preferensi notifikasimu. Silakan coba lagi."
   },
   "offlineIndicator": {
     "backOnline": "Kembali daring",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ Kiat profesional:",
     "allSet": "Anda sudah siap!",
     "clickTunedFor": "KLIK disetel untuk",
-    "makeFirstVideoViral": "Jadikan video pertama Anda menjadi viral."
+    "makeFirstVideoViral": "Jadikan video pertama Anda menjadi viral.",
+    "syncFailed": "Jawabanmu gagal disimpan ke akunmu. Jawaban tetap berlaku di perangkat ini."
   },
   "oneClickPublish": {
     "salvageLowCtr": "Rasio klik awal di TikTok rendah. Pertimbangkan mencoba versi lain.",
@@ -6477,7 +6569,9 @@
     "variantB": "Varian B",
     "ignore": "Mengabaikan",
     "swapToVariantB": "Tukar ke Varian B",
-    "swapVariantB": "Tukar Varian B"
+    "swapVariantB": "Tukar Varian B",
+    "someFailed": "Tidak dipublikasikan ke: {{platforms}}",
+    "allFailed": "Gagal memublikasikan ke: {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "Memuat {{alt}}",
@@ -6688,7 +6782,10 @@
     "reach": "Mencapai",
     "virality": "Viralitas",
     "keyInsights": "Wawasan Utama",
-    "recommendations": "Rekomendasi"
+    "recommendations": "Rekomendasi",
+    "ruleBasedNote": "Skor berbasis aturan dari panjang teks, hashtag, emoji, dan pertanyaan. Ini bukan prediksi tayangan atau jangkauan.",
+    "predictFailed": "Gagal menilai konten ini. Coba lagi.",
+    "needsText": "Tambahkan teks untuk menilainya."
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "Analytics berhasil disinkronkan",
@@ -6711,7 +6808,9 @@
     "expectedViews": "Tampilan yang Diharapkan",
     "engagementRate": "Tingkat Keterlibatan",
     "positiveFactors": "Faktor Positif",
-    "recommendations": "Rekomendasi"
+    "recommendations": "Rekomendasi",
+    "predictFailed": "Gagal memprediksi performa. Coba lagi.",
+    "ruleBasedNote": "AI sedang tidak tersedia, jadi ini skor berbasis aturan dari panjang teks, hashtag, pertanyaan, dan ajakan bertindak. Perkiraan tayangan tidak ditampilkan."
   },
   "phase8Dashboard": {
     "howItWorks": "Cara kerjanya:",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "AI-Analyzed // Dari kinerja postingan Anda yang dipublikasikan",
     "coldStartHint": "Publikasikan postingan sehingga Click dapat menganalisis mana yang berhasil",
     "noInsightsYet": "Belum ada wawasan",
-    "impact": "Dampak: {{impact}}"
+    "impact": "Dampak: {{impact}}",
+    "loadFailed": "Gagal memuat insight."
   },
   "scalingHub": {
     "neuralThroughput": "Throughput",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "Contoh tempo: {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "Frame dipotong ke {{ratio}}. Ekspor dengan preset {{ratio}} agar frame tetap utuh.",
+    "reframeNotApplied": "Potongan {{ratio}} tidak bisa diterapkan karena ukuran frame video belum diketahui. Coba lagi setelah video selesai dimuat.",
+    "resultAddedToTimeline": "{{tool}}: versi baru ditambahkan ke timeline-mu.",
+    "resultReady": "{{tool}} selesai. Buka hasilnya di bawah.",
+    "noOutput": "{{tool}} selesai tapi tidak menghasilkan file. Silakan coba lagi.",
+    "speedRampMarker": "Kecepatan {{speed}}x",
+    "speedRampMarked": "{{count}} penanda speed ramp ditambahkan ke timeline-mu. Atur kecepatan di setiap penanda untuk menerapkannya.",
+    "speedRampPlanOnly": "{{count}} speed ramp direncanakan. Belum diterapkan ke videomu.",
+    "dubAddedToTimeline": "Trek suara bahasa Spanyol ditambahkan ke timeline-mu. Bisukan audio asli agar hanya dub yang terdengar.",
+    "openResult": "Buka hasil",
     "reframeStarting": "Me-reframe videomu di sekitar subjek utama…",
     "reframeDone": "Reframe otomatis selesai.",
     "reframeFailed": "Reframe otomatis tidak berhasil. Coba lagi.",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "Tutup pintasan",
     "searchTools": "Cari alat"
   },
+  "aiTimelineChat": {
+    "title": "Asisten timeline",
+    "greeting": "Bilang saja apa yang mau diubah. Aku bisa menerapkan color grade, menambahkan judul, mengubah kecepatan putar, atau membuka Ekspor untuk memilih bentuk frame lain.",
+    "placeholder": "mis. Bikin lebih cinematic",
+    "send": "Kirim pesan",
+    "appliedGrade": "Color grade {{grade}} diterapkan.",
+    "gradeNotApplied": "Aku tidak bisa menerapkan color grade {{grade}}.",
+    "addedText": "Judul \"{{text}}\" ditambahkan di posisi playhead.",
+    "textNeedsQuotes": "Tulis judul dalam tanda kutip, misalnya: add title \"Kabar besar\".",
+    "speedSet": "Kecepatan putar diatur ke {{speed}}x.",
+    "aspectOpenExport": "Bentuk frame dipilih saat ekspor. Ekspor sudah kubuka: pilih preset {{ratio}} di sana.",
+    "aspectNoExport": "Bentuk frame dipilih saat ekspor. Buka Ekspor lalu pilih preset {{ratio}}.",
+    "notUnderstood": "Aku tidak mengubah apa pun. Aku bisa menerapkan color grade (misalnya cinematic, warm, atau vintage), menambahkan judul dalam tanda kutip, mengubah kecepatan (misalnya 1.5x atau slow motion), atau membuka Ekspor untuk frame 9:16 atau 1:1.",
+    "badgeGrade": "Color grade: {{grade}}",
+    "badgeText": "Judul ditambahkan",
+    "badgeSpeed": "Kecepatan {{speed}}x",
+    "badgeExport": "Ekspor dibuka"
+  },
+  "repurposeView": {
+    "renderFailed": "Versi {{format}} gagal: {{error}}",
+    "renderFailedGeneric": "Render gagal.",
+    "renderTimedOut": "Render terlalu lama dan berhenti mengirim status. Silakan coba lagi."
+  },
+  "musicPicker": {
+    "generationFailed": "Gagal membuat musik AI. Silakan coba lagi.",
+    "generationFailedReason": "Gagal membuat musik AI: {{error}}",
+    "generationNoTrack": "Trek sudah dibuat tapi gagal disimpan. Silakan buat ulang."
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "Look ini gagal dihapus. Look masih tersimpan."
+  },
   "editorHUD": {
+    "saveFailedRetry": "Belum tersimpan ke akunmu. Klik untuk mencoba lagi.",
     "section": {
       "edit": "Editing",
       "color": "Warna",
@@ -8846,6 +8988,7 @@
     "export": "Ekspor"
   },
   "quickActionsBar": {
+    "trendsList": "Lagi tren di TikTok: {{list}}",
     "variantsNeedBase": "Tambahkan caption atau hook dulu agar pembuat varian punya bahan.",
     "noVariants": "Tidak ada varian — coba hook dasar yang lebih panjang.",
     "variantsGenerated": "{{count}} varian dibuat — buka pemilih A/B untuk pratinjau.",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "Wawasan Kompetitor"
     },
     "err": {
+      "analyzeFailed": "Video ini gagal dianalisis. Coba lagi sebentar lagi.",
       "videoNotFound": "Data video tidak ditemukan dalam respons",
       "loadFailed": "Gagal memuat video. Coba lagi.",
       "missingSource": "File sumber video ini tidak ada. Unggah ulang lalu coba lagi.",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "Analitik retensi, kekuatan hook, dan tempo akan muncul di sini setelah videomu dianalisis.",
       "transcript": "Transkrip"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "Memproses undanganmu…",
+    "body": "Kami sedang menambahkanmu ke tim. Ini hanya sebentar.",
+    "noToken": "Link undangan ini tidak memiliki kode. Minta undangan baru.",
+    "joined": "✓ Kamu sudah bergabung dengan tim",
+    "failed": "Gagal menerima undangan"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "Terlalu banyak permintaan reset. Tunggu beberapa menit, lalu coba lagi.",
+    "sendFailed": "Kami gagal mengirim link reset saat ini. Periksa koneksimu lalu coba lagi."
+  },
+  "governanceDashboard": {
+    "loadFailed": "Gagal memuat log audit."
+  },
+  "clickIsland": {
+    "chatEmpty": "Aku belum bisa membuat jawaban saat ini. Coba ubah kalimatnya atau kirim lagi.",
+    "chatRateLimited": "Kamu sudah mencapai batas AI untuk saat ini. Coba lagi beberapa saat lagi.",
+    "chatUnavailable": "AI belum bisa menjawab saat ini. Coba lagi sebentar lagi.",
+    "chatOffline": "Asisten sedang tidak bisa dihubungi. Periksa koneksimu lalu coba lagi."
+  },
+  "postStatus": {
+    "scheduled": "Terjadwal",
+    "awaitingApproval": "Menunggu persetujuan",
+    "publishing": "Memublikasikan",
+    "published": "Dipublikasikan",
+    "retrying": "Mencoba ulang",
+    "failed": "Gagal",
+    "cancelled": "Dibatalkan"
+  },
+  "creatorTools": {
+    "noResults": "Kali ini tidak ada hasil. Coba lagi atau ubah kalimatnya.",
+    "variantNotAdapted": "AI tidak bisa menyesuaikan yang ini. Ini teks aslimu."
+  },
+  "contentRecycling": {
+    "loadFailed": "Gagal memuat data daur ulang.",
+    "planCreated": "Rencana daur ulang dibuat.",
+    "createFailed": "Gagal membuat rencana daur ulang.",
+    "toggleFailed": "Gagal memperbarui rencana daur ulang."
   }
 }

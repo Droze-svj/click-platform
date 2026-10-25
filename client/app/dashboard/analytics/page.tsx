@@ -335,8 +335,10 @@ export default function AnalyticsPage() {
                         role="button"
                         tabIndex={0}
                         aria-label={t('analyticsPage.viewDetailsFor', { title: node.title })}
-                        onClick={() => router.push(`/dashboard/video/edit/${node.id}`)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push(`/dashboard/video/edit/${node.id}`) }}
+                        // node.id is a ScheduledPost id, not a Content id — the video
+                        // editor opened on it showed nothing. Open the post's analytics.
+                        onClick={() => router.push(`/dashboard/analytics/posts/${node.id}`)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') router.push(`/dashboard/analytics/posts/${node.id}`) }}
                         className="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-4 hover:bg-accent transition-colors cursor-pointer group"
                       >
                         <span className="ds-text-caption tabular-nums w-6 flex-shrink-0 text-theme-muted">

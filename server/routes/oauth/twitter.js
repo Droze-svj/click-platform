@@ -118,15 +118,10 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
   sendSuccess(res, 'Tweet posted successfully', 200, { tweet });
 }));
 
-/**
- * DELETE /api/oauth/twitter/disconnect
- * Disconnect Twitter account
- */
-router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
-  const userId = req.userId || req.user?._id || req.user?.id;
-  await twitterService.disconnectTwitter(userId);
-  sendSuccess(res, 'Twitter account disconnected', 200);
-}));
+// DELETE /api/oauth/twitter/disconnect is answered by the multi-account handler
+// in routes/oauth.js (DELETE /:platform/disconnect). A copy here used to
+// shadow it and ignore `accountId`, so disconnecting one account removed
+// every account on the platform (Instagram removed the first one instead).
 
 /**
  * GET /api/oauth/twitter/status

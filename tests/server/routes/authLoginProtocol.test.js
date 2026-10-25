@@ -158,7 +158,7 @@ describe('two-factor authentication on MongoDB accounts', () => {
 
     // Disabling needs both the password and a code.
     expect((await request(app).post('/api/auth/2fa/disable').set(authz).send({ token: backupCodes[1] })).status).toBe(400);
-    expect((await request(app).post('/api/auth/2fa/disable').set(authz).send({ password: 'Wrong-pass-1', token: backupCodes[1] })).status).toBe(401);
+    expect((await request(app).post('/api/auth/2fa/disable').set(authz).send({ password: 'Wrong-pass-1', token: backupCodes[1] })).status).toBe(400);
     const off = await request(app).post('/api/auth/2fa/disable').set(authz).send({ password: PASSWORD, token: backupCodes[1] });
     expect(off.status).toBe(200);
     const afterOff = await User.findById(user._id).lean();
@@ -230,7 +230,7 @@ describe('password reset, change, and session revocation', () => {
     await sleep(1100);
 
     expect((await request(app).post('/api/auth/change-password').set('Authorization', `Bearer ${mine.token}`)
-      .send({ currentPassword: 'Wrong-pass-1', newPassword: NEW_PASSWORD })).status).toBe(401);
+      .send({ currentPassword: 'Wrong-pass-1', newPassword: NEW_PASSWORD })).status).toBe(400);
 
     const res = await request(app).post('/api/auth/change-password').set('Authorization', `Bearer ${mine.token}`)
       .send({ currentPassword: PASSWORD, newPassword: NEW_PASSWORD });
@@ -244,7 +244,7 @@ describe('password reset, change, and session revocation', () => {
     const user = await makeUser('deactivate');
     const { token } = (await login(user.email)).body.data;
     const authz = { Authorization: `Bearer ${token}` };
-    expect((await request(app).post('/api/auth/deactivate').set(authz).send({ password: 'Wrong-pass-1' })).status).toBe(401);
+    expect((await request(app).post('/api/auth/deactivate').set(authz).send({ password: 'Wrong-pass-1' })).status).toBe(400);
     await sleep(1100);
     const res = await request(app).post('/api/auth/deactivate').set(authz).send({ password: PASSWORD, reason: 'test' });
     expect(res.status).toBe(200);

@@ -123,11 +123,14 @@ export default function OnboardingPage() {
   const handlePickNiche = async (value: string) => {
     setNiche(value)
     setEditingNiche(false)
-    showToast(t('onboardingPage.toastNicheLocked', { niche: value.toUpperCase() }), 'success')
+    // Confirm only once the server has saved it: the success toast used to
+    // fire before the request, so a failed save showed both toasts.
     try {
       await apiPut('/niche/select', { niche: value })
+      showToast(t('onboardingPage.toastNicheLocked', { niche: value.toUpperCase() }), 'success')
     } catch {
       showToast(t('onboardingPage.toastNicheSyncFailed'), 'error')
+      return
     }
     const profileStep = steps.find(s => s.id === 'profile')
     if (profileStep && !profileStep.completed) {

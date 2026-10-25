@@ -18,6 +18,30 @@ const auth = require('../../middleware/auth');
 const { resolveTier } = require('../../config/entitlements');
 const { guardOwnership } = require('../../utils/ownership');
 
+// The strategy is one LLM call. Never spend it when there are no live trends to
+// base it on, and reuse the answer for the same trend set (page loads would
+// otherwise each burn a request from the shared daily AI quota).
+const STRATEGY_TTL_MS = 6 * 60 * 60 * 1000;
+const strategyCache = new Map();
+async function strategyFor(trends, tier) {
+  const items = ['sounds', 'hashtags', 'topics']
+    .flatMap((k) => (Array.isArray(trends && trends[k]) ? trends[k] : []))
+    .map((it) => it && it.label)
+    .filter(Boolean);
+  if (items.length === 0) {
+    return { ok: false, error: 'No live trends to build a strategy from yet.' };
+  }
+  const key = `${tier}|${items.join('|')}`;
+  const hit = strategyCache.get(key);
+  if (hit && Date.now() - hit.at < STRATEGY_TTL_MS) return hit.value;
+  const value = await liveTrendService.getTrendStrategy(trends, { tier });
+  if (value && value.ok) {
+    if (strategyCache.size > 200) strategyCache.clear();
+    strategyCache.set(key, { at: Date.now(), value });
+  }
+  return value;
+}
+
 /**
  * GET /api/video/neural/trends
  * Fetch live trends for strategic ideation
@@ -27,7 +51,7 @@ router.get('/trends', auth, async (req, res) => {
     const platform = req.query.platform || 'tiktok';
     const tier = resolveTier(req.user);
     const trends = await liveTrendService.getLatestTrends(platform, { tier });
-    const strategy = await liveTrendService.getTrendStrategy(trends, { tier });
+    const strategy = await strategyFor(trends, tier);
 
     res.json({
       success: true,

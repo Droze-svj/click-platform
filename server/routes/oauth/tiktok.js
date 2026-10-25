@@ -11,6 +11,8 @@ const { resolveOAuthCallbackUrl } = require('../../utils/oauthCallbackUrl');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
 const logger = require('../../utils/logger');
+const { materializeVideoSource, ownUploadFile } = require('../../utils/ownUploadFile');
+const { unescape: unescapeHtml } = require('validator');
 const { verifyState } = require('../../utils/oauthState');
 const router = express.Router();
 
@@ -116,45 +118,67 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
  * Upload video to TikTok
  */
 router.post('/upload', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
-  const { videoFile, caption } = req.body;
+  // Undo the global sanitizer's HTML-escaping: the URL is resolved to a file
+  // and the caption goes to TikTok — neither is rendered as HTML here.
+  const raw = (v) => (typeof v === 'string' ? unescapeHtml(v) : v);
+  const videoFile = raw(req.body.videoFile);
+  const caption = raw(req.body.caption);
 
   if (!videoFile || !caption) {
     return sendError(res, 'Video file and caption are required', 400);
   }
 
   const userId = req.userId || req.user?._id || req.user?.id;
-  // uploadVideoToTikTok(userId, videoPath, caption) — videoFile is a local path.
-  const video = await tiktokService.uploadVideoToTikTok(userId, videoFile, caption);
-
-  sendSuccess(res, 'TikTok video uploaded successfully', 200, { video });
+  // uploadVideoToTikTok(userId, videoPath, caption) needs a file on disk; the
+  // client sends a media URL. Own signed /uploads media is read from disk,
+  // remote media is downloaded (SSRF-guarded) and removed afterwards, and a
+  // bare server path is refused.
+  let source;
+  try {
+    source = await materializeVideoSource(videoFile, { prefix: 'tiktok' });
+  } catch (err) {
+    return sendError(res, err.message, err.statusCode || 400);
+  }
+  try {
+    const video = await tiktokService.uploadVideoToTikTok(userId, source.path, caption);
+    sendSuccess(res, 'TikTok video uploaded successfully', 200, { video });
+  } finally {
+    source.cleanup();
+  }
 }));
 
 /**
  * POST /api/oauth/tiktok/post
  */
 router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
-  const { videoUrl, caption } = req.body;
+  // Undo the global sanitizer's HTML-escaping: an escaped "/" made every
+  // videoUrl unfetchable and an escaped apostrophe leaked into captions.
+  const raw = (v) => (typeof v === 'string' ? unescapeHtml(v) : v);
+  const videoUrl = raw(req.body.videoUrl);
+  const caption = raw(req.body.caption);
 
   if (!videoUrl || !caption) {
     return sendError(res, 'Video URL and caption are required', 400);
   }
 
   const userId = req.userId || req.user?._id || req.user?.id;
+  // Our own signed /uploads media is handed over as a local file — the
+  // service would otherwise download it from ourselves over HTTP (blocked by
+  // the SSRF guard on loopback, and broken once the signature expires).
+  // Any other URL goes to the service's guarded remote download.
+  const ownFile = ownUploadFile(videoUrl);
   // postToTikTok(userId, postData) — pass a {mediaUrl, caption} object, not a bare URL.
-  const post = await tiktokService.postToTikTok(userId, { mediaUrl: videoUrl, caption });
+  const post = await tiktokService.postToTikTok(userId, ownFile
+    ? { videoPath: ownFile, caption }
+    : { mediaUrl: videoUrl, caption });
 
   sendSuccess(res, 'TikTok post published successfully', 200, { post });
 }));
 
-/**
- * DELETE /api/oauth/tiktok/disconnect
- * Disconnect TikTok account
- */
-router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
-  const userId = req.userId || req.user?._id || req.user?.id;
-  await tiktokService.disconnectTikTok(userId);
-  sendSuccess(res, 'TikTok account disconnected', 200);
-}));
+// DELETE /api/oauth/tiktok/disconnect is answered by the multi-account handler
+// in routes/oauth.js (DELETE /:platform/disconnect). A copy here used to
+// shadow it and ignore `accountId`, so disconnecting one account removed
+// every account on the platform (Instagram removed the first one instead).
 
 /**
  * GET /api/oauth/tiktok/status

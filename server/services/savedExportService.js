@@ -10,27 +10,40 @@ const logger = require('../utils/logger')
 const DEFAULT_EXPIRES_DAYS = 10
 const SAVED_EXPORTS_BASE = path.join(__dirname, '../../uploads/saved-exports')
 
+const UPLOADS_BASE = path.resolve(__dirname, '../../uploads')
+
 /**
- * Resolve server path from relative URL (e.g. /uploads/exports/render-xxx.mp4)
+ * Resolve server path from relative URL (e.g. /uploads/exports/render-xxx.mp4).
+ * Returns null for anything that resolves outside <root>/uploads.
  */
 function resolveExportPath(exportPathOrUrl) {
-  let normalized = (exportPathOrUrl || '').trim()
+  let normalized = String(exportPathOrUrl || '').trim()
   try {
-    if (normalized.startsWith('http')) {
+    if (/^https?:\/\//i.test(normalized)) {
       const u = new URL(normalized)
       normalized = u.pathname || ''
     }
   } catch (_) {
     // Ignore URL parsing errors and fallback to treating as a relative path
   }
+  // A file path never carries a query or fragment. The editor sends the
+  // render URL it was given, which is SIGNED ("/uploads/x.mp4?exp=…&sig=…");
+  // the suffix used to be stripped only from absolute http URLs, so every
+  // "Save to Library" looked for a file literally named "x.mp4?exp=…" and failed.
+  const cut = normalized.search(/[?#]/)
+  if (cut !== -1) normalized = normalized.slice(0, cut)
+  try { normalized = decodeURIComponent(normalized) } catch (_) { /* keep as-is */ }
   normalized = normalized.replace(/^\/+/, '')
+  let resolved
   if (normalized.startsWith('uploads/')) {
-    return path.join(__dirname, '../..', normalized)
+    resolved = path.resolve(__dirname, '../..', normalized)
+  } else {
+    resolved = path.resolve(UPLOADS_BASE, normalized)
   }
-  if (normalized.startsWith('exports/')) {
-    return path.join(__dirname, '../../uploads', normalized)
-  }
-  return path.join(__dirname, '../..', 'uploads', normalized)
+  // Containment: the source must stay inside <root>/uploads — a traversal
+  // ("/uploads/../../.env") must never be copied into a user's library.
+  if (!resolved.startsWith(UPLOADS_BASE + path.sep)) return null
+  return resolved
 }
 
 /**
@@ -60,7 +73,7 @@ async function saveExport(options) {
   }
 
   const sourcePath = resolveExportPath(exportPathOrUrl)
-  if (!fs.existsSync(sourcePath)) {
+  if (!sourcePath || !fs.existsSync(sourcePath)) {
     throw new Error('Export file not found. Render again and save immediately.')
   }
 
@@ -186,4 +199,5 @@ module.exports = {
   listSavedExports,
   deleteSavedExport,
   DEFAULT_EXPIRES_DAYS,
+  resolveExportPath,
 }

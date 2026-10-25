@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import axios from 'axios'
+import { apiGet, apiPost } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
 import LoadingSpinner from './LoadingSpinner'
 import { History, RotateCcw, Eye } from 'lucide-react'
@@ -14,11 +14,32 @@ interface Version {
   contentSnapshot: any
   changes: string
   changedBy: {
-    _id: string
-    name: string
-    email: string
-  }
+    _id?: string
+    name?: string
+    email?: string
+  } | null
   createdAt: string
+}
+
+// GET /versions/:contentId returns ContentVersion docs:
+// { _id, version, createdBy (populated {name,email}), changeSummary, title,
+//   description, transcript, generatedContent, metadata, createdAt }.
+function toVersion(v: any): Version {
+  const by = v?.changedBy ?? v?.createdBy
+  return {
+    _id: String(v?._id ?? ''),
+    versionNumber: Number(v?.versionNumber ?? v?.version ?? 0),
+    contentSnapshot: v?.contentSnapshot ?? {
+      title: v?.title,
+      description: v?.description,
+      transcript: v?.transcript,
+      generatedContent: v?.generatedContent,
+      metadata: v?.metadata,
+    },
+    changes: typeof v?.changes === 'string' ? v.changes : (v?.changeSummary || ''),
+    changedBy: by && typeof by === 'object' ? by : null,
+    createdAt: v?.createdAt,
+  }
 }
 
 interface VersionHistoryProps {
@@ -38,16 +59,9 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
 
   const loadVersions = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/versions/content/${contentId}`,
-        {
-        }
-      )
-
-      if (response.data.success) {
-        setVersions(response.data.data || [])
-      }
+      const res: any = await apiGet(`/versions/${encodeURIComponent(contentId)}`, undefined, false)
+      const list = res?.data ?? res
+      setVersions(Array.isArray(list) ? list.map(toVersion) : [])
     } catch (error) {
       showToast(t('versionHistory.loadFailed'), 'error')
     } finally {
@@ -67,15 +81,10 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
     }
 
     try {
-      const token = localStorage.getItem('token')
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/versions/${version._id}/restore`,
-        {},
-        {
-        }
-      )
+      await apiPost(`/versions/${encodeURIComponent(contentId)}/${version.versionNumber}/restore`, {})
 
       showToast(t('versionHistory.restoreSuccess'), 'success')
+      loadVersions()
       onRestore?.()
     } catch (error) {
       showToast(t('versionHistory.restoreFailed'), 'error')
@@ -109,7 +118,7 @@ export default function VersionHistory({ contentId, onRestore }: VersionHistoryP
                     {new Date(version.createdAt).toLocaleString()}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {t('versionHistory.by', { name: version.changedBy.name })}
+                    {t('versionHistory.by', { name: version.changedBy?.name || version.changedBy?.email || '—' })}
                   </p>
                 </div>
                 <div className="flex gap-2">

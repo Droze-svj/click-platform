@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../hooks/useAuth'
-import { apiGet, apiPost } from '../lib/api'
+import { apiGet, apiPost, handleApiError } from '../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useToast } from '../contexts/ToastContext'
 
 interface Suggestion {
   type: 'workflow' | 'action' | 'onboarding'
@@ -19,6 +20,7 @@ interface Suggestion {
 export default function NextStepsPanel() {
   const router = useRouter()
   const { t } = useTranslation()
+  const { showToast } = useToast()
   const { user } = useAuth()
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loading, setLoading] = useState(true)
@@ -81,7 +83,7 @@ export default function NextStepsPanel() {
           navigateToAction(nextAction)
         }
       } catch (error) {
-        console.error('Failed to execute workflow', error)
+        showToast(handleApiError(error) || t('nextStepsPanel.workflowFailed'), 'error')
       }
     } else if (suggestion.action) {
       navigateToAction(suggestion.action)

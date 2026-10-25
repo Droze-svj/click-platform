@@ -86,7 +86,9 @@
     "openLabs": "Labs openen",
     "exploreLabs": "Labs verkennen",
     "earlyAccessOn": "Early access — voor jou beschikbaar",
-    "earlyAccessAgencyOnly": "Exclusief voor Agency"
+    "earlyAccessAgencyOnly": "Exclusief voor Agency",
+    "checkoutUnavailable": "Afrekenen voor dit abonnement is nu niet beschikbaar. Er is niets gewijzigd. Probeer het later opnieuw of neem contact op met support.",
+    "invoiceDownloadFailed": "De factuur kon niet worden gedownload. Probeer het opnieuw."
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "Gevarenzone",
     "irreversibleActions": "Onomkeerbare acties",
     "deleteAccountWarning": "Je account verwijderen: verwijder permanent al je video's, berichten, gekoppelde accounts en abonnementen. Dit kan niet ongedaan worden gemaakt.",
-    "deleteAccount": "Account verwijderen"
+    "deleteAccount": "Account verwijderen",
+    "loadFailedSaveBlocked": "We konden je opgeslagen instellingen niet laden. Opslaan is uitgeschakeld tot ze geladen zijn, zodat je echte instellingen niet door standaardwaarden worden vervangen.",
+    "saveBlockedNotLoaded": "Je opgeslagen instellingen zijn nog niet geladen. Probeer het opnieuw voordat je opslaat.",
+    "apiKeySavedPlaceholder": "Opgeslagen sleutel eindigt op {{last4}}. Voer een nieuwe sleutel in om hem te vervangen"
   },
   "common": {
     "save": "Redden",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "Analyseren…",
     "predictiveTelemetry": "Prestatieprognose",
     "predictiveTelemetryDesc": "Voorspellingen van hoe je content kan presteren.",
-    "scanningTrajectories": "Trajecten scannen..."
+    "scanningTrajectories": "Trajecten scannen...",
+    "errorStatusCheckFailed": "De status van je content kon niet worden gecontroleerd. Het kan nog steeds lukken; kijk in je bibliotheek.",
+    "errorGenerationTimeout": "Dit duurt langer dan normaal. Het kan nog steeds lukken; kijk over een paar minuten in je bibliotheek.",
+    "errorTemplateLoadFailed": "Die template kon niet worden geladen. Je kunt nog steeds zelf iets schrijven."
   },
   "forgePage": {
     "documentTitle": "AI-inhoudmaker | Klik",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "Openen",
     "resonanceAck": "Markeren als gelezen",
     "confirmPurgeSignal": "Deze melding verwijderen?",
-    "purgeSignal": "Verwijderen"
+    "purgeSignal": "Verwijderen",
+    "category_task": "Taken",
+    "category_project": "Projecten",
+    "category_content": "Content",
+    "category_approval": "Goedkeuringen",
+    "category_mention": "Vermeldingen",
+    "category_system": "Systeem",
+    "category_workflow": "Workflows",
+    "category_publishing": "Publiceren",
+    "category_recurring": "Terugkerende posts",
+    "category_brief": "Dagelijkse briefing",
+    "bulkReadFailed": "{{failed}} van {{total}} konden niet als gelezen worden gemarkeerd.",
+    "bulkDeleteFailed": "{{failed}} van {{total}} konden niet worden verwijderd.",
+    "loadFailed": "Meldingen konden niet worden geladen."
   },
   "onboardingPage": {
     "loading": "Laden",
@@ -1721,7 +1742,8 @@
     "statusPublished": "Gepubliceerd",
     "statusFailed": "Mislukt",
     "statusDraft": "Voorlopige versie",
-    "viewSequenceDetails": "Bekijk details"
+    "viewSequenceDetails": "Bekijk details",
+    "toastScheduledPartial": "{{ok}} van {{total}} posts ingepland. De rest is mislukt: {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "Scripts konden niet worden geladen",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "Script verwijderen?",
     "purgeNodeBody": "Hiermee wordt het script definitief verwijderd. Dit kan niet ongedaan worden gemaakt.",
     "abortPurge": "Annuleren",
-    "commitPurge": "Verwijderen"
+    "commitPurge": "Verwijderen",
+    "toastTemplateLoadFailed": "Die template kon niet worden geladen."
   },
   "searchPage": {
     "reconFailed": "Zoeken duurde te lang. Probeer het opnieuw.",
@@ -1929,7 +1952,8 @@
     "transmitting": "Verfrissend…",
     "transmit": "VERZENDEN",
     "terminateProtocol": "Taak verwijderen",
-    "secureAndLeave": "VEILIG_&_VERLATEN"
+    "secureAndLeave": "VEILIG_&_VERLATEN",
+    "toastLoadFailed": "Je taken konden niet worden geladen."
   },
   "templatesPage": {
     "toastSyncFailed": "Sjablonen konden niet worden geladen",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "Voortgang",
     "anomalyIntercepted": "Fout",
     "procTime": "Verwerkingstijd: {{time}}",
-    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}"
+    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}",
+    "cancelled": "Taak geannuleerd.",
+    "cancelFailed": "Deze taak kon niet worden geannuleerd."
   },
   "strategistPage": {
     "clickIntelligence": "Klik op Intelligentie",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "Emotionele aantrekkingskracht",
     "dominantLabel": "Dominant: {{emotion}}",
     "missingTriggerLabel": "Ontbrekende trigger met hoge impact:",
-    "optimalPostingWindows": "Optimale postvensters"
+    "optimalPostingWindows": "Optimale postvensters",
+    "syncFailed": "Synchroniseren mislukt. Probeer het opnieuw.",
+    "playbookFallbackNote": "AI is nu niet beschikbaar, dus deze ideeën komen uit het niche-playbook.",
+    "trendHooks": "Hooks om te proberen",
+    "trendFormats": "Formats",
+    "trendSounds": "Geluidsideeën",
+    "trendHashtags": "Hashtags",
+    "momentumRising": "Stijgend",
+    "momentumSteady": "Stabiel",
+    "momentumPeaking": "Op z'n hoogtepunt",
+    "nicheVoice": "Stem",
+    "pitfalls": "Vermijden",
+    "retentionFloorLabel": "Houd minstens {{value}}% van de kijkers vast",
+    "retentionTargetLabel": "Mik op {{value}}%",
+    "retentionGuidelineNote": "Een richtlijn voor {{platform}} op basis van het hook-venster, geen meting van je posts.",
+    "sequenceStepLabel": "Stap {{step}} · {{timing}}",
+    "campaignVideoLabel": "Video {{num}} · {{mark}}",
+    "angleNumber": "Invalshoek {{num}}",
+    "promptGroupSave": "Vaker opgeslagen",
+    "promptGroupComment": "Meer reacties",
+    "promptGroupShare": "Vaker gedeeld",
+    "promptGroupDm": "Meer DM's",
+    "promptGroupFollow": "Meer volgers",
+    "benchIdealLength": "Ideale lengte",
+    "benchHookWindow": "Hook-venster",
+    "benchCaptionStyle": "Ondertitelstijl",
+    "benchHashtags": "Hashtags",
+    "benchSoundStrategy": "Geluid",
+    "benchAvoid": "Vermijden op {{platform}}",
+    "verdictPublishReady": "Klaar om te publiceren",
+    "verdictNeedsTightening": "Kan strakker",
+    "verdictRewrite": "Moet herschreven worden",
+    "wordCountLabel": "{{count}} woorden",
+    "scoreRuleBasedNote": "Controle op basis van regels uit het {{platform}}-playbook.",
+    "notesTitle": "Wat je kunt aanpassen"
   },
   "teamDetailPage": {
     "toastLoadFailed": "Team kon niet worden geladen",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "Alleen-lezen instellingen",
     "latticeMetadata": "Teamdetails",
     "clusterId": "Team-ID",
-    "ownerHash": "Eigenaar"
+    "ownerHash": "Eigenaar",
+    "inviteEmailFailed": "De uitnodiging staat klaar, maar de e-mail kon niet worden verstuurd. Kopieer de link en stuur hem zelf.",
+    "inviteLinkLabel": "Uitnodigingslink",
+    "copyInviteLink": "Link kopiëren",
+    "inviteLinkCopied": "✓ Link gekopieerd"
   },
   "teamsPage": {
     "toastLoadFailed": "Kan teams niet laden",
@@ -4195,7 +4259,9 @@
     "postComment": "Reactie plaatsen",
     "resolved": "Opgelost",
     "helpful": "Behulpzaam",
-    "empty": "Nog geen opmerkingen. Wees de eerste die reageert!"
+    "empty": "Nog geen opmerkingen. Wees de eerste die reageert!",
+    "needsTeam": "Reacties worden gedeeld met een team.",
+    "needsTeamCta": "Maak of word lid van een team"
   },
   "complianceDashboard": {
     "outOf100": "/ 100",
@@ -4281,7 +4347,19 @@
     "colChecked": "Gecontroleerd",
     "untitled": "(Zonder titel)",
     "noHistory": "Nog geen nalevingsgeschiedenis.",
-    "noHistoryHint": "Voer een controle uit op uw inhoud om te beginnen met volgen."
+    "noHistoryHint": "Voer een controle uit op uw inhoud om te beginnen met volgen.",
+    "rulesLoadFailed": "Je regels konden niet worden geladen.",
+    "ruleSaveFailed": "De regel kon niet worden opgeslagen.",
+    "ruleDeleteFailed": "De regel kon niet worden verwijderd.",
+    "policiesLoadFailed": "Platformrichtlijnen konden niet worden geladen.",
+    "historyLoadFailed": "Nalevingsgeschiedenis kon niet worden geladen.",
+    "totalRulesStat": "Regels",
+    "activeRulesStat": "Actieve regels",
+    "totalTriggersStat": "Keer geactiveerd",
+    "colRule": "Regel",
+    "colTriggers": "Activeringen",
+    "colLastTriggered": "Laatst geactiveerd",
+    "noTriggersYet": "Geen van je regels is al geactiveerd."
   },
   "confirmDialog": {
     "confirm": "Bevestigen",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}}% optimaal",
     "dayAtTime": "{{day}} bij {{time}}",
     "schedule": "Schema",
-    "viewAllOptimalTimes": "Bekijk alle optimale tijden →"
+    "viewAllOptimalTimes": "Bekijk alle optimale tijden →",
+    "loadFailed": "Plaatsingstijden konden niet worden geladen."
   },
   "contentSuggestions": {
     "loadFailed": "Kan suggesties niet laden",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "Beschrijf wat deze workflow doet...",
     "trigger": "Trekker",
     "enableWorkflow": "Werkstroom inschakelen",
-    "cancel": "Annuleren"
+    "cancel": "Annuleren",
+    "notExecuted": "Workflow is niet uitgevoerd: {{reason}}",
+    "someActionsFailed": "Workflow is uitgevoerd, maar deze stappen zijn mislukt: {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "Ondernemingsbestuur",
@@ -5710,7 +5791,9 @@
     "retrying": "Opnieuw proberen...",
     "retryJob": "Probeer de taak opnieuw",
     "close": "Dichtbij",
-    "jobNotFound": "Baan niet gevonden"
+    "jobNotFound": "Baan niet gevonden",
+    "retryQueued": "Taak staat opnieuw in de wachtrij.",
+    "retryFailed": "Deze taak kon niet opnieuw worden gestart."
   },
   "jobProgressViewer": {
     "loadingJobStatus": "Taakstatus laden...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "Voorgestelde volgende stappen",
     "nextStep": "Volgende stap",
-    "continueSetup": "Ga door met instellen"
+    "continueSetup": "Ga door met instellen",
+    "workflowFailed": "Die workflow kon niet worden uitgevoerd."
   },
   "multiClientRollupDashboard": {
     "title": "Multi-client overzichtsdashboard",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "Ideeëngenerator",
     "autoFoley": "Auto-Foley",
     "brollAgent": "B-Roll-agent",
-    "captionSwarm": "AI-ondertitels"
+    "captionSwarm": "AI-ondertitels",
+    "noTrendsYet": "Er zijn nu geen live trends. Probeer het later opnieuw.",
+    "kindSound": "Geluid",
+    "kindHashtag": "Hashtag",
+    "kindTopic": "Onderwerp"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "Plaats je volgende video vanavond om 22.00 uur. Donderdagavonden zijn 23% boven het gemiddelde wat betreft korte viraliteit.",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "Markeer alles als gelezen",
     "loading": "Laden...",
     "noNotifications": "Geen meldingen",
-    "view": "Weergave"
+    "view": "Weergave",
+    "markReadFailed": "Kon dit niet als gelezen markeren. Probeer het opnieuw."
   },
   "notificationPreferences": {
     "title": "Meldingsvoorkeuren",
@@ -6309,7 +6398,9 @@
     "push": "Duw",
     "pushDescription": "Browser-pushmeldingen",
     "saving": "Besparing...",
-    "savePreferences": "Bewaar voorkeuren"
+    "savePreferences": "Bewaar voorkeuren",
+    "loadFailed": "We konden je meldingsvoorkeuren niet laden. Opslaan is uitgeschakeld tot ze geladen zijn.",
+    "saveFailed": "Je meldingsvoorkeuren konden niet worden opgeslagen. Probeer het opnieuw."
   },
   "offlineIndicator": {
     "backOnline": "Terug online",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ Pro-tip:",
     "allSet": "Je bent helemaal klaar!",
     "clickTunedFor": "KLIK is afgestemd op",
-    "makeFirstVideoViral": "Zorg ervoor dat je eerste video viraal gaat."
+    "makeFirstVideoViral": "Zorg ervoor dat je eerste video viraal gaat.",
+    "syncFailed": "Je antwoorden konden niet in je account worden opgeslagen. Op dit apparaat gelden ze nog steeds."
   },
   "oneClickPublish": {
     "salvageLowCtr": "Lage vroege doorklikratio op TikTok. Probeer eventueel een andere versie.",
@@ -6477,7 +6569,9 @@
     "variantB": "Variant B",
     "ignore": "Negeren",
     "swapToVariantB": "Wissel naar variant B",
-    "swapVariantB": "Wisselvariant B"
+    "swapVariantB": "Wisselvariant B",
+    "someFailed": "Niet gepubliceerd op: {{platforms}}",
+    "allFailed": "Publiceren mislukt op: {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "{{alt}} laden",
@@ -6688,7 +6782,10 @@
     "reach": "Bereik",
     "virality": "Viraliteit",
     "keyInsights": "Belangrijkste inzichten",
-    "recommendations": "Aanbevelingen"
+    "recommendations": "Aanbevelingen",
+    "ruleBasedNote": "Score op basis van regels: lengte, hashtags, emoji en vragen. Het is geen voorspelling van weergaven of bereik.",
+    "predictFailed": "Deze content kon geen score krijgen. Probeer het opnieuw.",
+    "needsText": "Voeg wat tekst toe om een score te krijgen."
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "Analytics is succesvol gesynchroniseerd",
@@ -6711,7 +6808,9 @@
     "expectedViews": "Verwachte weergaven",
     "engagementRate": "Betrokkenheidspercentage",
     "positiveFactors": "Positieve factoren",
-    "recommendations": "Aanbevelingen"
+    "recommendations": "Aanbevelingen",
+    "predictFailed": "Prestaties konden niet worden voorspeld. Probeer het opnieuw.",
+    "ruleBasedNote": "AI is niet beschikbaar, dus dit is een score op basis van regels: lengte, hashtags, vragen en calls-to-action. Er wordt geen schatting van weergaven getoond."
   },
   "phase8Dashboard": {
     "howItWorks": "Hoe het werkt:",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "AI-geanalyseerd // Op basis van de prestaties van uw gepubliceerde berichten",
     "coldStartHint": "Publiceer berichten zodat Click kan analyseren wat werkt",
     "noInsightsYet": "Nog geen inzichten",
-    "impact": "Impact: {{impact}}"
+    "impact": "Impact: {{impact}}",
+    "loadFailed": "Inzichten konden niet worden geladen."
   },
   "scalingHub": {
     "neuralThroughput": "Doorvoer",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "Voorbeeldtempo: {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "Beeld bijgesneden naar {{ratio}}. Exporteer met een {{ratio}}-voorinstelling om het volledige beeld te behouden.",
+    "reframeNotApplied": "De {{ratio}}-uitsnede kon niet worden toegepast omdat de beeldgrootte van de video nog niet bekend is. Probeer het opnieuw zodra de video is geladen.",
+    "resultAddedToTimeline": "{{tool}}: de nieuwe versie is aan je tijdlijn toegevoegd.",
+    "resultReady": "{{tool}} is klaar. Open het resultaat hieronder.",
+    "noOutput": "{{tool}} is klaar, maar heeft geen bestand teruggegeven. Probeer het opnieuw.",
+    "speedRampMarker": "Snelheid {{speed}}x",
+    "speedRampMarked": "{{count}} speed-ramp-markeringen aan je tijdlijn toegevoegd. Stel bij elke markering de snelheid in om ze toe te passen.",
+    "speedRampPlanOnly": "{{count}} speed ramps gepland. Ze zijn nog niet op je video toegepast.",
+    "dubAddedToTimeline": "De Spaanse stemtrack is aan je tijdlijn toegevoegd. Demp de originele audio om alleen de nasynchronisatie te horen.",
+    "openResult": "Resultaat openen",
     "reframeStarting": "Je video herkaderen rond het hoofdonderwerp…",
     "reframeDone": "Automatisch herkaderen voltooid.",
     "reframeFailed": "Automatisch herkaderen is niet gelukt. Probeer het opnieuw.",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "Sneltoetsen sluiten",
     "searchTools": "Tools zoeken"
   },
+  "aiTimelineChat": {
+    "title": "Tijdlijnassistent",
+    "greeting": "Vertel me wat je wilt aanpassen. Ik kan een kleurcorrectie toepassen, een titel toevoegen, de afspeelsnelheid wijzigen of Exporteren openen om een andere beeldverhouding te kiezen.",
+    "placeholder": "bijv. Maak het cinematic",
+    "send": "Bericht versturen",
+    "appliedGrade": "Kleurcorrectie {{grade}} toegepast.",
+    "gradeNotApplied": "Ik kon kleurcorrectie {{grade}} niet toepassen.",
+    "addedText": "Titel \"{{text}}\" toegevoegd bij de afspeelkop.",
+    "textNeedsQuotes": "Zet de titel tussen aanhalingstekens, bijvoorbeeld: add title \"Groot nieuws\".",
+    "speedSet": "Afspeelsnelheid ingesteld op {{speed}}x.",
+    "aspectOpenExport": "De beeldverhouding kies je bij het exporteren. Ik heb Exporteren geopend: kies daar een {{ratio}}-voorinstelling.",
+    "aspectNoExport": "De beeldverhouding kies je bij het exporteren. Open Exporteren en kies een {{ratio}}-voorinstelling.",
+    "notUnderstood": "Ik heb niets veranderd. Ik kan een kleurcorrectie toepassen (bijvoorbeeld cinematic, warm of vintage), een titel tussen aanhalingstekens toevoegen, de snelheid wijzigen (bijvoorbeeld 1.5x of slow motion) of Exporteren openen voor een 9:16- of 1:1-beeld.",
+    "badgeGrade": "Kleurcorrectie: {{grade}}",
+    "badgeText": "Titel toegevoegd",
+    "badgeSpeed": "Snelheid {{speed}}x",
+    "badgeExport": "Exporteren geopend"
+  },
+  "repurposeView": {
+    "renderFailed": "De {{format}}-versie is mislukt: {{error}}",
+    "renderFailedGeneric": "Het renderen is mislukt.",
+    "renderTimedOut": "Het renderen duurt te lang en geeft geen status meer door. Probeer het opnieuw."
+  },
+  "musicPicker": {
+    "generationFailed": "AI-muziek genereren is mislukt. Probeer het opnieuw.",
+    "generationFailedReason": "AI-muziek genereren is mislukt: {{error}}",
+    "generationNoTrack": "De track is gegenereerd, maar kon niet worden opgeslagen. Genereer hem opnieuw."
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "Deze look kon niet worden verwijderd. Hij is nog steeds opgeslagen."
+  },
   "editorHUD": {
+    "saveFailedRetry": "Nog niet opgeslagen in je account. Klik om het opnieuw te proberen.",
     "section": {
       "edit": "Bewerken",
       "color": "Kleur",
@@ -8846,6 +8988,7 @@
     "export": "Exporteren"
   },
   "quickActionsBar": {
+    "trendsList": "Nu trending op TikTok: {{list}}",
     "variantsNeedBase": "Voeg eerst een bijschrift of hook toe, zodat de variantgenerator iets heeft om mee te werken.",
     "noVariants": "Geen varianten ontvangen — probeer een langere basishook.",
     "variantsGenerated": "{{count}} varianten gemaakt — open de A/B-kiezer om ze te bekijken.",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "Inzichten over concurrenten"
     },
     "err": {
+      "analyzeFailed": "Deze video kon niet worden geanalyseerd. Probeer het zo opnieuw.",
       "videoNotFound": "Geen videogegevens gevonden in het antwoord",
       "loadFailed": "Video laden mislukt. Probeer het opnieuw.",
       "missingSource": "Het bronbestand van deze video ontbreekt. Upload opnieuw en probeer het nog eens.",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "Analyses van retentie, hookkracht en tempo verschijnen hier zodra je video is geanalyseerd.",
       "transcript": "Transcript"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "Je uitnodiging wordt verwerkt…",
+    "body": "We voegen je toe aan het team. Dit duurt maar even.",
+    "noToken": "Deze uitnodigingslink mist de code. Vraag om een nieuwe uitnodiging.",
+    "joined": "✓ Je bent lid van het team",
+    "failed": "De uitnodiging kon niet worden geaccepteerd"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "Te veel resetverzoeken. Wacht een paar minuten en probeer het dan opnieuw.",
+    "sendFailed": "We konden de resetlink nu niet versturen. Controleer je verbinding en probeer het opnieuw."
+  },
+  "governanceDashboard": {
+    "loadFailed": "Het auditlogboek kon niet worden geladen."
+  },
+  "clickIsland": {
+    "chatEmpty": "Ik kon nu geen antwoord genereren. Formuleer het anders of stuur het opnieuw.",
+    "chatRateLimited": "Je hebt de AI-limiet voorlopig bereikt. Probeer het over een tijdje opnieuw.",
+    "chatUnavailable": "De AI kon nu niet antwoorden. Probeer het zo opnieuw.",
+    "chatOffline": "Ik kan de assistent nu niet bereiken. Controleer je verbinding en probeer het opnieuw."
+  },
+  "postStatus": {
+    "scheduled": "Ingepland",
+    "awaitingApproval": "Wacht op goedkeuring",
+    "publishing": "Bezig met publiceren",
+    "published": "Gepubliceerd",
+    "retrying": "Opnieuw proberen",
+    "failed": "Mislukt",
+    "cancelled": "Geannuleerd"
+  },
+  "creatorTools": {
+    "noResults": "Deze keer geen resultaten. Probeer het opnieuw of formuleer het anders.",
+    "variantNotAdapted": "AI kon deze niet aanpassen. Dit is je originele tekst."
+  },
+  "contentRecycling": {
+    "loadFailed": "Recyclinggegevens konden niet worden geladen.",
+    "planCreated": "Recyclingplan aangemaakt.",
+    "createFailed": "Het recyclingplan kon niet worden aangemaakt.",
+    "toggleFailed": "Het recyclingplan kon niet worden bijgewerkt."
   }
 }

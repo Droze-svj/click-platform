@@ -86,7 +86,9 @@
     "openLabs": "Labs 열기",
     "exploreLabs": "Labs 둘러보기",
     "earlyAccessOn": "얼리 액세스 — 사용 가능",
-    "earlyAccessAgencyOnly": "Agency 전용"
+    "earlyAccessAgencyOnly": "Agency 전용",
+    "checkoutUnavailable": "지금은 이 요금제를 결제할 수 없어요. 아무것도 변경되지 않았어요. 나중에 다시 시도하거나 지원팀에 문의해 주세요.",
+    "invoiceDownloadFailed": "청구서를 다운로드하지 못했어요. 다시 시도해 주세요."
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "위험지대",
     "irreversibleActions": "되돌릴 수 없는 행동",
     "deleteAccountWarning": "계정 삭제: 모든 비디오, 게시물, 연결된 계정 및 구독을 영구적으로 제거합니다. 이 작업은 취소할 수 없습니다.",
-    "deleteAccount": "계정 삭제"
+    "deleteAccount": "계정 삭제",
+    "loadFailedSaveBlocked": "저장된 설정을 불러오지 못했어요. 실제 설정이 기본값으로 바뀌지 않도록 불러올 때까지 저장이 꺼져 있어요.",
+    "saveBlockedNotLoaded": "저장된 설정을 아직 불러오지 못했어요. 저장하기 전에 다시 시도해 주세요.",
+    "apiKeySavedPlaceholder": "{{last4}}(으)로 끝나는 키가 저장되어 있어요. 바꾸려면 새 키를 입력하세요"
   },
   "common": {
     "save": "저장",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "분석 중…",
     "predictiveTelemetry": "성과 예측",
     "predictiveTelemetryDesc": "콘텐츠 성과 예측이에요.",
-    "scanningTrajectories": "궤적 스캔 중..."
+    "scanningTrajectories": "궤적 스캔 중...",
+    "errorStatusCheckFailed": "콘텐츠 상태를 확인하지 못했어요. 아직 완료될 수 있으니 라이브러리를 확인해 주세요.",
+    "errorGenerationTimeout": "평소보다 오래 걸리고 있어요. 아직 완료될 수 있으니 몇 분 후 라이브러리를 확인해 주세요.",
+    "errorTemplateLoadFailed": "템플릿을 불러오지 못했어요. 직접 작성할 수도 있어요."
   },
   "forgePage": {
     "documentTitle": "AI 콘텐츠 크리에이터 | 딸깍 하는 소리",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "열기",
     "resonanceAck": "읽음으로 표시",
     "confirmPurgeSignal": "이 알림을 삭제할까요?",
-    "purgeSignal": "삭제"
+    "purgeSignal": "삭제",
+    "category_task": "할 일",
+    "category_project": "프로젝트",
+    "category_content": "콘텐츠",
+    "category_approval": "승인",
+    "category_mention": "멘션",
+    "category_system": "시스템",
+    "category_workflow": "워크플로",
+    "category_publishing": "게시",
+    "category_recurring": "반복 게시물",
+    "category_brief": "데일리 브리프",
+    "bulkReadFailed": "{{total}}개 중 {{failed}}개를 읽음으로 표시하지 못했어요.",
+    "bulkDeleteFailed": "{{total}}개 중 {{failed}}개를 삭제하지 못했어요.",
+    "loadFailed": "알림을 불러오지 못했어요."
   },
   "onboardingPage": {
     "loading": "로드 중",
@@ -1721,7 +1742,8 @@
     "statusPublished": "게시됨",
     "statusFailed": "실패한",
     "statusDraft": "초안",
-    "viewSequenceDetails": "세부정보 보기"
+    "viewSequenceDetails": "세부정보 보기",
+    "toastScheduledPartial": "게시물 {{total}}개 중 {{ok}}개를 예약했어요. 나머지는 실패했어요: {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "스크립트를 불러오지 못했어요",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "스크립트를 삭제할까요?",
     "purgeNodeBody": "스크립트가 영구적으로 삭제돼요. 되돌릴 수 없어요.",
     "abortPurge": "취소",
-    "commitPurge": "삭제"
+    "commitPurge": "삭제",
+    "toastTemplateLoadFailed": "템플릿을 불러오지 못했어요."
   },
   "searchPage": {
     "reconFailed": "검색 시간이 초과됐어요. 다시 시도해 주세요.",
@@ -1929,7 +1952,8 @@
     "transmitting": "상쾌하다…",
     "transmit": "부치다",
     "terminateProtocol": "작업 삭제",
-    "secureAndLeave": "보안_&_떠나기"
+    "secureAndLeave": "보안_&_떠나기",
+    "toastLoadFailed": "할 일을 불러오지 못했어요."
   },
   "templatesPage": {
     "toastSyncFailed": "템플릿을 불러오지 못했어요",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "진행 상황",
     "anomalyIntercepted": "오류",
     "procTime": "처리 시간: {{time}}",
-    "retryThreshold": "재시도 {{attempts}}회"
+    "retryThreshold": "재시도 {{attempts}}회",
+    "cancelled": "작업을 취소했어요.",
+    "cancelFailed": "이 작업을 취소하지 못했어요."
   },
   "strategistPage": {
     "clickIntelligence": "지능형 클릭",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "감성 호소력",
     "dominantLabel": "지배적: {{emotion}}",
     "missingTriggerLabel": "강력한 트리거 누락:",
-    "optimalPostingWindows": "최적 게시 창"
+    "optimalPostingWindows": "최적 게시 창",
+    "syncFailed": "동기화하지 못했어요. 다시 시도해 주세요.",
+    "playbookFallbackNote": "지금은 AI를 사용할 수 없어서 이 아이디어는 니치 플레이북에서 가져왔어요.",
+    "trendHooks": "시도해 볼 훅",
+    "trendFormats": "포맷",
+    "trendSounds": "사운드 아이디어",
+    "trendHashtags": "해시태그",
+    "momentumRising": "상승 중",
+    "momentumSteady": "꾸준함",
+    "momentumPeaking": "최고조",
+    "nicheVoice": "톤",
+    "pitfalls": "피할 것",
+    "retentionFloorLabel": "시청자의 {{value}}% 이상 유지",
+    "retentionTargetLabel": "목표 {{value}}%",
+    "retentionGuidelineNote": "{{platform}}의 훅 구간을 기준으로 한 가이드라인이며, 내 게시물을 측정한 값이 아니에요.",
+    "sequenceStepLabel": "{{step}}단계 · {{timing}}",
+    "campaignVideoLabel": "동영상 {{num}} · {{mark}}",
+    "angleNumber": "앵글 {{num}}",
+    "promptGroupSave": "저장 늘리기",
+    "promptGroupComment": "댓글 늘리기",
+    "promptGroupShare": "공유 늘리기",
+    "promptGroupDm": "DM 늘리기",
+    "promptGroupFollow": "팔로우 늘리기",
+    "benchIdealLength": "이상적인 길이",
+    "benchHookWindow": "훅 구간",
+    "benchCaptionStyle": "캡션 스타일",
+    "benchHashtags": "해시태그",
+    "benchSoundStrategy": "사운드",
+    "benchAvoid": "{{platform}}에서 피할 것",
+    "verdictPublishReady": "게시 준비 완료",
+    "verdictNeedsTightening": "다듬기 필요",
+    "verdictRewrite": "다시 쓰기 필요",
+    "wordCountLabel": "{{count}}단어",
+    "scoreRuleBasedNote": "{{platform}} 플레이북에 따른 규칙 기반 검사예요.",
+    "notesTitle": "바꿀 점"
   },
   "teamDetailPage": {
     "toastLoadFailed": "팀을 불러오지 못했어요",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "읽기 전용 설정",
     "latticeMetadata": "팀 세부 정보",
     "clusterId": "팀 ID",
-    "ownerHash": "소유자"
+    "ownerHash": "소유자",
+    "inviteEmailFailed": "초대는 준비됐지만 이메일을 보내지 못했어요. 링크를 복사해서 직접 보내 주세요.",
+    "inviteLinkLabel": "초대 링크",
+    "copyInviteLink": "링크 복사",
+    "inviteLinkCopied": "✓ 링크 복사됨"
   },
   "teamsPage": {
     "toastLoadFailed": "팀을 로드하지 못했습니다.",
@@ -4195,7 +4259,9 @@
     "postComment": "댓글 게시",
     "resolved": "해결됨",
     "helpful": "도움이 되는",
-    "empty": "아직 댓글이 없습니다. 가장 먼저 댓글을 달아주세요!"
+    "empty": "아직 댓글이 없습니다. 가장 먼저 댓글을 달아주세요!",
+    "needsTeam": "댓글은 팀과 공유돼요.",
+    "needsTeamCta": "팀 만들기 또는 참여하기"
   },
   "complianceDashboard": {
     "outOf100": "/ 100",
@@ -4281,7 +4347,19 @@
     "colChecked": "체크됨",
     "untitled": "(제목 없음)",
     "noHistory": "아직 준수 내역이 없습니다.",
-    "noHistoryHint": "추적을 시작하려면 콘텐츠를 확인하세요."
+    "noHistoryHint": "추적을 시작하려면 콘텐츠를 확인하세요.",
+    "rulesLoadFailed": "규칙을 불러오지 못했어요.",
+    "ruleSaveFailed": "규칙을 저장하지 못했어요.",
+    "ruleDeleteFailed": "규칙을 삭제하지 못했어요.",
+    "policiesLoadFailed": "플랫폼 정책을 불러오지 못했어요.",
+    "historyLoadFailed": "규정 준수 기록을 불러오지 못했어요.",
+    "totalRulesStat": "규칙",
+    "activeRulesStat": "활성 규칙",
+    "totalTriggersStat": "감지 횟수",
+    "colRule": "규칙",
+    "colTriggers": "감지 횟수",
+    "colLastTriggered": "마지막 감지",
+    "noTriggersYet": "아직 감지된 규칙이 없어요."
   },
   "confirmDialog": {
     "confirm": "확인하다",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}}% 최적",
     "dayAtTime": "{{time}}에서 {{day}}",
     "schedule": "일정",
-    "viewAllOptimalTimes": "최적의 시간 모두 보기 →"
+    "viewAllOptimalTimes": "최적의 시간 모두 보기 →",
+    "loadFailed": "게시 시간을 불러오지 못했어요."
   },
   "contentSuggestions": {
     "loadFailed": "제안을 로드하지 못했습니다.",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "이 워크플로의 기능을 설명하세요...",
     "trigger": "방아쇠",
     "enableWorkflow": "워크플로 활성화",
-    "cancel": "취소"
+    "cancel": "취소",
+    "notExecuted": "워크플로가 실행되지 않았어요: {{reason}}",
+    "someActionsFailed": "워크플로는 실행됐지만 다음 단계가 실패했어요: {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "엔터프라이즈 거버넌스",
@@ -5710,7 +5791,9 @@
     "retrying": "재시도 중...",
     "retryJob": "작업 재시도",
     "close": "닫다",
-    "jobNotFound": "채용정보를 찾을 수 없습니다."
+    "jobNotFound": "채용정보를 찾을 수 없습니다.",
+    "retryQueued": "작업이 다시 실행되도록 대기열에 추가했어요.",
+    "retryFailed": "이 작업을 다시 시도하지 못했어요."
   },
   "jobProgressViewer": {
     "loadingJobStatus": "작업 상태 로드 중...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "제안된 다음 단계",
     "nextStep": "다음 단계",
-    "continueSetup": "계속 설정"
+    "continueSetup": "계속 설정",
+    "workflowFailed": "해당 워크플로를 실행하지 못했어요."
   },
   "multiClientRollupDashboard": {
     "title": "다중 클라이언트 롤업 대시보드",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "아이디어 생성기",
     "autoFoley": "자동 폴리",
     "brollAgent": "B-롤 에이전트",
-    "captionSwarm": "AI 자막"
+    "captionSwarm": "AI 자막",
+    "noTrendsYet": "지금은 실시간 트렌드가 없어요. 나중에 다시 시도해 주세요.",
+    "kindSound": "사운드",
+    "kindHashtag": "해시태그",
+    "kindTopic": "주제"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "오늘 밤 10시에 다음 동영상을 게시하세요. 목요일 밤의 짧은 형식 입소문은 평균보다 23% 높습니다.",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "모두 읽음으로 표시",
     "loading": "로드 중...",
     "noNotifications": "알림 없음",
-    "view": "보다"
+    "view": "보다",
+    "markReadFailed": "읽음으로 표시하지 못했어요. 다시 시도해 주세요."
   },
   "notificationPreferences": {
     "title": "알림 환경설정",
@@ -6309,7 +6398,9 @@
     "push": "푸시",
     "pushDescription": "브라우저 푸시 알림",
     "saving": "절약...",
-    "savePreferences": "환경설정 저장"
+    "savePreferences": "환경설정 저장",
+    "loadFailed": "알림 설정을 불러오지 못했어요. 불러올 때까지 저장이 꺼져 있어요.",
+    "saveFailed": "알림 설정을 저장하지 못했어요. 다시 시도해 주세요."
   },
   "offlineIndicator": {
     "backOnline": "온라인으로 돌아오다",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ 전문가 팁:",
     "allSet": "모든 준비가 완료되었습니다.",
     "clickTunedFor": "CLICK이 조정되었습니다",
-    "makeFirstVideoViral": "첫 번째 비디오를 입소문나게 만들어 보세요."
+    "makeFirstVideoViral": "첫 번째 비디오를 입소문나게 만들어 보세요.",
+    "syncFailed": "답변을 계정에 저장하지 못했어요. 이 기기에서는 계속 적용돼요."
   },
   "oneClickPublish": {
     "salvageLowCtr": "TikTok 초기 클릭률이 낮아요. 다른 버전을 시도해 보세요.",
@@ -6477,7 +6569,9 @@
     "variantB": "변형 B",
     "ignore": "무시하다",
     "swapToVariantB": "변형 B로 교체",
-    "swapVariantB": "스왑 변형 B"
+    "swapVariantB": "스왑 변형 B",
+    "someFailed": "게시되지 않은 곳: {{platforms}}",
+    "allFailed": "게시하지 못한 곳: {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "로드 중 {{alt}}",
@@ -6688,7 +6782,10 @@
     "reach": "도달하다",
     "virality": "바이러스성",
     "keyInsights": "주요 통찰력",
-    "recommendations": "권장 사항"
+    "recommendations": "권장 사항",
+    "ruleBasedNote": "길이, 해시태그, 이모지, 질문을 바탕으로 한 규칙 기반 점수예요. 조회수나 도달 범위를 예측한 값이 아니에요.",
+    "predictFailed": "이 콘텐츠의 점수를 매기지 못했어요. 다시 시도해 주세요.",
+    "needsText": "점수를 매기려면 텍스트를 추가하세요."
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "Analytics가 성공적으로 동기화되었습니다.",
@@ -6711,7 +6808,9 @@
     "expectedViews": "예상 조회수",
     "engagementRate": "참여율",
     "positiveFactors": "긍정적인 요소",
-    "recommendations": "권장 사항"
+    "recommendations": "권장 사항",
+    "predictFailed": "성과를 예측하지 못했어요. 다시 시도해 주세요.",
+    "ruleBasedNote": "AI를 사용할 수 없어서 길이, 해시태그, 질문, 행동 유도 문구를 바탕으로 한 규칙 기반 점수예요. 예상 조회수는 표시되지 않아요."
   },
   "phase8Dashboard": {
     "howItWorks": "작동 방식:",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "AI 분석 // 게시된 게시물 성과에서",
     "coldStartHint": "Click에서 효과적인 내용을 분석할 수 있도록 게시물을 게시하세요.",
     "noInsightsYet": "아직 통계가 없습니다.",
-    "impact": "영향: {{impact}}"
+    "impact": "영향: {{impact}}",
+    "loadFailed": "인사이트를 불러오지 못했어요."
   },
   "scalingHub": {
     "neuralThroughput": "처리량",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "예시 페이싱: {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "화면을 {{ratio}}(으)로 잘랐어요. 전체 화면을 유지하려면 {{ratio}} 프리셋으로 내보내세요.",
+    "reframeNotApplied": "동영상의 프레임 크기를 아직 알 수 없어서 {{ratio}} 자르기를 적용하지 못했어요. 로드가 끝난 후 다시 시도해 주세요.",
+    "resultAddedToTimeline": "{{tool}}: 새 버전을 타임라인에 추가했어요.",
+    "resultReady": "{{tool}} 작업이 끝났어요. 아래에서 결과를 열어 보세요.",
+    "noOutput": "{{tool}} 작업은 끝났지만 파일이 반환되지 않았어요. 다시 시도해 주세요.",
+    "speedRampMarker": "속도 {{speed}}x",
+    "speedRampMarked": "타임라인에 속도 램프 마커 {{count}}개를 추가했어요. 적용하려면 각 마커에서 속도를 설정하세요.",
+    "speedRampPlanOnly": "속도 램프 {{count}}개를 계획했어요. 아직 동영상에는 적용되지 않았어요.",
+    "dubAddedToTimeline": "스페인어 음성 트랙을 타임라인에 추가했어요. 더빙만 들으려면 원본 오디오를 음소거하세요.",
+    "openResult": "결과 열기",
     "reframeStarting": "주요 피사체를 중심으로 동영상을 리프레임하는 중…",
     "reframeDone": "자동 리프레임 완료.",
     "reframeFailed": "자동 리프레임이 되지 않았어요. 다시 시도해 주세요.",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "단축키 닫기",
     "searchTools": "도구 검색"
   },
+  "aiTimelineChat": {
+    "title": "타임라인 어시스턴트",
+    "greeting": "무엇을 바꿀지 알려 주세요. 컬러 그레이딩 적용, 제목 추가, 재생 속도 변경, 다른 화면 비율을 고를 수 있도록 내보내기 열기를 할 수 있어요.",
+    "placeholder": "예: 시네마틱하게 만들어 줘",
+    "send": "메시지 보내기",
+    "appliedGrade": "{{grade}} 컬러 그레이딩을 적용했어요.",
+    "gradeNotApplied": "{{grade}} 컬러 그레이딩을 적용하지 못했어요.",
+    "addedText": "재생 헤드 위치에 제목 \"{{text}}\"을(를) 추가했어요.",
+    "textNeedsQuotes": "제목을 따옴표로 감싸 주세요. 예: 제목 추가 \"빅 뉴스\"",
+    "speedSet": "재생 속도를 {{speed}}x로 설정했어요.",
+    "aspectOpenExport": "화면 비율은 내보낼 때 선택해요. 내보내기를 열었으니 {{ratio}} 프리셋을 선택하세요.",
+    "aspectNoExport": "화면 비율은 내보낼 때 선택해요. 내보내기를 열고 {{ratio}} 프리셋을 선택하세요.",
+    "notUnderstood": "아무것도 변경하지 않았어요. 컬러 그레이딩 적용(예: 시네마틱, 따뜻하게, 빈티지), 따옴표 안의 제목 추가, 속도 변경(예: 1.5x 또는 슬로 모션), 9:16 또는 1:1 화면을 위한 내보내기 열기를 할 수 있어요.",
+    "badgeGrade": "컬러 그레이딩: {{grade}}",
+    "badgeText": "제목 추가됨",
+    "badgeSpeed": "속도 {{speed}}x",
+    "badgeExport": "내보내기 열림"
+  },
+  "repurposeView": {
+    "renderFailed": "{{format}} 버전 생성에 실패했어요: {{error}}",
+    "renderFailedGeneric": "렌더링에 실패했어요.",
+    "renderTimedOut": "렌더링이 너무 오래 걸리고 진행 상황 보고가 멈췄어요. 다시 시도해 주세요."
+  },
+  "musicPicker": {
+    "generationFailed": "AI 음악 생성에 실패했어요. 다시 시도해 주세요.",
+    "generationFailedReason": "AI 음악 생성에 실패했어요: {{error}}",
+    "generationNoTrack": "트랙은 생성됐지만 저장하지 못했어요. 다시 생성해 주세요."
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "이 룩을 삭제하지 못했어요. 그대로 저장되어 있어요."
+  },
   "editorHUD": {
+    "saveFailedRetry": "아직 계정에 저장되지 않았어요. 클릭해서 다시 시도하세요.",
     "section": {
       "edit": "편집",
       "color": "색상",
@@ -8846,6 +8988,7 @@
     "export": "내보내기"
   },
   "quickActionsBar": {
+    "trendsList": "지금 TikTok 인기: {{list}}",
     "variantsNeedBase": "변형을 만들 수 있도록 먼저 캡션이나 훅을 추가하세요.",
     "noVariants": "생성된 변형이 없어요 — 기본 훅을 더 길게 써 보세요.",
     "variantsGenerated": "변형 {{count}}개를 생성했어요 — A/B 선택 창에서 미리 보세요.",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "경쟁 분석"
     },
     "err": {
+      "analyzeFailed": "이 동영상을 분석하지 못했어요. 잠시 후 다시 시도해 주세요.",
       "videoNotFound": "응답에서 동영상 데이터를 찾을 수 없어요",
       "loadFailed": "동영상을 불러오지 못했어요. 다시 시도해 주세요.",
       "missingSource": "이 동영상의 원본 파일이 없어요. 다시 업로드한 뒤 시도해 주세요.",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "동영상 분석이 끝나면 시청 유지율, 훅 강도, 페이싱 분석이 여기에 표시돼요.",
       "transcript": "트랜스크립트"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "초대를 처리하는 중…",
+    "body": "팀에 추가하고 있어요. 잠시만 기다려 주세요.",
+    "noToken": "이 초대 링크에 코드가 없어요. 새 초대를 요청하세요.",
+    "joined": "✓ 팀에 참여했어요",
+    "failed": "초대를 수락하지 못했어요"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "재설정 요청이 너무 많아요. 몇 분 후 다시 시도해 주세요.",
+    "sendFailed": "지금은 재설정 링크를 보내지 못했어요. 연결 상태를 확인하고 다시 시도해 주세요."
+  },
+  "governanceDashboard": {
+    "loadFailed": "감사 로그를 불러오지 못했어요."
+  },
+  "clickIsland": {
+    "chatEmpty": "지금은 답변을 생성하지 못했어요. 다르게 표현하거나 다시 보내 주세요.",
+    "chatRateLimited": "지금은 AI 사용 한도에 도달했어요. 잠시 후 다시 시도해 주세요.",
+    "chatUnavailable": "지금은 AI가 답변할 수 없어요. 잠시 후 다시 시도해 주세요.",
+    "chatOffline": "지금은 어시스턴트에 연결할 수 없어요. 연결 상태를 확인하고 다시 시도해 주세요."
+  },
+  "postStatus": {
+    "scheduled": "예약됨",
+    "awaitingApproval": "승인 대기 중",
+    "publishing": "게시 중",
+    "published": "게시됨",
+    "retrying": "재시도 중",
+    "failed": "실패",
+    "cancelled": "취소됨"
+  },
+  "creatorTools": {
+    "noResults": "이번에는 결과가 없어요. 다시 시도하거나 다르게 표현해 보세요.",
+    "variantNotAdapted": "AI가 이 항목을 변환하지 못했어요. 원본 텍스트예요."
+  },
+  "contentRecycling": {
+    "loadFailed": "재활용 데이터를 불러오지 못했어요.",
+    "planCreated": "재활용 플랜을 만들었어요.",
+    "createFailed": "재활용 플랜을 만들지 못했어요.",
+    "toggleFailed": "재활용 플랜을 업데이트하지 못했어요."
   }
 }

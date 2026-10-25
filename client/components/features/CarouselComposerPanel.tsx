@@ -1,12 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import { handleApiError } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 import { composeSlides, type SlideFormat, type SlideResult } from '@/lib/featuresApi'
 
 const FORMATS: SlideFormat[] = ['carousel', 'thread']
 
 /** Split one idea into ordered carousel slides / thread posts. */
 export default function CarouselComposerPanel() {
+  const { t } = useTranslation()
   const [topic, setTopic] = useState('')
   const [format, setFormat] = useState<SlideFormat>('carousel')
   const [result, setResult] = useState<SlideResult | null>(null)
@@ -20,7 +23,7 @@ export default function CarouselComposerPanel() {
     try {
       setResult(await composeSlides({ topic, format }))
     } catch (e) {
-      setError((e as Error)?.message || 'Failed to compose slides')
+      setError(handleApiError(e) || 'Failed to compose slides')
     } finally {
       setLoading(false)
     }
@@ -64,7 +67,10 @@ export default function CarouselComposerPanel() {
 
       {error && <p data-testid="carousel-error" className="text-sm text-red-400">{error}</p>}
 
-      {result && (
+      {result && (result.slides ?? []).length === 0 && (
+        <p data-testid="carousel-empty" className="text-sm text-zinc-400">{t('creatorTools.noResults')}</p>
+      )}
+      {result && (result.slides ?? []).length > 0 && (
         <div className="space-y-2" data-testid="carousel-results">
           <div className="flex items-center justify-between">
             <span className="text-xs text-zinc-500">{result.slides.length} slides</span>

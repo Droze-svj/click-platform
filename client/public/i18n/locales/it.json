@@ -86,7 +86,9 @@
     "openLabs": "Apri Labs",
     "exploreLabs": "Esplora Labs",
     "earlyAccessOn": "Accesso anticipato: disponibile per te",
-    "earlyAccessAgencyOnly": "Esclusiva Agency"
+    "earlyAccessAgencyOnly": "Esclusiva Agency",
+    "checkoutUnavailable": "Il checkout per questo piano non è disponibile al momento. Non è stato modificato nulla. Riprova più tardi o contatta l'assistenza.",
+    "invoiceDownloadFailed": "Impossibile scaricare la fattura. Riprova."
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "Zona pericolosa",
     "irreversibleActions": "Azioni irreversibili",
     "deleteAccountWarning": "Elimina il tuo account: rimuovi definitivamente tutti i tuoi video, post, account collegati e abbonamenti. Questa operazione non può essere annullata.",
-    "deleteAccount": "Elimina account"
+    "deleteAccount": "Elimina account",
+    "loadFailedSaveBlocked": "Non siamo riusciti a caricare le impostazioni salvate. Il salvataggio è disattivato finché non vengono caricate, così le tue impostazioni reali non vengono sostituite da quelle predefinite.",
+    "saveBlockedNotLoaded": "Le impostazioni salvate non sono ancora state caricate. Riprova prima di salvare.",
+    "apiKeySavedPlaceholder": "Chiave salvata che termina con {{last4}}. Inseriscine una nuova per sostituirla"
   },
   "common": {
     "save": "Salva",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "Analisi in corso…",
     "predictiveTelemetry": "Previsione delle performance",
     "predictiveTelemetryDesc": "Previsioni su come potrebbero andare i tuoi contenuti.",
-    "scanningTrajectories": "Scansione delle traiettorie..."
+    "scanningTrajectories": "Scansione delle traiettorie...",
+    "errorStatusCheckFailed": "Impossibile verificare lo stato del tuo contenuto. Potrebbe comunque completarsi: controlla la tua libreria.",
+    "errorGenerationTimeout": "Ci sta mettendo più del solito. Potrebbe comunque completarsi: controlla la tua libreria tra qualche minuto.",
+    "errorTemplateLoadFailed": "Impossibile caricare quel modello. Puoi comunque scrivere il tuo."
   },
   "forgePage": {
     "documentTitle": "Creatore di contenuti AI | Clic",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "Apri",
     "resonanceAck": "Segna come letta",
     "confirmPurgeSignal": "Eliminare questa notifica?",
-    "purgeSignal": "Elimina"
+    "purgeSignal": "Elimina",
+    "category_task": "Attività",
+    "category_project": "Progetti",
+    "category_content": "Contenuti",
+    "category_approval": "Approvazioni",
+    "category_mention": "Menzioni",
+    "category_system": "Sistema",
+    "category_workflow": "Workflow",
+    "category_publishing": "Pubblicazione",
+    "category_recurring": "Post ricorrenti",
+    "category_brief": "Brief giornaliero",
+    "bulkReadFailed": "Impossibile segnare come lette {{failed}} su {{total}}.",
+    "bulkDeleteFailed": "Impossibile eliminare {{failed}} su {{total}}.",
+    "loadFailed": "Impossibile caricare le notifiche."
   },
   "onboardingPage": {
     "loading": "Caricamento",
@@ -1721,7 +1742,8 @@
     "statusPublished": "Pubblicato",
     "statusFailed": "Fallito",
     "statusDraft": "Bozza",
-    "viewSequenceDetails": "Visualizza i dettagli"
+    "viewSequenceDetails": "Visualizza i dettagli",
+    "toastScheduledPartial": "Programmati {{ok}} post su {{total}}. Gli altri non sono riusciti: {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "Impossibile caricare gli script",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "Eliminare lo script?",
     "purgeNodeBody": "Lo script verrà eliminato definitivamente. L'operazione non può essere annullata.",
     "abortPurge": "Annulla",
-    "commitPurge": "Elimina"
+    "commitPurge": "Elimina",
+    "toastTemplateLoadFailed": "Impossibile caricare quel modello."
   },
   "searchPage": {
     "reconFailed": "La ricerca è scaduta. Riprova.",
@@ -1929,7 +1952,8 @@
     "transmitting": "Rinfrescante…",
     "transmit": "TRASMETTERE",
     "terminateProtocol": "Elimina attività",
-    "secureAndLeave": "SICURO_&_LASCIA"
+    "secureAndLeave": "SICURO_&_LASCIA",
+    "toastLoadFailed": "Impossibile caricare le tue attività."
   },
   "templatesPage": {
     "toastSyncFailed": "Impossibile caricare i modelli",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "Avanzamento",
     "anomalyIntercepted": "Errore",
     "procTime": "Tempo di elaborazione: {{time}}",
-    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}"
+    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}",
+    "cancelled": "Job annullato.",
+    "cancelFailed": "Impossibile annullare questo job."
   },
   "strategistPage": {
     "clickIntelligence": "Fare clic su Intelligenza",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "Impatto emotivo",
     "dominantLabel": "Dominante: {{emotion}}",
     "missingTriggerLabel": "Grilletto ad alto impatto mancante:",
-    "optimalPostingWindows": "Finestre di registrazione ottimali"
+    "optimalPostingWindows": "Finestre di registrazione ottimali",
+    "syncFailed": "Sincronizzazione non riuscita. Riprova.",
+    "playbookFallbackNote": "L'AI non è disponibile al momento, quindi queste idee vengono dal playbook della nicchia.",
+    "trendHooks": "Hook da provare",
+    "trendFormats": "Formati",
+    "trendSounds": "Idee audio",
+    "trendHashtags": "Hashtag",
+    "momentumRising": "In crescita",
+    "momentumSteady": "Stabile",
+    "momentumPeaking": "Al picco",
+    "nicheVoice": "Tono",
+    "pitfalls": "Da evitare",
+    "retentionFloorLabel": "Trattieni almeno il {{value}}% degli spettatori",
+    "retentionTargetLabel": "Punta al {{value}}%",
+    "retentionGuidelineNote": "Un riferimento per {{platform}} basato sulla sua finestra dell'hook, non una misurazione dei tuoi post.",
+    "sequenceStepLabel": "Passaggio {{step}} · {{timing}}",
+    "campaignVideoLabel": "Video {{num}} · {{mark}}",
+    "angleNumber": "Angolazione {{num}}",
+    "promptGroupSave": "Ottieni salvataggi",
+    "promptGroupComment": "Ottieni commenti",
+    "promptGroupShare": "Ottieni condivisioni",
+    "promptGroupDm": "Ottieni DM",
+    "promptGroupFollow": "Ottieni follower",
+    "benchIdealLength": "Durata ideale",
+    "benchHookWindow": "Finestra dell'hook",
+    "benchCaptionStyle": "Stile della didascalia",
+    "benchHashtags": "Hashtag",
+    "benchSoundStrategy": "Audio",
+    "benchAvoid": "Da evitare su {{platform}}",
+    "verdictPublishReady": "Pronto da pubblicare",
+    "verdictNeedsTightening": "Da asciugare",
+    "verdictRewrite": "Da riscrivere",
+    "wordCountLabel": "{{count}} parole",
+    "scoreRuleBasedNote": "Controllo basato su regole secondo il playbook di {{platform}}.",
+    "notesTitle": "Cosa cambiare"
   },
   "teamDetailPage": {
     "toastLoadFailed": "Impossibile caricare il team",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "Impostazioni in sola lettura",
     "latticeMetadata": "Dettagli del team",
     "clusterId": "ID del team",
-    "ownerHash": "Proprietario"
+    "ownerHash": "Proprietario",
+    "inviteEmailFailed": "L'invito è pronto, ma non è stato possibile inviare l'email. Copia il link e invialo tu.",
+    "inviteLinkLabel": "Link di invito",
+    "copyInviteLink": "Copia link",
+    "inviteLinkCopied": "✓ Link copiato"
   },
   "teamsPage": {
     "toastLoadFailed": "Impossibile caricare le squadre",
@@ -4195,7 +4259,9 @@
     "postComment": "Pubblica commento",
     "resolved": "Risolto",
     "helpful": "Utile",
-    "empty": "Nessun commento ancora Sii il primo a commentare!"
+    "empty": "Nessun commento ancora Sii il primo a commentare!",
+    "needsTeam": "I commenti vengono condivisi con un team.",
+    "needsTeamCta": "Crea o unisciti a un team"
   },
   "complianceDashboard": {
     "outOf100": "/100",
@@ -4281,7 +4347,19 @@
     "colChecked": "Controllato",
     "untitled": "(Senza titolo)",
     "noHistory": "Nessuna cronologia di conformità ancora.",
-    "noHistoryHint": "Esegui un controllo sui tuoi contenuti per iniziare il monitoraggio."
+    "noHistoryHint": "Esegui un controllo sui tuoi contenuti per iniziare il monitoraggio.",
+    "rulesLoadFailed": "Impossibile caricare le tue regole.",
+    "ruleSaveFailed": "Impossibile salvare la regola.",
+    "ruleDeleteFailed": "Impossibile eliminare la regola.",
+    "policiesLoadFailed": "Impossibile caricare le policy delle piattaforme.",
+    "historyLoadFailed": "Impossibile caricare la cronologia di conformità.",
+    "totalRulesStat": "Regole",
+    "activeRulesStat": "Regole attive",
+    "totalTriggersStat": "Volte attivate",
+    "colRule": "Regola",
+    "colTriggers": "Attivazioni",
+    "colLastTriggered": "Ultima attivazione",
+    "noTriggersYet": "Nessuna delle tue regole è stata ancora attivata."
   },
   "confirmDialog": {
     "confirm": "Confermare",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}}% ottimale",
     "dayAtTime": "{{day}} a {{time}}",
     "schedule": "Programma",
-    "viewAllOptimalTimes": "Visualizza tutti i tempi ottimali →"
+    "viewAllOptimalTimes": "Visualizza tutti i tempi ottimali →",
+    "loadFailed": "Impossibile caricare gli orari di pubblicazione."
   },
   "contentSuggestions": {
     "loadFailed": "Impossibile caricare i suggerimenti",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "Descrivi cosa fa questo flusso di lavoro...",
     "trigger": "Grilletto",
     "enableWorkflow": "Abilita flusso di lavoro",
-    "cancel": "Cancellare"
+    "cancel": "Cancellare",
+    "notExecuted": "Il workflow non è stato eseguito: {{reason}}",
+    "someActionsFailed": "Il workflow è stato eseguito, ma questi passaggi non sono riusciti: {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "Governo aziendale",
@@ -5710,7 +5791,9 @@
     "retrying": "Nuovo tentativo...",
     "retryJob": "Riprova il lavoro",
     "close": "Vicino",
-    "jobNotFound": "Lavoro non trovato"
+    "jobNotFound": "Lavoro non trovato",
+    "retryQueued": "Job rimesso in coda.",
+    "retryFailed": "Impossibile riavviare questo job."
   },
   "jobProgressViewer": {
     "loadingJobStatus": "Caricamento stato lavoro...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "Passaggi successivi suggeriti",
     "nextStep": "Prossimo passo",
-    "continueSetup": "Continua la configurazione"
+    "continueSetup": "Continua la configurazione",
+    "workflowFailed": "Impossibile eseguire quel workflow."
   },
   "multiClientRollupDashboard": {
     "title": "Dashboard di rollup multi-cliente",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "Generatore di idee",
     "autoFoley": "Foley automatico",
     "brollAgent": "Agente B-Roll",
-    "captionSwarm": "Sottotitoli AI"
+    "captionSwarm": "Sottotitoli AI",
+    "noTrendsYet": "Nessun trend live al momento. Riprova più tardi.",
+    "kindSound": "Audio",
+    "kindHashtag": "Hashtag",
+    "kindTopic": "Argomento"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "Pubblica il tuo prossimo video stasera alle 22:00: i giovedì sera hanno una viralità breve del 23% superiore alla media.",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "Segna tutto come letto",
     "loading": "Caricamento...",
     "noNotifications": "Nessuna notifica",
-    "view": "Visualizzazione"
+    "view": "Visualizzazione",
+    "markReadFailed": "Impossibile segnare come letta. Riprova."
   },
   "notificationPreferences": {
     "title": "Preferenze di notifica",
@@ -6309,7 +6398,9 @@
     "push": "Spingere",
     "pushDescription": "Notifiche push del browser",
     "saving": "Risparmio...",
-    "savePreferences": "Salva preferenze"
+    "savePreferences": "Salva preferenze",
+    "loadFailed": "Non siamo riusciti a caricare le tue preferenze di notifica. Il salvataggio è disattivato finché non vengono caricate.",
+    "saveFailed": "Impossibile salvare le tue preferenze di notifica. Riprova."
   },
   "offlineIndicator": {
     "backOnline": "Di nuovo in linea",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ Suggerimento da professionista:",
     "allSet": "È tutto pronto!",
     "clickTunedFor": "CLICK è sintonizzato per",
-    "makeFirstVideoViral": "Rendi virale il tuo primo video."
+    "makeFirstVideoViral": "Rendi virale il tuo primo video.",
+    "syncFailed": "Impossibile salvare le tue risposte nel tuo account. Restano valide su questo dispositivo."
   },
   "oneClickPublish": {
     "salvageLowCtr": "Click-through iniziale basso su TikTok. Valuta di provare un'altra versione.",
@@ -6477,7 +6569,9 @@
     "variantB": "Variante B",
     "ignore": "Ignorare",
     "swapToVariantB": "Passa alla variante B",
-    "swapVariantB": "Scambia variante B"
+    "swapVariantB": "Scambia variante B",
+    "someFailed": "Non pubblicato su: {{platforms}}",
+    "allFailed": "Impossibile pubblicare su: {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "Caricamento {{alt}}",
@@ -6688,7 +6782,10 @@
     "reach": "Portata",
     "virality": "Viralità",
     "keyInsights": "Approfondimenti chiave",
-    "recommendations": "Raccomandazioni"
+    "recommendations": "Raccomandazioni",
+    "ruleBasedNote": "Punteggio basato su regole: lunghezza, hashtag, emoji e domande. Non è una previsione di visualizzazioni o copertura.",
+    "predictFailed": "Impossibile valutare questo contenuto. Riprova.",
+    "needsText": "Aggiungi del testo per ottenere un punteggio."
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "Analytics sincronizzato correttamente",
@@ -6711,7 +6808,9 @@
     "expectedViews": "Visualizzazioni previste",
     "engagementRate": "Tasso di coinvolgimento",
     "positiveFactors": "Fattori positivi",
-    "recommendations": "Raccomandazioni"
+    "recommendations": "Raccomandazioni",
+    "predictFailed": "Impossibile prevedere le performance. Riprova.",
+    "ruleBasedNote": "L'AI non è disponibile, quindi questo è un punteggio basato su regole: lunghezza, hashtag, domande e call to action. Nessuna stima delle visualizzazioni."
   },
   "phase8Dashboard": {
     "howItWorks": "Come funziona:",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "Analizzato dall'intelligenza artificiale // Dalle prestazioni dei tuoi post pubblicati",
     "coldStartHint": "Pubblica post in modo che Click possa analizzare ciò che funziona",
     "noInsightsYet": "Ancora nessun approfondimento",
-    "impact": "Impatto: {{impact}}"
+    "impact": "Impatto: {{impact}}",
+    "loadFailed": "Impossibile caricare gli insight."
   },
   "scalingHub": {
     "neuralThroughput": "Throughput",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "Ritmo di esempio: {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "Inquadratura ritagliata a {{ratio}}. Esporta con un preset {{ratio}} per mantenere l'inquadratura completa.",
+    "reframeNotApplied": "Impossibile applicare il ritaglio {{ratio}} perché le dimensioni del video non sono ancora note. Riprova quando il video è caricato.",
+    "resultAddedToTimeline": "{{tool}}: la nuova versione è stata aggiunta alla timeline.",
+    "resultReady": "{{tool}} ha finito. Apri il risultato qui sotto.",
+    "noOutput": "{{tool}} ha finito ma non ha restituito alcun file. Riprova.",
+    "speedRampMarker": "Velocità {{speed}}x",
+    "speedRampMarked": "Aggiunti {{count}} marcatori di speed ramp alla timeline. Imposta la velocità su ogni marcatore per applicarli.",
+    "speedRampPlanOnly": "Speed ramp pianificati: {{count}}. Non sono ancora stati applicati al video.",
+    "dubAddedToTimeline": "Traccia vocale in spagnolo aggiunta alla timeline. Disattiva l'audio originale per sentire solo il doppiaggio.",
+    "openResult": "Apri risultato",
     "reframeStarting": "Reframe del video attorno al soggetto principale…",
     "reframeDone": "Reframe automatico completato.",
     "reframeFailed": "Il reframe automatico non ha funzionato. Riprova.",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "Chiudi scorciatoie",
     "searchTools": "Cerca strumenti"
   },
+  "aiTimelineChat": {
+    "title": "Assistente timeline",
+    "greeting": "Dimmi cosa cambiare. Posso applicare un color grading, aggiungere un titolo, cambiare la velocità di riproduzione o aprire Esporta per scegliere un altro formato.",
+    "placeholder": "es. Make it cinematic",
+    "send": "Invia messaggio",
+    "appliedGrade": "Color grading {{grade}} applicato.",
+    "gradeNotApplied": "Non sono riuscito ad applicare il color grading {{grade}}.",
+    "addedText": "Titolo «{{text}}» aggiunto alla testina di riproduzione.",
+    "textNeedsQuotes": "Metti il titolo tra virgolette, ad esempio: add title \"Big news\".",
+    "speedSet": "Velocità di riproduzione impostata a {{speed}}x.",
+    "aspectOpenExport": "Il formato dell'inquadratura si sceglie in fase di esportazione. Ho aperto Esporta: scegli lì un preset {{ratio}}.",
+    "aspectNoExport": "Il formato dell'inquadratura si sceglie in fase di esportazione. Apri Esporta e scegli un preset {{ratio}}.",
+    "notUnderstood": "Non ho cambiato nulla. Posso applicare un color grading (ad esempio cinematic, warm o vintage), aggiungere un titolo tra virgolette, cambiare la velocità (ad esempio 1.5x o slow motion) o aprire Esporta per un formato 9:16 o 1:1.",
+    "badgeGrade": "Color grading: {{grade}}",
+    "badgeText": "Titolo aggiunto",
+    "badgeSpeed": "Velocità {{speed}}x",
+    "badgeExport": "Esporta aperto"
+  },
+  "repurposeView": {
+    "renderFailed": "La versione {{format}} non è riuscita: {{error}}",
+    "renderFailedGeneric": "Il rendering non è riuscito.",
+    "renderTimedOut": "Il rendering sta richiedendo troppo tempo e non risponde più. Riprova."
+  },
+  "musicPicker": {
+    "generationFailed": "Generazione musicale AI non riuscita. Riprova.",
+    "generationFailedReason": "Generazione musicale AI non riuscita: {{error}}",
+    "generationNoTrack": "La traccia è stata generata ma non è stato possibile salvarla. Generala di nuovo."
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "Impossibile eliminare questo look. È ancora salvato."
+  },
   "editorHUD": {
+    "saveFailedRetry": "Non ancora salvato nel tuo account. Fai clic per riprovare.",
     "section": {
       "edit": "Montaggio",
       "color": "Colore",
@@ -8846,6 +8988,7 @@
     "export": "Esporta"
   },
   "quickActionsBar": {
+    "trendsList": "Di tendenza ora su TikTok: {{list}}",
     "variantsNeedBase": "Aggiungi prima un sottotitolo o un hook, così il generatore di varianti ha una base su cui lavorare.",
     "noVariants": "Nessuna variante restituita: prova con un hook di base più lungo.",
     "variantsGenerated": "{{count}} varianti generate: apri il selettore A/B per vederle in anteprima.",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "Analisi della concorrenza"
     },
     "err": {
+      "analyzeFailed": "Impossibile analizzare questo video. Riprova tra un attimo.",
       "videoNotFound": "Dati del video non trovati nella risposta",
       "loadFailed": "Impossibile caricare il video. Riprova.",
       "missingSource": "Manca il file sorgente di questo video. Ricaricalo e riprova.",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "Le analisi su retention, efficacia dell'hook e ritmo appariranno qui dopo l'analisi del video.",
       "transcript": "Trascrizione"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "Elaborazione dell'invito…",
+    "body": "Ti stiamo aggiungendo al team. Ci vorrà solo un momento.",
+    "noToken": "In questo link di invito manca il codice. Chiedi un nuovo invito.",
+    "joined": "✓ Sei entrato nel team",
+    "failed": "Impossibile accettare l'invito"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "Troppe richieste di reimpostazione. Attendi qualche minuto e riprova.",
+    "sendFailed": "Non siamo riusciti a inviare il link di reimpostazione. Controlla la connessione e riprova."
+  },
+  "governanceDashboard": {
+    "loadFailed": "Impossibile caricare il registro di audit."
+  },
+  "clickIsland": {
+    "chatEmpty": "Non sono riuscito a generare una risposta. Prova a riformulare o invia di nuovo.",
+    "chatRateLimited": "Hai raggiunto il limite AI per ora. Riprova tra un po'.",
+    "chatUnavailable": "L'AI non è riuscita a rispondere. Riprova tra un attimo.",
+    "chatOffline": "Al momento non riesco a raggiungere l'assistente. Controlla la connessione e riprova."
+  },
+  "postStatus": {
+    "scheduled": "Programmato",
+    "awaitingApproval": "In attesa di approvazione",
+    "publishing": "In pubblicazione",
+    "published": "Pubblicato",
+    "retrying": "Nuovo tentativo",
+    "failed": "Non riuscito",
+    "cancelled": "Annullato"
+  },
+  "creatorTools": {
+    "noResults": "Nessun risultato stavolta. Riprova o riformula.",
+    "variantNotAdapted": "L'AI non è riuscita ad adattare questa variante. Questo è il tuo testo originale."
+  },
+  "contentRecycling": {
+    "loadFailed": "Impossibile caricare i dati di riciclo.",
+    "planCreated": "Piano di riciclo creato.",
+    "createFailed": "Impossibile creare il piano di riciclo.",
+    "toggleFailed": "Impossibile aggiornare il piano di riciclo."
   }
 }

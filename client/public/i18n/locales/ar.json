@@ -86,7 +86,9 @@
     "openLabs": "فتح Labs",
     "exploreLabs": "استكشف Labs",
     "earlyAccessOn": "الوصول المبكر — متاح لك",
-    "earlyAccessAgencyOnly": "حصري للوكالات"
+    "earlyAccessAgencyOnly": "حصري للوكالات",
+    "checkoutUnavailable": "الدفع لهذه الخطة غير متاح حاليًا. لم يتغيّر أي شيء. حاول مرة أخرى لاحقًا أو تواصل مع الدعم.",
+    "invoiceDownloadFailed": "تعذّر تنزيل الفاتورة. حاول مرة أخرى."
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "منطقة الخطر",
     "irreversibleActions": "إجراءات لا رجعة فيها",
     "deleteAccountWarning": "حذف حسابك: قم بإزالة جميع مقاطع الفيديو والمشاركات والحسابات المرتبطة والاشتراكات نهائيًا. لا يمكن التراجع عن هذا.",
-    "deleteAccount": "حذف الحساب"
+    "deleteAccount": "حذف الحساب",
+    "loadFailedSaveBlocked": "تعذّر تحميل إعداداتك المحفوظة. الحفظ متوقف حتى يكتمل تحميلها، حتى لا تُستبدل إعداداتك الفعلية بالقيم الافتراضية.",
+    "saveBlockedNotLoaded": "لم تُحمَّل إعداداتك المحفوظة بعد. حاول مرة أخرى قبل الحفظ.",
+    "apiKeySavedPlaceholder": "مفتاح محفوظ ينتهي بـ {{last4}}. أدخل مفتاحًا جديدًا لاستبداله"
   },
   "common": {
     "save": "حفظ",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "جارٍ التحليل…",
     "predictiveTelemetry": "توقعات الأداء",
     "predictiveTelemetryDesc": "توقعات لأداء محتواك المحتمل.",
-    "scanningTrajectories": "مسح المسارات..."
+    "scanningTrajectories": "مسح المسارات...",
+    "errorStatusCheckFailed": "تعذّر التحقق من حالة المحتوى. قد يكتمل رغم ذلك؛ ابحث عنه في مكتبتك.",
+    "errorGenerationTimeout": "يستغرق هذا وقتًا أطول من المعتاد. قد يكتمل رغم ذلك؛ ابحث عنه في مكتبتك بعد بضع دقائق.",
+    "errorTemplateLoadFailed": "تعذّر تحميل هذا القالب. لا يزال بإمكانك كتابة محتواك بنفسك."
   },
   "forgePage": {
     "documentTitle": "منشئ محتوى الذكاء الاصطناعي | انقر",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "فتح",
     "resonanceAck": "تحديد كمقروء",
     "confirmPurgeSignal": "حذف هذا الإشعار؟",
-    "purgeSignal": "حذف"
+    "purgeSignal": "حذف",
+    "category_task": "المهام",
+    "category_project": "المشاريع",
+    "category_content": "المحتوى",
+    "category_approval": "الموافقات",
+    "category_mention": "الإشارات",
+    "category_system": "النظام",
+    "category_workflow": "سير العمل",
+    "category_publishing": "النشر",
+    "category_recurring": "المنشورات المتكررة",
+    "category_brief": "الملخص اليومي",
+    "bulkReadFailed": "تعذّر تعليم {{failed}} من أصل {{total}} كمقروءة.",
+    "bulkDeleteFailed": "تعذّر حذف {{failed}} من أصل {{total}}.",
+    "loadFailed": "تعذّر تحميل الإشعارات."
   },
   "onboardingPage": {
     "loading": "تحميل",
@@ -1721,7 +1742,8 @@
     "statusPublished": "تم النشر",
     "statusFailed": "فشل",
     "statusDraft": "مسودة",
-    "viewSequenceDetails": "عرض التفاصيل"
+    "viewSequenceDetails": "عرض التفاصيل",
+    "toastScheduledPartial": "تمت جدولة {{ok}} من أصل {{total}} منشورات. فشل الباقي: {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "تعذّر تحميل النصوص",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "حذف النص؟",
     "purgeNodeBody": "سيؤدي هذا إلى حذف النص نهائيًا. لا يمكن التراجع عن ذلك.",
     "abortPurge": "إلغاء",
-    "commitPurge": "حذف"
+    "commitPurge": "حذف",
+    "toastTemplateLoadFailed": "تعذّر تحميل هذا القالب."
   },
   "searchPage": {
     "reconFailed": "انتهت مهلة البحث. حاول مرة أخرى.",
@@ -1929,7 +1952,8 @@
     "transmitting": "منعش…",
     "transmit": "إرسال",
     "terminateProtocol": "حذف المهمة",
-    "secureAndLeave": "آمن_&_مغادرة"
+    "secureAndLeave": "آمن_&_مغادرة",
+    "toastLoadFailed": "تعذّر تحميل مهامك."
   },
   "templatesPage": {
     "toastSyncFailed": "تعذّر تحميل القوالب",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "التقدّم",
     "anomalyIntercepted": "خطأ",
     "procTime": "مدة المعالجة: {{time}}",
-    "retryThreshold": "المحاولة 0{{attempts}}"
+    "retryThreshold": "المحاولة 0{{attempts}}",
+    "cancelled": "تم إلغاء المهمة.",
+    "cancelFailed": "تعذّر إلغاء هذه المهمة."
   },
   "strategistPage": {
     "clickIntelligence": "انقر فوق الذكاء",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "الجاذبية العاطفية",
     "dominantLabel": "المهيمنة: {{emotion}}",
     "missingTriggerLabel": "الزناد عالي التأثير المفقود:",
-    "optimalPostingWindows": "النشر الأمثل ويندوز"
+    "optimalPostingWindows": "النشر الأمثل ويندوز",
+    "syncFailed": "تعذّرت المزامنة. حاول مرة أخرى.",
+    "playbookFallbackNote": "الذكاء الاصطناعي غير متاح الآن، لذا هذه الأفكار مأخوذة من دليل المجال.",
+    "trendHooks": "خطافات للتجربة",
+    "trendFormats": "الصيغ",
+    "trendSounds": "أفكار صوتية",
+    "trendHashtags": "الهاشتاغات",
+    "momentumRising": "في صعود",
+    "momentumSteady": "مستقر",
+    "momentumPeaking": "في الذروة",
+    "nicheVoice": "الأسلوب",
+    "pitfalls": "تجنّب",
+    "retentionFloorLabel": "احتفظ بما لا يقل عن {{value}}% من المشاهدين",
+    "retentionTargetLabel": "استهدف {{value}}%",
+    "retentionGuidelineNote": "إرشاد لـ {{platform}} مبني على نافذة الخطاف فيها، وليس قياسًا لمنشوراتك.",
+    "sequenceStepLabel": "الخطوة {{step}} · {{timing}}",
+    "campaignVideoLabel": "الفيديو {{num}} · {{mark}}",
+    "angleNumber": "الزاوية {{num}}",
+    "promptGroupSave": "احصل على حفظ",
+    "promptGroupComment": "احصل على تعليقات",
+    "promptGroupShare": "احصل على مشاركات",
+    "promptGroupDm": "احصل على رسائل خاصة",
+    "promptGroupFollow": "احصل على متابعين",
+    "benchIdealLength": "الطول المثالي",
+    "benchHookWindow": "نافذة الخطاف",
+    "benchCaptionStyle": "نمط التسميات",
+    "benchHashtags": "الهاشتاغات",
+    "benchSoundStrategy": "الصوت",
+    "benchAvoid": "تجنّب على {{platform}}",
+    "verdictPublishReady": "جاهز للنشر",
+    "verdictNeedsTightening": "يحتاج إلى إحكام",
+    "verdictRewrite": "يحتاج إلى إعادة كتابة",
+    "wordCountLabel": "عدد الكلمات: {{count}}",
+    "scoreRuleBasedNote": "فحص قائم على القواعد وفق دليل {{platform}}.",
+    "notesTitle": "ما يجب تغييره"
   },
   "teamDetailPage": {
     "toastLoadFailed": "تعذّر تحميل الفريق",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "إعدادات للقراءة فقط",
     "latticeMetadata": "تفاصيل الفريق",
     "clusterId": "معرّف الفريق",
-    "ownerHash": "المالك"
+    "ownerHash": "المالك",
+    "inviteEmailFailed": "الدعوة جاهزة، لكن تعذّر إرسال البريد الإلكتروني. انسخ الرابط وأرسله بنفسك.",
+    "inviteLinkLabel": "رابط الدعوة",
+    "copyInviteLink": "نسخ الرابط",
+    "inviteLinkCopied": "✓ تم نسخ الرابط"
   },
   "teamsPage": {
     "toastLoadFailed": "فشل في تحميل الفرق",
@@ -4195,7 +4259,9 @@
     "postComment": "أضف تعليق",
     "resolved": "تم الحل",
     "helpful": "متعاون",
-    "empty": "لا توجد تعليقات حتى الآن. كن أول من يعلق!"
+    "empty": "لا توجد تعليقات حتى الآن. كن أول من يعلق!",
+    "needsTeam": "تتم مشاركة التعليقات مع فريق.",
+    "needsTeamCta": "أنشئ فريقًا أو انضم إلى فريق"
   },
   "complianceDashboard": {
     "outOf100": "/ 100",
@@ -4281,7 +4347,19 @@
     "colChecked": "تم الفحص",
     "untitled": "(بدون عنوان)",
     "noHistory": "لا يوجد سجل الامتثال حتى الآن.",
-    "noHistoryHint": "قم بإجراء فحص على المحتوى الخاص بك لبدء التتبع."
+    "noHistoryHint": "قم بإجراء فحص على المحتوى الخاص بك لبدء التتبع.",
+    "rulesLoadFailed": "تعذّر تحميل قواعدك.",
+    "ruleSaveFailed": "تعذّر حفظ القاعدة.",
+    "ruleDeleteFailed": "تعذّر حذف القاعدة.",
+    "policiesLoadFailed": "تعذّر تحميل سياسات المنصات.",
+    "historyLoadFailed": "تعذّر تحميل سجل الامتثال.",
+    "totalRulesStat": "القواعد",
+    "activeRulesStat": "القواعد النشطة",
+    "totalTriggersStat": "عدد مرات التفعيل",
+    "colRule": "القاعدة",
+    "colTriggers": "مرات التفعيل",
+    "colLastTriggered": "آخر تفعيل",
+    "noTriggersYet": "لم تُفعَّل أي قاعدة من قواعدك بعد."
   },
   "confirmDialog": {
     "confirm": "يتأكد",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}}% الأمثل",
     "dayAtTime": "{{day}} في {{time}}",
     "schedule": "جدول",
-    "viewAllOptimalTimes": "عرض جميع الأوقات المثالية →"
+    "viewAllOptimalTimes": "عرض جميع الأوقات المثالية →",
+    "loadFailed": "تعذّر تحميل أوقات النشر."
   },
   "contentSuggestions": {
     "loadFailed": "فشل تحميل الاقتراحات",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "وصف ما يفعله سير العمل هذا...",
     "trigger": "مشغل",
     "enableWorkflow": "تمكين سير العمل",
-    "cancel": "يلغي"
+    "cancel": "يلغي",
+    "notExecuted": "لم يعمل سير العمل: {{reason}}",
+    "someActionsFailed": "عمل سير العمل، لكن هذه الخطوات فشلت: {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "حوكمة المؤسسات",
@@ -5710,7 +5791,9 @@
     "retrying": "جارٍ إعادة المحاولة...",
     "retryJob": "إعادة محاولة المهمة",
     "close": "يغلق",
-    "jobNotFound": "لم يتم العثور على الوظيفة"
+    "jobNotFound": "لم يتم العثور على الوظيفة",
+    "retryQueued": "أُعيدت المهمة إلى قائمة الانتظار.",
+    "retryFailed": "تعذّرت إعادة تشغيل هذه المهمة."
   },
   "jobProgressViewer": {
     "loadingJobStatus": "جارٍ تحميل حالة الوظيفة...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "الخطوات التالية المقترحة",
     "nextStep": "الخطوة التالية",
-    "continueSetup": "متابعة الإعداد"
+    "continueSetup": "متابعة الإعداد",
+    "workflowFailed": "تعذّر تشغيل سير العمل هذا."
   },
   "multiClientRollupDashboard": {
     "title": "لوحة المعلومات التراكمية متعددة العملاء",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "مولّد الأفكار",
     "autoFoley": "أوتو فولي",
     "brollAgent": "وكيل B-رول",
-    "captionSwarm": "تسميات توضيحية بالذكاء الاصطناعي"
+    "captionSwarm": "تسميات توضيحية بالذكاء الاصطناعي",
+    "noTrendsYet": "لا توجد ترندات مباشرة الآن. حاول مرة أخرى لاحقًا.",
+    "kindSound": "صوت",
+    "kindHashtag": "هاشتاغ",
+    "kindTopic": "موضوع"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "انشر مقطع الفيديو التالي الخاص بك الليلة في تمام الساعة 10 مساءً - تزيد نسبة انتشار الفيديو القصير في ليالي الخميس بنسبة 23% عن المتوسط.",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "وضع علامة على الكل كمقروءة",
     "loading": "تحميل...",
     "noNotifications": "لا الإخطارات",
-    "view": "منظر"
+    "view": "منظر",
+    "markReadFailed": "تعذّر تعليمه كمقروء. حاول مرة أخرى."
   },
   "notificationPreferences": {
     "title": "تفضيلات الإخطار",
@@ -6309,7 +6398,9 @@
     "push": "يدفع",
     "pushDescription": "إشعارات المتصفح",
     "saving": "توفير...",
-    "savePreferences": "حفظ التفضيلات"
+    "savePreferences": "حفظ التفضيلات",
+    "loadFailed": "تعذّر تحميل تفضيلات الإشعارات. الحفظ متوقف حتى يكتمل تحميلها.",
+    "saveFailed": "تعذّر حفظ تفضيلات الإشعارات. حاول مرة أخرى."
   },
   "offlineIndicator": {
     "backOnline": "العودة على الانترنت",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ نصيحة احترافية:",
     "allSet": "أنت جاهز تمامًا!",
     "clickTunedFor": "تم ضبط النقرة",
-    "makeFirstVideoViral": "اجعل الفيديو الأول الخاص بك ينتشر بسرعة."
+    "makeFirstVideoViral": "اجعل الفيديو الأول الخاص بك ينتشر بسرعة.",
+    "syncFailed": "تعذّر حفظ إجاباتك في حسابك. لا تزال مطبّقة على هذا الجهاز."
   },
   "oneClickPublish": {
     "salvageLowCtr": "معدل نقر مبكر منخفض على TikTok. جرّب نسخة أخرى.",
@@ -6477,7 +6569,9 @@
     "variantB": "البديل ب",
     "ignore": "يتجاهل",
     "swapToVariantB": "التبديل إلى البديل ب",
-    "swapVariantB": "تبديل البديل ب"
+    "swapVariantB": "تبديل البديل ب",
+    "someFailed": "لم يتم النشر على: {{platforms}}",
+    "allFailed": "تعذّر النشر على: {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "جار التحميل {{alt}}",
@@ -6688,7 +6782,10 @@
     "reach": "يصل",
     "virality": "الفيروسية",
     "keyInsights": "رؤى رئيسية",
-    "recommendations": "التوصيات"
+    "recommendations": "التوصيات",
+    "ruleBasedNote": "تقييم قائم على القواعد من الطول والهاشتاغات والإيموجي والأسئلة. ليس توقعًا للمشاهدات أو الوصول.",
+    "predictFailed": "تعذّر تقييم هذا المحتوى. حاول مرة أخرى.",
+    "needsText": "أضف بعض النص لتقييمه."
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "تمت مزامنة التحليلات بنجاح",
@@ -6711,7 +6808,9 @@
     "expectedViews": "المشاهدات المتوقعة",
     "engagementRate": "معدل المشاركة",
     "positiveFactors": "العوامل الإيجابية",
-    "recommendations": "التوصيات"
+    "recommendations": "التوصيات",
+    "predictFailed": "تعذّر توقع الأداء. حاول مرة أخرى.",
+    "ruleBasedNote": "الذكاء الاصطناعي غير متاح، لذا هذا تقييم قائم على القواعد من الطول والهاشتاغات والأسئلة والدعوات إلى الإجراء. لا يُعرض تقدير للمشاهدات."
   },
   "phase8Dashboard": {
     "howItWorks": "كيف يعمل:",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "تحليل الذكاء الاصطناعي // من أدائك المنشور",
     "coldStartHint": "انشر المنشورات حتى تتمكن Click من تحليل ما ينجح",
     "noInsightsYet": "لا توجد رؤى حتى الآن",
-    "impact": "التأثير: {{impact}}"
+    "impact": "التأثير: {{impact}}",
+    "loadFailed": "تعذّر تحميل الرؤى."
   },
   "scalingHub": {
     "neuralThroughput": "الإنتاجية",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "إيقاع نموذجي: {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "تم قص الإطار إلى {{ratio}}. صدّر بإعداد مسبق بنسبة {{ratio}} للحفاظ على الإطار كاملًا.",
+    "reframeNotApplied": "تعذّر تطبيق قص {{ratio}} لأن حجم إطار الفيديو غير معروف بعد. حاول مرة أخرى بعد اكتمال تحميله.",
+    "resultAddedToTimeline": "{{tool}}: تمت إضافة النسخة الجديدة إلى الخط الزمني.",
+    "resultReady": "انتهى {{tool}}. افتح النتيجة أدناه.",
+    "noOutput": "انتهى {{tool}} لكنه لم يُرجع أي ملف. حاول مرة أخرى.",
+    "speedRampMarker": "السرعة {{speed}}x",
+    "speedRampMarked": "تمت إضافة علامات تغيير السرعة إلى الخط الزمني ({{count}}). اضبط السرعة عند كل علامة لتطبيقها.",
+    "speedRampPlanOnly": "تم التخطيط لتغييرات السرعة ({{count}}). لم تُطبَّق على الفيديو بعد.",
+    "dubAddedToTimeline": "تمت إضافة المسار الصوتي الإسباني إلى الخط الزمني. اكتم الصوت الأصلي لتسمع الدبلجة فقط.",
+    "openResult": "فتح النتيجة",
     "reframeStarting": "جارٍ إعادة تأطير الفيديو حول الموضوع الرئيسي…",
     "reframeDone": "اكتملت إعادة التأطير التلقائية.",
     "reframeFailed": "لم تنجح إعادة التأطير التلقائية. يُرجى المحاولة مرة أخرى.",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "إغلاق الاختصارات",
     "searchTools": "ابحث في الأدوات"
   },
+  "aiTimelineChat": {
+    "title": "مساعد الخط الزمني",
+    "greeting": "أخبرني بما تريد تغييره. يمكنني تطبيق تدرّج ألوان، أو إضافة عنوان، أو تغيير سرعة التشغيل، أو فتح التصدير لاختيار شكل إطار مختلف.",
+    "placeholder": "مثال: make it cinematic",
+    "send": "إرسال الرسالة",
+    "appliedGrade": "تم تطبيق تدرّج الألوان {{grade}}.",
+    "gradeNotApplied": "تعذّر عليّ تطبيق تدرّج الألوان {{grade}}.",
+    "addedText": "أُضيف العنوان \"{{text}}\" عند موضع التشغيل.",
+    "textNeedsQuotes": "ضع العنوان بين علامتي اقتباس، مثلًا: add title \"Big news\".",
+    "speedSet": "تم ضبط سرعة التشغيل على {{speed}}x.",
+    "aspectOpenExport": "يُحدَّد شكل الإطار عند التصدير. فتحتُ لك التصدير: اختر هناك إعدادًا مسبقًا بنسبة {{ratio}}.",
+    "aspectNoExport": "يُحدَّد شكل الإطار عند التصدير. افتح التصدير واختر إعدادًا مسبقًا بنسبة {{ratio}}.",
+    "notUnderstood": "لم أغيّر أي شيء. يمكنني تطبيق تدرّج ألوان (مثل cinematic أو warm أو vintage)، أو إضافة عنوان بين علامتي اقتباس، أو تغيير السرعة (مثل 1.5x أو slow motion)، أو فتح التصدير لإطار 9:16 أو 1:1.",
+    "badgeGrade": "تدرّج الألوان: {{grade}}",
+    "badgeText": "تمت إضافة العنوان",
+    "badgeSpeed": "السرعة {{speed}}x",
+    "badgeExport": "تم فتح التصدير"
+  },
+  "repurposeView": {
+    "renderFailed": "فشلت نسخة {{format}}: {{error}}",
+    "renderFailedGeneric": "فشل العرض.",
+    "renderTimedOut": "يستغرق العرض وقتًا طويلًا جدًا وتوقف عن إرسال التحديثات. حاول مرة أخرى."
+  },
+  "musicPicker": {
+    "generationFailed": "فشل إنشاء الموسيقى بالذكاء الاصطناعي. حاول مرة أخرى.",
+    "generationFailedReason": "فشل إنشاء الموسيقى بالذكاء الاصطناعي: {{error}}",
+    "generationNoTrack": "تم إنشاء المقطع الموسيقي لكن تعذّر حفظه. أنشئه مرة أخرى."
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "تعذّر حذف هذا المظهر. لا يزال محفوظًا."
+  },
   "editorHUD": {
+    "saveFailedRetry": "لم يُحفظ في حسابك بعد. انقر لإعادة المحاولة.",
     "section": {
       "edit": "التحرير",
       "color": "الألوان",
@@ -8846,6 +8988,7 @@
     "export": "تصدير"
   },
   "quickActionsBar": {
+    "trendsList": "الرائج على TikTok الآن: {{list}}",
     "variantsNeedBase": "أضف ترجمة أو خطّافًا أولًا ليجد مولّد الصيغ ما يعمل عليه.",
     "noVariants": "لم تُرجع أي صيغ بديلة — جرّب خطّافًا أساسيًا أطول.",
     "variantsGenerated": "تم إنشاء {{count}} صيغ بديلة — افتح أداة اختيار A/B للمعاينة.",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "رؤى المنافسين"
     },
     "err": {
+      "analyzeFailed": "تعذّر تحليل هذا الفيديو. حاول مرة أخرى بعد قليل.",
       "videoNotFound": "لم يتم العثور على بيانات الفيديو في الاستجابة",
       "loadFailed": "تعذّر تحميل الفيديو. حاول مرة أخرى.",
       "missingSource": "ملف المصدر لهذا الفيديو مفقود. أعد رفعه وحاول مجددًا.",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "ستظهر هنا تحليلات الاحتفاظ وقوة الخطّاف والإيقاع بعد تحليل الفيديو.",
       "transcript": "النص المفرَّغ"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "جارٍ معالجة دعوتك…",
+    "body": "نضيفك إلى الفريق الآن. لن يستغرق هذا سوى لحظة.",
+    "noToken": "رابط الدعوة هذا ينقصه الرمز. اطلب دعوة جديدة.",
+    "joined": "✓ انضممت إلى الفريق",
+    "failed": "تعذّر قبول الدعوة"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "طلبات إعادة تعيين كثيرة جدًا. انتظر بضع دقائق ثم حاول مرة أخرى.",
+    "sendFailed": "تعذّر إرسال رابط إعادة التعيين الآن. تحقّق من اتصالك وحاول مرة أخرى."
+  },
+  "governanceDashboard": {
+    "loadFailed": "تعذّر تحميل سجل التدقيق."
+  },
+  "clickIsland": {
+    "chatEmpty": "تعذّر عليّ إنشاء رد الآن. جرّب إعادة الصياغة أو أرسلها مرة أخرى.",
+    "chatRateLimited": "وصلت إلى حد الذكاء الاصطناعي حاليًا. حاول مرة أخرى بعد قليل.",
+    "chatUnavailable": "تعذّر على الذكاء الاصطناعي الرد الآن. حاول مرة أخرى بعد قليل.",
+    "chatOffline": "لا يمكنني الوصول إلى المساعد الآن. تحقّق من اتصالك وحاول مرة أخرى."
+  },
+  "postStatus": {
+    "scheduled": "مجدول",
+    "awaitingApproval": "بانتظار الموافقة",
+    "publishing": "جارٍ النشر",
+    "published": "منشور",
+    "retrying": "جارٍ إعادة المحاولة",
+    "failed": "فشل",
+    "cancelled": "ملغى"
+  },
+  "creatorTools": {
+    "noResults": "لا توجد نتائج هذه المرة. حاول مرة أخرى أو أعد الصياغة.",
+    "variantNotAdapted": "تعذّر على الذكاء الاصطناعي تكييف هذا. هذا نصك الأصلي."
+  },
+  "contentRecycling": {
+    "loadFailed": "تعذّر تحميل بيانات إعادة التدوير.",
+    "planCreated": "تم إنشاء خطة إعادة التدوير.",
+    "createFailed": "تعذّر إنشاء خطة إعادة التدوير.",
+    "toggleFailed": "تعذّر تحديث خطة إعادة التدوير."
   }
 }

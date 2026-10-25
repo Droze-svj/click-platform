@@ -181,6 +181,10 @@ async function generateWithModel(prompt, taskType, options = {}) {
   } catch (error) {
     logger.error('Generate with model error', { error: error.message, taskType });
 
+    // Already a typed error (e.g. ServiceUnavailableError → 503) — keep its status
+    // instead of flattening it into a generic 500.
+    if (error instanceof AppError) throw error;
+
     // Handle OpenAI API errors
     if (error.response?.status === 429) {
       throw new AppError('AI API rate limit exceeded. Please try again later.', 429);
@@ -206,6 +210,7 @@ function getSystemPromptForTask(taskType) {
     'summarization': 'You are a summarization expert. Create concise, informative summaries.',
     'translation': 'You are a professional translator. Translate accurately while maintaining tone.',
     'ideation': 'You are a creative strategist. Generate innovative ideas and suggestions.',
+    'chat': 'You are Click, the in-app assistant of a video and social media tool for creators. Answer briefly, concretely and in plain language.',
   };
 
   const antiHallucinationGuardrail = '\n\nCRITICAL INSTRUCTIONS:\n- DO NOT hallucinate. Base your response strictly on the provided context.\n- DO NOT invent features, facts, or statistics that are not explicitly stated.\n- AVOID repetitive phrasing and redundant loops. Ensure diverse and natural vocabulary.';

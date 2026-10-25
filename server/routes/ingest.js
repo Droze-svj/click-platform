@@ -10,8 +10,9 @@
  *                               fresh content record so the user can start a new
  *                               edit without touching the original.
  *
- * Dev mode: returns deterministic mock contentIds and stores blob metadata in the
- * shared dev video store so the editor can resolve them without Mongo.
+ * Real users get a saved Content document (its _id is the contentId the editor
+ * opens). Dev sessions without a Mongo user use the in-memory dev store
+ * (`dev-content-*` ids, which resolveContent knows).
  */
 
 const express = require('express');
@@ -27,10 +28,17 @@ const { isDevUser, allowDevMode: checkAllowDevMode } = require('../utils/devUser
 // SSRF-guarded per redirect hop via utils/urlGuard.
 const { classifyUrl, streamDownload } = require('../utils/downloadUtils');
 const urlGuard = require('../utils/urlGuard');
+const validator = require('validator');
 
 const { uploadLimiter } = require('../middleware/enhancedRateLimiter');
 
 const router = express.Router();
+const mongoose = require('mongoose');
+
+const RECENT_LIMIT = 12;
+// Fields a remix must not inherit from the original: identity, timestamps,
+// engagement/analytics, sharing and processing state.
+const REMIX_EXCLUDED_FIELDS = ['_id', 'id', '__v', 'createdAt', 'updatedAt', 'analytics', 'abTest', 'sharedWith', 'isPublic', 'isTemplate', 'pipeline', 'syncVersion', 'errorMessage'];
 
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads', 'videos');
 try { fs.mkdirSync(UPLOADS_DIR, { recursive: true }); } catch { /* dir exists */ }
@@ -86,7 +94,13 @@ function ytDlpDownload(url, destPath) {
 // ── POST /api/ingest/url ───────────────────────────────────────────────────
 async function ingestUrlHandler(req, res) {
   try {
-    const { url, title } = req.body || {};
+    // The input sanitizer HTML-escapes body strings (`/` → `&#x2F;`), which
+    // turned every pasted link into `https:&#x2F;&#x2F;…` and failed
+    // classification. Undo it: the URL goes to the SSRF guard and a download,
+    // the title is stored and rendered by React — neither is an HTML sink.
+    const body = req.body || {};
+    const url = typeof body.url === 'string' ? validator.unescape(body.url).trim() : body.url;
+    const title = typeof body.title === 'string' ? validator.unescape(body.title) : body.title;
     if (!url || typeof url !== 'string') {
       return res.status(400).json({ success: false, error: 'Missing url' });
     }
@@ -146,45 +160,50 @@ async function ingestUrlHandler(req, res) {
     }
 
     const stats = await fs.promises.stat(destPath);
-    const contentId = (devModeAllowed && (!userId || isDevUser(req.user)))
-      ? `dev-content-${Date.now()}`
-      : `ingest-${Date.now()}`;
-    const record = {
-      _id: contentId,
-      title: title || `Ingest ${new Date().toISOString().slice(0, 10)}`,
-      status: 'completed',
-      type: 'video',
-      userId: userId || 'dev-user',
-      source: { kind: classified.kind, platform: classified.platform || null, originalUrl: url },
-      originalFile: { url: fileUrl, filename, size: stats.size },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const recordTitle = (typeof title === 'string' && title.trim()) || `Ingest ${new Date().toISOString().slice(0, 10)}`;
+    const source = { kind: classified.kind, platform: classified.platform || null, originalUrl: url };
+    const originalFile = { url: fileUrl, filename, size: stats.size };
 
-    if (devModeAllowed || !userId) {
-      devVideoStore.set(contentId, record);
-    } else {
-      // For real users we'd persist to Mongo here. We mirror to devVideoStore
-      // too so the editor can resolve immediately while the Content model
-      // catches up async.
-      devVideoStore.set(contentId, record);
-      try {
-        const Content = require('../models/Content');
-        await Content.create({
-          _id: undefined,
-          userId,
-          title: record.title,
-          type: 'video',
-          status: 'completed',
-          originalFile: record.originalFile,
-          metadata: { ingestSource: record.source },
-        });
-      } catch (e) {
-        logger.warn('[ingest] Mongo persistence failed (kept in dev store):', e.message);
-      }
+    // Dev sessions (no Mongo user) live in the in-memory dev store; ids must
+    // start with "dev-" for resolveContent to find them.
+    if (!userId || (devModeAllowed && isDevUser(req.user))) {
+      const contentId = `dev-content-${Date.now()}`;
+      devVideoStore.set(contentId, {
+        _id: contentId,
+        title: recordTitle,
+        status: 'completed',
+        type: 'video',
+        userId: userId ? String(userId) : 'dev-user',
+        source,
+        originalFile,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      return res.json({ success: true, data: { contentId, fileUrl, source: classified, size: stats.size } });
     }
 
-    return res.json({ success: true, data: { contentId, fileUrl, source: classified, size: stats.size } });
+    // Real users: the editor loads the project from Mongo by its _id. This
+    // used to answer a made-up `ingest-<timestamp>` id (kept only in the
+    // in-memory dev store), discard Content.create's _id and swallow its
+    // errors, so the editor opened on a project that could not be loaded.
+    let saved;
+    try {
+      const Content = require('../models/Content');
+      saved = await Content.create({
+        userId: String(userId),
+        title: recordTitle,
+        type: 'video',
+        status: 'completed',
+        originalFile,
+        metadata: { ingestSource: source },
+      });
+    } catch (e) {
+      logger.error('[ingest] could not save the imported video', { error: e.message, userId: String(userId) });
+      try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch (_) { /* best effort */ }
+      return res.status(500).json({ success: false, error: 'The video downloaded but could not be saved. Please try again.' });
+    }
+
+    return res.json({ success: true, data: { contentId: String(saved._id), fileUrl, source: classified, size: stats.size } });
   } catch (err) {
     logger.error('[ingest/url] failed:', err);
     return res.status(500).json({ success: false, error: err.message || 'Ingest failed' });
@@ -209,35 +228,81 @@ router.post('/remix', auth, async (req, res) => {
     const original = await guardOwnership(req, res, contentId);
     if (!original) return;
 
-    const newId = `remix-${Date.now()}`;
-    const remix = {
-      ...original,
-      _id: newId,
-      title: `${original.title} (Remix)`,
-      remixOf: contentId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    devVideoStore.set(newId, remix);
-    return res.json({ success: true, data: { contentId: newId } });
+    // Dev-store originals stay in the dev store (ids must start with "dev-"
+    // to resolve). The old `remix-<ts>` id lived only there, so for every
+    // real user the editor opened a remix that could not be loaded.
+    if (String(contentId).startsWith('dev-')) {
+      const newId = `dev-content-remix-${Date.now()}`;
+      devVideoStore.set(newId, {
+        ...original,
+        _id: newId,
+        title: `${original.title || 'Untitled'} (Remix)`,
+        remixOf: contentId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      return res.json({ success: true, data: { contentId: newId } });
+    }
+
+    // Mongo content: save the copy as a new Content owned by the caller.
+    const src = typeof original.toObject === 'function' ? original.toObject() : { ...original };
+    for (const key of REMIX_EXCLUDED_FIELDS) delete src[key];
+    const Content = require('../models/Content');
+    let saved;
+    try {
+      saved = await Content.create({
+        ...src,
+        userId: String(req.user._id || req.user.id),
+        title: `${src.title || 'Untitled'} (Remix)`,
+        isFavorite: false,
+        isArchived: false,
+        metadata: { ...(src.metadata || {}), remixOf: String(contentId) },
+      });
+    } catch (e) {
+      logger.error('[ingest/remix] could not save the remix', { error: e.message, contentId: String(contentId) });
+      return res.status(500).json({ success: false, error: 'Could not create the remix. Please try again.' });
+    }
+    return res.json({ success: true, data: { contentId: String(saved._id) } });
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message || 'Remix failed' });
   }
 });
 
 // ── GET /api/ingest/recent ─────────────────────────────────────────────────
-// Returns the most recent dev-store ingests so the IngestPanel can show
-// "remix from previous project" without needing a separate Mongo round-trip.
-router.get('/recent', auth, (req, res) => {
+// The caller's most recent videos, for "remix from a previous project".
+// SECURITY: this used to list every entry in the shared dev store — every
+// user's imports, titles and file URLs. It is now scoped to req.user.
+router.get('/recent', auth, async (req, res) => {
   try {
-    const all = Array.from(devVideoStore.entries())
-      .map(([id, v]) => ({ id, title: v.title, fileUrl: v.originalFile?.url, createdAt: v.createdAt }))
+    const uid = String(req.user?._id || req.user?.id || '');
+    const devItems = Array.from(devVideoStore.entries())
+      .filter(([, v]) => v && String(v.userId) === uid)
+      .map(([id, v]) => ({ id, title: v.title, fileUrl: v.originalFile?.url, createdAt: v.createdAt }));
+
+    let mongoItems = [];
+    if (mongoose.Types.ObjectId.isValid(uid)) {
+      const Content = require('../models/Content');
+      const docs = await Content.find({ userId: uid, type: 'video', 'originalFile.url': { $exists: true, $nin: [null, ''] } })
+        .sort({ createdAt: -1 })
+        .limit(RECENT_LIMIT)
+        .select('title originalFile.url createdAt')
+        .lean();
+      mongoItems = docs.map((d) => ({
+        id: String(d._id),
+        title: d.title,
+        fileUrl: d.originalFile?.url,
+        createdAt: d.createdAt ? new Date(d.createdAt).toISOString() : null,
+      }));
+    }
+
+    const all = devItems.concat(mongoItems)
       .filter(v => v.fileUrl)
       .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
-      .slice(0, 12);
+      .slice(0, RECENT_LIMIT);
     return res.json({ success: true, data: all });
   } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
+    logger.error('[ingest/recent] failed', { error: err.message });
+    return res.status(500).json({ success: false, error: 'Could not load your recent videos' });
   }
 });
 

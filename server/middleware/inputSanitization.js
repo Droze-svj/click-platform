@@ -4,7 +4,7 @@ const { body, query, param } = require('express-validator');
 const { validationResult } = require('express-validator');
 const logger = require('../utils/logger');
 const { sendError } = require('../utils/response');
-const { sanitizeString, sanitizeObject, sanitizeMongoQuery, validateInput } = require('../utils/inputSanitizer');
+const { sanitizeString, sanitizeObject, sanitizeMongoQuery, validateInput, sanitizeRequestValue } = require('../utils/inputSanitizer');
 
 // Use advanced sanitizer from utils
 
@@ -50,6 +50,15 @@ const SANITIZER_BYPASS_PATHS = [
   // HTML — escaping burned `&#x27;` into exported videos wherever a caption had
   // an apostrophe). SSRF guard + ownership checks protect it, not HTML-escaping.
   /^\/api\/video\/manual-editing\/(render|waveform-peaks|filmstrip|beats)(\/|$|\?)/,
+  // Profile edits: escaping turned every website/social URL into
+  // `https:&#x2F;&#x2F;…` (so the URL check rejected all of them) and stored
+  // apostrophes in bios as `&#x27;`. The handler type-checks each field and
+  // React escapes on render — there is no HTML sink.
+  /^\/api\/auth\/profile($|\?)/,
+  // Posts editor (create / update one post): long-form text stored as typed
+  // and rendered by React. Escaping saved "Tom's" as `Tom&#x27;s`, which then
+  // showed on screen. Handlers type-check every field.
+  /^\/api\/posts(\/[0-9a-f]{24})?($|\?)/,
 ];
 
 function sanitizeInput(req, res, next) {
@@ -59,16 +68,17 @@ function sanitizeInput(req, res, next) {
     if (SANITIZER_BYPASS_PATHS.some((rx) => rx.test(reqPath))) {
       return next();
     }
-    if (req.body) {
-      req.body = sanitizeObject(req.body, {});
+    // Text is stored as typed (see sanitizeRequestValue) — no HTML-escaping.
+    if (req.body && typeof req.body === 'object' && !Buffer.isBuffer(req.body)) {
+      req.body = sanitizeRequestValue(req.body);
     }
     if (req.query) {
-      req.query = sanitizeObject(req.query, {});
+      req.query = sanitizeRequestValue(req.query);
       // Also sanitize MongoDB queries
       req.query = sanitizeMongoQuery(req.query);
     }
     if (req.params) {
-      req.params = sanitizeObject(req.params, {});
+      req.params = sanitizeRequestValue(req.params);
     }
     next();
   } catch (error) {

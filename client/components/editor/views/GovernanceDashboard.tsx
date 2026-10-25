@@ -11,7 +11,8 @@ import {
   Fingerprint,
 } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
-import { apiGet } from '../../../lib/api'
+import { apiGet, handleApiError } from '../../../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface GovernanceAction {
   _id: string
@@ -31,8 +32,10 @@ interface GovernanceAction {
 const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
 
 export const GovernanceDashboard: React.FC = () => {
+    const { t } = useTranslation()
     const [actions, setActions] = useState<GovernanceAction[]>([])
     const [loading, setLoading] = useState(true)
+    const [loadError, setLoadError] = useState('')
 
     useEffect(() => {
         fetchLedger()
@@ -40,10 +43,15 @@ export const GovernanceDashboard: React.FC = () => {
 
     const fetchLedger = async () => {
         try {
-            const data = await apiGet('/sovereign/ledger')
-            setActions(data)
+            // GET /click/ledger answers a bare GovernanceAction[] for this user.
+            // (/sovereign/ledger is a different {audits, state} payload.)
+            const res: any = await apiGet('/click/ledger', undefined, false)
+            const list = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []
+            setActions(list)
+            setLoadError('')
         } catch (err) {
-            console.error('Ledger fetch failed')
+            setActions([])
+            setLoadError(handleApiError(err) || t('governanceDashboard.loadFailed'))
         } finally {
             setLoading(false)
         }
@@ -144,7 +152,11 @@ export const GovernanceDashboard: React.FC = () => {
                     </table>
                 </div>
 
-                {!loading && actions.length === 0 && (
+                {!loading && loadError && (
+                    <div className="p-6 text-sm text-rose-400">{t('governanceDashboard.loadFailed')} {loadError}</div>
+                )}
+
+                {!loading && !loadError && actions.length === 0 && (
                     <div className="p-24 flex flex-col items-center justify-center text-center space-y-4 opacity-30 italic">
                         <Fingerprint className="w-16 h-16" />
                         <span className="text-[10px] font-black uppercase tracking-[0.3em]">No actions recorded yet</span>

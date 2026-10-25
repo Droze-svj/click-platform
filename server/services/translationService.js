@@ -501,6 +501,43 @@ async function deleteTranslation(translationId, userId) {
 }
 
 /**
+ * Translate a free-text snippet (e.g. a caption that is not saved as Content).
+ * Returns { ok:true, translatedText, targetLanguage } or an honest failure —
+ * never the untranslated text dressed up as a translation.
+ */
+async function translateText(text, targetLanguage, { context = null } = {}) {
+  const code = String(targetLanguage || '').toLowerCase().slice(0, 5);
+  const languageName = SUPPORTED_LANGUAGES[code];
+  if (!languageName) {
+    return { ok: false, status: 400, error: `Unsupported language: ${targetLanguage}` };
+  }
+  if (!text || !String(text).trim()) {
+    return { ok: false, status: 400, error: 'Text is required' };
+  }
+  if (!geminiConfigured) {
+    return { ok: false, status: 503, error: 'Translation is unavailable right now (AI is not configured).' };
+  }
+  const contextLine = context === 'social_media_caption'
+    ? 'This is a social media caption: keep hashtags, @mentions, emoji and line breaks as they are, and keep it natural for native speakers.'
+    : 'Keep formatting, hashtags, @mentions and emoji as they are.';
+  const prompt =
+    `Translate the following text into ${languageName}. ${contextLine}\n` +
+    'Respond with ONLY the translated text — no quotes, notes or explanations.\n\n' +
+    `TEXT:\n${text}`;
+  try {
+    const out = await geminiGenerate(prompt, { temperature: 0.3, maxTokens: 2048 });
+    const translated = typeof out === 'string' ? out.trim() : '';
+    if (!translated) {
+      return { ok: false, status: 503, error: 'Translation is unavailable right now. Try again later.' };
+    }
+    return { ok: true, translatedText: translated, targetLanguage: code };
+  } catch (error) {
+    logger.warn('translateText failed', { error: error.message, targetLanguage: code });
+    return { ok: false, status: 503, error: 'Translation is unavailable right now. Try again later.' };
+  }
+}
+
+/**
  * Get supported languages
  */
 function getSupportedLanguages() {
@@ -652,6 +689,7 @@ module.exports = {
   updateTranslation,
   deleteTranslation,
   getSupportedLanguages,
+  translateText,
   translateSegments,
   SUPPORTED_LANGUAGES
 };

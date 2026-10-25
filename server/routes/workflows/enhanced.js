@@ -21,8 +21,14 @@ const router = express.Router();
  *       - bearerAuth: []
  */
 router.post('/', auth, asyncHandler(async (req, res) => {
-  const workflow = await createWorkflow(req.user._id, req.body);
-  sendSuccess(res, 'Workflow created successfully', 201, workflow);
+  try {
+    const workflow = await createWorkflow(req.user._id, req.body || {});
+    sendSuccess(res, 'Workflow created successfully', 201, workflow);
+  } catch (err) {
+    if (err.statusCode) return sendError(res, err.message, err.statusCode);
+    if (err.name === 'ValidationError') return sendError(res, err.message, 400);
+    throw err;
+  }
 }));
 
 /**
@@ -36,9 +42,14 @@ router.post('/', auth, asyncHandler(async (req, res) => {
  */
 router.post('/:workflowId/execute', auth, asyncHandler(async (req, res) => {
   const { workflowId } = req.params;
-  const { context } = req.body;
-  const result = await executeWorkflow(req.user._id, workflowId, context);
-  sendSuccess(res, 'Workflow executed', 200, result);
+  const { context } = req.body || {};
+  try {
+    const result = await executeWorkflow(req.user._id, workflowId, context && typeof context === 'object' ? context : {});
+    sendSuccess(res, 'Workflow executed', 200, result);
+  } catch (err) {
+    if (err.statusCode) return sendError(res, err.message, err.statusCode);
+    throw err;
+  }
 }));
 
 /**

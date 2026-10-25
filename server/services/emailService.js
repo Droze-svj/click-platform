@@ -1,6 +1,9 @@
 // Email notification service
 
 const nodemailer = require('nodemailer');
+// User text is stored as typed — escape everything interpolated into HTML.
+const { escapeHtml } = require('../utils/escapeHtml');
+const { unescape: decodeEntities } = require('validator');
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
 
@@ -188,7 +191,7 @@ async function sendWelcomeEmail(userEmail, userName, customContent = null) {
           <h1>Welcome to Click! 🎉</h1>
         </div>
         <div class="content">
-          <p>Hi ${userName || 'there'},</p>
+          <p>Hi ${escapeHtml(userName || 'there')},</p>
           <p>Welcome to Click! We're excited to have you on board.</p>
           <p>Click is your all-in-one content creation platform. Here's what you can do:</p>
           <ul>
@@ -246,7 +249,7 @@ async function sendPasswordResetEmail(userEmail, resetToken, userName) {
           <h1>Reset Your Password</h1>
         </div>
         <div class="content">
-          <p>Hi ${userName || 'there'},</p>
+          <p>Hi ${escapeHtml(userName || 'there')},</p>
           <p>We received a request to reset your password for your Click account.</p>
           <p style="text-align: center;">
             <a href="${resetUrl}" class="button">Reset Password</a>
@@ -297,8 +300,8 @@ async function sendContentProcessingEmail(userEmail, contentTitle, contentType, 
           <h1>✅ Content Ready!</h1>
         </div>
         <div class="content">
-          <p>Hi ${userName || 'there'},</p>
-          <p>Great news! Your ${contentType} "${contentTitle}" has been processed and is ready to use.</p>
+          <p>Hi ${escapeHtml(userName || 'there')},</p>
+          <p>Great news! Your ${escapeHtml(contentType)} "${escapeHtml(contentTitle)}" has been processed and is ready to use.</p>
           <p style="text-align: center;">
             <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/content" class="button">View Content</a>
           </p>
@@ -343,8 +346,8 @@ async function sendSubscriptionExpirationEmail(userEmail, daysRemaining, userNam
           <h1>Subscription Expiring Soon</h1>
         </div>
         <div class="content">
-          <p>Hi ${userName || 'there'},</p>
-          <p>Your ${planName} subscription will expire in ${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'}.</p>
+          <p>Hi ${escapeHtml(userName || 'there')},</p>
+          <p>Your ${escapeHtml(planName)} subscription will expire in ${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'}.</p>
           <p>Renew now to continue enjoying all Click features without interruption.</p>
           <p style="text-align: center;">
             <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/billing" class="button">Renew Subscription</a>
@@ -392,8 +395,8 @@ async function sendTeamInvitationEmail(userEmail, inviterName, teamName, invitat
           <h1>Team Invitation</h1>
         </div>
         <div class="content">
-          <p>Hi ${userName || 'there'},</p>
-          <p><strong>${inviterName}</strong> has invited you to join the <strong>${teamName}</strong> team on Click.</p>
+          <p>Hi ${escapeHtml(userName || 'there')},</p>
+          <p><strong>${escapeHtml(inviterName)}</strong> has invited you to join the <strong>${escapeHtml(teamName)}</strong> team on Click.</p>
           <p>Accept the invitation to start collaborating on content creation.</p>
           <p style="text-align: center;">
             <a href="${acceptUrl}" class="button">Accept Invitation</a>
@@ -413,7 +416,7 @@ async function sendTeamInvitationEmail(userEmail, inviterName, teamName, invitat
 
   return sendEmail({
     to: userEmail,
-    subject: `You've been invited to join ${teamName} on Click`,
+    subject: `You've been invited to join ${decodeEntities(String(teamName || ''))} on Click`,
     html,
   });
 }
@@ -444,7 +447,7 @@ async function sendWeeklyDigestEmail(userEmail, stats, userName) {
           <h1>Your Weekly Summary 📊</h1>
         </div>
         <div class="content">
-          <p>Hi ${userName || 'there'},</p>
+          <p>Hi ${escapeHtml(userName || 'there')},</p>
           <p>Here's what you accomplished this week:</p>
           <div class="stat">
             <div class="stat-number">${stats.contentCreated || 0}</div>

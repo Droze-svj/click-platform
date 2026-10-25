@@ -232,7 +232,13 @@ export default function Register() {
         // through the one-step caption setup first, then on to the welcome
         // dashboard (passed as `next`) so onboarding starts with their captions.
         const nicheParam = chosenNiche ? `&niche=${encodeURIComponent(chosenNiche)}` : ''
-        const welcomeDest = `/dashboard?welcome=1${nicheParam}`
+        // Someone who opened a team invite while signed out lands back on it
+        // after the caption step (stored by /teams/accept), so it's accepted.
+        let pendingInvite: string | null = null
+        try { pendingInvite = sessionStorage.getItem('pendingInviteToken') } catch { /* storage blocked */ }
+        const welcomeDest = pendingInvite
+          ? `/teams/accept?token=${encodeURIComponent(pendingInvite)}`
+          : `/dashboard?welcome=1${nicheParam}`
         router.push(`/dashboard/onboarding/captions?next=${encodeURIComponent(welcomeDest)}`)
       } else if (response.data?.requiresVerification || response.success) {
         router.push(`/registration-success?verification=required&email=${encodeURIComponent(email)}`)

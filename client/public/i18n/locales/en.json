@@ -86,7 +86,9 @@
     "openLabs": "Open Labs",
     "exploreLabs": "Explore Labs",
     "earlyAccessOn": "Early access — available to you",
-    "earlyAccessAgencyOnly": "Agency-exclusive"
+    "earlyAccessAgencyOnly": "Agency-exclusive",
+    "checkoutUnavailable": "Checkout for this plan is not available right now. Nothing was changed. Please try again later or contact support.",
+    "invoiceDownloadFailed": "Couldn't download the invoice. Please try again."
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "Danger zone",
     "irreversibleActions": "Irreversible actions",
     "deleteAccountWarning": "Delete your account: permanently remove all of your videos, posts, connected accounts, and subscription. This cannot be undone.",
-    "deleteAccount": "Delete account"
+    "deleteAccount": "Delete account",
+    "loadFailedSaveBlocked": "We couldn't load your saved settings. Saving is turned off until they load, so your real settings aren't replaced by defaults.",
+    "saveBlockedNotLoaded": "Your saved settings haven't loaded yet. Try again before saving.",
+    "apiKeySavedPlaceholder": "Saved key ending {{last4}}. Enter a new key to replace it"
   },
   "common": {
     "save": "Save",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "Analyzing…",
     "predictiveTelemetry": "Performance forecast",
     "predictiveTelemetryDesc": "Forecasts of how your content may perform.",
-    "scanningTrajectories": "Scanning Trajectories..."
+    "scanningTrajectories": "Scanning Trajectories...",
+    "errorStatusCheckFailed": "Couldn't check on your content. It may still finish; look for it in your library.",
+    "errorGenerationTimeout": "This is taking longer than usual. It may still finish; look for it in your library in a few minutes.",
+    "errorTemplateLoadFailed": "Couldn't load that template. You can still write your own."
   },
   "forgePage": {
     "documentTitle": "AI Content Creator | Click",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "Open",
     "resonanceAck": "Mark as read",
     "confirmPurgeSignal": "Delete this notification?",
-    "purgeSignal": "Delete"
+    "purgeSignal": "Delete",
+    "category_task": "Tasks",
+    "category_project": "Projects",
+    "category_content": "Content",
+    "category_approval": "Approvals",
+    "category_mention": "Mentions",
+    "category_system": "System",
+    "category_workflow": "Workflows",
+    "category_publishing": "Publishing",
+    "category_recurring": "Recurring posts",
+    "category_brief": "Daily brief",
+    "bulkReadFailed": "{{failed}} of {{total}} couldn't be marked as read.",
+    "bulkDeleteFailed": "{{failed}} of {{total}} couldn't be deleted.",
+    "loadFailed": "Couldn't load notifications."
   },
   "onboardingPage": {
     "loading": "Loading",
@@ -1721,7 +1742,8 @@
     "statusPublished": "Published",
     "statusFailed": "Failed",
     "statusDraft": "Draft",
-    "viewSequenceDetails": "View details"
+    "viewSequenceDetails": "View details",
+    "toastScheduledPartial": "Scheduled {{ok}} of {{total}} posts. The rest failed: {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "Couldn't load scripts",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "Delete script?",
     "purgeNodeBody": "This will permanently delete the script. This can't be undone.",
     "abortPurge": "Cancel",
-    "commitPurge": "Delete"
+    "commitPurge": "Delete",
+    "toastTemplateLoadFailed": "Couldn't load that template."
   },
   "searchPage": {
     "reconFailed": "Search timed out. Try again.",
@@ -1929,7 +1952,8 @@
     "transmitting": "Refreshing…",
     "transmit": "TRANSMIT",
     "terminateProtocol": "Delete task",
-    "secureAndLeave": "SECURE_&_LEAVE"
+    "secureAndLeave": "SECURE_&_LEAVE",
+    "toastLoadFailed": "Couldn't load your tasks."
   },
   "templatesPage": {
     "toastSyncFailed": "Couldn't load templates",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "Progress",
     "anomalyIntercepted": "Error",
     "procTime": "Processing time: {{time}}",
-    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}"
+    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}",
+    "cancelled": "Job cancelled.",
+    "cancelFailed": "Couldn't cancel this job."
   },
   "strategistPage": {
     "clickIntelligence": "Click Intelligence",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "Emotional appeal",
     "dominantLabel": "Dominant: {{emotion}}",
     "missingTriggerLabel": "Missing high-impact trigger:",
-    "optimalPostingWindows": "Optimal Posting Windows"
+    "optimalPostingWindows": "Optimal Posting Windows",
+    "syncFailed": "Couldn't sync. Try again.",
+    "playbookFallbackNote": "AI is unavailable right now, so these ideas come from the niche playbook.",
+    "trendHooks": "Hooks to try",
+    "trendFormats": "Formats",
+    "trendSounds": "Sound ideas",
+    "trendHashtags": "Hashtags",
+    "momentumRising": "Rising",
+    "momentumSteady": "Steady",
+    "momentumPeaking": "Peaking",
+    "nicheVoice": "Voice",
+    "pitfalls": "Avoid",
+    "retentionFloorLabel": "Keep at least {{value}}% of viewers",
+    "retentionTargetLabel": "Aim for {{value}}%",
+    "retentionGuidelineNote": "A guideline for {{platform}} based on its hook window, not a measurement of your posts.",
+    "sequenceStepLabel": "Step {{step}} · {{timing}}",
+    "campaignVideoLabel": "Video {{num}} · {{mark}}",
+    "angleNumber": "Angle {{num}}",
+    "promptGroupSave": "Get saves",
+    "promptGroupComment": "Get comments",
+    "promptGroupShare": "Get shares",
+    "promptGroupDm": "Get DMs",
+    "promptGroupFollow": "Get follows",
+    "benchIdealLength": "Ideal length",
+    "benchHookWindow": "Hook window",
+    "benchCaptionStyle": "Caption style",
+    "benchHashtags": "Hashtags",
+    "benchSoundStrategy": "Sound",
+    "benchAvoid": "Avoid on {{platform}}",
+    "verdictPublishReady": "Ready to publish",
+    "verdictNeedsTightening": "Needs tightening",
+    "verdictRewrite": "Needs a rewrite",
+    "wordCountLabel": "{{count}} words",
+    "scoreRuleBasedNote": "Rule-based check against the {{platform}} playbook.",
+    "notesTitle": "What to change"
   },
   "teamDetailPage": {
     "toastLoadFailed": "Couldn't load team",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "Read-only settings",
     "latticeMetadata": "Team details",
     "clusterId": "Team ID",
-    "ownerHash": "Owner"
+    "ownerHash": "Owner",
+    "inviteEmailFailed": "The invite is ready, but the email could not be sent. Copy the link and send it yourself.",
+    "inviteLinkLabel": "Invite link",
+    "copyInviteLink": "Copy link",
+    "inviteLinkCopied": "✓ Link copied"
   },
   "teamsPage": {
     "toastLoadFailed": "Failed to load teams",
@@ -4195,7 +4259,9 @@
     "postComment": "Post Comment",
     "resolved": "Resolved",
     "helpful": "Helpful",
-    "empty": "No comments yet. Be the first to comment!"
+    "empty": "No comments yet. Be the first to comment!",
+    "needsTeam": "Comments are shared with a team.",
+    "needsTeamCta": "Create or join a team"
   },
   "complianceDashboard": {
     "outOf100": "/ 100",
@@ -4281,7 +4347,19 @@
     "colChecked": "Checked",
     "untitled": "(Untitled)",
     "noHistory": "No compliance history yet.",
-    "noHistoryHint": "Run a check on your content to start tracking."
+    "noHistoryHint": "Run a check on your content to start tracking.",
+    "rulesLoadFailed": "Couldn't load your rules.",
+    "ruleSaveFailed": "Couldn't save the rule.",
+    "ruleDeleteFailed": "Couldn't delete the rule.",
+    "policiesLoadFailed": "Couldn't load platform policies.",
+    "historyLoadFailed": "Couldn't load compliance history.",
+    "totalRulesStat": "Rules",
+    "activeRulesStat": "Active rules",
+    "totalTriggersStat": "Times triggered",
+    "colRule": "Rule",
+    "colTriggers": "Triggers",
+    "colLastTriggered": "Last triggered",
+    "noTriggersYet": "None of your rules has been triggered yet."
   },
   "confirmDialog": {
     "confirm": "Confirm",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}}% optimal",
     "dayAtTime": "{{day}} at {{time}}",
     "schedule": "Schedule",
-    "viewAllOptimalTimes": "View all optimal times →"
+    "viewAllOptimalTimes": "View all optimal times →",
+    "loadFailed": "Couldn't load posting times."
   },
   "contentSuggestions": {
     "loadFailed": "Failed to load suggestions",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "Describe what this workflow does...",
     "trigger": "Trigger",
     "enableWorkflow": "Enable workflow",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "notExecuted": "Workflow did not run: {{reason}}",
+    "someActionsFailed": "Workflow ran, but these steps failed: {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "Enterprise Governance",
@@ -5710,7 +5791,9 @@
     "retrying": "Retrying...",
     "retryJob": "Retry Job",
     "close": "Close",
-    "jobNotFound": "Job not found"
+    "jobNotFound": "Job not found",
+    "retryQueued": "Job queued to run again.",
+    "retryFailed": "Couldn't retry this job."
   },
   "jobProgressViewer": {
     "loadingJobStatus": "Loading job status...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "Suggested Next Steps",
     "nextStep": "Next step",
-    "continueSetup": "Continue setup"
+    "continueSetup": "Continue setup",
+    "workflowFailed": "Couldn't run that workflow."
   },
   "multiClientRollupDashboard": {
     "title": "Multi-Client Rollup Dashboard",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "Idea generator",
     "autoFoley": "Auto-Foley",
     "brollAgent": "B-Roll Agent",
-    "captionSwarm": "AI captions"
+    "captionSwarm": "AI captions",
+    "noTrendsYet": "No live trends right now. Try again later.",
+    "kindSound": "Sound",
+    "kindHashtag": "Hashtag",
+    "kindTopic": "Topic"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "Post your next video tonight at 10 PM — Thursday nights are 23% above average for short-form virality.",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "Mark all as read",
     "loading": "Loading...",
     "noNotifications": "No notifications",
-    "view": "View"
+    "view": "View",
+    "markReadFailed": "Couldn't mark that as read. Try again."
   },
   "notificationPreferences": {
     "title": "Notification Preferences",
@@ -6309,7 +6398,9 @@
     "push": "Push",
     "pushDescription": "Browser push notifications",
     "saving": "Saving...",
-    "savePreferences": "Save Preferences"
+    "savePreferences": "Save Preferences",
+    "loadFailed": "We couldn't load your notification preferences. Saving is off until they load.",
+    "saveFailed": "Couldn't save your notification preferences. Please try again."
   },
   "offlineIndicator": {
     "backOnline": "Back online",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ Pro tip: ",
     "allSet": "You're all set!",
     "clickTunedFor": "CLICK is tuned for",
-    "makeFirstVideoViral": "Make your first video go viral."
+    "makeFirstVideoViral": "Make your first video go viral.",
+    "syncFailed": "Couldn't save your answers to your account. They still apply on this device."
   },
   "oneClickPublish": {
     "salvageLowCtr": "Low early click-through rate on TikTok. Consider trying another version.",
@@ -6477,7 +6569,9 @@
     "variantB": "Variant B",
     "ignore": "Ignore",
     "swapToVariantB": "Swap to Variant B",
-    "swapVariantB": "Swap Variant B"
+    "swapVariantB": "Swap Variant B",
+    "someFailed": "Not published to: {{platforms}}",
+    "allFailed": "Couldn't publish to: {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "Loading {{alt}}",
@@ -6688,7 +6782,10 @@
     "reach": "Reach",
     "virality": "Virality",
     "keyInsights": "Key Insights",
-    "recommendations": "Recommendations"
+    "recommendations": "Recommendations",
+    "ruleBasedNote": "Rule-based score from length, hashtags, emoji and questions. It is not a forecast of views or reach.",
+    "predictFailed": "Couldn't score this content. Try again.",
+    "needsText": "Add some text to score it."
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "Analytics synced successfully",
@@ -6711,7 +6808,9 @@
     "expectedViews": "Expected Views",
     "engagementRate": "Engagement Rate",
     "positiveFactors": "Positive Factors",
-    "recommendations": "Recommendations"
+    "recommendations": "Recommendations",
+    "predictFailed": "Couldn't predict performance. Try again.",
+    "ruleBasedNote": "AI is unavailable, so this is a rule-based score from length, hashtags, questions and calls to action. No view estimate is shown."
   },
   "phase8Dashboard": {
     "howItWorks": "How it works:",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "AI-Analyzed // From your published-post performance",
     "coldStartHint": "Publish posts so Click can analyze what works",
     "noInsightsYet": "No insights yet",
-    "impact": "Impact: {{impact}}"
+    "impact": "Impact: {{impact}}",
+    "loadFailed": "Couldn't load insights."
   },
   "scalingHub": {
     "neuralThroughput": "Throughput",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "Example pacing: {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "Cropped the frame to {{ratio}}. Export with a {{ratio}} preset to keep the full frame.",
+    "reframeNotApplied": "The {{ratio}} crop couldn't be applied because the video's frame size isn't known yet. Try again once it has loaded.",
+    "resultAddedToTimeline": "{{tool}}: the new version was added to your timeline.",
+    "resultReady": "{{tool}} is done. Open the result below.",
+    "noOutput": "{{tool}} finished but didn't return a file. Please try again.",
+    "speedRampMarker": "Speed {{speed}}x",
+    "speedRampMarked": "Added {{count}} speed-ramp markers to your timeline. Set the speed at each marker to apply them.",
+    "speedRampPlanOnly": "Planned {{count}} speed ramps. They haven't been applied to your video.",
+    "dubAddedToTimeline": "Added the Spanish voice track to your timeline. Mute the original audio to hear only the dub.",
+    "openResult": "Open result",
     "reframeStarting": "Reframing your video around the main subject…",
     "reframeDone": "Auto-reframe finished.",
     "reframeFailed": "Auto-reframe didn't work. Please try again.",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "Close shortcuts",
     "searchTools": "Search tools"
   },
+  "aiTimelineChat": {
+    "title": "Timeline assistant",
+    "greeting": "Tell me what to change. I can apply a color grade, add a title, change the playback speed, or open Export to pick a different frame shape.",
+    "placeholder": "e.g. Make it cinematic",
+    "send": "Send message",
+    "appliedGrade": "Applied the {{grade}} color grade.",
+    "gradeNotApplied": "I couldn't apply the {{grade}} color grade.",
+    "addedText": "Added the title \"{{text}}\" at the playhead.",
+    "textNeedsQuotes": "Put the title in quotes, for example: add title \"Big news\".",
+    "speedSet": "Set the playback speed to {{speed}}x.",
+    "aspectOpenExport": "The frame shape is chosen when you export. I opened Export: pick a {{ratio}} preset there.",
+    "aspectNoExport": "The frame shape is chosen when you export. Open Export and pick a {{ratio}} preset.",
+    "notUnderstood": "I didn't change anything. I can apply a color grade (for example cinematic, warm or vintage), add a title in quotes, change the speed (for example 1.5x or slow motion), or open Export for a 9:16 or 1:1 frame.",
+    "badgeGrade": "Color grade: {{grade}}",
+    "badgeText": "Title added",
+    "badgeSpeed": "Speed {{speed}}x",
+    "badgeExport": "Opened Export"
+  },
+  "repurposeView": {
+    "renderFailed": "The {{format}} version failed: {{error}}",
+    "renderFailedGeneric": "The render failed.",
+    "renderTimedOut": "Rendering is taking too long and has stopped reporting back. Please try again."
+  },
+  "musicPicker": {
+    "generationFailed": "AI music generation failed. Please try again.",
+    "generationFailedReason": "AI music generation failed: {{error}}",
+    "generationNoTrack": "The track was generated but could not be saved. Please generate it again."
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "Could not delete this look. It is still saved."
+  },
   "editorHUD": {
+    "saveFailedRetry": "Not saved to your account yet. Click to retry.",
     "section": {
       "edit": "Editing",
       "color": "Color",
@@ -8846,6 +8988,7 @@
     "export": "Export"
   },
   "quickActionsBar": {
+    "trendsList": "Trending on TikTok now: {{list}}",
     "variantsNeedBase": "Add a caption or hook first so the variant generator has something to work with.",
     "noVariants": "No variants returned — try a longer base hook.",
     "variantsGenerated": "Generated {{count}} variants — open the A/B picker to preview.",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "Competitive Insights"
     },
     "err": {
+      "analyzeFailed": "Couldn't analyze this video. Try again in a moment.",
       "videoNotFound": "Video data not found in response",
       "loadFailed": "Failed to load video. Please try again.",
       "missingSource": "This video is missing its source file. Re-upload and try again.",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "Retention, hook strength and pacing analytics will appear here once your video has been analyzed.",
       "transcript": "Transcript"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "Processing your invitation…",
+    "body": "We are adding you to the team. This only takes a moment.",
+    "noToken": "This invitation link is missing its code. Ask for a new invite.",
+    "joined": "✓ You joined the team",
+    "failed": "Couldn't accept the invitation"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "Too many reset requests. Wait a few minutes, then try again.",
+    "sendFailed": "We couldn't send the reset link right now. Check your connection and try again."
+  },
+  "governanceDashboard": {
+    "loadFailed": "Couldn't load the audit log."
+  },
+  "clickIsland": {
+    "chatEmpty": "I couldn't generate a response just now. Try rephrasing or send that again.",
+    "chatRateLimited": "You've hit the AI limit for now. Try again in a little while.",
+    "chatUnavailable": "The AI couldn't answer right now. Try again in a moment.",
+    "chatOffline": "I can't reach the assistant right now. Check your connection and try again."
+  },
+  "postStatus": {
+    "scheduled": "Scheduled",
+    "awaitingApproval": "Awaiting approval",
+    "publishing": "Publishing",
+    "published": "Published",
+    "retrying": "Retrying",
+    "failed": "Failed",
+    "cancelled": "Cancelled"
+  },
+  "creatorTools": {
+    "noResults": "No results this time. Try again or rephrase.",
+    "variantNotAdapted": "AI could not adapt this one. This is your original text."
+  },
+  "contentRecycling": {
+    "loadFailed": "Couldn't load recycling data.",
+    "planCreated": "Recycling plan created.",
+    "createFailed": "Couldn't create the recycling plan.",
+    "toggleFailed": "Couldn't update the recycling plan."
   }
 }

@@ -457,6 +457,7 @@ export default function VideoEditPage({ params }: PageProps) {
   const handleAnalyzeVideo = async () => {
     setAnalyzing(true)
     setShowAnalysis(false)
+    setAnalysisError(null)
     try {
       const analysis = await apiPost('/video/ai-editing/analyze', {
         videoId,
@@ -465,11 +466,34 @@ export default function VideoEditPage({ params }: PageProps) {
       setAiAnalysis(analysis.data || analysis)
       setShowAnalysis(true)
     } catch (error: any) {
+      // A failed analysis used to be logged and dropped — the button just
+      // stopped spinning. Show why.
       console.error(error)
+      const serverMsg = error?.response?.data?.error || error?.response?.data?.message
+      setAnalysisError(typeof serverMsg === 'string' && serverMsg.trim() ? serverMsg : t('aiAutoEdit.err.analyzeFailed'))
     } finally {
       setAnalyzing(false)
     }
   }
+
+  // Live progress for the inline auto-edit: aiVideoEditingService emits
+  // `video:edit:progress` to the user's room at each stage. Nothing listened,
+  // so the bar sat at 0% for the whole edit.
+  useEffect(() => {
+    if (!socket) return
+    const handleProgress = (p: any) => {
+      if (!p || String(p.videoId) !== String(videoId)) return
+      const pct = Math.max(0, Math.min(100, Math.round(Number(p.percent) || 0)))
+      setLiveProgress((prev) => ({
+        stage: typeof p.stage === 'string' ? p.stage : (prev?.stage || ''),
+        // Stages can report out of order; never move the bar backwards.
+        percent: Math.max(prev?.percent || 0, pct),
+        message: typeof p.message === 'string' ? p.message : (prev?.message || ''),
+      }))
+    }
+    on('video:edit:progress', handleProgress)
+    return () => off('video:edit:progress', handleProgress)
+  }, [socket, on, off, videoId])
 
   const handleStartAIEdit = async () => {
     const sourceUrl = video?.originalFile?.url
@@ -598,7 +622,7 @@ export default function VideoEditPage({ params }: PageProps) {
     return (
       <div className="fixed inset-0 bg-surface-50 dark:bg-surface-950 overflow-hidden transition-colors duration-500">
         {/* Back lives in the editor's sidebar header (it used to float on top of it). */}
-        <DynamicModernVideoEditor videoId={videoId} videoUrl={urlForEditor} initialAiTool={aiTool} autoGenerateCaptions={autoCaptions} backAction={{ label: t('aiAutoEdit.badge'), onClick: () => setEditMode('ai-auto') }} />
+        <DynamicModernVideoEditor videoId={videoId} videoUrl={urlForEditor} initialTitle={video?.title} initialAiTool={aiTool} autoGenerateCaptions={autoCaptions} backAction={{ label: t('aiAutoEdit.badge'), onClick: () => setEditMode('ai-auto') }} />
       </div>
     )
   }
@@ -641,10 +665,10 @@ export default function VideoEditPage({ params }: PageProps) {
           </header>
 
           {/* Errors were set but never shown — a failed edit looked like nothing happened. */}
-          {(processingError || error) && (
+          {(processingError || error || analysisError) && (
             <div role="alert" className="mb-6 flex items-start justify-between gap-4 rounded-2xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 p-4 text-sm text-rose-700 dark:text-rose-300">
-              <span className="flex items-start gap-2"><AlertCircle size={18} className="mt-0.5 shrink-0" aria-hidden /> {processingError || error}</span>
-              <button type="button" onClick={() => { setProcessingError(''); setError('') }} aria-label={t('aiAutoEdit.dismissError')} className="shrink-0 font-semibold hover:underline">{t('aiAutoEdit.dismiss')}</button>
+              <span className="flex items-start gap-2"><AlertCircle size={18} className="mt-0.5 shrink-0" aria-hidden /> {processingError || error || analysisError}</span>
+              <button type="button" onClick={() => { setProcessingError(''); setError(''); setAnalysisError(null) }} aria-label={t('aiAutoEdit.dismissError')} className="shrink-0 font-semibold hover:underline">{t('aiAutoEdit.dismiss')}</button>
             </div>
           )}
 
@@ -663,7 +687,7 @@ export default function VideoEditPage({ params }: PageProps) {
                 ) : (
                   <div className="space-y-4">
                     <div className="flex justify-between items-end mb-2">
-                       <span className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider">{liveProgress?.stage || t('aiAutoEdit.initializing')}</span>
+                       <span className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider">{liveProgress?.message || liveProgress?.stage || t('aiAutoEdit.initializing')}</span>
                        <span className="text-lg font-black text-surface-900 dark:text-white">{liveProgress?.percent || 0}%</span>
                     </div>
                     <div className="h-3 bg-surface-100 dark:bg-surface-800 rounded-full overflow-hidden">

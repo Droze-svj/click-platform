@@ -104,7 +104,9 @@ async function composeSlides(input, deps) {
       taskType: 'carousel-composer',
     });
   }
-  return { format: normalizeFormat(format), slides: shapeSlides(rawOut, n) };
+  const slides = shapeSlides(rawOut, n);
+  if (slides.length === 0) throw require('../utils/aiUnavailable').aiUnavailable('carousel slides');
+  return { format: normalizeFormat(format), slides };
 }
 
 module.exports = {

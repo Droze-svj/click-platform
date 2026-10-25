@@ -11,6 +11,8 @@ const { resolveOAuthCallbackUrl } = require('../../utils/oauthCallbackUrl');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
 const logger = require('../../utils/logger');
+const { materializeVideoSource } = require('../../utils/ownUploadFile');
+const { unescape: unescapeHtml } = require('validator');
 const router = express.Router();
 
 const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
@@ -150,25 +152,48 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
  * Upload video to YouTube
  */
 router.post('/upload', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
-  const { videoFile, title, description, options } = req.body;
+  // The global input sanitizer HTML-escapes body strings ("/" becomes an
+  // entity, so does "'"). Nothing here is rendered as HTML — the URL is
+  // resolved to a file and the text goes to YouTube — so undo it, or the media
+  // URL is unreadable and titles go out with literal entities.
+  const raw = (v) => (typeof v === 'string' ? unescapeHtml(v) : v);
+  const videoFile = raw(req.body.videoFile);
+  const title = raw(req.body.title);
+  const description = raw(req.body.description);
+  const { options } = req.body;
 
   if (!videoFile || !title) {
     return sendError(res, 'Video file and title are required', 400);
   }
 
   const userId = req.userId || req.user?._id || req.user?.id;
-  // uploadVideoToYouTube(userId, videoPath, metadata) — the title/description/
-  // options were being passed as three positional arguments, so `metadata`
-  // received the title STRING. metadata.title was then undefined and every
-  // upload went out as "Untitled Sovereign Video" with the default description
-  // and tags, silently discarding what the caller asked for.
-  const video = await youtubeService.uploadVideoToYouTube(userId, videoFile, {
-    title,
-    description: description || '',
-    ...(options || {}),
-  });
+  // The editor sends the URL it plays (a signed /uploads link, or a cloud
+  // URL) — the uploader needs a file. Every editor publish used to fail with
+  // "Video file not found" because the URL was passed as a filesystem path.
+  // Own media is read from disk; remote media is downloaded (SSRF-guarded)
+  // to a temp file that is removed afterwards. Bare server paths are refused.
+  let source;
+  try {
+    source = await materializeVideoSource(videoFile, { prefix: 'youtube' });
+  } catch (err) {
+    return sendError(res, err.message, err.statusCode || 400);
+  }
+  try {
+    // uploadVideoToYouTube(userId, videoPath, metadata) — the title/description/
+    // options were being passed as three positional arguments, so `metadata`
+    // received the title STRING. metadata.title was then undefined and every
+    // upload went out as "Untitled Sovereign Video" with the default description
+    // and tags, silently discarding what the caller asked for.
+    const video = await youtubeService.uploadVideoToYouTube(userId, source.path, {
+      title,
+      description: description || '',
+      ...(options || {}),
+    });
 
-  sendSuccess(res, 'YouTube video uploaded successfully', 200, { video });
+    sendSuccess(res, 'YouTube video uploaded successfully', 200, { video });
+  } finally {
+    source.cleanup();
+  }
 }));
 
 /**
@@ -198,15 +223,10 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
   sendSuccess(res, 'YouTube post published successfully', 200, { post });
 }));
 
-/**
- * DELETE /api/oauth/youtube/disconnect
- * Disconnect YouTube account
- */
-router.delete('/disconnect', auth, asyncHandler(async (req, res) => {
-  const userId = req.userId || req.user?._id || req.user?.id;
-  await youtubeService.disconnectYouTube(userId);
-  sendSuccess(res, 'YouTube account disconnected', 200);
-}));
+// DELETE /api/oauth/youtube/disconnect is answered by the multi-account handler
+// in routes/oauth.js (DELETE /:platform/disconnect). A copy here used to
+// shadow it and ignore `accountId`, so disconnecting one account removed
+// every account on the platform (Instagram removed the first one instead).
 
 /**
  * GET /api/oauth/youtube/status

@@ -95,7 +95,9 @@ async function generateFirstComments(input, deps) {
       taskType: 'first-comment',
     });
   }
-  return { platform, goal: normalizeGoal(goal), options: shapeOptions(raw, goal) };
+  const options = shapeOptions(raw, goal);
+  if (options.length === 0) throw require('../utils/aiUnavailable').aiUnavailable('comment options');
+  return { platform, goal: normalizeGoal(goal), options };
 }
 
 module.exports = {

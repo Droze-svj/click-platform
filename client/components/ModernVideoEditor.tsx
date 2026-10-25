@@ -255,7 +255,9 @@ const ModernVideoEditor: React.FC<{
   autoGenerateCaptions?: boolean;
   /** Shown as a back button in the tool sidebar's header. */
   backAction?: { label: string; onClick: () => void };
-}> = ({ videoUrl, videoPath, videoId, initialState, initialAiTool, autoGenerateCaptions, backAction }) => {
+  /** The video's saved title — the project name starts from it. */
+  initialTitle?: string;
+}> = ({ videoUrl, videoPath, videoId, initialState, initialAiTool, autoGenerateCaptions, backAction, initialTitle }) => {
   const { t } = useTranslation()
   const { showToast } = useToast()
   const brandKit = useBrandKit()
@@ -292,7 +294,21 @@ const ModernVideoEditor: React.FC<{
   }, [])
   const activeCategory = activeCategoryState; // Renamed to avoid conflict with the new state variable
 
-  const [projectName, setProjectName] = useState(t('modernVideoEditor.untitledProject'))
+  // The project name starts from the video's real title. It is sent to the
+  // server (which writes Content.title) ONLY after the user renames it here —
+  // previously the "Untitled project" placeholder went out on the first
+  // autosave and renamed every video that was opened.
+  const [projectName, setProjectNameState] = useState<string>(() => initialTitle?.trim() || t('modernVideoEditor.untitledProject'))
+  const [projectRenamed, setProjectRenamed] = useState(false)
+  const setProjectName = useCallback((name: string) => {
+    setProjectNameState(name)
+    setProjectRenamed(true)
+  }, [])
+  useEffect(() => {
+    // The title arrives after the page fetches the video; adopt it unless
+    // the user has already typed a name of their own.
+    if (!projectRenamed && initialTitle?.trim()) setProjectNameState(initialTitle.trim())
+  }, [initialTitle, projectRenamed])
   const [deviceView, setDeviceView] = useState<'desktop' | 'tablet' | 'mobile'>('desktop')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [propertiesPanelOpen, setPropertiesPanelOpen] = useState(false)
@@ -995,7 +1011,8 @@ const ModernVideoEditor: React.FC<{
   const { autosaveStatus, loadSavedState, getStatusIcon, retrySave, manualSave } = useVideoEditorAutosave({
     state: editorState,
     videoId: videoId || 'temp-id',
-    name: projectName,
+    name: projectRenamed ? projectName : undefined,
+    serverSave: !!videoId,
     enabled: true,
     debounceMs: 2500
   })
@@ -1022,7 +1039,8 @@ const ModernVideoEditor: React.FC<{
       if (stateToLoad.audioMix && typeof stateToLoad.audioMix === 'object') setAudioMix(stateToLoad.audioMix)
       if (stateToLoad.captionStyle) setCaptionStyle(stateToLoad.captionStyle)
       if (stateToLoad.templateLayout) setTemplateLayout(stateToLoad.templateLayout)
-      if (stateToLoad.projectName) setProjectName(stateToLoad.projectName)
+      // A restored name is display-only; the video's own title wins.
+      if (stateToLoad.projectName && !initialTitle?.trim()) setProjectNameState(stateToLoad.projectName)
       showToast(t('modernVideoEditor.neuralStateRestored'), 'success')
       return
     }
@@ -2058,7 +2076,50 @@ const ModernVideoEditor: React.FC<{
 
   const getCategoryContent = () => {
     switch (activeCategory) {
-      case 'ai': return <CreativeAIView videoId={videoId || ''} showToast={showToast} setShapeOverlays={setShapeOverlays} setVideoFilters={setVideoFilters} transcript={transcript} onUpdateBroll={(brolls) => {
+      case 'ai': return <CreativeAIView videoId={videoId || ''} showToast={showToast} setShapeOverlays={setShapeOverlays} setVideoFilters={setVideoFilters} transcript={transcript}
+        videoUrl={actualVideoUrl || ''}
+        setVideoCrop={setVideoCrop}
+        onAddMarkers={(markers) => setTimelineMarkers((prev) => [
+          ...prev,
+          ...markers.map((m, i) => ({ id: `ramp-${Date.now()}-${i}`, time: m.time, name: m.name })),
+        ])}
+        onUseProcessedVideo={(url, label) => {
+          // A processed full-length version of the source (fill frame,
+          // background swap, eye contact) goes on the next free video track
+          // above everything, muted so the original audio isn't doubled.
+          const dur = videoState.duration > 0 ? videoState.duration : 60
+          setTimelineSegments((prev: TimelineSegment[]) => {
+            const used = prev.filter((s) => s.type === 'video').map((s) => s.track ?? 0)
+            const track = Math.min(5, (used.length ? Math.max(...used) : 0) + 1)
+            return [...prev, {
+              id: `processed-${Date.now()}`,
+              startTime: 0,
+              endTime: dur,
+              duration: dur,
+              type: 'video' as const,
+              name: label,
+              color: '#0ea5e9',
+              track,
+              sourceUrl: url,
+              volume: 0,
+            }]
+          })
+        }}
+        onAddAudioTrack={(url, label) => {
+          const dur = videoState.duration > 0 ? videoState.duration : 60
+          setTimelineSegments((prev: TimelineSegment[]) => [...prev, {
+            id: `dub-${Date.now()}`,
+            startTime: 0,
+            endTime: dur,
+            duration: dur,
+            type: 'audio' as const,
+            name: label,
+            color: '#f97316',
+            track: 7, // dialogue track (same as AI voiceover)
+            sourceUrl: url,
+          }])
+        }}
+        onUpdateBroll={(brolls) => {
         // Logic to dispatch overlays from Creative AI mapping.
         // For B-Roll, we map the incoming items to our state type.
         // We'll map them as timeline segments for direct editing capabilities!
@@ -2410,7 +2471,9 @@ const ModernVideoEditor: React.FC<{
           <EditorHUD
             projectName={projectName}
             setProjectName={setProjectName}
-            autosaveStatus={autosaveStatus as any}
+            autosaveStatus={autosaveStatus.status === 'saving' || autosaveStatus.status === 'error' ? autosaveStatus.status : 'saved'}
+            autosaveMessage={autosaveStatus.message}
+            onRetrySave={retrySave}
             historyIndex={historyIndex}
             historyLength={history.length}
             handleUndo={handleUndo}
@@ -2443,6 +2506,28 @@ const ModernVideoEditor: React.FC<{
             onAutoViralEdit={handleAutoViralEdit}
             autoViralBusy={isAutoViralEditing}
             showToast={showToast}
+            contentId={videoId || null}
+            onBrollPlan={(plan) => {
+              // Same placement as Magic B-roll: stock clips on the B-roll track.
+              const segs = plan
+                .filter((p) => p && p.url && Number.isFinite(Number(p.startTime)) && Number(p.duration) > 0)
+                .map((p, i) => {
+                  const start = Number(p.startTime)
+                  const dur = Number(p.duration)
+                  return {
+                    id: `broll-plan-${Date.now()}-${i}`,
+                    startTime: start,
+                    endTime: start + dur,
+                    duration: dur,
+                    type: 'video' as const,
+                    name: t('modernVideoEditor.magicBroll'),
+                    color: '#8b5cf6',
+                    track: 2,
+                    sourceUrl: p.url,
+                  }
+                })
+              if (segs.length) setTimelineSegments((prev: TimelineSegment[]) => [...prev, ...segs])
+            }}
           />
 
           <SmartCleanupPanel
@@ -2850,9 +2935,18 @@ const ModernVideoEditor: React.FC<{
                 </div>
                 {/* Prompt-Based Timeline Chat Docked to Timeline */}
                 {assistantOpen && (
-                  <AiTimelineChat 
-                    onApplyLUT={(name) => setVideoFilters(prev => ({...prev, contrast: 120, saturation: 110, temperature: 95, vignette: 20}))}
-                    onChangeAspectRatio={() => showToast(t('modernVideoEditor.aspectRatioUpdated'), 'success')}
+                  <AiTimelineChat
+                    // Real setters only: the grade goes through the shared
+                    // registry (same as the AI Director); the frame shape is
+                    // chosen in Export, so the chat opens it rather than
+                    // claiming a change it can't make.
+                    onApplyGrade={(gradeId) => handleApplyColorGrade(gradeId)}
+                    onSetSpeed={(speed) => {
+                      if (!Number.isFinite(speed) || speed <= 0) return false
+                      setPlaybackSpeed(Math.min(2, Math.max(0.25, speed)))
+                      return true
+                    }}
+                    onOpenExport={() => setActiveCategory('export')}
                     onAddText={(text) => setTextOverlays(prev => [...prev, {
                       id: `ai-text-${Date.now()}`,
                       text, x: 50, y: 50, fontSize: 64, color: '#ffffff', fontFamily: 'Inter, sans-serif', startTime: videoState.currentTime, endTime: videoState.currentTime + 3, style: 'bold-kinetic', shadowColor: 'rgba(0,0,0,0.5)', animationIn: 'pop', animationOut: 'fade', animationInDuration: 0.15, animationOutDuration: 0.2, layer: 10

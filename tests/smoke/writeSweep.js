@@ -136,11 +136,28 @@ async function main() {
   const fx = { user, content, userToken: signToken(user._id), userBToken: signToken(userB._id) };
 
   const dispatch = (method, url, token) => request(app)[method.toLowerCase()](url).set('Authorization', `Bearer ${token}`).send(GENERIC_BODY);
-  async function sendOnce(method, url, token) {
+  // The sweep calls account endpoints too — /api/auth/revoke-sessions really
+  // signs both users out, and deactivate/delete can disable them. Undo that so
+  // every later write still runs as a signed-in user (before this, everything
+  // after revoke-sessions was a 401 and the sweep silently tested nothing).
+  const restoreAccounts = () => User.updateMany(
+    { _id: { $in: [user._id, userB._id] } },
+    { $unset: { sessionsRevokedAt: 1 }, $set: { status: 'active' } },
+  );
+  async function sendRaw(method, url, token) {
     const req = dispatch(method, url, token);
     try {
       return await Promise.race([req, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), PER_CALL_TIMEOUT_MS))]);
     } catch (e) { try { if (req.abort) req.abort(); } catch { /* ignore */ } Promise.resolve(req).catch(() => {}); throw e; }
+  }
+  async function sendOnce(method, url, token) {
+    const res = await sendRaw(method, url, token);
+    const code = res.body && res.body.code;
+    if (code === 'SESSION_REVOKED' || code === 'ACCOUNT_DISABLED') {
+      await restoreAccounts();
+      return sendRaw(method, url, token);
+    }
+    return res;
   }
 
   async function callOne(ep) {
@@ -170,6 +187,7 @@ async function main() {
   const results = [];
   for (let i = 0; i < writes.length; i += CONCURRENCY) {
     results.push(...await Promise.all(writes.slice(i, i + CONCURRENCY).map((ep) => callOne(ep))));
+    await restoreAccounts();
   }
 
   const summary = results.reduce((a, r) => { a[r.category] = (a[r.category] || 0) + 1; return a; }, {});
@@ -196,7 +214,11 @@ async function main() {
   await mongoose.disconnect().catch(() => {});
   if (mongod) await mongod.stop().catch(() => {});
 
-  const fail = serverErrors.length > 0 || idor.length > 0 || malformed.length > 0;
+  // A sweep where most writes bounce off auth isn't testing the endpoints.
+  const blind = (summary.AUTH || 0) > results.length / 2;
+  if (blind) console.log(`BLIND: ${summary.AUTH}/${results.length} writes were rejected by auth — the sweep's users lost their sessions`);
+
+  const fail = serverErrors.length > 0 || idor.length > 0 || malformed.length > 0 || blind;
   process.exit(fail ? 1 : 0);
 }
 

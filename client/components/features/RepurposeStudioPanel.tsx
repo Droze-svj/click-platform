@@ -2,11 +2,14 @@
 
 import { useState } from 'react'
 import { repurposeStudio, type Platform, type RepurposeVariant } from '@/lib/featuresApi'
+import { handleApiError } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const PLATFORMS: Platform[] = ['tiktok', 'instagram', 'youtube', 'twitter', 'linkedin']
 
 /** Paste one piece of content → preview platform-native variants (no save). */
 export default function RepurposeStudioPanel() {
+  const { t } = useTranslation()
   const [text, setText] = useState('')
   const [selected, setSelected] = useState<Platform[]>(['tiktok', 'instagram'])
   const [variants, setVariants] = useState<RepurposeVariant[] | null>(null)
@@ -23,7 +26,7 @@ export default function RepurposeStudioPanel() {
       const res = await repurposeStudio({ text, platforms: selected })
       setVariants(res.variants)
     } catch (e) {
-      setError((e as Error)?.message || 'Failed to generate variants')
+      setError(handleApiError(e) || 'Failed to generate variants')
     } finally {
       setLoading(false)
     }
@@ -63,11 +66,17 @@ export default function RepurposeStudioPanel() {
 
       {error && <p data-testid="repurpose-error" className="text-sm text-red-400">{error}</p>}
 
-      {variants && (
+      {variants && variants.length === 0 && (
+        <p data-testid="repurpose-empty" className="text-sm text-zinc-400">{t('creatorTools.noResults')}</p>
+      )}
+      {variants && variants.length > 0 && (
         <ul className="space-y-2" data-testid="repurpose-variants">
           {variants.map((v, i) => (
             <li key={i} data-testid="repurpose-variant" className="rounded-lg bg-zinc-950 border border-zinc-800 p-2">
               <div className="text-xs text-zinc-500">{v.platform} · {v.aspectRatio} · {v.format}</div>
+              {v.degraded && (
+                <div data-testid="repurpose-degraded" className="text-xs text-amber-400">{t('creatorTools.variantNotAdapted')}</div>
+              )}
               <div className="text-sm text-zinc-200">{v.content}</div>
             </li>
           ))}

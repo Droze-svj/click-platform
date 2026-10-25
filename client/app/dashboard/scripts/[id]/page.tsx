@@ -40,7 +40,7 @@ interface Script {
 export default function ScriptDetailPage() {
   const router = useRouter()
   const params = useParams()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { showToast } = useToast()
   const { t } = useTranslation()
   const [script, setScript] = useState<Script | null>(null)
@@ -76,12 +76,13 @@ export default function ScriptDetailPage() {
   }, [params.id, router, showToast])
 
   useEffect(() => {
+    if (authLoading) return // user is null until /auth/me answers
     if (!user) {
       router.push('/login')
       return
     }
     loadScript()
-  }, [user, router, loadScript])
+  }, [user, authLoading, router, loadScript])
 
   const handleSave = async () => {
     if (!script) return

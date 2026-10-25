@@ -29,8 +29,9 @@ router.post('/execute', auth, async (req, res) => {
     const result = await sovereignToolboxService.executeTool(toolId, videoId, options, userId);
     res.json({ success: true, data: result });
   } catch (error) {
-    logger.error('[ToolboxRoute] Execution failed', { error: error.message });
-    res.status(500).json({ success: false, error: error.message });
+    const status = error.statusCode && error.statusCode < 500 ? error.statusCode : (error.statusCode === 501 ? 501 : 500);
+    if (status >= 500 && status !== 501) logger.error('[ToolboxRoute] Execution failed', { error: error.message });
+    res.status(status).json({ success: false, error: error.message });
   }
 });
 

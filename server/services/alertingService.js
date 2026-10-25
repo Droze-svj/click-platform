@@ -1,6 +1,7 @@
 // Alerting Service for Critical Errors and Issues
 
 const logger = require('../utils/logger');
+const { escapeHtml } = require('../utils/escapeHtml');
 const { captureException, captureMessage } = require('../utils/sentry');
 const { sendEmail } = require('./emailService');
 const { sendToAllWebhooks } = require('./webhookAlertService');
@@ -65,9 +66,9 @@ async function sendAlert(alertType, severity, message, details = {}) {
         to: process.env.ADMIN_EMAIL,
         subject: `[CRITICAL] ${message}`,
         html: `
-          <h2>Critical Alert: ${alertType}</h2>
-          <p><strong>Message:</strong> ${message}</p>
-          <pre>${JSON.stringify(details, null, 2)}</pre>
+          <h2>Critical Alert: ${escapeHtml(alertType)}</h2>
+          <p><strong>Message:</strong> ${escapeHtml(message)}</p>
+          <pre>${escapeHtml(JSON.stringify(details, null, 2))}</pre>
           <p><strong>Time:</strong> ${new Date().toISOString()}</p>
         `,
       });

@@ -19,6 +19,26 @@ interface Workflow {
   schedule?: any
 }
 
+// GET /workflows returns Workflow documents: _id, status ('active'|'paused'|
+// 'archived'), triggers[{type}], actions[], and — for workflows made here —
+// the full spec in definition {trigger, conditions, actions, schedule}.
+function toWorkflow(doc: any): Workflow {
+  const def = doc?.definition && doc.definition.kind === 'enhanced' ? doc.definition : null
+  const modelTrigger = Array.isArray(doc?.triggers) && doc.triggers[0]?.type
+  const trigger = def?.trigger
+    || (modelTrigger === 'schedule' ? 'scheduled' : modelTrigger === 'event' ? 'event' : 'manual')
+  return {
+    id: String(doc?._id ?? doc?.id ?? ''),
+    name: doc?.name || '',
+    description: doc?.description || '',
+    trigger,
+    conditions: Array.isArray(def?.conditions) ? def.conditions : [],
+    actions: Array.isArray(def?.actions) ? def.actions : (Array.isArray(doc?.actions) ? doc.actions : (Array.isArray(doc?.steps) ? doc.steps : [])),
+    enabled: doc?.status ? doc.status === 'active' : doc?.enabled !== false,
+    schedule: def?.schedule,
+  }
+}
+
 interface WorkflowSuggestion {
   type: string
   name: string
@@ -49,10 +69,9 @@ export default function EnhancedWorkflowBuilder() {
 
   const loadWorkflows = useCallback(async () => {
     try {
-      const response = await apiGet<{ success: boolean; data: Workflow[] }>('/workflows')
-      if (response.success) {
-        setWorkflows(response.data || [])
-      }
+      const response = await apiGet<{ success: boolean; data: any[] }>('/workflows')
+      const list = (response as any)?.data ?? response
+      setWorkflows(Array.isArray(list) ? list.map(toWorkflow).filter((w) => w.id) : [])
     } catch (error) {
       showToast(t('enhancedWorkflowBuilder.failedToLoadWorkflows'), 'error')
     } finally {
@@ -118,8 +137,16 @@ export default function EnhancedWorkflowBuilder() {
 
   const handleExecuteWorkflow = async (workflowId: string) => {
     try {
-      await apiPost(`/workflows/enhanced/${workflowId}/execute`, {})
-      showToast(t('enhancedWorkflowBuilder.workflowExecuted'), 'success')
+      const res: any = await apiPost(`/workflows/enhanced/${workflowId}/execute`, {})
+      const result = res?.data ?? res
+      if (result && result.executed === false) {
+        showToast(t('enhancedWorkflowBuilder.notExecuted', { reason: result.reason || '' }), 'info')
+      } else if (Array.isArray(result?.results) && result.results.some((r: any) => r && r.success === false)) {
+        const failed = result.results.filter((r: any) => r && r.success === false).map((r: any) => r.action).join(', ')
+        showToast(t('enhancedWorkflowBuilder.someActionsFailed', { actions: failed }), 'error')
+      } else {
+        showToast(t('enhancedWorkflowBuilder.workflowExecuted'), 'success')
+      }
     } catch (error: any) {
       showToast(error.response?.data?.error || t('enhancedWorkflowBuilder.failedToExecute'), 'error')
     }

@@ -18,6 +18,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  // Public profile (Settings → Profile, PUT /api/auth/profile, POST /avatar).
+  // `username` is the preferred display name shown in greetings.
+  username: { type: String, trim: true, maxlength: 40 },
+  bio: { type: String, trim: true, maxlength: 500 },
+  website: { type: String, trim: true, maxlength: 300 },
+  location: { type: String, trim: true, maxlength: 100 },
+  avatar: String, // Cloudinary URL, or a data: URL when Cloudinary isn't configured
+  socialLinks: { type: mongoose.Schema.Types.Mixed, default: undefined }, // { twitter: 'https://…', … }
   whopUserId: {
     type: String,
     unique: true,
@@ -45,7 +53,10 @@ const userSchema = new mongoose.Schema({
     // expired, which silently blocked every brand-new user from uploading.
     // Paid flows (Whop webhook / billing service) overwrite this on purchase.
     endDate: { type: Date, default: () => new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) },
-    whopSubscriptionId: String,
+    whopSubscriptionId: String, // Whop membership id (mem_…)
+    cancelledAt: Date, // renewal stopped (self-service cancel); access runs to endDate
+    refundRequestedAt: Date,
+    refundTicketId: String,
     // 'monthly' | 'yearly'. The Whop webhook has always written this, but the
     // field was missing from the schema, so Mongoose strict mode silently
     // dropped it and no account ever recorded which billing period it paid for.
@@ -206,6 +217,25 @@ const userSchema = new mongoose.Schema({
       activeAccountId: String,
       states: mongoose.Schema.Types.Mixed, // in-flight OAuth states, keyed by value
     },
+    // Google (Sign-in / Drive-style connections via googleOAuthService). It was
+    // missing here, so strict mode dropped everything saveSocialCredentials()
+    // and putState() wrote for 'google' — Google connect could never complete
+    // on MongoDB.
+    google: {
+      accessToken: String,
+      refreshToken: String,
+      connected: { type: Boolean, default: false },
+      connectedAt: Date,
+      expiresAt: Date,
+      platformUserId: String,
+      platformUsername: String,
+      avatar: String,
+      email: String,
+      state: String,
+      accounts: [mongoose.Schema.Types.Mixed],
+      activeAccountId: String,
+      states: mongoose.Schema.Types.Mixed,
+    },
     tiktok: {
       accessToken: String,
       refreshToken: String,
@@ -364,7 +394,16 @@ userSchema.pre('save', async function(next) {
 
 // Compare password method
 userSchema.methods.comparePassword = async function(candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+  const { comparePasswordCompat } = require('../utils/passwordCompat');
+  const { match, legacy } = await comparePasswordCompat(candidatePassword, this.password);
+  if (match && legacy && this._id) {
+    // Stored from the old HTML-escaped input — re-hash the password as typed.
+    const hash = await bcrypt.hash(candidatePassword, 10);
+    // Written straight to the DB (not this.password) so a later save() of this
+    // document can't re-hash the hash.
+    await this.constructor.updateOne({ _id: this._id }, { $set: { password: hash } }).catch(() => {});
+  }
+  return match;
 };
 
 // Check if account is locked

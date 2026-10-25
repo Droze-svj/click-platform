@@ -7,6 +7,17 @@ import { apiPut } from '../lib/api'
 import { useAuth } from '../hooks/useAuth'
 import { useTranslation } from '@/hooks/useTranslation'
 
+const NICHES = [
+  { value: 'health', key: 'profilePage.nicheHealth' },
+  { value: 'finance', key: 'profilePage.nicheFinance' },
+  { value: 'education', key: 'profilePage.nicheEducation' },
+  { value: 'technology', key: 'profilePage.nicheTechnology' },
+  { value: 'lifestyle', key: 'profilePage.nicheLifestyle' },
+  { value: 'business', key: 'profilePage.nicheBusiness' },
+  { value: 'entertainment', key: 'profilePage.nicheEntertainment' },
+  { value: 'other', key: 'profilePage.nicheOther' },
+]
+
 const ProfileHUD = () => {
   const { t } = useTranslation()
   const { user, refresh } = useAuth()
@@ -84,13 +95,18 @@ const ProfileHUD = () => {
 
               <div className="space-y-2">
                 <label className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest block ml-1">{t('profileHud.contentNiche')}</label>
-                <input
-                  type="text"
+                {/* The server accepts only these niches (each maps to an AI playbook). */}
+                <select
                   value={niche}
                   onChange={(e) => setNiche(e.target.value)}
+                  title={t('profileHud.contentNiche')}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-[var(--text-main)] focus:outline-none focus:border-indigo-500 transition-colors"
-                  placeholder={t('profileHud.nichePlaceholder')}
-                />
+                >
+                  <option value="">{t('profilePage.nicheChoose')}</option>
+                  {NICHES.map((n) => (
+                    <option key={n.value} value={n.value}>{t(n.key)}</option>
+                  ))}
+                </select>
               </div>
 
               {error ? (

@@ -1758,7 +1758,14 @@ const RealTimeVideoPreview: React.FC<RealTimeVideoPreviewProps> = ({
                     </>
                   )}
                   {svg.url && svg.url.startsWith('<svg') ? (
-                    <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: svg.url }} />
+                    // Inline markup is shown as an image, never injected into the
+                    // page: an <img> can't run scripts or handlers inside the SVG
+                    // (projects can be shared, so this markup isn't always yours).
+                    <img
+                      src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.url)}`}
+                      alt={tr('realTimeVideoPreview.svgLayer')}
+                      className="w-full h-full object-contain pointer-events-none"
+                    />
                   ) : (
                     <img
                       src={getAssetUrl(svg.url)}

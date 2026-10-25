@@ -1,5 +1,6 @@
 'use client'
 
+import { isPlatformConnected } from '../../../lib/connections'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
@@ -212,7 +213,12 @@ export default function SocialPage() {
     )
   }
 
-  const activeCount = accounts ? Object.values(accounts).filter(Boolean).length : 0
+  // /oauth/accounts lists every platform with an array of its accounts —
+  // an empty [] is truthy, so .filter(Boolean) counted every platform as
+  // connected ("7 connected" for everyone). Count platforms with accounts.
+  const activeCount = accounts
+    ? Object.values(accounts).filter(isPlatformConnected).length
+    : 0
 
   return (
     <ErrorBoundary>

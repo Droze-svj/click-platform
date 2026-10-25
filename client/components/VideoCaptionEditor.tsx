@@ -119,8 +119,17 @@ export default function VideoCaptionEditor({
     setError(null)
 
     try {
-      await apiPost<any>(`/video/captions/${contentId}/translate`, { targetLanguage })
-      await loadCaptions()
+      // Show the translation the server returns. This used to discard it and
+      // reload the source captions, so Translate never changed anything.
+      const data = await apiPost<any>(`/video/captions/${contentId}/translate`, { targetLanguage, format: selectedFormat })
+      const translated = extractApiData<CaptionData>(data)
+      if (!translated || !Array.isArray(translated.segments) || translated.segments.length === 0) {
+        setError(t('videoCaptionEditor.translateFailed'))
+        return
+      }
+      const segments = translated.segments.map((seg, i) => ({ ...seg, id: typeof seg.id === 'number' ? seg.id : i + 1 }))
+      setCaptions({ ...translated, format: translated.format || selectedFormat, segments })
+      setEditedSegments(segments)
     } catch (err: any) {
       setError(handleApiError(err) || t('videoCaptionEditor.translateFailed'))
     } finally {

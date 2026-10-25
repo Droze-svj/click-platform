@@ -26,6 +26,8 @@ interface UseVideoEditorAutosaveOptions {
   folderId?: string
   enabled?: boolean
   debounceMs?: number
+  /** False when there is no saved video to write to (local-only editing). */
+  serverSave?: boolean
 }
 
 interface AutosaveStatus {
@@ -36,9 +38,11 @@ interface AutosaveStatus {
 
 const BACKUP_SUFFIXES = ['backup-0', 'backup-1'] as const
 const SAVED_DISPLAY_MS = 4000
-const ERROR_DISPLAY_MS = 5000
 const SERVER_RETRIES = 2
 const SERVER_RETRY_DELAY_MS = 600
+// After a save the server refused, try again on this schedule (ms) while the
+// editor stays open — the change is NOT treated as saved until one succeeds.
+const BACKGROUND_RETRY_MS = [5000, 15000, 30000, 60000]
 
 export function useVideoEditorAutosave({
   state,
@@ -46,7 +50,8 @@ export function useVideoEditorAutosave({
   name,
   folderId,
   enabled = true,
-  debounceMs = 2500
+  debounceMs = 2500,
+  serverSave = true
 }: UseVideoEditorAutosaveOptions) {
   const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>({
     status: 'idle',
@@ -65,6 +70,9 @@ export function useVideoEditorAutosave({
   // out-of-order writes from clobbering newer state with older state.
   const inFlightRef = useRef(false)
   const pendingRef = useRef<VideoEditorState | null>(null)
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const retryAttemptRef = useRef(0)
+  const latestStateRef = useRef<VideoEditorState | null>(null)
 
   const saveToLocalStorage = useCallback(
     (stateString: string) => {
@@ -98,12 +106,15 @@ export function useVideoEditorAutosave({
 
       try {
         let serverOk = false
-        if (videoId) {
+        if (videoId && serverSave) {
           for (let attempt = 0; attempt <= SERVER_RETRIES; attempt++) {
             try {
               await apiPost('/video/editor/save', {
                 videoId,
-                name: name ?? stateToSave.projectName,
+                // Only an explicit rename is sent. Falling back to the
+                // in-state projectName renamed every opened video to the
+                // "Untitled project" placeholder on its first autosave.
+                ...(typeof name === 'string' && name.trim() ? { name } : {}),
                 folderId,
                 editorState: stateToSave
               })
@@ -140,6 +151,32 @@ export function useVideoEditorAutosave({
           } else throw storageError
         }
 
+        if (retryTimerRef.current) {
+          clearTimeout(retryTimerRef.current)
+          retryTimerRef.current = undefined
+        }
+
+        if (videoId && serverSave && !serverOk) {
+          // The server refused every attempt. The change is only on this
+          // device, so it must NOT be marked saved: leave lastSavedRef
+          // alone (the next save of this same state goes through) and
+          // keep retrying in the background until the server takes it.
+          const delay = BACKGROUND_RETRY_MS[Math.min(retryAttemptRef.current, BACKGROUND_RETRY_MS.length - 1)]
+          retryAttemptRef.current += 1
+          retryTimerRef.current = setTimeout(() => {
+            retryTimerRef.current = undefined
+            const latest = latestStateRef.current
+            if (latest) saveStateRef.current?.(latest)
+          }, delay)
+          setAutosaveStatus({
+            status: 'error',
+            lastSaved: lastSavedDateRef.current,
+            message: 'Not saved to your account yet. Retrying.'
+          })
+          return
+        }
+
+        retryAttemptRef.current = 0
         lastSavedRef.current = stateString
         const now = new Date()
         lastSavedDateRef.current = now
@@ -162,15 +199,13 @@ export function useVideoEditorAutosave({
         }, SAVED_DISPLAY_MS)
       } catch (error) {
         console.error('Autosave failed:', error)
+        // The error stays visible until a save succeeds — reverting to
+        // idle made the badge claim "Saved" for a change that never was.
         setAutosaveStatus({
           status: 'error',
           lastSaved: lastSavedDateRef.current,
           message: error instanceof Error ? error.message : 'Failed to save'
         })
-        idleTimeoutRef.current = setTimeout(() => {
-          idleTimeoutRef.current = undefined
-          setAutosaveStatus((prev) => ({ ...prev, status: 'idle', message: '' }))
-        }, ERROR_DISPLAY_MS)
       } finally {
         inFlightRef.current = false
         // If state changed while we were saving, fire one more save with
@@ -183,13 +218,19 @@ export function useVideoEditorAutosave({
         }
       }
     },
-    [videoId, name, folderId, saveToLocalStorage, saveKey]
+    [videoId, name, folderId, serverSave, saveToLocalStorage, saveKey]
   )
 
   // Self-reference so the finally block can call back into the latest
   // saveState without forming a dependency cycle.
   const saveStateRef = useRef<typeof saveState | null>(null)
   saveStateRef.current = saveState
+
+  latestStateRef.current = state
+
+  useEffect(() => () => {
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
+  }, [])
 
   useEffect(() => {
     if (!enabled) return

@@ -54,8 +54,8 @@ router.get('/', auth, asyncHandler(async (req, res) => {
   
   const playbooks = await getPlaybooks(userId, {
     category: category || null,
-    includeShared: includeShared === 'true',
-    includePublic: includePublic === 'true'
+    includeShared: String(includeShared) !== 'false',
+    includePublic: String(includePublic) !== 'false'
   });
   
   sendSuccess(res, 'Playbooks retrieved', 200, { playbooks });

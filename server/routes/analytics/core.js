@@ -28,23 +28,63 @@ async function loadPublishedPostsFromMongo(userId, limit) {
     .limit(limit)
     .select('platform postedAt content.text analytics')
     .lean();
-  return rows.map((r) => {
-    const a = r.analytics || {};
-    const b = a.engagementBreakdown || {};
-    const rate = (a.engagementRate && (a.engagementRate.byReach || a.engagementRate.byImpressions)) || 0;
-    const text = String((r.content && r.content.text) || '').trim();
-    return {
-      id: String(r._id),
-      title: text ? text.split('\n')[0].slice(0, 80) : null,
-      platform: r.platform || 'other',
-      postedAt: r.postedAt || null,
-      views: b.views || a.impressions || 0,
-      likes: b.likes || 0,
-      shares: b.shares || 0,
-      comments: b.comments || 0,
-      engagementRate: Math.round(rate * 100) / 100,
-    };
-  });
+  return rows.map(toPostRow);
+}
+
+function toPostRow(r) {
+  const a = r.analytics || {};
+  const b = a.engagementBreakdown || {};
+  const rate = (a.engagementRate && (a.engagementRate.byReach || a.engagementRate.byImpressions)) || 0;
+  const text = String((r.content && r.content.text) || '').trim();
+  return {
+    id: String(r._id),
+    title: text ? text.split('\n')[0].slice(0, 80) : null,
+    text,
+    platform: r.platform || 'other',
+    postedAt: r.postedAt || null,
+    views: b.views || a.impressions || 0,
+    likes: b.likes || 0,
+    shares: b.shares || 0,
+    comments: b.comments || 0,
+    engagementRate: Math.round(rate * 100) / 100,
+  };
+}
+
+/**
+ * A factual insight from the user's own posts: which platform's posts get the
+ * most views on average. Needs at least two platforms with 2+ posts each, so
+ * it never generalises from a single post.
+ */
+function platformInsight(posts) {
+  const by = {};
+  for (const p of posts) {
+    const d = by[p.platform] || (by[p.platform] = { posts: 0, views: 0 });
+    d.posts += 1; d.views += p.views;
+  }
+  const ranked = Object.entries(by)
+    .filter(([, d]) => d.posts >= 2)
+    .map(([platform, d]) => ({ platform, avg: Math.round(d.views / d.posts), posts: d.posts }))
+    .sort((a, b) => b.avg - a.avg);
+  if (ranked.length < 2 || ranked[0].avg === 0) return null;
+  const [best, next] = ranked;
+  const name = (p) => p.charAt(0).toUpperCase() + p.slice(1);
+  const ratio = next.avg > 0 ? best.avg / next.avg : null;
+  const lead = ratio && ratio >= 1.1 ? `${ratio.toFixed(1)}× your ${name(next.platform)} posts` : `ahead of ${name(next.platform)}`;
+  return {
+    quote: `Your ${name(best.platform)} posts average ${best.avg.toLocaleString('en-US')} views — ${lead} (${best.posts} vs ${next.posts} posts).`,
+    tip: `Put your next strongest idea on ${name(best.platform)} first, then adapt it for the others.`,
+  };
+}
+
+/** One of the caller's own ScheduledPosts as a post row, or null. */
+async function loadOwnedPostFromMongo(userId, postId) {
+  const mongoose = require('mongoose');
+  if (!mongoose.Types.ObjectId.isValid(String(postId))) return null;
+  const ScheduledPost = require('../../models/ScheduledPost');
+  const r = await ScheduledPost.findOne({ _id: postId, userId })
+    .select('platform postedAt content.text analytics')
+    .lean();
+  return r ? toPostRow(r) : null;
 }
 
 /**
@@ -54,38 +94,47 @@ async function loadPublishedPostsFromMongo(userId, limit) {
 router.get('/overview', auth, asyncHandler(async (req, res) => {
   try {
     const supabase = getSupabaseClient();
-    let recentPosts = [];
+    const weekAgo = new Date(Date.now() - 7 * 86400000);
+    let videosThisWeek = 0;
+    let scheduledPosts = 0;
+    let reach = 0;
+    let aiInsight = null;
 
     if (supabase) {
       const { data } = await supabase
         .from('posts')
         .select('id, created_at')
         .eq('author_id', req.user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-      recentPosts = data || [];
+        .gte('created_at', weekAgo.toISOString())
+        .limit(100);
+      videosThisWeek = (data || []).length;
+    } else {
+      // MongoDB (production). This used to count nothing here, so the card
+      // never had data, and the "insight" it would have shown was a fixed
+      // quote with an invented statistic.
+      const ScheduledPost = require('../../models/ScheduledPost');
+      const [week, scheduled, posted] = await Promise.all([
+        ScheduledPost.find({ userId: req.user._id, status: 'posted', postedAt: { $gte: weekAgo } }).select('analytics').lean(),
+        ScheduledPost.countDocuments({ userId: req.user._id, status: 'scheduled' }),
+        loadPublishedPostsFromMongo(req.user._id, 200),
+      ]);
+      videosThisWeek = week.length;
+      scheduledPosts = scheduled;
+      reach = week.reduce((sum, r) => sum + toPostRow(r).views, 0);
+      aiInsight = platformInsight(posted);
     }
 
-    // Honest empty-state when the user has no real data. Previously this
-    // route returned procedurally-varied phantom numbers ("Live feel")
-    // that made a brand-new account look like an established creator.
-    // Now we return zeros + isFallback so the client can render an
-    // empty-state card instead of fabricated growth charts.
-    const hasRealData = Array.isArray(recentPosts) && recentPosts.length > 0;
     const response = {
       success: true,
-      videosThisWeek: recentPosts?.length || 0,
+      videosThisWeek,
       videosGrowth: 0,
-      reach: '0',
+      reach: String(reach),
       reachGrowth: 0,
       avgHookScore: 0,
-      scheduledPosts: 0,
+      scheduledPosts,
       recentActivity: [],
-      aiInsight: hasRealData ? {
-        quote: '"Pattern-interrupt hooks drive 2.3× more completions than spoken openers."',
-        tip: '✦ Open your next video with a visual shock cut — no talking in the first 2 frames.'
-      } : null,
-      isFallback: !hasRealData,
+      aiInsight,
+      isFallback: videosThisWeek === 0 && !aiInsight,
     };
 
     return res.json(response);
@@ -115,13 +164,35 @@ router.get('/posts/:postId', auth, asyncHandler(async (req, res) => {
 
     const supabase = getSupabaseClient();
     if (!supabase) {
+      // MongoDB (production): the post is one of the user's ScheduledPosts —
+      // the ids the analytics list links here with. This used to answer with a
+      // placeholder ("Spectral Post (Dev)") and no `post`, so the page crashed.
+      const row = await loadOwnedPostFromMongo(req.user._id, postId);
+      if (!row) return res.status(404).json({ success: false, error: 'Post not found' });
+      const engagement = row.likes + row.shares + row.comments;
       return res.json({
         success: true,
-        post_id: postId,
-        post_title: 'Spectral Post (Dev)',
-        analytics: [],
+        post_id: row.id,
+        post_title: row.title,
+        post: { id: row.id, title: row.title, platform: row.platform, posted_at: row.postedAt },
+        analytics: [{
+          platform: row.platform,
+          views: row.views,
+          likes: row.likes,
+          shares: row.shares,
+          comments: row.comments,
+          engagement_rate: row.engagementRate,
+          posted_at: row.postedAt,
+        }],
         insights: null,
-        aggregate: { total_views: 0, total_likes: 0, platforms_count: 0 }
+        aggregate: {
+          total_views: row.views,
+          total_likes: row.likes,
+          total_shares: row.shares,
+          total_comments: row.comments,
+          platforms_count: 1,
+          overall_engagement_rate: row.views > 0 ? (engagement / row.views * 100).toFixed(2) : 0,
+        },
       });
     }
     
@@ -214,6 +285,7 @@ router.get('/posts/:postId', auth, asyncHandler(async (req, res) => {
       success: true,
       post_id: postId,
       post_title: post.title,
+      post: { id: post.id, title: post.title },
       analytics: (analytics || []).map(a => ({
         ...a,
         metadata: {
@@ -408,6 +480,75 @@ router.get('/dashboard', auth, asyncHandler(async (req, res) => {
   const { isDevUser: checkIsDev } = require('../../utils/devUser');
   const isDevUser = checkIsDev(req.user) || (typeof userId === 'string' && userId.startsWith('dev-'));
   const supabaseConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  // MongoDB (production has no Supabase): the user's ScheduledPosts. This
+  // used to return the zero payload below for every production account.
+  if (!isDevUser && !supabaseConfigured) {
+    const ScheduledPost = require('../../models/ScheduledPost');
+    const owner = req.user._id;
+    const [totalPosts, publishedPosts, posted, recent] = await Promise.all([
+      ScheduledPost.countDocuments({ userId: owner }),
+      ScheduledPost.countDocuments({ userId: owner, status: 'posted' }),
+      loadPublishedPostsFromMongo(owner, 1000),
+      ScheduledPost.find({ userId: owner, createdAt: { $gte: new Date(Date.now() - 30 * 86400000) } })
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .select('platform status postedAt createdAt content.text analytics')
+        .lean(),
+    ]);
+    const engagementOf = (p) => p.likes + p.shares + p.comments;
+    const totalViews = posted.reduce((sum, p) => sum + p.views, 0);
+    const totalEngagement = posted.reduce((sum, p) => sum + engagementOf(p), 0);
+    const platformDistribution = {};
+    for (const p of posted) {
+      const d = platformDistribution[p.platform] || (platformDistribution[p.platform] = { posts: 0, views: 0, engagement: 0 });
+      d.posts += 1; d.views += p.views; d.engagement += engagementOf(p);
+    }
+    const asPostAnalytics = (p) => [{ platform: p.platform, views: p.views, likes: p.likes, shares: p.shares, comments: p.comments, engagement_rate: p.engagementRate }];
+    const recentPosts = recent.map((r) => {
+      const p = toPostRow(r);
+      return {
+        id: p.id,
+        title: p.title,
+        status: r.status === 'posted' ? 'published' : r.status,
+        published_at: r.postedAt || null,
+        created_at: r.createdAt || null,
+        post_analytics: asPostAnalytics(p),
+      };
+    });
+    const topPosts = posted.slice()
+      .sort((a, b) => engagementOf(b) - engagementOf(a))
+      .slice(0, 5)
+      .map((p) => ({
+        id: p.id,
+        title: p.title,
+        published_at: p.postedAt,
+        post_analytics: asPostAnalytics(p),
+        total_views: p.views,
+        total_engagement: engagementOf(p),
+        avg_engagement_rate: p.views > 0 ? (engagementOf(p) / p.views * 100).toFixed(2) : 0,
+      }));
+    const empty = totalPosts === 0;
+    return res.json({
+      success: true,
+      totalPosts,
+      publishedPosts,
+      totalViews,
+      totalEngagement,
+      overview: {
+        total_posts: totalPosts,
+        published_posts: publishedPosts,
+        total_views: totalViews,
+        total_engagement: totalEngagement,
+        avg_engagement_rate: totalViews > 0 ? (totalEngagement / totalViews * 100).toFixed(2) : 0,
+        ...(empty ? { isFallback: true } : {}),
+      },
+      platform_distribution: platformDistribution,
+      recent_posts: recentPosts,
+      top_performing_posts: topPosts,
+      ...(empty ? { isFallback: true } : {}),
+    });
+  }
 
   if (isDevUser || !supabaseConfigured) {
     return res.json({
@@ -708,14 +849,39 @@ router.get('/insights/:postId', auth, asyncHandler(async (req, res) => {
 }));
 
 /**
- * GET /api/analytics/performance
- * Get performance trends over time
+ * GET /api/analytics/daily-performance
+ * The creator's views/engagement per day over a period.
+ *
+ * This used to be GET /api/analytics/performance, but routes/analytics/
+ * performance.js is mounted on that exact path first and its GET / is the
+ * admin-only system monitor — so the Performance page got 403 for every
+ * creator. It also only read Supabase, which production doesn't have.
  */
-router.get('/performance', auth, asyncHandler(async (req, res) => {
+router.get('/daily-performance', auth, asyncHandler(async (req, res) => {
   try {
     const supabase = getSupabaseClient();
     const userId = req.user.id;
     const { period = '30', sync = 'false' } = req.query; // days, sync flag
+    const days = Math.min(Math.max(parseInt(period, 10) || 30, 1), 365);
+
+    if (!supabase) {
+      // MongoDB: the user's published posts in the window, grouped by the day
+      // they went out (current totals per post — there is no per-day history).
+      const ScheduledPost = require('../../models/ScheduledPost');
+      const since = new Date(Date.now() - days * 86400000);
+      const rows = await ScheduledPost.find({ userId: req.user._id, status: 'posted', postedAt: { $gte: since } })
+        .select('postedAt analytics')
+        .lean();
+      const byDay = {};
+      for (const r of rows) {
+        const row = toPostRow(r);
+        const date = new Date(r.postedAt).toISOString().split('T')[0];
+        const d = byDay[date] || (byDay[date] = { date, views: 0, likes: 0, shares: 0, comments: 0, posts_count: 0 });
+        d.views += row.views; d.likes += row.likes; d.shares += row.shares; d.comments += row.comments; d.posts_count += 1;
+      }
+      const performanceData = Object.values(byDay).sort((a, b) => a.date.localeCompare(b.date));
+      return res.json({ success: true, period: `${days} days`, performance_data: performanceData, ...(performanceData.length ? {} : { isFallback: true }) });
+    }
 
     // Trigger background sync if requested (Spectral Pulse)
     if (sync === 'true') {
@@ -804,7 +970,7 @@ router.get('/performance', auth, asyncHandler(async (req, res) => {
     });
 
   } catch (error) {
-    
+    logger.error('Daily performance error:', error);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 }));
@@ -1221,55 +1387,59 @@ router.post('/process-insights/:id', auth, asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const supabase = getSupabaseClient();
-    const { generateContent: geminiGenerate, isConfigured: geminiConfigured } = require('../../utils/googleAI');
+    const { isConfigured: geminiConfigured } = require('../../utils/googleAI');
+    const { aiCallJson } = require('../../utils/aiRouter');
 
-    // Supabase (post store) + Gemini (synthesis) are hard deps for a Neural Scan.
-    // Unconfigured → dependency outage → honest 503, not a null-deref 500.
-    if (!supabase) {
-      return res.status(503).json({ success: false, error: 'Analytics store unavailable' });
-    }
     if (!geminiConfigured) {
       return res.status(503).json({ success: false, error: 'AI synthesis unavailable' });
     }
 
-    // 1. Fetch Post and Analytics Context
-    const { data: post, error: postErr } = await supabase
-      .from('posts')
-      .select('*, post_analytics(*)')
-      .eq('id', id)
-      .eq('author_id', req.user.id)
-      .single();
-
-    if (postErr || !post) {
-      return res.status(404).json({ success: false, error: 'POST_NODE_NOT_FOUND' });
+    // The post + its metrics: a ScheduledPost on MongoDB (production), or the
+    // Supabase posts row. This used to require Supabase, so it was always 503.
+    let post;
+    if (supabase) {
+      const { data, error: postErr } = await supabase
+        .from('posts')
+        .select('*, post_analytics(*)')
+        .eq('id', id)
+        .eq('author_id', req.user.id)
+        .single();
+      if (!postErr && data) {
+        const a = (Array.isArray(data.post_analytics) ? data.post_analytics[0] : data.post_analytics) || {};
+        post = { title: data.title, text: data.content, platform: data.platform, views: a.views || 0, likes: a.likes || 0, shares: a.shares || 0, comments: a.comments || 0 };
+      }
+    } else {
+      post = await loadOwnedPostFromMongo(req.user._id, id);
+    }
+    if (!post) {
+      return res.status(404).json({ success: false, error: 'Post not found' });
     }
 
-    // 2. Synthesize with Gemini
     const platform = post.platform || 'tiktok';
-    const analytics = (Array.isArray(post.post_analytics) ? post.post_analytics[0] : post.post_analytics) || {};
-    
-    
-
     const prompt = `
-      Perform a deep-scan on this ${platform} content manifest. 
-      Title: ${post.title}
-      Metrics: Views(${analytics.views}), Likes(${analytics.likes}), Shares(${analytics.shares})
-      
-      Synthesize a Heuristic Strategic Matrix in JSON format:
-      - potencyScore: (1-100) based on current traction.
-      - predictiveROI: (percentage) expected growth if action is taken.
-      - specificAdvice: Single sentence of PLATFORM-SPECIFIC tactical advice for ${platform}.
+      Review this ${platform} post and how it performed.
+      Text: ${String(post.text || post.title || '').slice(0, 1500)}
+      Metrics: Views(${post.views}), Likes(${post.likes}), Shares(${post.shares}), Comments(${post.comments})
+
+      Return a JSON object:
+      - headline: one sentence on how the post did, grounded in the metrics above.
+      - potencyScore: (1-100) how well it performed relative to its views.
+      - specificAdvice: one sentence of ${platform}-specific advice for the next post.
+      - signalGaps: up to 3 short phrases naming what held it back.
     `;
 
-    const matrixResponse = await geminiGenerate(prompt, { json: true });
-    
+    const matrix = await aiCallJson(prompt, null, { taskType: 'post-insight', maxTokens: 900, temperature: 0.3 });
+    if (!matrix || typeof matrix !== 'object') {
+      return res.status(503).json({ success: false, error: 'AI synthesis unavailable' });
+    }
+
     res.json({
       success: true,
-      matrix: matrixResponse
+      matrix: { ...matrix, platform_context: platform }
     });
   } catch (error) {
-    logger.error('Neural scan failure:', error);
-    res.status(500).json({ success: false, error: 'NEURAL_SCAN_FAILURE' });
+    logger.error('Post insight scan failed:', error);
+    res.status(500).json({ success: false, error: 'Insight scan failed' });
   }
 }));
 

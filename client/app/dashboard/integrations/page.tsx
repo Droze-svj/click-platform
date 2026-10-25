@@ -35,6 +35,8 @@ interface Integration {
   provider?: string
   status: 'active' | 'inactive' | 'error' | 'pending' | string
   lastSyncAt?: string
+  // Integration model: the last sync time lives at sync.lastSync.
+  sync?: { lastSync?: string | null } | null
   config?: Record<string, any>
   createdAt: string
 }
@@ -128,8 +130,8 @@ export default function IntegrationsPage() {
       await apiPost(`/integrations/${id}/sync`, {})
       showToast(t('integrationsPage.toastSyncStarted'), 'success')
       await loadAll()
-    } catch {
-      showToast(t('integrationsPage.toastSyncFailed'), 'error')
+    } catch (e: any) {
+      showToast(e?.response?.data?.error || e?.response?.data?.message || t('integrationsPage.toastSyncFailed'), 'error')
     } finally { setSyncingId(null) }
   }
 
@@ -283,7 +285,7 @@ export default function IntegrationsPage() {
                         <div className="flex flex-wrap items-center gap-2 ds-text-caption">
                           <span className="text-theme-secondary">{intg.provider || intg.type}</span>
                           <span aria-hidden>·</span>
-                          <span>{t('integrationsPage.lastSync', { time: intg.lastSyncAt ? new Date(intg.lastSyncAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : t('integrationsPage.never') })}</span>
+                          <span>{t('integrationsPage.lastSync', { time: (intg.sync?.lastSync || intg.lastSyncAt) ? new Date((intg.sync?.lastSync || intg.lastSyncAt) as string).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : t('integrationsPage.never') })}</span>
                         </div>
                       </div>
                     </div>

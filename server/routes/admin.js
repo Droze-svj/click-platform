@@ -22,6 +22,58 @@ const getSupabaseClient = () => {
   }
 };
 
+async function mongoAdminDashboard() {
+  const mongoose = require('mongoose');
+  const User = require('../models/User');
+  const ScheduledPost = require('../models/ScheduledPost');
+  const oauthPlatforms = Object.keys(User.schema.paths)
+    .map((p) => (p.match(/^oauth\.([^.]+)\.connected$/) || [])[1])
+    .filter(Boolean);
+  const [totalUsers, verifiedUsers, totalPosts, publishedPosts, recentUsers, recentPosts, ...connected] = await Promise.all([
+    User.countDocuments({}),
+    User.countDocuments({ emailVerified: true }),
+    ScheduledPost.countDocuments({}),
+    ScheduledPost.countDocuments({ status: 'posted' }),
+    User.find({}).sort({ createdAt: -1 }).limit(5).select('email name createdAt').lean(),
+    ScheduledPost.find({}).sort({ createdAt: -1 }).limit(5)
+      .select('status userId createdAt content.text').lean(),
+    ...oauthPlatforms.map((p) => User.countDocuments({ [`oauth.${p}.connected`]: true })),
+  ]);
+  // ScheduledPost.userId is a plain string (no ref), so look the authors up.
+  const authorIds = [...new Set(recentPosts.map((p) => String(p.userId)))].filter((id) => mongoose.Types.ObjectId.isValid(id));
+  const authors = new Map((await User.find({ _id: { $in: authorIds } }).select('email').lean()).map((u) => [String(u._id), u.email]));
+  const statusLabel = (s) => (s === 'posted' ? 'published'
+    : ['scheduled', 'pending', 'pending_approval', 'publishing'].includes(s) ? 'pending' : 'archived');
+  return {
+    success: true,
+    overview: {
+      users: { total: totalUsers, verified: verifiedUsers, unverified: totalUsers - verifiedUsers },
+      posts: { total: totalPosts, published: publishedPosts, drafts: totalPosts - publishedPosts },
+      social: { connected_accounts: connected.reduce((a, b) => a + b, 0) },
+    },
+    recent_activity: {
+      users: recentUsers.map((u) => {
+        const [first, ...rest] = String(u.name || '').trim().split(/\s+/);
+        return { id: String(u._id), email: u.email, first_name: first || '', last_name: rest.join(' '), created_at: u.createdAt };
+      }),
+      posts: recentPosts.map((p) => ({
+        id: String(p._id),
+        title: String((p.content && p.content.text) || '').split('\n')[0].slice(0, 80) || null,
+        status: statusLabel(p.status),
+        author_id: String(p.userId || ''),
+        created_at: p.createdAt,
+        users: { email: authors.get(String(p.userId)) || '' },
+      })),
+    },
+    system_health: {
+      database: mongoose.connection && mongoose.connection.readyState === 1 ? 'healthy' : 'degraded',
+      api: 'healthy',
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+    },
+  };
+}
+
 /**
  * GET /api/admin/ai-features
  * Wiring status of the optional external-AI integrations (dubbing, avatar,
@@ -40,6 +92,16 @@ router.get('/ai-features', auth, requireAdmin, asyncHandler(async (req, res) => 
  * Admin dashboard overview
  */
 router.get('/dashboard', auth, requireAdmin, asyncHandler(async (req, res) => {
+  // MongoDB (production has no Supabase — this used to throw and 500 for
+  // every admin).
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      return res.json(await mongoAdminDashboard());
+    } catch (error) {
+      logger.error('Failed to load admin dashboard', { error: error.message });
+      return res.status(500).json({ success: false, error: 'Failed to load admin dashboard' });
+    }
+  }
   try {
     const supabase = getSupabaseClient();
 

@@ -40,15 +40,16 @@ interface LiveStatusState {
   tasks: LiveStatusItem[]; jobs: LiveStatusJob[]; lastUpdated?: string | null;
 }
 
-const CATEGORIES = ['TASK_OPS', 'PROJECT_VINE', 'CONTENT_FORGE', 'APPROVAL_NODE', 'MENTION_SIGNAL', 'SYSTEM_CORE', 'WORKFLOW_LATTICE'] as const
+// The server's Notification.category enum (server/models/Notification.js).
+// These used to be invented labels (TASK_OPS, PROJECT_VINE…) the API ignored.
+const CATEGORIES = ['task', 'project', 'content', 'approval', 'mention', 'system', 'workflow', 'publishing', 'recurring', 'brief'] as const
 
 export default function NotificationsPage() {
   const router = useRouter()
   const { t } = useTranslation()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { socket } = useSocket(user?.id ?? null)
   const { showToast } = useToast()
-  void showToast
 
   const [loading, setLoading] = useState(true)
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -73,11 +74,12 @@ export default function NotificationsPage() {
       setUnreadCount(data?.unreadCount || 0)
     } catch {
       setNotifications([])
+      showToast(t('notificationsPage.loadFailed'), 'error')
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [filter, category])
+  }, [filter, category, showToast, t])
 
   const loadLiveStatus = useCallback(async () => {
     try {
@@ -94,10 +96,11 @@ export default function NotificationsPage() {
   }, [])
 
   useEffect(() => {
+    if (authLoading) return // user is null until /auth/me answers
     if (!user) { router.push('/login'); return }
     loadSignals()
     loadLiveStatus()
-  }, [user, loadSignals, loadLiveStatus, router])
+  }, [user, authLoading, loadSignals, loadLiveStatus, router])
 
   useEffect(() => {
     if (socket) {
@@ -269,7 +272,7 @@ export default function NotificationsPage() {
               </div>
               <select aria-label={t('notificationsPage.signalSectorCategory')} value={category} onChange={(e) => setCategory(e.target.value)} className={selectClass}>
                 <option value="">{t('notificationsPage.allSignalSectors')}</option>
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                {CATEGORIES.map(c => <option key={c} value={c}>{t(`notificationsPage.category_${c}`)}</option>)}
               </select>
             </div>
           </header>
@@ -285,14 +288,38 @@ export default function NotificationsPage() {
                 <Button
                   variant="primary" size="sm" loading={busy}
                   leftIcon={!busy ? <CheckCircle2 size={16} aria-hidden /> : undefined}
-                  onClick={async () => { if (busy) return; setBusy(true); try { await Promise.all(Array.from(selectedNotifications).map(id => apiPut(`/notifications/${id}/read`, {}).catch(() => null))); await loadSignals(); setSelectedNotifications(new Set()) } finally { setBusy(false) } }}
+                  onClick={async () => {
+                    if (busy) return
+                    setBusy(true)
+                    try {
+                      const ids = Array.from(selectedNotifications)
+                      const results = await Promise.allSettled(ids.map(id => apiPut(`/notifications/${id}/read`, {})))
+                      const failed = ids.filter((_, i) => results[i].status === 'rejected')
+                      await loadSignals()
+                      // Keep the ones that failed selected so they can be retried.
+                      setSelectedNotifications(new Set(failed))
+                      if (failed.length) showToast(t('notificationsPage.bulkReadFailed', { failed: failed.length, total: ids.length }), 'error')
+                    } finally { setBusy(false) }
+                  }}
                 >
                   {t('notificationsPage.synchronizeSignals')}
                 </Button>
                 <Button
                   variant="destructive" size="sm" loading={busy}
                   leftIcon={!busy ? <Trash2 size={16} aria-hidden /> : undefined}
-                  onClick={async () => { if (busy) return; if (!confirm(t('notificationsPage.confirmPurgeSelected'))) return; setBusy(true); try { await Promise.all(Array.from(selectedNotifications).map(id => apiDelete(`/notifications/${id}`).catch(() => null))); await loadSignals(); setSelectedNotifications(new Set()) } finally { setBusy(false) } }}
+                  onClick={async () => {
+                    if (busy) return
+                    if (!confirm(t('notificationsPage.confirmPurgeSelected'))) return
+                    setBusy(true)
+                    try {
+                      const ids = Array.from(selectedNotifications)
+                      const results = await Promise.allSettled(ids.map(id => apiDelete(`/notifications/${id}`)))
+                      const failed = ids.filter((_, i) => results[i].status === 'rejected')
+                      await loadSignals()
+                      setSelectedNotifications(new Set(failed))
+                      if (failed.length) showToast(t('notificationsPage.bulkDeleteFailed', { failed: failed.length, total: ids.length }), 'error')
+                    } finally { setBusy(false) }
+                  }}
                 >
                   {t('notificationsPage.purgeLedgerData')}
                 </Button>
@@ -335,7 +362,7 @@ export default function NotificationsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         {n.category && (
-                          <span className="inline-block rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium">{n.category.replace('_', ' ')}</span>
+                          <span className="inline-block rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium">{(CATEGORIES as readonly string[]).includes(n.category) ? t(`notificationsPage.category_${n.category}`) : n.category}</span>
                         )}
                         <span className="inline-flex items-center gap-1 ds-text-caption">
                           <Timer size={12} aria-hidden /> {new Date(n.createdAt).toLocaleString()}
@@ -369,7 +396,11 @@ export default function NotificationsPage() {
                         )}
                         <div className="ml-auto flex items-center gap-2">
                           {!n.read && (
-                            <Button variant="secondary" size="sm" onClick={() => { apiPut(`/notifications/${n._id}/read`, {}); loadSignals() }}>
+                            <Button variant="secondary" size="sm" onClick={async () => {
+                              try { await apiPut(`/notifications/${n._id}/read`, {}) }
+                              catch { showToast(t('notificationsPage.bulkReadFailed', { failed: 1, total: 1 }), 'error') }
+                              loadSignals()
+                            }}>
                               {t('notificationsPage.resonanceAck')}
                             </Button>
                           )}
@@ -377,7 +408,12 @@ export default function NotificationsPage() {
                             variant="ghost" size="sm"
                             className="text-rose-500 hover:text-rose-600"
                             title={t('notificationsPage.purgeSignal')} aria-label={t('notificationsPage.purgeSignal')}
-                            onClick={() => { if (confirm(t('notificationsPage.confirmPurgeSignal'))) { apiDelete(`/notifications/${n._id}`); loadSignals() } }}
+                            onClick={async () => {
+                              if (!confirm(t('notificationsPage.confirmPurgeSignal'))) return
+                              try { await apiDelete(`/notifications/${n._id}`) }
+                              catch { showToast(t('notificationsPage.bulkDeleteFailed', { failed: 1, total: 1 }), 'error') }
+                              loadSignals()
+                            }}
                           >
                             <Trash2 size={16} aria-hidden />
                           </Button>

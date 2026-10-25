@@ -505,7 +505,11 @@ async function processEvent(event, deps) {
   const stampTime = eventTime != null ? new Date(eventTime) : null;
 
   const productId = planIdOf(event) || productIdOf(event);
-  const subId = event?.data?.id || event?.data?.subscription_id || event?.id || null;
+  // The membership id (mem_…) is what cancelling needs. Payment events carry
+  // it nested (data.membership) while data.id is the payment (pay_…), which
+  // used to be stored here instead.
+  const subId = idOf(event?.data?.membership) || event?.data?.membership_id
+    || event?.data?.id || event?.data?.subscription_id || event?.id || null;
   const mapping = resolvePlanFromEvent(event, user);
 
   switch (eventType) {

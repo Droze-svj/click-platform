@@ -115,7 +115,7 @@ async function getCreatorDNA(userId) {
     topMotions: topByCount(profile?.motions),
     topColorGrades: topByCount(profile?.colorGrades),
     topTransitions: topByCount(profile?.transitions),
-    topHooks: topByCount(profile?.hooks),
+    topHooks: topByCount(profile?.hookStyles), // the schema field is hookStyles; `hooks` never existed
     topNiches: topByCount(profile?.niches),
     topPlatforms: topByCount(profile?.platforms),
 
@@ -154,14 +154,19 @@ async function getCreatorDNA(userId) {
       captionAffinity: topCaptionScore > 0 ? `+${(topCaptionScore * 100).toFixed(1)}%` : '0%',
     },
     verdict: topFontScore > 0 || topCaptionScore > 0
-      ? `Visual telemetry shows using font "${fontName}" and caption style "${captionName}" provides an average retention booster of +${((topFontScore + topCaptionScore) / 2 * 100).toFixed(1)}% against baseline edits.`
-      : 'Baseline metrics settle inside the standard deviation. Continue publishing with structured visual grids to build affinity scores.'
+      ? `Posts using the font "${fontName}" and the caption style "${captionName}" retain about ${((topFontScore + topCaptionScore) / 2 * 100).toFixed(1)}% better than your other edits.`
+      : 'Not enough measured posts yet to tell which fonts and caption styles keep viewers watching.'
   };
 
   // 2. Engagement Diffusion Analysis
-  const topHookStyle = profile?.weightedHooks?.[0]?.key || 'curiosity-gap';
-  const platformMatches = profile?.platforms || [];
-  const primaryPlatform = platformMatches.sort((a,b) => b.count - a.count)[0]?.key || 'tiktok';
+  // No invented defaults: with no data these stay null (this used to claim
+  // "curiosity-gap" on TIKTOK for every creator who hadn't published yet).
+  const topHookStyle = profile?.weightedHooks?.[0]?.key
+    || [...(profile?.hookStyles || [])].sort((a, b) => (b.count || 0) - (a.count || 0))[0]?.key
+    || null;
+  const platformMatches = [...(profile?.platforms || [])];
+  const primaryPlatform = platformMatches.sort((a,b) => b.count - a.count)[0]?.key || null;
+  const platformLabel = primaryPlatform ? primaryPlatform.toUpperCase() : null;
 
   // The hook's measured retention delta, when the learning loop has one. There
   // is no "diffusion" or "distribution score" telemetry behind this — a fixed
@@ -172,14 +177,16 @@ async function getCreatorDNA(userId) {
 
   dna.engagementDiffusionAnalysis = {
     metrics: {
-      primaryPlatform: primaryPlatform.toUpperCase(),
+      primaryPlatform: platformLabel,
       // Real EMA retention delta for this hook style, or null when unmeasured.
       hookRetentionDelta: topHookSamples > 0 ? `${topHookScore >= 0 ? '+' : ''}${(topHookScore * 100).toFixed(1)}%` : null,
       hookSampleSize: topHookSamples,
     },
-    verdict: topHookSamples > 0
-      ? `Across ${topHookSamples} measured post${topHookSamples === 1 ? '' : 's'}, your "${topHookStyle}" hooks retain ${Math.abs(topHookScore * 100).toFixed(1)}% ${topHookScore >= 0 ? 'better' : 'worse'} than your own baseline. ${primaryPlatform.toUpperCase()} is where you publish most.`
-      : `"${topHookStyle}" is the hook style you reach for most often on ${primaryPlatform.toUpperCase()}. Publish a few more and Click can measure how it actually retains.`
+    verdict: topHookSamples > 0 && topHookStyle
+      ? `Across ${topHookSamples} measured post${topHookSamples === 1 ? '' : 's'}, your "${topHookStyle}" hooks retain ${Math.abs(topHookScore * 100).toFixed(1)}% ${topHookScore >= 0 ? 'better' : 'worse'} than your own baseline.${platformLabel ? ` ${platformLabel} is where you publish most.` : ''}`
+      : topHookStyle
+        ? `"${topHookStyle}" is the hook style you reach for most often${platformLabel ? ` on ${platformLabel}` : ''}. Publish a few more and Click can measure how it actually retains.`
+        : 'Not enough published posts yet to tell which hook style you use most.'
   };
 
   // 3. Recommendations derived from the creator's own most-used choices.

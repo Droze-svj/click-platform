@@ -877,11 +877,20 @@ router.post('/render', auth, asyncHandler(async (req, res) => {
 
 router.post('/saved-exports', auth, asyncHandler(async (req, res) => {
   const userId = req.user?.id || req.user?._id;
-  const { videoId: contentId, exportPath, title, quality, expiresInDays } = req.body;
+  const { videoId: contentId, quality, expiresInDays } = req.body;
+  // The global sanitizer HTML-escapes body strings, turning "/" into an
+  // entity — the export path could never resolve. Neither field is rendered
+  // as HTML here (React escapes the title on display), so undo it.
+  const { unescape: unescapeHtml } = require('validator');
+  const exportPath = typeof req.body.exportPath === 'string' ? unescapeHtml(req.body.exportPath) : req.body.exportPath;
+  const title = typeof req.body.title === 'string' ? unescapeHtml(req.body.title) : req.body.title;
 
   if (!contentId || !exportPath) {
     return sendError(res, 'videoId and exportPath (from last render URL) are required', 400);
   }
+  // The export is filed under this content — it must be the caller's.
+  const owned = await guardOwnership(req, res, contentId);
+  if (!owned) return;
 
   try {
     const saved = await savedExportService.saveExport({

@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import axios from 'axios'
 import { X, RefreshCw, Trash2, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useDialogBehavior } from './ui/modal'
+import { apiGet, apiPost, handleApiError } from '../lib/api'
+import { useToast } from '../contexts/ToastContext'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'
+// BullMQ progress can be a number or an object; anything else rendered "NaN%".
+const pct = (p: any) => (Number.isFinite(Number(p)) ? Math.min(100, Math.max(0, Math.round(Number(p)))) : 0)
 
 interface JobDetailsModalProps {
   jobId: string
@@ -18,20 +20,15 @@ interface JobDetailsModalProps {
 
 export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onRefresh }: JobDetailsModalProps) {
   const { t } = useTranslation()
+  const { showToast } = useToast()
   const [job, setJob] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [retrying, setRetrying] = useState(false)
 
   const loadJobDetails = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return
-
-      const response = await axios.get(`${API_URL}/jobs/status/${queueName}/${jobId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-
-      setJob(response.data.data)
+      const res: any = await apiGet(`/jobs/status/${encodeURIComponent(queueName)}/${encodeURIComponent(jobId)}`, undefined, false)
+      setJob(res?.data ?? null)
     } catch (error) {
       console.error('Failed to load job details:', error)
     } finally {
@@ -50,17 +47,12 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
   const retryJob = async () => {
     setRetrying(true)
     try {
-      const token = localStorage.getItem('token')
-      if (!token) return
-
-      await axios.post(`${API_URL}/jobs/retry/${queueName}/${jobId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-
+      await apiPost(`/jobs/retry/${encodeURIComponent(queueName)}/${encodeURIComponent(jobId)}`, {})
+      showToast(t('jobDetailsModal.retryQueued'), 'success')
       onRefresh()
       onClose()
     } catch (error) {
-      console.error('Failed to retry job:', error)
+      showToast(handleApiError(error) || t('jobDetailsModal.retryFailed'), 'error')
     } finally {
       setRetrying(false)
     }
@@ -118,12 +110,12 @@ export default function JobDetailsModal({ jobId, queueName, isOpen, onClose, onR
               <div>
                 <div className="flex items-center justify-between text-sm mb-2">
                   <span>{t('jobDetailsModal.progress')}</span>
-                  <span>{job.progress}%</span>
+                  <span>{pct(job.progress)}%</span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div
                     className="bg-blue-600 h-2 rounded-full transition-all"
-                    style={{ width: `${job.progress}%` }}
+                    style={{ width: `${pct(job.progress)}%` }}
                   />
                 </div>
               </div>

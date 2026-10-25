@@ -94,7 +94,7 @@ export default function HeuristicMatrixPage() {
         // fabricated default into the learning brain would skew the profile.
         const fresh = raw.filter(v => v?.id && !seen.has(v.id) && typeof v.completionRate === 'number')
         if (fresh.length) {
-          await Promise.allSettled(fresh.map(v => apiPost('/style-profile/ingest-post', {
+          const results = await Promise.allSettled(fresh.map(v => apiPost('/style-profile/ingest-post', {
             contentId: v.id,
             metrics: {
               completionRate: v.completionRate / 100,
@@ -106,7 +106,9 @@ export default function HeuristicMatrixPage() {
               benchmarkRetention: 0.55,
             },
           })))
-          fresh.forEach(v => seen.add(v.id))
+          // Only remember posts the server actually ingested — marking failed
+          // ones as seen meant they were never retried and never learned from.
+          fresh.forEach((v, i) => { if (results[i].status === 'fulfilled') seen.add(v.id) })
           localStorage.setItem(seenKey, JSON.stringify(Array.from(seen).slice(-200)))
         }
       } catch { /* ingestion is best-effort — analytics view still renders */ }

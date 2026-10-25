@@ -56,7 +56,7 @@ export default function SovereignPostDiagnosticHub() {
         apiGet<any>(`/analytics/history/${postId}`)
       ])
       setData({
-        post: details.post,
+        post: details.post || { id: postId, title: details.post_title || null },
         analytics: details.analytics || [],
         insights: details.insights,
         history: historyRes.history || historyRes.data || []
@@ -103,7 +103,7 @@ export default function SovereignPostDiagnosticHub() {
       <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto overflow-x-hidden text-theme-primary">
         <SectionHeader
           as="h1"
-          title={data.post.title || t('analyticsPostPage.untitledNode')}
+          title={data.post?.title || t('analyticsPostPage.untitledNode')}
           description={t('analyticsPostPage.subtitle')}
           className="mb-6"
           actions={

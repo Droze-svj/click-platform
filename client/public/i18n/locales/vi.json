@@ -86,7 +86,9 @@
     "openLabs": "Mở Labs",
     "exploreLabs": "Khám phá Labs",
     "earlyAccessOn": "Truy cập sớm — đã sẵn sàng cho bạn",
-    "earlyAccessAgencyOnly": "Dành riêng cho Agency"
+    "earlyAccessAgencyOnly": "Dành riêng cho Agency",
+    "checkoutUnavailable": "Hiện chưa thể thanh toán gói này. Chưa có gì thay đổi. Vui lòng thử lại sau hoặc liên hệ bộ phận hỗ trợ.",
+    "invoiceDownloadFailed": "Không thể tải hóa đơn xuống. Vui lòng thử lại."
   },
   "labsPage": {
     "title": "Labs",
@@ -358,7 +360,10 @@
     "dangerZone": "Vùng nguy hiểm",
     "irreversibleActions": "Hành động không thể đảo ngược",
     "deleteAccountWarning": "Xóa tài khoản của bạn: xóa vĩnh viễn tất cả video, bài đăng, tài khoản được kết nối và đăng ký của bạn. Điều này không thể hoàn tác được.",
-    "deleteAccount": "Xóa tài khoản"
+    "deleteAccount": "Xóa tài khoản",
+    "loadFailedSaveBlocked": "Không thể tải cài đặt đã lưu của bạn. Tính năng lưu tạm tắt cho đến khi tải xong, để cài đặt thật của bạn không bị thay bằng mặc định.",
+    "saveBlockedNotLoaded": "Cài đặt đã lưu của bạn chưa tải xong. Hãy thử lại trước khi lưu.",
+    "apiKeySavedPlaceholder": "Đã lưu khóa kết thúc bằng {{last4}}. Nhập khóa mới để thay thế"
   },
   "common": {
     "save": "Cứu",
@@ -1129,7 +1134,10 @@
     "decryptingHeuristics": "Đang phân tích…",
     "predictiveTelemetry": "Dự báo hiệu suất",
     "predictiveTelemetryDesc": "Dự báo nội dung của bạn có thể hoạt động thế nào.",
-    "scanningTrajectories": "Quét quỹ đạo..."
+    "scanningTrajectories": "Quét quỹ đạo...",
+    "errorStatusCheckFailed": "Không thể kiểm tra nội dung của bạn. Có thể vẫn sẽ hoàn tất; hãy xem trong thư viện.",
+    "errorGenerationTimeout": "Việc này lâu hơn bình thường. Có thể vẫn sẽ hoàn tất; hãy xem trong thư viện sau vài phút.",
+    "errorTemplateLoadFailed": "Không thể tải mẫu đó. Bạn vẫn có thể tự viết."
   },
   "forgePage": {
     "documentTitle": "Người tạo nội dung AI | nhấp chuột",
@@ -1409,7 +1417,20 @@
     "accessOriginNode": "Mở",
     "resonanceAck": "Đánh dấu đã đọc",
     "confirmPurgeSignal": "Xóa thông báo này?",
-    "purgeSignal": "Xóa"
+    "purgeSignal": "Xóa",
+    "category_task": "Công việc",
+    "category_project": "Dự án",
+    "category_content": "Nội dung",
+    "category_approval": "Phê duyệt",
+    "category_mention": "Lượt nhắc đến",
+    "category_system": "Hệ thống",
+    "category_workflow": "Quy trình",
+    "category_publishing": "Đăng bài",
+    "category_recurring": "Bài đăng định kỳ",
+    "category_brief": "Bản tin hằng ngày",
+    "bulkReadFailed": "Không thể đánh dấu đã đọc {{failed}}/{{total}} mục.",
+    "bulkDeleteFailed": "Không thể xóa {{failed}}/{{total}} mục.",
+    "loadFailed": "Không thể tải thông báo."
   },
   "onboardingPage": {
     "loading": "Đang tải",
@@ -1721,7 +1742,8 @@
     "statusPublished": "Đã xuất bản",
     "statusFailed": "Thất bại",
     "statusDraft": "Bản nháp",
-    "viewSequenceDetails": "Xem chi tiết"
+    "viewSequenceDetails": "Xem chi tiết",
+    "toastScheduledPartial": "Đã lên lịch {{ok}}/{{total}} bài đăng. Số còn lại bị lỗi: {{error}}"
   },
   "scriptsPage": {
     "toastLoadFailed": "Không tải được kịch bản",
@@ -1767,7 +1789,8 @@
     "purgeNodeTitle": "Xóa kịch bản?",
     "purgeNodeBody": "Kịch bản sẽ bị xóa vĩnh viễn. Thao tác này không thể hoàn tác.",
     "abortPurge": "Hủy",
-    "commitPurge": "Xóa"
+    "commitPurge": "Xóa",
+    "toastTemplateLoadFailed": "Không thể tải mẫu đó."
   },
   "searchPage": {
     "reconFailed": "Tìm kiếm quá thời gian. Vui lòng thử lại.",
@@ -1929,7 +1952,8 @@
     "transmitting": "Đang làm mới…",
     "transmit": "TRUYỀN",
     "terminateProtocol": "Xóa công việc",
-    "secureAndLeave": "ĐẢM BẢO_&_RỜI HỎI"
+    "secureAndLeave": "ĐẢM BẢO_&_RỜI HỎI",
+    "toastLoadFailed": "Không thể tải công việc của bạn."
   },
   "templatesPage": {
     "toastSyncFailed": "Không tải được mẫu",
@@ -2184,7 +2208,9 @@
     "synchronizingBuffer": "Tiến độ",
     "anomalyIntercepted": "Lỗi",
     "procTime": "Thời gian xử lý: {{time}}",
-    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}"
+    "retryThreshold": "RETRY_THRESHOLD_CYCLE_0{{attempts}}",
+    "cancelled": "Đã hủy tác vụ.",
+    "cancelFailed": "Không thể hủy tác vụ này."
   },
   "strategistPage": {
     "clickIntelligence": "Nhấp vào Thông minh",
@@ -2298,7 +2324,41 @@
     "emotionalResonance": "Sức hút cảm xúc",
     "dominantLabel": "Chiếm ưu thế: {{emotion}}",
     "missingTriggerLabel": "Thiếu trình kích hoạt tác động cao:",
-    "optimalPostingWindows": "Windows đăng bài tối ưu"
+    "optimalPostingWindows": "Windows đăng bài tối ưu",
+    "syncFailed": "Không thể đồng bộ. Hãy thử lại.",
+    "playbookFallbackNote": "AI hiện không khả dụng, nên các ý tưởng này lấy từ cẩm nang của ngách.",
+    "trendHooks": "Hook nên thử",
+    "trendFormats": "Định dạng",
+    "trendSounds": "Ý tưởng âm thanh",
+    "trendHashtags": "Hashtag",
+    "momentumRising": "Đang tăng",
+    "momentumSteady": "Ổn định",
+    "momentumPeaking": "Đang đạt đỉnh",
+    "nicheVoice": "Giọng điệu",
+    "pitfalls": "Nên tránh",
+    "retentionFloorLabel": "Giữ ít nhất {{value}}% người xem",
+    "retentionTargetLabel": "Mục tiêu {{value}}%",
+    "retentionGuidelineNote": "Mức tham khảo cho {{platform}} dựa trên thời lượng hook, không phải số đo từ bài đăng của bạn.",
+    "sequenceStepLabel": "Bước {{step}} · {{timing}}",
+    "campaignVideoLabel": "Video {{num}} · {{mark}}",
+    "angleNumber": "Góc tiếp cận {{num}}",
+    "promptGroupSave": "Tăng lượt lưu",
+    "promptGroupComment": "Tăng bình luận",
+    "promptGroupShare": "Tăng lượt chia sẻ",
+    "promptGroupDm": "Tăng tin nhắn",
+    "promptGroupFollow": "Tăng lượt theo dõi",
+    "benchIdealLength": "Độ dài lý tưởng",
+    "benchHookWindow": "Thời lượng hook",
+    "benchCaptionStyle": "Kiểu chú thích",
+    "benchHashtags": "Hashtag",
+    "benchSoundStrategy": "Âm thanh",
+    "benchAvoid": "Tránh trên {{platform}}",
+    "verdictPublishReady": "Sẵn sàng đăng",
+    "verdictNeedsTightening": "Cần cô đọng hơn",
+    "verdictRewrite": "Cần viết lại",
+    "wordCountLabel": "{{count}} từ",
+    "scoreRuleBasedNote": "Kiểm tra theo quy tắc dựa trên cẩm nang {{platform}}.",
+    "notesTitle": "Cần thay đổi gì"
   },
   "teamDetailPage": {
     "toastLoadFailed": "Không tải được nhóm",
@@ -2357,7 +2417,11 @@
     "globalSecurityEnabled": "Cài đặt chỉ đọc",
     "latticeMetadata": "Chi tiết nhóm",
     "clusterId": "ID nhóm",
-    "ownerHash": "Chủ sở hữu"
+    "ownerHash": "Chủ sở hữu",
+    "inviteEmailFailed": "Lời mời đã sẵn sàng nhưng không gửi được email. Hãy sao chép liên kết và tự gửi.",
+    "inviteLinkLabel": "Liên kết mời",
+    "copyInviteLink": "Sao chép liên kết",
+    "inviteLinkCopied": "✓ Đã sao chép liên kết"
   },
   "teamsPage": {
     "toastLoadFailed": "Không thể tải đội",
@@ -4195,7 +4259,9 @@
     "postComment": "Đăng bình luận",
     "resolved": "Đã giải quyết",
     "helpful": "Hữu ích",
-    "empty": "Chưa có bình luận nào Hãy là người đầu tiên bình luận!"
+    "empty": "Chưa có bình luận nào Hãy là người đầu tiên bình luận!",
+    "needsTeam": "Bình luận được chia sẻ trong nhóm.",
+    "needsTeamCta": "Tạo hoặc tham gia nhóm"
   },
   "complianceDashboard": {
     "outOf100": "/ 100",
@@ -4281,7 +4347,19 @@
     "colChecked": "Đã kiểm tra",
     "untitled": "(Không có tiêu đề)",
     "noHistory": "Chưa có lịch sử tuân thủ.",
-    "noHistoryHint": "Chạy kiểm tra nội dung của bạn để bắt đầu theo dõi."
+    "noHistoryHint": "Chạy kiểm tra nội dung của bạn để bắt đầu theo dõi.",
+    "rulesLoadFailed": "Không thể tải các quy tắc của bạn.",
+    "ruleSaveFailed": "Không thể lưu quy tắc.",
+    "ruleDeleteFailed": "Không thể xóa quy tắc.",
+    "policiesLoadFailed": "Không thể tải chính sách nền tảng.",
+    "historyLoadFailed": "Không thể tải lịch sử tuân thủ.",
+    "totalRulesStat": "Quy tắc",
+    "activeRulesStat": "Quy tắc đang bật",
+    "totalTriggersStat": "Số lần kích hoạt",
+    "colRule": "Quy tắc",
+    "colTriggers": "Lượt kích hoạt",
+    "colLastTriggered": "Kích hoạt gần nhất",
+    "noTriggersYet": "Chưa có quy tắc nào của bạn bị kích hoạt."
   },
   "confirmDialog": {
     "confirm": "Xác nhận",
@@ -4599,7 +4677,8 @@
     "percentOptimal": "{{score}}% tối ưu",
     "dayAtTime": "{{day}} tại {{time}}",
     "schedule": "Lịch trình",
-    "viewAllOptimalTimes": "Xem tất cả thời gian tối ưu →"
+    "viewAllOptimalTimes": "Xem tất cả thời gian tối ưu →",
+    "loadFailed": "Không thể tải thời gian đăng."
   },
   "contentSuggestions": {
     "loadFailed": "Không tải được đề xuất",
@@ -5227,7 +5306,9 @@
     "descriptionPlaceholder": "Mô tả công việc của quy trình làm việc này...",
     "trigger": "Cò súng",
     "enableWorkflow": "Bật quy trình làm việc",
-    "cancel": "Hủy bỏ"
+    "cancel": "Hủy bỏ",
+    "notExecuted": "Quy trình chưa chạy: {{reason}}",
+    "someActionsFailed": "Quy trình đã chạy nhưng các bước sau bị lỗi: {{actions}}"
   },
   "enterpriseGovernance": {
     "title": "Quản trị doanh nghiệp",
@@ -5710,7 +5791,9 @@
     "retrying": "Đang thử lại...",
     "retryJob": "Thử lại công việc",
     "close": "Đóng",
-    "jobNotFound": "Không tìm thấy công việc"
+    "jobNotFound": "Không tìm thấy công việc",
+    "retryQueued": "Đã xếp tác vụ vào hàng đợi để chạy lại.",
+    "retryFailed": "Không thể thử lại tác vụ này."
   },
   "jobProgressViewer": {
     "loadingJobStatus": "Đang tải trạng thái công việc...",
@@ -5832,7 +5915,8 @@
   "nextStepsPanel": {
     "suggestedNextSteps": "Các bước tiếp theo được đề xuất",
     "nextStep": "Bước tiếp theo",
-    "continueSetup": "Tiếp tục thiết lập"
+    "continueSetup": "Tiếp tục thiết lập",
+    "workflowFailed": "Không thể chạy quy trình đó."
   },
   "multiClientRollupDashboard": {
     "title": "Bảng điều khiển tổng hợp nhiều khách hàng",
@@ -5914,7 +5998,11 @@
     "swarmGenHud": "Trình tạo ý tưởng",
     "autoFoley": "Foley tự động",
     "brollAgent": "Đại lý B-Roll",
-    "captionSwarm": "Phụ đề AI"
+    "captionSwarm": "Phụ đề AI",
+    "noTrendsYet": "Hiện chưa có xu hướng trực tiếp. Hãy thử lại sau.",
+    "kindSound": "Âm thanh",
+    "kindHashtag": "Hashtag",
+    "kindTopic": "Chủ đề"
   },
   "neuralWorkspaceHub": {
     "nbaViral": "Đăng video tiếp theo của bạn vào lúc 10 giờ tối nay - mức độ lan truyền của dạng ngắn vào tối thứ Năm cao hơn 23% so với mức trung bình.",
@@ -6273,7 +6361,8 @@
     "markAllAsRead": "Đánh dấu tất cả là đã đọc",
     "loading": "Đang tải...",
     "noNotifications": "Không có thông báo",
-    "view": "Xem"
+    "view": "Xem",
+    "markReadFailed": "Không thể đánh dấu là đã đọc. Hãy thử lại."
   },
   "notificationPreferences": {
     "title": "Tùy chọn thông báo",
@@ -6309,7 +6398,9 @@
     "push": "Xô",
     "pushDescription": "Thông báo đẩy của trình duyệt",
     "saving": "Đang lưu...",
-    "savePreferences": "Lưu tùy chọn"
+    "savePreferences": "Lưu tùy chọn",
+    "loadFailed": "Không thể tải tùy chọn thông báo của bạn. Tạm thời không thể lưu cho đến khi tải xong.",
+    "saveFailed": "Không thể lưu tùy chọn thông báo của bạn. Vui lòng thử lại."
   },
   "offlineIndicator": {
     "backOnline": "Trở lại trực tuyến",
@@ -6444,7 +6535,8 @@
     "proTipPrefix": "✦ Mẹo chuyên nghiệp:",
     "allSet": "Bạn đã hoàn tất!",
     "clickTunedFor": "CLICK được điều chỉnh cho",
-    "makeFirstVideoViral": "Làm cho video đầu tiên của bạn trở nên lan truyền."
+    "makeFirstVideoViral": "Làm cho video đầu tiên của bạn trở nên lan truyền.",
+    "syncFailed": "Không thể lưu câu trả lời vào tài khoản của bạn. Chúng vẫn được áp dụng trên thiết bị này."
   },
   "oneClickPublish": {
     "salvageLowCtr": "Tỷ lệ nhấp ban đầu trên TikTok thấp. Hãy cân nhắc thử phiên bản khác.",
@@ -6477,7 +6569,9 @@
     "variantB": "Biến thể B",
     "ignore": "Phớt lờ",
     "swapToVariantB": "Hoán đổi sang Biến thể B",
-    "swapVariantB": "Hoán đổi biến thể B"
+    "swapVariantB": "Hoán đổi biến thể B",
+    "someFailed": "Chưa đăng lên: {{platforms}}",
+    "allFailed": "Không thể đăng lên: {{platforms}}"
   },
   "optimizedImage": {
     "loadingAlt": "Đang tải {{alt}}",
@@ -6688,7 +6782,10 @@
     "reach": "Với tới",
     "virality": "Tính lan truyền",
     "keyInsights": "Thông tin chi tiết chính",
-    "recommendations": "Khuyến nghị"
+    "recommendations": "Khuyến nghị",
+    "ruleBasedNote": "Điểm theo quy tắc dựa trên độ dài, hashtag, emoji và câu hỏi. Đây không phải dự báo lượt xem hay lượt tiếp cận.",
+    "predictFailed": "Không thể chấm điểm nội dung này. Hãy thử lại.",
+    "needsText": "Hãy thêm nội dung chữ để chấm điểm."
   },
   "platformAnalyticsSync": {
     "analyticsSyncedSuccessfully": "Đã đồng bộ hóa thành công phân tích",
@@ -6711,7 +6808,9 @@
     "expectedViews": "Lượt xem dự kiến",
     "engagementRate": "Tỷ lệ tương tác",
     "positiveFactors": "Yếu tố tích cực",
-    "recommendations": "Khuyến nghị"
+    "recommendations": "Khuyến nghị",
+    "predictFailed": "Không thể dự đoán hiệu quả. Hãy thử lại.",
+    "ruleBasedNote": "AI không khả dụng, nên đây là điểm theo quy tắc dựa trên độ dài, hashtag, câu hỏi và lời kêu gọi hành động. Không hiển thị ước tính lượt xem."
   },
   "phase8Dashboard": {
     "howItWorks": "Nó hoạt động như thế nào:",
@@ -7358,7 +7457,8 @@
     "feedSubtitle": "AI-Analyzed // Từ hiệu suất bài đăng của bạn",
     "coldStartHint": "Xuất bản bài đăng để Click có thể phân tích những gì hoạt động",
     "noInsightsYet": "Chưa có thông tin chi tiết nào",
-    "impact": "Tác động: {{impact}}"
+    "impact": "Tác động: {{impact}}",
+    "loadFailed": "Không thể tải thông tin chi tiết."
   },
   "scalingHub": {
     "neuralThroughput": "Thông lượng",
@@ -8550,6 +8650,16 @@
     "pacingOverlayLabel": "Nhịp độ mẫu: {{name}}"
   },
   "creativeAI": {
+    "reframeApplied": "Đã cắt khung hình thành {{ratio}}. Hãy xuất với preset {{ratio}} để giữ trọn khung hình.",
+    "reframeNotApplied": "Không thể áp dụng cắt {{ratio}} vì chưa biết kích thước khung hình của video. Hãy thử lại khi video đã tải xong.",
+    "resultAddedToTimeline": "{{tool}}: đã thêm phiên bản mới vào dòng thời gian.",
+    "resultReady": "{{tool}} đã xong. Mở kết quả bên dưới.",
+    "noOutput": "{{tool}} đã xong nhưng không trả về tệp nào. Vui lòng thử lại.",
+    "speedRampMarker": "Tốc độ {{speed}}x",
+    "speedRampMarked": "Đã thêm {{count}} điểm đánh dấu speed ramp vào dòng thời gian. Đặt tốc độ tại từng điểm để áp dụng.",
+    "speedRampPlanOnly": "Đã lên kế hoạch {{count}} speed ramp. Chúng chưa được áp dụng vào video.",
+    "dubAddedToTimeline": "Đã thêm track giọng tiếng Tây Ban Nha vào dòng thời gian. Tắt tiếng âm thanh gốc để chỉ nghe bản lồng tiếng.",
+    "openResult": "Mở kết quả",
     "reframeStarting": "Đang căn khung video theo chủ thể chính…",
     "reframeDone": "Đã tự động căn khung xong.",
     "reframeFailed": "Tự động căn khung không thành công. Vui lòng thử lại.",
@@ -8786,7 +8896,39 @@
     "closeShortcuts": "Đóng phím tắt",
     "searchTools": "Tìm công cụ"
   },
+  "aiTimelineChat": {
+    "title": "Trợ lý dòng thời gian",
+    "greeting": "Cho mình biết bạn muốn thay đổi gì. Mình có thể áp dụng chỉnh màu, thêm tiêu đề, đổi tốc độ phát hoặc mở Xuất để chọn tỷ lệ khung hình khác.",
+    "placeholder": "VD: Làm cho nó điện ảnh hơn",
+    "send": "Gửi tin nhắn",
+    "appliedGrade": "Đã áp dụng chỉnh màu {{grade}}.",
+    "gradeNotApplied": "Mình không thể áp dụng chỉnh màu {{grade}}.",
+    "addedText": "Đã thêm tiêu đề \"{{text}}\" tại vị trí đầu phát.",
+    "textNeedsQuotes": "Hãy đặt tiêu đề trong ngoặc kép, ví dụ: thêm tiêu đề \"Tin lớn\".",
+    "speedSet": "Đã đặt tốc độ phát thành {{speed}}x.",
+    "aspectOpenExport": "Tỷ lệ khung hình được chọn khi xuất. Mình đã mở Xuất: hãy chọn preset {{ratio}} ở đó.",
+    "aspectNoExport": "Tỷ lệ khung hình được chọn khi xuất. Hãy mở Xuất và chọn preset {{ratio}}.",
+    "notUnderstood": "Mình chưa thay đổi gì. Mình có thể áp dụng chỉnh màu (ví dụ điện ảnh, ấm hoặc cổ điển), thêm tiêu đề đặt trong ngoặc kép, đổi tốc độ (ví dụ 1.5x hoặc quay chậm) hoặc mở Xuất cho khung hình 9:16 hay 1:1.",
+    "badgeGrade": "Chỉnh màu: {{grade}}",
+    "badgeText": "Đã thêm tiêu đề",
+    "badgeSpeed": "Tốc độ {{speed}}x",
+    "badgeExport": "Đã mở Xuất"
+  },
+  "repurposeView": {
+    "renderFailed": "Phiên bản {{format}} bị lỗi: {{error}}",
+    "renderFailedGeneric": "Kết xuất không thành công.",
+    "renderTimedOut": "Kết xuất mất quá nhiều thời gian và đã ngừng báo tiến độ. Vui lòng thử lại."
+  },
+  "musicPicker": {
+    "generationFailed": "Tạo nhạc bằng AI không thành công. Vui lòng thử lại.",
+    "generationFailedReason": "Tạo nhạc bằng AI không thành công: {{error}}",
+    "generationNoTrack": "Bản nhạc đã được tạo nhưng không thể lưu. Vui lòng tạo lại."
+  },
+  "savedLooksPanel": {
+    "deleteFailed": "Không thể xóa tông màu này. Nó vẫn được lưu."
+  },
   "editorHUD": {
+    "saveFailedRetry": "Chưa lưu vào tài khoản của bạn. Nhấn để thử lại.",
     "section": {
       "edit": "Chỉnh sửa",
       "color": "Màu",
@@ -8846,6 +8988,7 @@
     "export": "Xuất"
   },
   "quickActionsBar": {
+    "trendsList": "Đang thịnh hành trên TikTok: {{list}}",
     "variantsNeedBase": "Hãy thêm phụ đề hoặc hook trước để trình tạo biến thể có nội dung để làm việc.",
     "noVariants": "Không có biến thể nào — hãy thử hook gốc dài hơn.",
     "variantsGenerated": "Đã tạo {{count}} biến thể — mở bộ chọn A/B để xem trước.",
@@ -8970,6 +9113,7 @@
       "competitiveInsights": "Phân tích đối thủ"
     },
     "err": {
+      "analyzeFailed": "Không thể phân tích video này. Hãy thử lại sau giây lát.",
       "videoNotFound": "Không tìm thấy dữ liệu video trong phản hồi",
       "loadFailed": "Không tải được video. Vui lòng thử lại.",
       "missingSource": "Video này thiếu tệp gốc. Hãy tải lên lại và thử lại.",
@@ -10048,5 +10192,44 @@
       "comingSoonHint": "Phân tích tỷ lệ giữ chân, độ mạnh của hook và nhịp độ sẽ hiện ở đây sau khi video được phân tích.",
       "transcript": "Bản ghi lời thoại"
     }
+  },
+  "teamAcceptPage": {
+    "processing": "Đang xử lý lời mời của bạn…",
+    "body": "Đang thêm bạn vào nhóm. Chỉ mất một chút thôi.",
+    "noToken": "Liên kết mời này thiếu mã. Hãy xin một lời mời mới.",
+    "joined": "✓ Bạn đã tham gia nhóm",
+    "failed": "Không thể chấp nhận lời mời"
+  },
+  "forgotPasswordPage": {
+    "rateLimited": "Quá nhiều yêu cầu đặt lại. Hãy chờ vài phút rồi thử lại.",
+    "sendFailed": "Hiện chưa thể gửi liên kết đặt lại. Hãy kiểm tra kết nối và thử lại."
+  },
+  "governanceDashboard": {
+    "loadFailed": "Không thể tải nhật ký kiểm tra."
+  },
+  "clickIsland": {
+    "chatEmpty": "Mình chưa thể tạo câu trả lời lúc này. Hãy diễn đạt lại hoặc gửi lại lần nữa.",
+    "chatRateLimited": "Bạn đã đạt giới hạn AI tạm thời. Hãy thử lại sau ít phút.",
+    "chatUnavailable": "AI hiện không thể trả lời. Hãy thử lại sau giây lát.",
+    "chatOffline": "Hiện không thể kết nối với trợ lý. Hãy kiểm tra kết nối và thử lại."
+  },
+  "postStatus": {
+    "scheduled": "Đã lên lịch",
+    "awaitingApproval": "Chờ duyệt",
+    "publishing": "Đang đăng",
+    "published": "Đã đăng",
+    "retrying": "Đang thử lại",
+    "failed": "Thất bại",
+    "cancelled": "Đã hủy"
+  },
+  "creatorTools": {
+    "noResults": "Lần này không có kết quả. Hãy thử lại hoặc diễn đạt khác.",
+    "variantNotAdapted": "AI không thể chuyển thể mục này. Đây là văn bản gốc của bạn."
+  },
+  "contentRecycling": {
+    "loadFailed": "Không thể tải dữ liệu tái sử dụng.",
+    "planCreated": "Đã tạo kế hoạch tái sử dụng.",
+    "createFailed": "Không thể tạo kế hoạch tái sử dụng.",
+    "toggleFailed": "Không thể cập nhật kế hoạch tái sử dụng."
   }
 }

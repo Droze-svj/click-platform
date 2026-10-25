@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { handleApiError } from '@/lib/api'
 import { critiquePost, type Platform, type Critique } from '@/lib/featuresApi'
 
 const PLATFORMS: Platform[] = ['instagram', 'tiktok', 'youtube', 'twitter', 'linkedin']
@@ -32,7 +33,7 @@ export default function CaptionCritiquePanel() {
     try {
       setResult(await critiquePost({ text, platform }))
     } catch (e) {
-      setError((e as Error)?.message || 'Failed to critique')
+      setError(handleApiError(e) || 'Failed to critique')
     } finally {
       setLoading(false)
     }

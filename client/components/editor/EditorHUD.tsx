@@ -34,6 +34,10 @@ interface EditorHUDProps {
   projectName: string
   setProjectName: (name: string) => void
   autosaveStatus: 'saved' | 'saving' | 'error'
+  /** Detail for the save badge's tooltip (e.g. why a save failed). */
+  autosaveMessage?: string
+  /** When set, a failed-save badge becomes a retry button. */
+  onRetrySave?: () => void
   historyIndex: number
   historyLength: number
   handleUndo: () => void
@@ -175,6 +179,8 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
   projectName,
   setProjectName,
   autosaveStatus,
+  autosaveMessage,
+  onRetrySave,
   historyIndex,
   historyLength,
   handleUndo,
@@ -198,6 +204,7 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
 }) => {
   const reduceMotion = useReducedMotion()
   const { t } = useTranslation()
+  const canRetrySave = autosaveStatus === 'error' && !!onRetrySave
   const [layoutOpen, setLayoutOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
 
@@ -291,17 +298,21 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
             </AnimatePresence>
           </div>
 
-          {/* Autosave status */}
-          <div
+          {/* Autosave status — a failed save stays visible and can be retried */}
+          <button
+            type="button"
+            onClick={canRetrySave ? onRetrySave : undefined}
+            tabIndex={canRetrySave ? 0 : -1}
+            aria-live="polite"
             className={`flex items-center gap-1.5 p-1 sm:px-2.5 sm:py-1 rounded-lg border text-[11px] font-medium shrink-0 ${
               autosaveStatus === 'saving'
                 ? 'bg-amber-500/5 border-amber-500/20 text-amber-400'
                 : autosaveStatus === 'error'
                 ? 'bg-rose-500/5 border-rose-500/20 text-rose-400'
                 : 'bg-white/[0.03] border-white/10 text-slate-400'
-            }`}
-            title={autosaveStatus === 'saving' ? t('editorHUD.savingEllipsis') : autosaveStatus === 'error' ? t('editorHUD.saveFailed') : t('editorHUD.allChangesSaved')}
-            aria-label={autosaveStatus === 'saving' ? t('editorHUD.saving') : autosaveStatus === 'error' ? t('editorHUD.saveFailed') : t('editorHUD.saved')}
+            } ${canRetrySave ? 'cursor-pointer hover:bg-rose-500/10' : 'cursor-default'}`}
+            title={autosaveStatus === 'saving' ? t('editorHUD.savingEllipsis') : autosaveStatus === 'error' ? (canRetrySave ? t('editorHUD.saveFailedRetry') : (autosaveMessage || t('editorHUD.saveFailed'))) : t('editorHUD.allChangesSaved')}
+            aria-label={autosaveStatus === 'saving' ? t('editorHUD.saving') : autosaveStatus === 'error' ? (canRetrySave ? t('editorHUD.saveFailedRetry') : t('editorHUD.saveFailed')) : t('editorHUD.saved')}
           >
             {autosaveStatus === 'saving' ? (
               <Loader2 className="w-3 h-3 animate-spin" />
@@ -313,7 +324,7 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
             {L.saveLabel && (
               <span>{autosaveStatus === 'saving' ? t('editorHUD.saving') : autosaveStatus === 'error' ? t('editorHUD.saveFailed') : t('editorHUD.saved')}</span>
             )}
-          </div>
+          </button>
         </div>
 
         <Divider />

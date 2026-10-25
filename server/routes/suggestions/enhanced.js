@@ -32,12 +32,15 @@ router.get('/', auth, asyncHandler(async (req, res) => {
       includeSeasonal = true
     } = req.query;
 
+    // includeX default to true; they used to be compared with === 'true', which
+    // is false for the boolean default, so a plain request switched every
+    // source off and the Suggestions tab was always empty.
     const suggestions = await getEnhancedSuggestions(req.user._id, {
       niche,
       count: parseInt(count, 10),
-      includeTrending: includeTrending === 'true',
-      includeGaps: includeGaps === 'true',
-      includeSeasonal: includeSeasonal === 'true'
+      includeTrending: String(includeTrending) !== 'false',
+      includeGaps: String(includeGaps) !== 'false',
+      includeSeasonal: String(includeSeasonal) !== 'false'
     });
 
     sendSuccess(res, 'Enhanced suggestions fetched', 200, suggestions || []);

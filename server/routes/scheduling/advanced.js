@@ -170,7 +170,7 @@ router.get('/templates', auth, asyncHandler(async (req, res) => {
 
   const templates = await ScheduleTemplate.find({
     userId: req.user._id,
-    isActive: isActive === 'true'
+    isActive: String(isActive) !== 'false'
   })
     .sort({ isDefault: -1, usageCount: -1, createdAt: -1 })
     .lean();

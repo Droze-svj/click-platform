@@ -31,9 +31,17 @@ async function generateAutoClips(videoId, options = {}) {
     throw e;
   }
 
-  const transcript = String(content.transcript || '').trim()
-    || (Array.isArray(content.captions) ? content.captions.map((c) => c && c.text).filter(Boolean).join(' ') : '');
-  const duration = Number(content.duration)
+  // `captions` is a sub-document ({ text, segments, ... }), not an array.
+  const captionText = content.captions && typeof content.captions.text === 'string'
+    ? content.captions.text
+    : (Array.isArray(content.captions && content.captions.segments)
+      ? content.captions.segments.map((c) => c && c.text).filter(Boolean).join(' ')
+      : '');
+  const transcript = String(content.transcript || '').trim() || String(captionText || '').trim();
+  // The source length lives on originalFile.duration (there is no top-level
+  // `duration` on Content). Reading the non-existent field left `duration` at
+  // 0, so buildClipPlan never clamped and clip windows ran past the video end.
+  const duration = Number(content.originalFile && content.originalFile.duration)
     || Number(content.metadata && content.metadata.duration)
     || Number(options.duration) || 0;
 

@@ -81,6 +81,9 @@ export default function TeamDetailsPage() {
   const [inviting, setInviting] = useState(false)
   const [updatingRole, setUpdatingRole] = useState<string | null>(null)
   const [removing, setRemoving] = useState<string | null>(null)
+  // Set when the invitation was saved but the email could not be sent; the
+  // inviter copies the link and shares it themselves.
+  const [inviteLink, setInviteLink] = useState<string | null>(null)
 
   const teamId = params.teamId as string
 
@@ -117,8 +120,15 @@ export default function TeamDetailsPage() {
     }
     setInviting(true)
     try {
-      await apiPost(`/teams/${teamId}/invite-by-email`, { email, role: inviteRole })
-      showToast(t('teamDetailPage.toastInviteSent'), 'success')
+      const res: any = await apiPost(`/teams/${teamId}/invite-by-email`, { email, role: inviteRole })
+      const result = res?.data ?? res
+      if (result?.invitationSent === false && result?.inviteUrl) {
+        setInviteLink(result.inviteUrl)
+        showToast(t('teamDetailPage.inviteEmailFailed'), 'warning')
+      } else {
+        setInviteLink(null)
+        showToast(t('teamDetailPage.toastInviteSent'), 'success')
+      }
       setInviteEmail('')
       await loadTeam()
     } catch (e: any) {
@@ -126,6 +136,16 @@ export default function TeamDetailsPage() {
       showToast(err?.message || t('teamDetailPage.toastInviteFailed'), 'error')
     } finally {
       setInviting(false)
+    }
+  }
+
+  const handleCopyInviteLink = async () => {
+    if (!inviteLink) return
+    try {
+      await navigator.clipboard.writeText(inviteLink)
+      showToast(t('teamDetailPage.inviteLinkCopied'), 'success')
+    } catch {
+      // Clipboard blocked: the link stays selectable in the field.
     }
   }
 
@@ -324,6 +344,20 @@ export default function TeamDetailsPage() {
                   <Button variant="primary" size="md" onClick={handleInviteByEmail} loading={inviting} disabled={inviting} className="w-full">
                     {t('teamDetailPage.inductUnit')}
                   </Button>
+                  {inviteLink && (
+                    <div className="space-y-2 rounded-lg ds-surface-subtle p-3" role="status">
+                      <p className="ds-text-caption text-theme-primary">{t('teamDetailPage.inviteEmailFailed')}</p>
+                      <Input
+                        readOnly
+                        value={inviteLink}
+                        onFocus={(e) => e.currentTarget.select()}
+                        aria-label={t('teamDetailPage.inviteLinkLabel')}
+                      />
+                      <Button variant="secondary" size="sm" onClick={handleCopyInviteLink} className="w-full">
+                        {t('teamDetailPage.copyInviteLink')}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </Panel>
             )}
