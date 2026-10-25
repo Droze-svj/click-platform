@@ -412,6 +412,9 @@ function publicCatalog() {
 module.exports = {
   TIERS,
   TIER_IDS,
+  // billingService quotes plans by id; it read this while it was not
+  // exported, so every plan-change quote for a tier id threw.
+  TIER_BY_ID,
   FEATURES,
   LIMITS,
   tierOrder,

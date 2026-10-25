@@ -13,7 +13,7 @@ const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
 const { sendSuccess, sendError } = require('../utils/response');
 const { clampInt } = require('../utils/pagination');
 const {
-  processSubscriptionChange,
+  quoteSubscriptionChange,
   applyPromoCode
 } = require('../services/billingService');
 const {
@@ -31,27 +31,38 @@ const router = express.Router();
 
 /**
  * POST /api/billing/upgrade
- * Upgrade or change subscription
+ * QUOTE an upgrade or plan change (price, proration, promo code preview).
+ *
+ * Read-only. It used to redeem the promo code and write a 'pending'
+ * SubscriptionChange without any checkout — burning single-use codes and
+ * filling billing history with plan changes that never happened. Plans change
+ * only when the user pays at checkout (the signed Whop webhook applies them).
  */
 router.post('/upgrade', auth, asyncHandler(async (req, res) => {
   const { packageId, planId, billingCycle, promoCode, addOns } = req.body;
   const targetId = packageId || planId;
-  const targetCycle = billingCycle || 'monthly';
+  const targetCycle = billingCycle === 'yearly' ? 'yearly' : 'monthly';
 
   if (!targetId) {
     return sendError(res, 'Package ID is required', 400);
   }
 
   const userId = req.userId || req.user?._id || req.user?.id;
-  const result = await processSubscriptionChange(
-    userId,
-    targetId,
-    targetCycle,
-    promoCode,
-    addOns || []
-  );
+  let result;
+  try {
+    result = await quoteSubscriptionChange(
+      userId,
+      targetId,
+      targetCycle,
+      promoCode,
+      Array.isArray(addOns) ? addOns : []
+    );
+  } catch (err) {
+    if (/not found/i.test(err.message)) return sendError(res, err.message, 404);
+    throw err;
+  }
 
-  sendSuccess(res, 'Subscription change processed', 200, result);
+  sendSuccess(res, 'Quote only — nothing changes until you complete checkout', 200, result);
 }));
 
 /**
