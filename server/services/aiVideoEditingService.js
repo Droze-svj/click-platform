@@ -701,6 +701,109 @@ function fitCaptionsToFrame(captions, { frameWidth = 1080, baseFontSize = 58, ch
   return out.filter((c) => c.endTime > c.startTime + 0.05);
 }
 
+// Clip lengths behind the auto-edit page's "Clip length" choices.
+const CLIP_LENGTHS = {
+  short: { minLen: 8, maxLen: 30 },
+  'mid-3-5': { minLen: 30, maxLen: 60 },
+  'mid-5-10': { minLen: 60, maxLen: 180 },
+};
+
+/**
+ * Pick up to `count` non-overlapping clip windows on the EDITED video (all
+ * times on the output clock). Windows start and end on sentence boundaries
+ * from the word timings, so no clip begins or ends mid-word; they're ranked by
+ * the AI's engagement peaks / reactions / clip suggestions inside them. A
+ * window covering (nearly) the whole edit is dropped — that's the main clip.
+ */
+function planHighlightClips({ words = [], keyMoments = {}, duration = 0, count = 1, minLen = 8, maxLen = 30 } = {}) {
+  const dur = Number(duration) || 0;
+  if (!(dur > 0) || count < 1) return [];
+  const clean = (Array.isArray(words) ? words : [])
+    .map((w) => ({ text: String(w.word ?? w.text ?? '').trim(), start: Number(w.start), end: Number(w.end) }))
+    .filter((w) => w.text && Number.isFinite(w.start) && Number.isFinite(w.end) && w.end >= w.start && w.start < dur)
+    .sort((a, b) => a.start - b.start);
+
+  // Sentence-sized units. Without words, fixed slices of the timeline.
+  const units = [];
+  if (clean.length) {
+    let cur = null;
+    for (const w of clean) {
+      if (cur && w.start - cur.end > 0.6) { units.push(cur); cur = null; }
+      if (!cur) cur = { start: w.start, end: w.end, words: [] };
+      cur.words.push(w.text);
+      cur.end = Math.min(dur, w.end);
+      if (/[.!?]$/.test(w.text)) { units.push(cur); cur = null; }
+    }
+    if (cur) units.push(cur);
+  } else {
+    const step = Math.max(1, minLen / 2);
+    for (let t = 0; t < dur; t += step) units.push({ start: t, end: Math.min(dur, t + step), words: [] });
+  }
+
+  const km = keyMoments || {};
+  const signals = [];
+  (Array.isArray(km.highlights) ? km.highlights : []).forEach((h) => {
+    const t = Number(h && h.time);
+    if (Number.isFinite(t)) signals.push({ t, w: Number.isFinite(Number(h.confidence)) ? Number(h.confidence) : 0.6 });
+  });
+  (Array.isArray(km.reactions) ? km.reactions : []).forEach((r) => {
+    const t = Number(r && r.time);
+    if (Number.isFinite(t)) signals.push({ t, w: CLIP_TRIGGER_WEIGHT[String(r.triggerType || '').toLowerCase()] || 0.7 });
+  });
+  const suggestions = (Array.isArray(km.clipSuggestions) ? km.clipSuggestions : [])
+    .map((s) => ({ a: Number(s && (s.start ?? s.startTime)), b: Number(s && (s.end ?? s.endTime)) }))
+    .filter((s) => Number.isFinite(s.a) && Number.isFinite(s.b) && s.b > s.a);
+
+  // When the asked-for number of clips fits, size them to fit (3 clips from a
+  // 68 s edit ≈ 22 s each) instead of two 30 s clips and no room for a third.
+  const target = Math.max(minLen, Math.min(maxLen, (dur / count) * 0.95));
+  const candidates = [];
+  for (let i = 0; i < units.length; i++) {
+    let j = i;
+    while (j + 1 < units.length && units[j + 1].end - units[i].start <= target) j++;
+    // A single sentence longer than the limit: cut it at the limit.
+    const start = Math.max(0, units[i].start - 0.15);
+    const end = Math.min(dur, units[j].end + 0.25, start + maxLen);
+    const len = end - start;
+    if (len < Math.min(minLen, dur) || len > dur * 0.9) continue;
+    const peak = signals.filter((s) => s.t >= start && s.t <= end).reduce((acc, s) => acc + s.w, 0);
+    const suggested = suggestions.reduce((acc, s) => acc + Math.max(0, Math.min(end, s.b) - Math.max(start, s.a)) / (s.b - s.a), 0);
+    const text = units.slice(i, j + 1).map((u) => u.words.join(' ')).join(' ').trim();
+    // core = the spoken span without padding; neighbours may share the padding.
+    candidates.push({ startTime: start, endTime: end, coreStart: units[i].start, coreEnd: Math.min(units[j].end, end), score: peak + 2 * suggested + (i === 0 ? 0.3 : 0), text });
+  }
+
+  candidates.sort((a, b) => b.score - a.score || a.startTime - b.startTime);
+  const picked = [];
+  for (const c of candidates) {
+    if (picked.length >= count) break;
+    if (picked.some((p) => c.coreStart < p.coreEnd - 1e-6 && p.coreStart < c.coreEnd - 1e-6)) continue;
+    picked.push(c);
+  }
+  return picked.map((c, i) => ({
+    rank: i + 1,
+    startTime: Number(c.startTime.toFixed(2)),
+    endTime: Number(c.endTime.toFixed(2)),
+    durationSec: Number((c.endTime - c.startTime).toFixed(2)),
+    text: c.text,
+    score: Number(c.score.toFixed(2)),
+  }));
+}
+
+/** Cut [start, end] out of the edited file (re-encoded, so the cut is frame-exact). */
+function cutClipFromEdit(inputPath, outputPath, start, end) {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .seekInput(Math.max(0, start))
+      .duration(Math.max(0.5, end - start))
+      .outputOptions(['-c:v libx264', '-preset veryfast', '-crf 20', '-pix_fmt yuv420p', '-c:a aac', '-b:a 160k', '-movflags +faststart'])
+      .output(outputPath)
+      .on('end', () => resolve(outputPath))
+      .on('error', reject)
+      .run();
+  });
+}
+
 /**
  * Map a time on the filter-graph INPUT clock to the OUTPUT clock, given the
  * kept segments ({ start, end, speed }) in order. A time inside a removed gap
@@ -2835,8 +2938,15 @@ Transcript: "${transcript.substring(0, 3500)}"`;
     if (isHorizontal) {
       // For horizontal footage: create blurred-background vertical canvas
       // This is a complete sub-graph; its output label is 'v_shield'
-      videoFilters.push('split[bg_s][fg_s];[bg_s]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:10[bg_out];[fg_s]scale=-1:1920[fg_out];[bg_out][fg_out]overlay=(W-w)/2:(H-h)/2,format=yuv420p');
+      // "Stabilize video" was read into enableStabilization and never used.
+      // deshake is single-pass, so it fits this one filter graph.
+      videoFilters.push(`${enableStabilization ? 'deshake,' : ''}split[bg_s][fg_s];[bg_s]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:10[bg_out];[fg_s]scale=-1:1920[fg_out];[bg_out][fg_out]overlay=(W-w)/2:(H-h)/2,format=yuv420p`);
       appliedEdits.push('Vertical Shielding (9:16 Optimization)');
+      if (enableStabilization) appliedEdits.push('Stabilized');
+    } else if (enableStabilization) {
+      // Stabilize means a steady frame: no simulated camera drift.
+      videoFilters.push('deshake,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,format=yuv420p');
+      appliedEdits.push('Stabilized');
     } else {
       // For vertical footage: apply Dynamic Cameraman Drift (Organic Breathing)
       // Uses non-repeating Lissajous curves + detected face region for subject-biased drift.
@@ -2858,46 +2968,21 @@ Transcript: "${transcript.substring(0, 3500)}"`;
 
     // Quality: 2026 Diverse Color Grades
     if (enableColorGrading) {
-      let avoidedThemes = [];
-      if (userId) {
-        try {
-          const SuggestionHistory = require('../models/SuggestionHistory');
-          const recentHistory = await SuggestionHistory.find({ 
-            userId, 
-            kind: 'auto-edit-theme' 
-          })
-            .sort({ createdAt: -1 })
-            .limit(3)
-            .lean();
-          avoidedThemes = recentHistory.map(h => h.label).filter(Boolean);
-        } catch (err) {
-          logger.warn('Failed to fetch recent auto-edit themes', { error: err.message });
-        }
-      }
-
-      const themes = ['cyberpunk_neon', 'vintage_film', 'high_contrast_luma', 'dreamy_pastel', 'hyper_pop', 'bw'];
-      let availableThemes = themes.filter(t => !avoidedThemes.includes(t));
-      if (availableThemes.length === 0) availableThemes = themes;
-
+      // "Color correction" with no grade picked used to apply a RANDOM look
+      // (cyberpunk neon, black & white, …) and never the same one twice in a
+      // row. Now: the grade the user picked, else the AI's pick for this
+      // video, else the creator's best-performing grade, else a light
+      // correction that keeps the footage looking like itself.
       let chosenTheme = null;
-
-      // 🧠 creator-dna performance biasing
       if (userId && !aestheticColorGrade && !requestVisualTheme) {
         try {
           const UserStyleProfile = require('../models/UserStyleProfile');
           const profile = await UserStyleProfile.findOne({ userId });
           if (profile && profile.weightedColorGrades && profile.weightedColorGrades.length > 0) {
-            // Retrieve top performing grades that are NOT avoided
-            const topPerformers = profile.topPerformers('weightedColorGrades', 5)
-              .map(p => p.key)
-              .filter(key => availableThemes.includes(key));
-            
-            if (topPerformers.length > 0) {
-              // 70% chance to pick their top performer, 30% chance to keep it fresh
-              if (Math.random() < 0.70) {
-                chosenTheme = topPerformers[0];
-                logger.info('🧠 Personalization Bias: Selected top-performing visual theme', { chosenTheme });
-              }
+            const top = profile.topPerformers('weightedColorGrades', 1).map(p => p.key)[0];
+            if (top) {
+              chosenTheme = top;
+              logger.info('Personalization: using top-performing visual theme', { chosenTheme });
             }
           }
         } catch (profileError) {
@@ -2905,29 +2990,27 @@ Transcript: "${transcript.substring(0, 3500)}"`;
         }
       }
 
-      const theme = aestheticColorGrade || requestVisualTheme || chosenTheme || availableThemes[Math.floor(Math.random() * availableThemes.length)];
-
-      if (userId && !aestheticColorGrade && !requestVisualTheme) {
+      const theme = aestheticColorGrade || requestVisualTheme || chosenTheme;
+      if (userId && theme && !aestheticColorGrade) {
         try {
           const SuggestionHistory = require('../models/SuggestionHistory');
-          await SuggestionHistory.create({
-            userId,
-            kind: 'auto-edit-theme',
-            label: theme
-          });
+          await SuggestionHistory.create({ userId, kind: 'auto-edit-theme', label: theme });
         } catch (err) {
           logger.warn('Failed to save selected theme to SuggestionHistory', { error: err.message });
         }
       }
       // Color grade via the shared registry (single source of truth) so the
       // autonomous forge renders the SAME grades as the manual editor + AI Director.
-      // Unknown/legacy theme names resolve via aliases; anything else falls back to
-      // luma-cinematic (the prior `else` default).
       const gradeReg = require('./colorGradeRegistry');
-      const gradeDef = gradeReg.resolveGrade(theme) || gradeReg.resolveGrade('luma-cinematic');
-      const gradeChain = videoRenderService.buildVideoFilterChain(gradeReg.gradeToVideoFilter(gradeDef.id));
-      if (gradeChain.length) videoFilters.push(gradeChain.join(','));
-      appliedEdits.push(`${gradeDef.label} Grade`);
+      const gradeDef = theme ? gradeReg.resolveGrade(theme) : null;
+      const gradeChain = gradeDef ? videoRenderService.buildVideoFilterChain(gradeReg.gradeToVideoFilter(gradeDef.id)) : [];
+      if (gradeDef && gradeChain.length) {
+        videoFilters.push(gradeChain.join(','));
+        appliedEdits.push(`${gradeDef.label} Grade`);
+      } else {
+        videoFilters.push('eq=contrast=1.05:saturation=1.08');
+        appliedEdits.push('Color Correction');
+      }
     }
 
     // Video quality enhancements (adaptive sharpening, denoising, dynamic range)
@@ -3172,7 +3255,8 @@ Transcript: "${transcript.substring(0, 3500)}"`;
       };
       if (Array.isArray(keyMoments.suggestedCaptions)) keyMoments.suggestedCaptions = keyMoments.suggestedCaptions.map((c) => retime(c, 'startTime', 'endTime'));
       if (Array.isArray(keyMoments.reactions)) keyMoments.reactions = keyMoments.reactions.map((r) => retime(r, 'time'));
-      if (Array.isArray(keyMoments.highlights)) keyMoments.highlights = keyMoments.highlights.map((h) => retime(h, 'start', 'end'));
+      if (Array.isArray(keyMoments.highlights)) keyMoments.highlights = keyMoments.highlights.map((h) => retime(h, 'time'));
+      if (Array.isArray(keyMoments.clipSuggestions)) keyMoments.clipSuggestions = keyMoments.clipSuggestions.map((s) => retime(s, 'start', 'end'));
       if (Array.isArray(smartCaptions)) smartCaptions = smartCaptions.map((c) => retime(c, 'startTime', 'endTime'));
       if (Array.isArray(textOverlays)) textOverlays = textOverlays.map((o) => retime(o, 'startTime', 'endTime'));
       if (Array.isArray(transcriptWords)) transcriptWords = transcriptWords.map((w) => retime(w, 'start', 'end'));
@@ -4047,6 +4131,78 @@ Transcript: "${transcript.substring(0, 3500)}"`;
               voiceTone: preferredVoiceTone || editingOptions.voiceTone || null,
               niche: keyMoments.niche || null,
             });
+            const mainClipIndex = content.generatedContent.shortVideos.length - 1;
+            const runClipIndexes = [mainClipIndex];
+
+            // CLIPS: "Generate clips" with a count and a length used to be
+            // logged only — the user asked for 5 × <30 s and got the one full
+            // edit. Cut the requested number of clips out of the EDITED video
+            // (so they carry the cuts, captions and grade) at its best moments.
+            const clipSpec = CLIP_LENGTHS[clipTargetLength] || null;
+            const wantClips = editingOptions.generateClips !== false && clipSpec && Number(clipCount) >= 1;
+            const editedDuration = Number(finalMetadata.format.duration) || duration;
+            // An edit that already fits the clip length IS the clip.
+            if (wantClips && editedDuration > clipSpec.maxLen) {
+              emitProgress('export', 97, `Cutting ${clipCount} clip${Number(clipCount) === 1 ? '' : 's'}...`);
+              const toOut = (t) => (typeof t === 'number' && Number.isFinite(t) ? t - globalTimeOffset : t);
+              const plan = planHighlightClips({
+                words: (transcriptWords || []).map((w) => ({ ...w, start: toOut(Number(w.start)), end: toOut(Number(w.end)) })),
+                keyMoments: {
+                  highlights: (keyMoments.highlights || []).map((h) => ({ ...h, time: toOut(Number(h.time)) })),
+                  reactions: (keyMoments.reactions || []).map((r) => ({ ...r, time: toOut(Number(r.time)) })),
+                  clipSuggestions: (keyMoments.clipSuggestions || []).map((s) => ({ ...s, start: toOut(Number(s.start ?? s.startTime)), end: toOut(Number(s.end ?? s.endTime)) })),
+                },
+                duration: editedDuration,
+                count: Math.min(20, Math.max(1, Math.round(Number(clipCount)))),
+                ...clipSpec,
+              });
+              let made = 0;
+              for (const c of plan) {
+                const clipName = `auto-clip-${videoId}-${Date.now()}-${c.rank}.mp4`;
+                const clipPath = path.join(path.dirname(finalVideoPath), clipName);
+                let keepLocal = false;
+                try {
+                  await cutClipFromEdit(finalVideoPath, clipPath, c.startTime, c.endTime);
+                  const up = await uploadFile(clipPath, `videos/${clipName}`, 'video/mp4', { videoId, type: 'auto-edit-clip' });
+                  keepLocal = up.storage === 'local'; // served from /uploads
+                  content.generatedContent.shortVideos.push({
+                    url: up.url,
+                    thumbnail: thumbnailUrl,
+                    createdAt: new Date(),
+                    aiGenerated: true,
+                    source: 'ai-auto-edit-clip',
+                    name: `Clip ${c.rank}`,
+                    duration: c.durationSec,
+                    startTime: c.startTime,
+                    endTime: c.endTime,
+                    // The words spoken in this clip; no placeholder when there are none.
+                    caption: c.text ? c.text.slice(0, 180) : undefined,
+                    hookText: c.text ? c.text.split(/(?<=[.!?])\s/)[0].slice(0, 120) : undefined,
+                    platform,
+                    highlight: true,
+                    editsApplied: appliedEdits,
+                    viralScore: compositeScore,
+                    hookScore,
+                    sentimentEnergy,
+                    stylePresetId: editingOptions.stylePresetId || null,
+                    colorGrade: aestheticColorGrade || editingOptions.colorGrade || null,
+                  });
+                  runClipIndexes.push(content.generatedContent.shortVideos.length - 1);
+                  made += 1;
+                } catch (clipErr) {
+                  logger.warn('Clip cut failed', { videoId, rank: c.rank, error: clipErr.message });
+                } finally {
+                  // Uploaded to cloud storage (or failed) → the local cut is a temp file.
+                  try { if (!keepLocal && fs.existsSync(clipPath)) fs.unlinkSync(clipPath); } catch (_) { /* best effort */ }
+                }
+              }
+              const asked = Math.round(Number(clipCount));
+              appliedEdits.push(made >= asked
+                ? `${made} clip${made === 1 ? '' : 's'} cut from the edit`
+                : `${made} of ${asked} clips cut — the edited video has room for ${made} without repeating`);
+            } else if (wantClips) {
+              appliedEdits.push(`The edit is ${Math.round(editedDuration)}s — no longer than the clip length you picked, so it is your clip`);
+            }
 
             // PHASE 6: NEURO-MARKETING METADATA GENERATION (2026 Premium Standard)
             try {
@@ -4064,7 +4220,7 @@ Transcript: "${transcript.substring(0, 3500)}"`;
                 content.generatedContent.marketingStrategy = marketingStrategy;
                 
                 // Attach the strategy and scheduling details directly to the clip record
-                const latestClipIndex = content.generatedContent.shortVideos.length - 1;
+                const latestClipIndex = mainClipIndex; // the full edit, not the last highlight clip
                 if (latestClipIndex >= 0) {
                   content.generatedContent.shortVideos[latestClipIndex].marketingStrategy = marketingStrategy;
                   // Pre-load scheduling matrix info directly onto the clip
@@ -4105,6 +4261,22 @@ Transcript: "${transcript.substring(0, 3500)}"`;
                 improvement: (finalQualityScore - qualityScore).toFixed(1),
               },
               metadata: content.metadata.autoEditHistory,
+              // This run's clips (the full edit first). The route used to list
+              // every clip the video ever had, so old runs showed up as new.
+              clips: runClipIndexes
+                .map((i) => content.generatedContent.shortVideos[i])
+                .filter((c) => c && c._id && c.url)
+                .map((c) => ({
+                  id: String(c._id),
+                  name: c.name || 'Auto-edited clip',
+                  url: c.url,
+                  caption: c.caption,
+                  duration: c.duration,
+                  startTime: c.startTime,
+                  endTime: c.endTime,
+                  highlight: !!c.highlight,
+                  editsApplied: c.editsApplied || appliedEdits,
+                })),
             };
 
             // Emit completion event
@@ -6269,6 +6441,7 @@ module.exports = {
   buildSpokenCaptions,
   fitCaptionsToFrame,
   buildCutFilter,
+  planHighlightClips,
   analyzeVideoForEditing,
   autoEditVideo,
   computeVideoScore,

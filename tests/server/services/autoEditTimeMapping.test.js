@@ -62,4 +62,38 @@ describe('auto-edit captions are what was said, and fit the frame', () => {
     const bottom = out.filter((c) => !c.position).sort((a, b) => a.startTime - b.startTime);
     for (let i = 0; i < bottom.length - 1; i++) expect(bottom[i].endTime).toBeLessThanOrEqual(bottom[i + 1].startTime + 1e-9);
   });
+
+  it('cuts the asked number of short clips on sentence boundaries, ranked by the AI peaks', () => {
+    const { planHighlightClips } = require('../../../server/services/aiVideoEditingService');
+    // 100 s of speech: a 6-word, ~3 s sentence every 4 s.
+    const words = [];
+    for (let s = 0; s < 25; s++) {
+      for (let k = 0; k < 6; k++) words.push({ word: k === 5 ? `end${s}.` : `w${s}_${k}`, start: s * 4 + k * 0.5, end: s * 4 + k * 0.5 + 0.4 });
+    }
+    const clips = planHighlightClips({
+      words, duration: 100, count: 3, minLen: 8, maxLen: 30,
+      keyMoments: { highlights: [{ time: 62, confidence: 0.9 }], reactions: [{ time: 20, triggerType: 'shock' }] },
+    });
+    expect(clips).toHaveLength(3);
+    clips.forEach((c) => {
+      expect(c.durationSec).toBeLessThanOrEqual(30);
+      expect(c.durationSec).toBeGreaterThanOrEqual(8);
+      expect(c.endTime).toBeLessThanOrEqual(100);
+      // starts just before a sentence and ends just after one (never mid-word)
+      expect(c.startTime === 0 ? 0 : (c.startTime + 0.15) % 4).toBeCloseTo(0, 5);
+      expect(c.text.split(' ').pop()).toMatch(/^end\d+\.$/);
+    });
+    const sorted = clips.slice().sort((a, b) => a.startTime - b.startTime);
+    for (let i = 0; i < sorted.length - 1; i++) expect(sorted[i].endTime).toBeLessThanOrEqual(sorted[i + 1].startTime);
+    // the two AI moments are inside the top two clips
+    const hits = (t) => clips.slice(0, 2).some((c) => c.startTime <= t && t <= c.endTime);
+    expect(hits(62)).toBe(true);
+    expect(hits(20)).toBe(true);
+  });
+
+  it('makes no extra clip that would just repeat the whole edit', () => {
+    const { planHighlightClips } = require('../../../server/services/aiVideoEditingService');
+    const words = [{ word: 'Hello', start: 0.5, end: 0.9 }, { word: 'there.', start: 1, end: 1.5 }];
+    expect(planHighlightClips({ words, duration: 12, count: 5, minLen: 8, maxLen: 30 })).toEqual([]);
+  });
 });

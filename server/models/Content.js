@@ -134,6 +134,7 @@ const contentSchema = new mongoose.Schema({
     // so an unexpected shape can never fail the whole save with a CastError.
     shortVideos: [{
       url: String,
+      name: String,
       thumbnail: String,
       duration: Number,
       caption: String,

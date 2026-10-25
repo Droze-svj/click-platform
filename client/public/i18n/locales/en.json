@@ -9149,7 +9149,14 @@
       "viewClipsTitle": "View the generated clips",
       "viewClips": "View Clips",
       "dismissTitle": "Dismiss this result",
-      "dismiss": "Dismiss"
+      "dismiss": "Dismiss",
+      "clipsTitle": "Your clips",
+      "clipsBody": "Cut from the edited video at its strongest moments, with the same edits.",
+      "clipN": "Clip {{n}}",
+      "downloadClip": "Download clip {{n}}",
+      "formatsTitle": "Other formats",
+      "downloadFormat": "Download the {{ratio}} version",
+      "formatsFailed": "The other formats couldn't be exported. You can export them from the clip later."
     },
     "diag": {
       "title": "Diagnostics",

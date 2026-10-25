@@ -615,6 +615,14 @@ export default function VideoEditPage({ params }: PageProps) {
     return Array.isArray(list) ? Array.from(new Set(list.filter((e: unknown): e is string => typeof e === 'string' && e.trim().length > 0))).slice(0, 12) : []
   })()
   const aiEditedDownloadUrl = getMediaUrl((aiEditResult?.data?.editedVideoUrl ?? aiEditResult?.editedVideoUrl ?? aiEditResult?.result?.editedVideoUrl) || '')
+  // The clips cut from the edit and the other picked formats. Both were made
+  // server-side but never shown here, so "5 × under 30s" looked like one video.
+  const aiEditData = aiEditResult?.data ?? aiEditResult?.result ?? aiEditResult
+  const aiClips: Array<{ id?: string; url: string; caption?: string; duration?: number }> =
+    (Array.isArray(aiEditData?.clips) ? aiEditData.clips : []).filter((c: any) => c && typeof c.url === 'string' && c.highlight)
+  const aiAspectExports: Array<{ ratio: string; resolution?: string; url: string }> =
+    (Array.isArray(aiEditData?.aspectExports) ? aiEditData.aspectExports : []).filter((x: any) => x && typeof x.url === 'string')
+  const aiAspectFailed = !!aiEditData?.aspectExports && !Array.isArray(aiEditData.aspectExports) && !!aiEditData.aspectExports.error
 
   if (editMode === 'manual') {
     const urlForEditor = editorVideoUrl || videoUrl
@@ -734,6 +742,50 @@ export default function VideoEditPage({ params }: PageProps) {
                     </button>
                   </div>
                 </div>
+
+                {(aiClips.length > 0 || aiAspectExports.length > 0 || aiAspectFailed) && (
+                  <section aria-labelledby="ai-edit-clips-heading" className="bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 rounded-3xl p-6 sm:p-8 shadow-sm">
+                    {aiClips.length > 0 && (
+                      <>
+                        <h3 id="ai-edit-clips-heading" className="text-lg font-black text-surface-900 dark:text-white tracking-tight">{t('aiAutoEdit.result.clipsTitle')}</h3>
+                        <p className="text-surface-500 text-sm mt-1">{t('aiAutoEdit.result.clipsBody')}</p>
+                        <ul className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
+                          {aiClips.map((c, i) => (
+                            <li key={c.id || c.url} className="rounded-2xl border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-950 overflow-hidden flex flex-col">
+                              <video src={getMediaUrl(c.url)} controls preload="metadata" playsInline className="w-full aspect-[9/16] bg-black object-contain" aria-label={t('aiAutoEdit.result.clipN', { n: i + 1 })} />
+                              <div className="p-3 flex flex-col gap-2 flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2 text-xs font-bold text-surface-900 dark:text-white">
+                                  <span>{t('aiAutoEdit.result.clipN', { n: i + 1 })}</span>
+                                  {typeof c.duration === 'number' && <span className="tabular-nums text-surface-500">{Math.round(c.duration)}s</span>}
+                                </div>
+                                {c.caption && <p className="text-xs text-surface-600 dark:text-surface-400 line-clamp-2 break-words">{c.caption}</p>}
+                                <a href={getMediaUrl(c.url)} download aria-label={t('aiAutoEdit.result.downloadClip', { n: i + 1 })} className="mt-auto inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 text-xs font-bold text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+                                  <Download size={14} aria-hidden /> {t('aiAutoEdit.result.download')}
+                                </a>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                    {(aiAspectExports.length > 0 || aiAspectFailed) && (
+                      <div className={aiClips.length > 0 ? 'mt-8' : ''}>
+                        <h4 id={aiClips.length > 0 ? undefined : 'ai-edit-clips-heading'} className="text-sm font-bold text-surface-900 dark:text-white">{t('aiAutoEdit.result.formatsTitle')}</h4>
+                        {aiAspectFailed ? (
+                          <p role="status" className="mt-2 text-sm text-amber-700 dark:text-amber-400">{t('aiAutoEdit.result.formatsFailed')}</p>
+                        ) : (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {aiAspectExports.map((x) => (
+                              <a key={x.ratio} href={getMediaUrl(x.url)} download aria-label={t('aiAutoEdit.result.downloadFormat', { ratio: x.ratio })} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-800 bg-surface-50 dark:bg-surface-950 text-xs font-bold text-surface-700 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+                                <Download size={14} aria-hidden /> {x.ratio}{x.resolution ? <span className="font-medium text-surface-500 tabular-nums">· {x.resolution}</span> : null}
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </section>
+                )}
 
                 {/* Marketing Brief */}
                 <MarketingBriefPanel brief={marketingBrief} />
