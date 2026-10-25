@@ -122,9 +122,9 @@ export default function EnhancedContentSuggestions() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="ds-surface-card p-5 sm:p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">{t('enhancedContentSuggestions.title')}</h2>
+        <h2 className="ds-text-h2 text-theme-primary">{t('enhancedContentSuggestions.title')}</h2>
         <button
           type="button"
           onClick={() => {

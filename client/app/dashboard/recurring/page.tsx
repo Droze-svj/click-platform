@@ -260,7 +260,8 @@ export default function RecurringPostsPage() {
             <EmptyState
               className="ds-surface-card"
               icon={Calendar}
-              title={t('recurringPage.emptyState')}
+              title={t('recurringPage.emptyTitle')}
+              description={t('recurringPage.emptyState')}
             />
           ) : (
             <div className="space-y-3">

@@ -157,14 +157,14 @@ export default function EnhancedWorkflowBuilder() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">{t('enhancedWorkflowBuilder.workflowAutomation')}</h1>
+    <div className="ds-surface-card">
+      <div className="p-5 sm:p-6">
+        <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
+          <h2 className="ds-text-h2 text-theme-primary">{t('enhancedWorkflowBuilder.workflowAutomation')}</h2>
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
-            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
+            className="inline-flex h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {t('enhancedWorkflowBuilder.createWorkflowButton')}
           </button>

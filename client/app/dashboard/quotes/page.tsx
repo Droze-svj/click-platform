@@ -234,7 +234,7 @@ export default function QuotesPage() {
             <EmptyState
               icon={Quote}
               title={t('quotesPage.fiscalVoid')}
-              description={`${t('quotesPage.fiscalVoidLine1')} ${t('quotesPage.fiscalVoidLine2')}`}
+              description={t('quotesPage.fiscalVoidLine1')}
               className="ds-surface-card"
             />
           </div>
