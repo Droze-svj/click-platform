@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { handleApiError } from '@/lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
 import { planSeries, type Platform, type SeriesResult } from '@/lib/featuresApi'
+import { platformLabel } from './platformLabel'
 
 const PLATFORMS: Platform[] = ['tiktok', 'instagram', 'youtube', 'twitter', 'linkedin']
 
@@ -18,12 +19,12 @@ export default function SeriesPlannerPanel() {
   const [error, setError] = useState<string | null>(null)
 
   async function run() {
-    if (!theme.trim()) { setError('Enter a theme for your series.'); return }
+    if (!theme.trim()) { setError(t('creatorTools.seriesPlanner.themeRequired')); return }
     setLoading(true); setError(null)
     try {
       setResult(await planSeries({ theme, parts, platform }))
     } catch (e) {
-      setError(handleApiError(e) || 'Failed to plan series')
+      setError(handleApiError(e) || t('creatorTools.seriesPlanner.failed'))
     } finally {
       setLoading(false)
     }
@@ -31,13 +32,13 @@ export default function SeriesPlannerPanel() {
 
   return (
     <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
-      <h2 className="text-sm font-semibold text-theme-primary">Series planner</h2>
+      <h2 className="text-sm font-semibold text-theme-primary">{t('creatorTools.seriesPlanner.title')}</h2>
       <div className="flex flex-wrap gap-2 items-end">
         <input
           data-testid="series-theme"
           value={theme}
           onChange={(e) => setTheme(e.target.value)}
-          placeholder="Theme, e.g. 'starting a business with $0'"
+          placeholder={t('creatorTools.seriesPlanner.placeholder')}
           className="flex-1 min-w-[10rem] rounded bg-background border border-default p-1 text-sm text-theme-primary"
         />
         <input
@@ -48,7 +49,7 @@ export default function SeriesPlannerPanel() {
         />
         <select data-testid="series-platform" value={platform} onChange={(e) => setPlatform(e.target.value as Platform)}
           className="rounded bg-background border border-default p-1 text-sm text-theme-primary">
-          {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+          {PLATFORMS.map((p) => <option key={p} value={p}>{platformLabel(t, p)}</option>)}
         </select>
       </div>
       <button
@@ -57,7 +58,7 @@ export default function SeriesPlannerPanel() {
         disabled={loading}
         className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
       >
-        {loading ? 'Planning…' : 'Plan series'}
+        {loading ? t('creatorTools.seriesPlanner.planning') : t('creatorTools.seriesPlanner.run')}
       </button>
 
       {error && <p data-testid="series-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
@@ -69,7 +70,7 @@ export default function SeriesPlannerPanel() {
         <ol className="space-y-1" data-testid="series-parts-list">
           {result.parts.map((p) => (
             <li key={p.part} data-testid="series-part" className="rounded-lg bg-background border border-default p-2">
-              <div className="text-xs text-theme-muted">Part {p.part}</div>
+              <div className="text-xs text-theme-muted">{t('creatorTools.seriesPlanner.part', { number: p.part })}</div>
               <div className="text-sm font-medium text-theme-primary">{p.title}</div>
               {p.hook && <div className="text-xs text-theme-secondary">{p.hook}</div>}
             </li>

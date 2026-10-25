@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import HookGeneratorPanel from '../HookGeneratorPanel'
 import * as api from '@/lib/featuresApi'
 
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
 jest.mock('@/lib/featuresApi')
 const mHooks = api.generateHooks as jest.MockedFunction<typeof api.generateHooks>
 

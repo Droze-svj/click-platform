@@ -2,16 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { handleApiError } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
+import { platformLabel } from './platformLabel'
 import {
   transcribeMemo, writeMemoScript, saveMemoScript,
   type Platform, type ScriptFormat, type MemoScriptResult, type SavedMemoScript,
 } from '@/lib/featuresApi'
 
 const PLATFORMS: Platform[] = ['tiktok', 'instagram', 'youtube', 'linkedin', 'facebook']
-const FORMATS: { value: ScriptFormat; label: string }[] = [
-  { value: 'short', label: 'Short-form' },
-  { value: 'long', label: 'Long-form' },
-]
+const FORMATS: ScriptFormat[] = ['short', 'long']
 // The memo is a quick brain-dump, not a take — stop recording at 2 minutes.
 const MAX_RECORD_SECONDS = 120
 
@@ -27,6 +26,11 @@ const fmtClock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart
  * transcript, and get a # Hook / # Body / # CTA script with a QA checklist.
  */
 export default function VoiceMemoScriptPanel() {
+  const { t } = useTranslation()
+  const formatLabels: Record<string, string> = {
+    short: t('creatorTools.voiceMemo.formatShort'),
+    long: t('creatorTools.voiceMemo.formatLong'),
+  }
   const [memo, setMemo] = useState('')
   const [platform, setPlatform] = useState<Platform>('tiktok')
   const [format, setFormat] = useState<ScriptFormat>('short')
@@ -52,7 +56,7 @@ export default function VoiceMemoScriptPanel() {
 
   function stopTracks() {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
-    streamRef.current?.getTracks().forEach((t) => t.stop())
+    streamRef.current?.getTracks().forEach((track) => track.stop())
     streamRef.current = null
   }
 
@@ -62,7 +66,7 @@ export default function VoiceMemoScriptPanel() {
       const { transcript } = await transcribeMemo(audio, filename)
       setMemo(transcript)
     } catch (e) {
-      setError(handleApiError(e) || 'Could not transcribe that memo')
+      setError(handleApiError(e) || t('creatorTools.voiceMemo.transcribeFailed'))
     } finally {
       setTranscribing(false)
     }
@@ -95,7 +99,7 @@ export default function VoiceMemoScriptPanel() {
       }, 1000)
     } catch {
       stopTracks()
-      setError('Microphone access was blocked. Allow it, or upload a memo instead.')
+      setError(t('creatorTools.voiceMemo.micBlocked'))
     }
   }
 
@@ -110,12 +114,12 @@ export default function VoiceMemoScriptPanel() {
   }
 
   async function write() {
-    if (!memo.trim()) { setError('Record a memo or type your raw thoughts first.'); return }
+    if (!memo.trim()) { setError(t('creatorTools.voiceMemo.memoRequired')); return }
     setWriting(true); setError(null); setCopied(false); setSaved(null)
     try {
       setResult(await writeMemoScript({ memo, platform, format }))
     } catch (e) {
-      setError(handleApiError(e) || 'Failed to write the script')
+      setError(handleApiError(e) || t('creatorTools.voiceMemo.writeFailed'))
     } finally {
       setWriting(false)
     }
@@ -127,7 +131,7 @@ export default function VoiceMemoScriptPanel() {
     try {
       setSaved(await saveMemoScript({ script: result.script, format: result.format, requestApproval }))
     } catch (e) {
-      setError(handleApiError(e) || 'Failed to save the script')
+      setError(handleApiError(e) || t('creatorTools.voiceMemo.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -153,8 +157,8 @@ export default function VoiceMemoScriptPanel() {
   return (
     <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
       <div>
-        <h2 className="text-sm font-semibold text-theme-primary">Voice memo → script</h2>
-        <p className="text-xs text-theme-muted">Brain-dump for up to 2 minutes. Get a hook, body and CTA you can record.</p>
+        <h2 className="text-sm font-semibold text-theme-primary">{t('creatorTools.voiceMemo.title')}</h2>
+        <p className="text-xs text-theme-muted">{t('creatorTools.voiceMemo.subtitle')}</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -164,50 +168,50 @@ export default function VoiceMemoScriptPanel() {
               type="button" data-testid="memo-stop" onClick={stopRecording}
               className="rounded-lg bg-red-500/90 px-3 py-1.5 text-sm font-medium text-white"
             >
-              ■ Stop · {fmtClock(elapsed)} / {fmtClock(MAX_RECORD_SECONDS)}
+              {t('creatorTools.voiceMemo.stop', { elapsed: fmtClock(elapsed), max: fmtClock(MAX_RECORD_SECONDS) })}
             </button>
           ) : (
             <button
               type="button" data-testid="memo-record" onClick={startRecording} disabled={busy}
               className="rounded-lg border border-strong px-3 py-1.5 text-sm text-theme-primary disabled:opacity-50"
             >
-              ● Record memo
+              {t('creatorTools.voiceMemo.record')}
             </button>
           )
         )}
         <label className="cursor-pointer rounded-lg border border-strong px-3 py-1.5 text-sm text-theme-primary">
-          Upload audio
+          {t('creatorTools.voiceMemo.uploadAudio')}
           <input
             data-testid="memo-file" type="file" accept="audio/*" onChange={onFile}
             disabled={busy || recording} className="sr-only"
           />
         </label>
-        {transcribing && <span data-testid="memo-transcribing" className="text-xs text-theme-secondary">Transcribing…</span>}
+        {transcribing && <span data-testid="memo-transcribing" className="text-xs text-theme-secondary">{t('creatorTools.voiceMemo.transcribing')}</span>}
       </div>
 
       <textarea
         data-testid="memo-input"
-        aria-label="Memo transcript"
+        aria-label={t('creatorTools.voiceMemo.transcriptLabel')}
         value={memo}
         onChange={(e) => setMemo(e.target.value)}
         rows={4}
-        placeholder="Your memo transcript appears here. Or just type your raw thoughts."
+        placeholder={t('creatorTools.voiceMemo.transcriptPlaceholder')}
         className="w-full rounded-lg bg-background border border-default p-2 text-sm text-theme-primary"
       />
       <div className="flex gap-2">
         <select
-          data-testid="memo-platform" aria-label="Platform" value={platform}
+          data-testid="memo-platform" aria-label={t('creatorTools.common.platform')} value={platform}
           onChange={(e) => setPlatform(e.target.value as Platform)}
           className="rounded bg-background border border-default p-1 text-sm text-theme-primary"
         >
-          {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+          {PLATFORMS.map((p) => <option key={p} value={p}>{platformLabel(t, p)}</option>)}
         </select>
         <select
-          data-testid="memo-format" aria-label="Format" value={format}
+          data-testid="memo-format" aria-label={t('creatorTools.common.format')} value={format}
           onChange={(e) => setFormat(e.target.value as ScriptFormat)}
           className="rounded bg-background border border-default p-1 text-sm text-theme-primary"
         >
-          {FORMATS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+          {FORMATS.map((f) => <option key={f} value={f}>{formatLabels[f] ?? f}</option>)}
         </select>
       </div>
       <button
@@ -217,7 +221,7 @@ export default function VoiceMemoScriptPanel() {
         disabled={busy || recording}
         className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
       >
-        {writing ? 'Writing…' : 'Write script'}
+        {writing ? t('creatorTools.voiceMemo.writing') : t('creatorTools.voiceMemo.writeScript')}
       </button>
 
       {error && <p data-testid="memo-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
@@ -225,17 +229,17 @@ export default function VoiceMemoScriptPanel() {
       {result && (
         <div data-testid="memo-result" className="space-y-3">
           <div className="rounded-lg bg-background border border-default p-3 space-y-2 text-sm text-theme-primary">
-            <p className="text-xs font-semibold uppercase tracking-wide text-orange-400">Hook</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-orange-400">{t('creatorTools.voiceMemo.hook')}</p>
             <p data-testid="memo-hook">{result.script.hook}</p>
-            <p className="text-xs font-semibold uppercase tracking-wide text-purple-400">Body</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-purple-400">{t('creatorTools.voiceMemo.body')}</p>
             <ol className="list-decimal space-y-1 pl-5" data-testid="memo-body">
               {result.script.body.map((beat, i) => <li key={i}>{beat}</li>)}
             </ol>
-            <p className="text-xs font-semibold uppercase tracking-wide text-yellow-400">CTA</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-yellow-400">{t('creatorTools.voiceMemo.cta')}</p>
             <p data-testid="memo-cta">{result.script.cta}</p>
             {result.script.brollCues.length > 0 && (
               <>
-                <p className="text-xs font-semibold uppercase tracking-wide text-theme-muted">B-roll cues</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-theme-muted">{t('creatorTools.voiceMemo.brollCues')}</p>
                 <ul className="list-disc space-y-1 pl-5 text-theme-secondary">
                   {result.script.brollCues.map((c, i) => <li key={i}>{c}</li>)}
                 </ul>
@@ -245,7 +249,9 @@ export default function VoiceMemoScriptPanel() {
 
           <div data-testid="memo-qa" className="space-y-1">
             <p className="text-xs text-theme-secondary">
-              QA {result.qa.passed ? 'passed' : 'needs a look'} · ~{result.qa.estimatedSeconds}s spoken
+              {result.qa.passed
+                ? t('creatorTools.voiceMemo.qaPassed', { seconds: result.qa.estimatedSeconds })
+                : t('creatorTools.voiceMemo.qaNeedsLook', { seconds: result.qa.estimatedSeconds })}
             </p>
             <ul className="space-y-1">
               {result.qa.checks.map((c) => (
@@ -261,22 +267,22 @@ export default function VoiceMemoScriptPanel() {
               type="button" data-testid="memo-copy" onClick={copyMarkdown}
               className="text-xs text-theme-secondary hover:text-theme-primary"
             >
-              {copied ? 'Copied ✓' : 'Copy script.md'}
+              {copied ? t('creatorTools.common.copied') : t('creatorTools.voiceMemo.copyMarkdown')}
             </button>
             <button
               type="button" data-testid="memo-download" onClick={downloadMarkdown}
               className="text-xs text-theme-secondary hover:text-theme-primary"
             >
-              Download script.md
+              {t('creatorTools.voiceMemo.downloadMarkdown')}
             </button>
           </div>
 
           {saved ? (
             <div data-testid="memo-saved" className="space-y-1 text-xs">
               <p className="text-theme-secondary">
-                Saved. <a href={`/dashboard/scripts/${saved.scriptId}`} className="underline hover:text-theme-primary">Open in Scripts</a>
+                {t('creatorTools.voiceMemo.saved')}{' '}<a href={`/dashboard/scripts/${saved.scriptId}`} className="underline hover:text-theme-primary">{t('creatorTools.voiceMemo.openInScripts')}</a>
                 {saved.approvalId && (
-                  <> · <a href="/dashboard/approvals" className="underline hover:text-theme-primary">Waiting for your sign-off in Approvals</a></>
+                  <> · <a href="/dashboard/approvals" className="underline hover:text-theme-primary">{t('creatorTools.voiceMemo.waitingSignOff')}</a></>
                 )}
               </p>
               {saved.approvalError && <p className="text-amber-600 dark:text-amber-400">{saved.approvalError}</p>}
@@ -287,13 +293,13 @@ export default function VoiceMemoScriptPanel() {
                 type="button" data-testid="memo-approve" onClick={() => save(true)} disabled={saving}
                 className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
               >
-                {saving ? 'Saving…' : 'Send for approval'}
+                {saving ? t('creatorTools.voiceMemo.saving') : t('creatorTools.voiceMemo.sendForApproval')}
               </button>
               <button
                 type="button" data-testid="memo-save" onClick={() => save(false)} disabled={saving}
                 className="rounded-lg border border-strong px-3 py-1.5 text-xs text-theme-primary disabled:opacity-50"
               >
-                Save to Scripts
+                {t('creatorTools.voiceMemo.saveToScripts')}
               </button>
             </div>
           )}

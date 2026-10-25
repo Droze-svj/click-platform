@@ -4,6 +4,7 @@ import { paths } from '@/lib/featuresApi'
 import * as api from '@/lib/featuresApi'
 import { heatmapMax, cellIntensity, cellLabel } from '@/lib/featureViewModels'
 
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
 jest.mock('@/lib/featuresApi', () => {
   const actual = jest.requireActual('@/lib/featuresApi')
   return { ...actual, getHeatmap: jest.fn() }

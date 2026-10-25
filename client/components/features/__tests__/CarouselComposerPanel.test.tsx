@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import CarouselComposerPanel from '../CarouselComposerPanel'
 import * as api from '@/lib/featuresApi'
 
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
 jest.mock('@/lib/featuresApi')
 const mCompose = api.composeSlides as jest.MockedFunction<typeof api.composeSlides>
 

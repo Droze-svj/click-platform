@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import CalendarAutofillPanel from '../CalendarAutofillPanel'
 import * as api from '@/lib/featuresApi'
 
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
 jest.mock('@/lib/featuresApi')
 const mAutofill = api.autofillCalendar as jest.MockedFunction<typeof api.autofillCalendar>
 const mApprove = api.approveCalendarPlan as jest.MockedFunction<typeof api.approveCalendarPlan>

@@ -5,6 +5,8 @@ import {
   generateHooks, generateCaptions, generateHashtags, critiquePost,
   type Platform, type Hook, type Caption, type Critique,
 } from '@/lib/featuresApi'
+import { useTranslation } from '@/hooks/useTranslation'
+import { platformLabel } from './platformLabel'
 
 const PLATFORMS: Platform[] = ['instagram', 'tiktok', 'youtube', 'twitter', 'linkedin']
 
@@ -15,6 +17,7 @@ const PLATFORMS: Platform[] = ['instagram', 'tiktok', 'youtube', 'twitter', 'lin
  * create → analyze loop. Pure frontend orchestration over the existing endpoints.
  */
 export default function ComposerPanel() {
+  const { t } = useTranslation()
   const [topic, setTopic] = useState('')
   const [platform, setPlatform] = useState<Platform>('instagram')
   const [loading, setLoading] = useState(false)
@@ -31,20 +34,20 @@ export default function ComposerPanel() {
   const [scoring, setScoring] = useState(false)
 
   async function run() {
-    if (!topic.trim()) { setError('Enter a topic to compose from.'); return }
+    if (!topic.trim()) { setError(t('creatorTools.composer.topicRequired')); return }
     setLoading(true); setError(null); setCopied(false); setDone(false); setCritique(null)
     try {
-      const [h, c, t] = await Promise.all([
+      const [h, c, tg] = await Promise.all([
         generateHooks({ topic, platform }),
         generateCaptions({ topic, platform }),
         generateHashtags({ topic, platform }),
       ])
       setHooks(h.hooks || [])
       setCaptions(c.captions || [])
-      setTags((t.tags || []).map((x) => x.tag))
+      setTags((tg.tags || []).map((x) => x.tag))
       setHookIdx(0); setCaptionIdx(0); setDone(true)
     } catch (e) {
-      setError((e as Error)?.message || 'Failed to compose')
+      setError((e as Error)?.message || t('creatorTools.composer.failed'))
     } finally {
       setLoading(false)
     }
@@ -69,7 +72,7 @@ export default function ComposerPanel() {
     try {
       setCritique(await critiquePost({ text: assembled, platform }))
     } catch (e) {
-      setError((e as Error)?.message || 'Failed to score draft')
+      setError((e as Error)?.message || t('creatorTools.composer.scoreFailed'))
     } finally {
       setScoring(false)
     }
@@ -78,8 +81,8 @@ export default function ComposerPanel() {
   return (
     <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
       <div>
-        <h2 className="text-sm font-semibold text-theme-primary">Composer</h2>
-        <p className="text-xs text-theme-muted">One topic → hook + caption + hashtags, assembled into a draft.</p>
+        <h2 className="text-sm font-semibold text-theme-primary">{t('creatorTools.composer.title')}</h2>
+        <p className="text-xs text-theme-muted">{t('creatorTools.composer.subtitle')}</p>
       </div>
 
       <textarea
@@ -87,16 +90,16 @@ export default function ComposerPanel() {
         value={topic}
         onChange={(e) => setTopic(e.target.value)}
         rows={2}
-        placeholder="What's this post about?"
+        placeholder={t('creatorTools.composer.placeholder')}
         className="w-full rounded-lg bg-background border border-default p-2 text-sm text-theme-primary"
       />
       <div className="flex gap-2">
         <select
-          data-testid="composer-platform" aria-label="Platform" value={platform}
+          data-testid="composer-platform" aria-label={t('creatorTools.common.platform')} value={platform}
           onChange={(e) => setPlatform(e.target.value as Platform)}
           className="rounded bg-background border border-default p-1 text-sm text-theme-primary"
         >
-          {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+          {PLATFORMS.map((p) => <option key={p} value={p}>{platformLabel(t, p)}</option>)}
         </select>
         <button
           type="button"
@@ -105,7 +108,7 @@ export default function ComposerPanel() {
           disabled={loading}
           className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
-          {loading ? 'Composing…' : 'Compose'}
+          {loading ? t('creatorTools.common.composing') : t('creatorTools.common.compose')}
         </button>
       </div>
 
@@ -115,7 +118,7 @@ export default function ComposerPanel() {
         <div className="space-y-3" data-testid="composer-results">
           {hooks.length > 0 && (
             <div>
-              <div className="text-[10px] uppercase tracking-wide text-theme-muted">Hook</div>
+              <div className="text-[10px] uppercase tracking-wide text-theme-muted">{t('creatorTools.composer.hook')}</div>
               <div className="mt-1 flex flex-wrap gap-1" data-testid="composer-hooks">
                 {hooks.map((h, i) => (
                   <button
@@ -135,7 +138,7 @@ export default function ComposerPanel() {
 
           {captions.length > 0 && (
             <div>
-              <div className="text-[10px] uppercase tracking-wide text-theme-muted">Caption</div>
+              <div className="text-[10px] uppercase tracking-wide text-theme-muted">{t('creatorTools.composer.caption')}</div>
               <div className="mt-1 space-y-1" data-testid="composer-captions">
                 {captions.map((c, i) => (
                   <button
@@ -155,13 +158,13 @@ export default function ComposerPanel() {
 
           <div>
             <div className="flex items-center justify-between">
-              <div className="text-[10px] uppercase tracking-wide text-theme-muted">Draft</div>
+              <div className="text-[10px] uppercase tracking-wide text-theme-muted">{t('creatorTools.composer.draft')}</div>
               <div className="flex items-center gap-3">
                 <button type="button" data-testid="composer-score" onClick={scoreDraft} disabled={scoring} className="text-xs text-theme-secondary hover:text-theme-primary disabled:opacity-50">
-                  {scoring ? 'Scoring…' : 'Critique draft'}
+                  {scoring ? t('creatorTools.common.scoring') : t('creatorTools.composer.critique')}
                 </button>
                 <button type="button" data-testid="composer-copy" onClick={copyAssembled} className="text-xs text-theme-secondary hover:text-theme-primary">
-                  {copied ? 'Copied ✓' : 'Copy draft'}
+                  {copied ? t('creatorTools.common.copied') : t('creatorTools.composer.copyDraft')}
                 </button>
               </div>
             </div>

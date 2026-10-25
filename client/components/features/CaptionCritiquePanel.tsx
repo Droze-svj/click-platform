@@ -2,15 +2,12 @@
 
 import { useState } from 'react'
 import { handleApiError } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 import { critiquePost, type Platform, type Critique } from '@/lib/featuresApi'
+import { platformLabel } from './platformLabel'
 
 const PLATFORMS: Platform[] = ['instagram', 'tiktok', 'youtube', 'twitter', 'linkedin']
-const DIMENSIONS: { key: string; label: string }[] = [
-  { key: 'hook', label: 'Hook' },
-  { key: 'clarity', label: 'Clarity' },
-  { key: 'cta', label: 'CTA' },
-  { key: 'value', label: 'Value' },
-]
+const DIMENSIONS = ['hook', 'clarity', 'cta', 'value'] as const
 
 // Score → colour band (out of 10).
 function scoreTone(n: number): string {
@@ -21,6 +18,13 @@ function scoreTone(n: number): string {
 
 /** Score a caption/script's copy and surface prioritized fixes. */
 export default function CaptionCritiquePanel() {
+  const { t } = useTranslation()
+  const dimensionLabels: Record<string, string> = {
+    hook: t('creatorTools.captionCritique.dimHook'),
+    clarity: t('creatorTools.captionCritique.dimClarity'),
+    cta: t('creatorTools.captionCritique.dimCta'),
+    value: t('creatorTools.captionCritique.dimValue'),
+  }
   const [text, setText] = useState('')
   const [platform, setPlatform] = useState<Platform>('instagram')
   const [result, setResult] = useState<Critique | null>(null)
@@ -28,12 +32,12 @@ export default function CaptionCritiquePanel() {
   const [error, setError] = useState<string | null>(null)
 
   async function run() {
-    if (!text.trim()) { setError('Paste your caption or script first.'); return }
+    if (!text.trim()) { setError(t('creatorTools.captionCritique.textRequired')); return }
     setLoading(true); setError(null)
     try {
       setResult(await critiquePost({ text, platform }))
     } catch (e) {
-      setError(handleApiError(e) || 'Failed to critique')
+      setError(handleApiError(e) || t('creatorTools.captionCritique.failed'))
     } finally {
       setLoading(false)
     }
@@ -41,22 +45,22 @@ export default function CaptionCritiquePanel() {
 
   return (
     <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
-      <h2 className="text-sm font-semibold text-theme-primary">Caption critique</h2>
+      <h2 className="text-sm font-semibold text-theme-primary">{t('creatorTools.captionCritique.title')}</h2>
       <textarea
         data-testid="critique-input"
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={3}
-        placeholder="Paste a caption or script to score…"
+        placeholder={t('creatorTools.captionCritique.placeholder')}
         className="w-full rounded-lg bg-background border border-default p-2 text-sm text-theme-primary"
       />
       <div className="flex gap-2">
         <select
-          data-testid="critique-platform" aria-label="Platform" value={platform}
+          data-testid="critique-platform" aria-label={t('creatorTools.common.platform')} value={platform}
           onChange={(e) => setPlatform(e.target.value as Platform)}
           className="rounded bg-background border border-default p-1 text-sm text-theme-primary"
         >
-          {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+          {PLATFORMS.map((p) => <option key={p} value={p}>{platformLabel(t, p)}</option>)}
         </select>
         <button
           type="button"
@@ -65,7 +69,7 @@ export default function CaptionCritiquePanel() {
           disabled={loading}
           className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
-          {loading ? 'Scoring…' : 'Score it'}
+          {loading ? t('creatorTools.common.scoring') : t('creatorTools.captionCritique.run')}
         </button>
       </div>
 
@@ -82,11 +86,11 @@ export default function CaptionCritiquePanel() {
 
           <div className="grid grid-cols-4 gap-2">
             {DIMENSIONS.map((d) => (
-              <div key={d.key} className="rounded-lg bg-background border border-default p-2 text-center">
-                <div data-testid={`critique-score-${d.key}`} className={`text-lg font-semibold ${scoreTone(result.scores[d.key] ?? 0)}`}>
-                  {result.scores[d.key] ?? 0}
+              <div key={d} className="rounded-lg bg-background border border-default p-2 text-center">
+                <div data-testid={`critique-score-${d}`} className={`text-lg font-semibold ${scoreTone(result.scores[d] ?? 0)}`}>
+                  {result.scores[d] ?? 0}
                 </div>
-                <div className="text-[10px] uppercase tracking-wide text-theme-muted">{d.label}</div>
+                <div className="text-[10px] uppercase tracking-wide text-theme-muted">{dimensionLabels[d]}</div>
               </div>
             ))}
           </div>

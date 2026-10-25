@@ -4,17 +4,21 @@ import { useState } from 'react'
 import { handleApiError } from '@/lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
 import { generateCaptions, type Platform, type CaptionResult } from '@/lib/featuresApi'
+import { platformLabel } from './platformLabel'
 
 const PLATFORMS: Platform[] = ['instagram', 'tiktok', 'youtube', 'twitter', 'linkedin']
-
-// Friendly label per angle key.
-const ANGLE_LABEL: Record<string, string> = {
-  hook: 'Hook-led', story: 'Story', value: 'Value', cta: 'CTA', question: 'Question',
-}
 
 /** Draft a few distinct-angle caption options for a topic. */
 export default function CaptionAnglesPanel() {
   const { t } = useTranslation()
+  // Friendly label per angle key.
+  const angleLabels: Record<string, string> = {
+    hook: t('creatorTools.captionAngles.angleHook'),
+    story: t('creatorTools.captionAngles.angleStory'),
+    value: t('creatorTools.captionAngles.angleValue'),
+    cta: t('creatorTools.captionAngles.angleCta'),
+    question: t('creatorTools.captionAngles.angleQuestion'),
+  }
   const [topic, setTopic] = useState('')
   const [platform, setPlatform] = useState<Platform>('instagram')
   const [result, setResult] = useState<CaptionResult | null>(null)
@@ -23,12 +27,12 @@ export default function CaptionAnglesPanel() {
   const [copied, setCopied] = useState<string | null>(null)
 
   async function run() {
-    if (!topic.trim()) { setError('Describe your topic first.'); return }
+    if (!topic.trim()) { setError(t('creatorTools.common.topicRequired')); return }
     setLoading(true); setError(null); setCopied(null)
     try {
       setResult(await generateCaptions({ topic, platform }))
     } catch (e) {
-      setError(handleApiError(e) || 'Failed to generate captions')
+      setError(handleApiError(e) || t('creatorTools.captionAngles.generateFailed'))
     } finally {
       setLoading(false)
     }
@@ -40,22 +44,22 @@ export default function CaptionAnglesPanel() {
 
   return (
     <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
-      <h2 className="text-sm font-semibold text-theme-primary">Caption angles</h2>
+      <h2 className="text-sm font-semibold text-theme-primary">{t('creatorTools.captionAngles.title')}</h2>
       <textarea
         data-testid="captions-input"
         value={topic}
         onChange={(e) => setTopic(e.target.value)}
         rows={2}
-        placeholder="What's the post about?"
+        placeholder={t('creatorTools.common.postAboutPlaceholder')}
         className="w-full rounded-lg bg-background border border-default p-2 text-sm text-theme-primary"
       />
       <div className="flex gap-2">
         <select
-          data-testid="captions-platform" aria-label="Platform" value={platform}
+          data-testid="captions-platform" aria-label={t('creatorTools.common.platform')} value={platform}
           onChange={(e) => setPlatform(e.target.value as Platform)}
           className="rounded bg-background border border-default p-1 text-sm text-theme-primary"
         >
-          {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+          {PLATFORMS.map((p) => <option key={p} value={p}>{platformLabel(t, p)}</option>)}
         </select>
         <button
           type="button"
@@ -64,7 +68,7 @@ export default function CaptionAnglesPanel() {
           disabled={loading}
           className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
-          {loading ? 'Drafting…' : 'Draft captions'}
+          {loading ? t('creatorTools.common.drafting') : t('creatorTools.captionAngles.run')}
         </button>
       </div>
 
@@ -79,7 +83,7 @@ export default function CaptionAnglesPanel() {
             <li key={i} data-testid="captions-item" className="rounded-lg bg-background border border-default p-2 space-y-1">
               <div className="flex items-center justify-between">
                 <span data-testid="captions-angle" className="text-[10px] uppercase tracking-wide text-theme-muted">
-                  {ANGLE_LABEL[c.angle] ?? c.angle}
+                  {angleLabels[c.angle] ?? c.angle}
                 </span>
                 <button
                   type="button"
@@ -87,7 +91,7 @@ export default function CaptionAnglesPanel() {
                   onClick={() => copy(c.text)}
                   className="text-xs text-theme-secondary hover:text-theme-primary"
                 >
-                  {copied === c.text ? 'Copied ✓' : 'Copy'}
+                  {copied === c.text ? t('creatorTools.common.copied') : t('creatorTools.common.copy')}
                 </button>
               </div>
               <p className="text-sm text-theme-primary">{c.text}</p>

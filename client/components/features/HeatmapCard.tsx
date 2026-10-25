@@ -4,6 +4,7 @@ import { Fragment } from 'react'
 import type { Heatmap } from '@/lib/featuresApi'
 import { heatmapMax, cellIntensity, cellLabel } from '@/lib/featureViewModels'
 import { weekdayShortNames } from '../../utils/locale'
+import { useTranslation } from '@/hooks/useTranslation'
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h)
 const DAYS = [0, 1, 2, 3, 4, 5, 6]
@@ -14,10 +15,11 @@ const DAYS = [0, 1, 2, 3, 4, 5, 6]
  * featuresApi.getHeatmap().
  */
 export default function HeatmapCard({ heatmap }: { heatmap: Heatmap | null }) {
+  const { t } = useTranslation()
   if (!heatmap || !heatmap.grid || heatmap.grid.length === 0) {
     return (
       <div className="rounded-xl bg-surface-card border border-default p-4" data-testid="heatmap-empty">
-        <p className="text-sm text-theme-secondary">No engagement heatmap yet — post more to build one.</p>
+        <p className="text-sm text-theme-secondary">{t('creatorTools.heatmap.empty')}</p>
       </div>
     )
   }
@@ -32,10 +34,10 @@ export default function HeatmapCard({ heatmap }: { heatmap: Heatmap | null }) {
   return (
     <div className="rounded-xl bg-surface-card border border-default p-4 space-y-2" data-testid="heatmap-card">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-theme-primary">When your audience engages</h2>
+        <h2 className="text-sm font-semibold text-theme-primary">{t('creatorTools.heatmap.title')}</h2>
         {peak && (
           <span className="text-xs text-green-600 dark:text-green-400" data-testid="heatmap-peak">
-            Peak: {cellLabel(peak.day, peak.hour, labels)}
+            {t('creatorTools.heatmap.peak', { time: cellLabel(peak.day, peak.hour, labels) })}
           </span>
         )}
       </div>
@@ -57,7 +59,7 @@ export default function HeatmapCard({ heatmap }: { heatmap: Heatmap | null }) {
                   <div
                     key={`c${d}-${h}`}
                     data-testid="heatmap-cell"
-                    title={avg == null ? cellLabel(d, h, labels) : `${cellLabel(d, h, labels)} · ${Math.round(avg)} avg`}
+                    title={avg == null ? cellLabel(d, h, labels) : t('creatorTools.heatmap.cellAverage', { time: cellLabel(d, h, labels), average: Math.round(avg) })}
                     className={`h-[0.6rem] w-[0.6rem] ${isPeak ? 'ring-1 ring-green-400' : ''}`}
                     style={{ backgroundColor: `rgba(57,255,20,${avg == null ? 0.04 : 0.1 + intensity * 0.9})` }}
                   />
@@ -67,7 +69,9 @@ export default function HeatmapCard({ heatmap }: { heatmap: Heatmap | null }) {
           ))}
         </div>
       </div>
-      <p className="text-[10px] text-theme-muted">Based on {heatmap.totalPosts} posted item{heatmap.totalPosts === 1 ? '' : 's'}.</p>
+      <p className="text-[10px] text-theme-muted">{heatmap.totalPosts === 1
+          ? t('creatorTools.heatmap.basedOnOne', { count: heatmap.totalPosts })
+          : t('creatorTools.heatmap.basedOnOther', { count: heatmap.totalPosts })}</p>
     </div>
   )
 }

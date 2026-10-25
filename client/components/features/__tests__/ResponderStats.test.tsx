@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import ResponderStats from '../ResponderStats'
 import * as api from '@/lib/featuresApi'
 
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
 jest.mock('@/lib/featuresApi')
 const mStats = api.getResponderStats as jest.MockedFunction<typeof api.getResponderStats>
 

@@ -10,6 +10,10 @@ const FORMATS: SlideFormat[] = ['carousel', 'thread']
 /** Split one idea into ordered carousel slides / thread posts. */
 export default function CarouselComposerPanel() {
   const { t } = useTranslation()
+  const formatLabels: Record<string, string> = {
+    carousel: t('creatorTools.carousel.formatCarousel'),
+    thread: t('creatorTools.carousel.formatThread'),
+  }
   const [topic, setTopic] = useState('')
   const [format, setFormat] = useState<SlideFormat>('carousel')
   const [result, setResult] = useState<SlideResult | null>(null)
@@ -18,12 +22,12 @@ export default function CarouselComposerPanel() {
   const [copied, setCopied] = useState(false)
 
   async function run() {
-    if (!topic.trim()) { setError('Describe your idea first.'); return }
+    if (!topic.trim()) { setError(t('creatorTools.carousel.ideaRequired')); return }
     setLoading(true); setError(null); setCopied(false)
     try {
       setResult(await composeSlides({ topic, format }))
     } catch (e) {
-      setError(handleApiError(e) || 'Failed to compose slides')
+      setError(handleApiError(e) || t('creatorTools.carousel.failed'))
     } finally {
       setLoading(false)
     }
@@ -37,22 +41,22 @@ export default function CarouselComposerPanel() {
 
   return (
     <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
-      <h2 className="text-sm font-semibold text-theme-primary">Carousel / thread</h2>
+      <h2 className="text-sm font-semibold text-theme-primary">{t('creatorTools.carousel.title')}</h2>
       <textarea
         data-testid="carousel-input"
         value={topic}
         onChange={(e) => setTopic(e.target.value)}
         rows={2}
-        placeholder="One idea to expand into slides…"
+        placeholder={t('creatorTools.carousel.placeholder')}
         className="w-full rounded-lg bg-background border border-default p-2 text-sm text-theme-primary"
       />
       <div className="flex gap-2">
         <select
-          data-testid="carousel-format" aria-label="Format" value={format}
+          data-testid="carousel-format" aria-label={t('creatorTools.common.format')} value={format}
           onChange={(e) => setFormat(e.target.value as SlideFormat)}
           className="rounded bg-background border border-default p-1 text-sm text-theme-primary"
         >
-          {FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
+          {FORMATS.map((f) => <option key={f} value={f}>{formatLabels[f] ?? f}</option>)}
         </select>
         <button
           type="button"
@@ -61,7 +65,7 @@ export default function CarouselComposerPanel() {
           disabled={loading}
           className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
-          {loading ? 'Composing…' : 'Compose'}
+          {loading ? t('creatorTools.common.composing') : t('creatorTools.common.compose')}
         </button>
       </div>
 
@@ -73,9 +77,11 @@ export default function CarouselComposerPanel() {
       {result && (result.slides ?? []).length > 0 && (
         <div className="space-y-2" data-testid="carousel-results">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-theme-muted">{result.slides.length} slides</span>
+            <span className="text-xs text-theme-muted">{result.slides.length === 1
+                ? t('creatorTools.carousel.slidesOne', { count: result.slides.length })
+                : t('creatorTools.carousel.slidesOther', { count: result.slides.length })}</span>
             <button type="button" data-testid="carousel-copy-all" onClick={copyAll} className="text-xs text-theme-secondary hover:text-theme-primary">
-              {copied ? 'Copied ✓' : 'Copy all'}
+              {copied ? t('creatorTools.common.copied') : t('creatorTools.common.copyAll')}
             </button>
           </div>
           <ol className="space-y-1">

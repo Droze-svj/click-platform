@@ -6,6 +6,7 @@ import * as api from '@/lib/featuresApi'
 // When the AI is unavailable the generators now answer 503 with a reason, and a
 // repurpose variant the AI could not adapt is flagged `degraded`. The panels
 // show the server's reason (not axios' "status code 503") and an empty state.
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
 jest.mock('@/lib/featuresApi')
 const mHooks = api.generateHooks as jest.MockedFunction<typeof api.generateHooks>
 const mRepurpose = api.repurposeStudio as jest.MockedFunction<typeof api.repurposeStudio>

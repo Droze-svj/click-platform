@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import CaptionAnglesPanel from '../CaptionAnglesPanel'
 import * as api from '@/lib/featuresApi'
 
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
 jest.mock('@/lib/featuresApi')
 const mCaptions = api.generateCaptions as jest.MockedFunction<typeof api.generateCaptions>
 

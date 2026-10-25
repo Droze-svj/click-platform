@@ -6,6 +6,8 @@ import {
   type Platform, type ResponderPlatform, type TriagedComment,
 } from '@/lib/featuresApi'
 import { parseCommentLines, groupTriageByPriority, priorityMeta } from '@/lib/featureViewModels'
+import { useTranslation } from '@/hooks/useTranslation'
+import { platformLabel } from './platformLabel'
 
 type Groups = ReturnType<typeof groupTriageByPriority>
 
@@ -20,6 +22,13 @@ const FALLBACK_PLATFORMS: ResponderPlatform[] = [
  * an AI reply for the ones worth answering (feeds the responder approval queue).
  */
 export default function CommentTriageInbox() {
+  const { t } = useTranslation()
+  const priorityLabels: Record<string, string> = {
+    high: t('creatorTools.commentTriage.priorityHigh'),
+    medium: t('creatorTools.commentTriage.priorityMedium'),
+    low: t('creatorTools.commentTriage.priorityLow'),
+    ignore: t('creatorTools.commentTriage.priorityIgnore'),
+  }
   const [text, setText] = useState('')
   const [platform, setPlatform] = useState<Platform>('instagram')
   const [groups, setGroups] = useState<Groups | null>(null)
@@ -48,13 +57,13 @@ export default function CommentTriageInbox() {
 
   async function run() {
     const comments = parseCommentLines(text)
-    if (!comments.length) { setError('Paste some comments first (one per line).'); return }
+    if (!comments.length) { setError(t('creatorTools.commentTriage.commentsRequired')); return }
     setLoading(true); setError(null); setDrafted({})
     try {
       const res = await triageComments(comments)
       setGroups(groupTriageByPriority(res.ranked))
     } catch (e) {
-      setError((e as Error)?.message || 'Failed to triage comments')
+      setError((e as Error)?.message || t('creatorTools.commentTriage.triageFailed'))
     } finally {
       setLoading(false)
     }
@@ -77,7 +86,7 @@ export default function CommentTriageInbox() {
   async function draft(cm: TriagedComment) {
     setError(null)
     try { await draftOne(cm) }
-    catch (e) { setError((e as Error)?.message || 'Failed to draft reply') }
+    catch (e) { setError((e as Error)?.message || t('creatorTools.commentTriage.draftFailed')) }
   }
 
   // Draft every not-yet-queued comment in a priority group in one pass. Sequential
@@ -90,28 +99,32 @@ export default function CommentTriageInbox() {
       if (drafted[cm.text]) continue
       try { await draftOne(cm) } catch { failed += 1 }
     }
-    if (failed) setError(`${failed} repl${failed === 1 ? 'y' : 'ies'} failed to draft — retry individually.`)
+    if (failed) {
+      setError(failed === 1
+        ? t('creatorTools.commentTriage.batchFailedOne', { count: failed })
+        : t('creatorTools.commentTriage.batchFailedOther', { count: failed }))
+    }
   }
 
   return (
     <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-theme-primary">Comment triage</h2>
+        <h2 className="text-sm font-semibold text-theme-primary">{t('creatorTools.commentTriage.title')}</h2>
         <select
           data-testid="triage-platform"
-          aria-label="Reply platform"
+          aria-label={t('creatorTools.commentTriage.replyPlatform')}
           value={platform}
           onChange={(e) => setPlatform(e.target.value as Platform)}
           className="rounded bg-background border border-default p-1 text-xs text-theme-secondary"
         >
-          {platforms.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
+          {platforms.map((p) => <option key={p.name} value={p.name}>{platformLabel(t, p.name)}</option>)}
         </select>
       </div>
       <textarea
         data-testid="triage-input"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Paste comments, one per line…"
+        placeholder={t('creatorTools.commentTriage.placeholder')}
         rows={4}
         className="w-full rounded-lg bg-background border border-default p-2 text-sm text-theme-primary"
       />
@@ -122,7 +135,7 @@ export default function CommentTriageInbox() {
         disabled={loading}
         className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
       >
-        {loading ? 'Triaging…' : 'Triage inbox'}
+        {loading ? t('creatorTools.commentTriage.triaging') : t('creatorTools.commentTriage.run')}
       </button>
 
       {error && <p data-testid="triage-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
@@ -133,7 +146,7 @@ export default function CommentTriageInbox() {
             <section key={g.priority} data-testid={`group-${g.priority}`}>
               <div className="flex items-center justify-between">
                 <h3 className={`text-xs font-medium ${priorityMeta(g.priority).tone}`}>
-                  {priorityMeta(g.priority).label} ({g.comments.length})
+                  {priorityLabels[g.priority] ?? priorityLabels.low} ({g.comments.length})
                 </h3>
                 {g.priority !== 'ignore' && g.comments.some((cm) => !drafted[cm.text]) && (
                   <button
@@ -143,7 +156,7 @@ export default function CommentTriageInbox() {
                     disabled={g.comments.some((cm) => drafting[cm.text])}
                     className="rounded bg-muted px-2 py-0.5 text-xs text-theme-secondary hover:text-theme-primary disabled:opacity-50"
                   >
-                    Draft all
+                    {t('creatorTools.commentTriage.draftAll')}
                   </button>
                 )}
               </div>
@@ -154,7 +167,7 @@ export default function CommentTriageInbox() {
                     {/* Reply-worthy items (not spam) get a one-click AI draft → responder queue. */}
                     {g.priority !== 'ignore' && (
                       drafted[cm.text]
-                        ? <span data-testid="triage-drafted" className="text-xs text-green-600 dark:text-green-400 whitespace-nowrap">Queued ✓</span>
+                        ? <span data-testid="triage-drafted" className="text-xs text-green-600 dark:text-green-400 whitespace-nowrap">{t('creatorTools.commentTriage.queued')}</span>
                         : (
                           <button
                             type="button"
@@ -163,7 +176,7 @@ export default function CommentTriageInbox() {
                             disabled={drafting[cm.text]}
                             className="rounded bg-muted px-2 py-0.5 text-xs text-theme-primary disabled:opacity-50 whitespace-nowrap"
                           >
-                            {drafting[cm.text] ? 'Drafting…' : 'Draft reply'}
+                            {drafting[cm.text] ? t('creatorTools.common.drafting') : t('creatorTools.commentTriage.draftReply')}
                           </button>
                         )
                     )}
@@ -176,7 +189,7 @@ export default function CommentTriageInbox() {
       )}
 
       {groups && groups.length === 0 && (
-        <p className="text-sm text-theme-muted" data-testid="triage-empty">No comments to rank.</p>
+        <p className="text-sm text-theme-muted" data-testid="triage-empty">{t('creatorTools.commentTriage.empty')}</p>
       )}
     </div>
   )

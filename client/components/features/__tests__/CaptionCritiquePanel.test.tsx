@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import CaptionCritiquePanel from '../CaptionCritiquePanel'
 import * as api from '@/lib/featuresApi'
 
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
 jest.mock('@/lib/featuresApi')
 const mCritique = api.critiquePost as jest.MockedFunction<typeof api.critiquePost>
 

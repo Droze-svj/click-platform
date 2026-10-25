@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { repurposeStudio, type Platform, type RepurposeVariant } from '@/lib/featuresApi'
 import { handleApiError } from '@/lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
+import { platformLabel } from './platformLabel'
 
 const PLATFORMS: Platform[] = ['tiktok', 'instagram', 'youtube', 'twitter', 'linkedin']
 
@@ -20,13 +21,13 @@ export default function RepurposeStudioPanel() {
     setSelected((s) => (s.includes(p) ? s.filter((x) => x !== p) : [...s, p]))
 
   async function run() {
-    if (!text.trim()) { setError('Paste some content to repurpose.'); return }
+    if (!text.trim()) { setError(t('creatorTools.repurpose.textRequired')); return }
     setLoading(true); setError(null)
     try {
       const res = await repurposeStudio({ text, platforms: selected })
       setVariants(res.variants)
     } catch (e) {
-      setError(handleApiError(e) || 'Failed to generate variants')
+      setError(handleApiError(e) || t('creatorTools.repurpose.failed'))
     } finally {
       setLoading(false)
     }
@@ -34,13 +35,13 @@ export default function RepurposeStudioPanel() {
 
   return (
     <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
-      <h2 className="text-sm font-semibold text-theme-primary">Repurpose studio</h2>
+      <h2 className="text-sm font-semibold text-theme-primary">{t('creatorTools.repurpose.title')}</h2>
       <textarea
         data-testid="repurpose-input"
         value={text}
         onChange={(e) => setText(e.target.value)}
         rows={3}
-        placeholder="Paste a caption, script, or post…"
+        placeholder={t('creatorTools.repurpose.placeholder')}
         className="w-full rounded-lg bg-background border border-default p-2 text-sm text-theme-primary"
       />
       <div className="flex flex-wrap gap-2">
@@ -51,7 +52,7 @@ export default function RepurposeStudioPanel() {
             onClick={() => toggle(p)}
             className={`rounded-full px-2 py-0.5 text-xs border ${selected.includes(p) ? 'bg-primary/10 border-primary/40 text-primary' : 'border-default text-theme-muted hover:text-theme-primary'}`}
           >
-            {p}
+            {platformLabel(t, p)}
           </button>
         ))}
       </div>
@@ -61,7 +62,7 @@ export default function RepurposeStudioPanel() {
         disabled={loading}
         className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
       >
-        {loading ? 'Generating…' : 'Generate variants'}
+        {loading ? t('creatorTools.common.generating') : t('creatorTools.repurpose.run')}
       </button>
 
       {error && <p data-testid="repurpose-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>}

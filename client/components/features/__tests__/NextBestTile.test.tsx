@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import NextBestTile from '../NextBestTile'
 import * as api from '@/lib/featuresApi'
 
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
 jest.mock('@/lib/featuresApi')
 const mNext = api.getNextBest as jest.MockedFunction<typeof api.getNextBest>
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { handleApiError } from '@/lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 import {
   getMorningBrief, getBriefSubscription, setBriefSubscription,
   type MorningBrief, type BriefSubscriptionState,
@@ -32,6 +33,7 @@ const browserTimeZone = () => {
  * data only — an empty section says so.
  */
 export default function MorningBriefPanel() {
+  const { t } = useTranslation()
   const [brief, setBrief] = useState<MorningBrief | null>(null)
   const [sub, setSub] = useState<BriefSubscriptionState | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -41,11 +43,14 @@ export default function MorningBriefPanel() {
     let alive = true
     getMorningBrief()
       .then((b) => { if (alive) setBrief(b) })
-      .catch((e) => { if (alive) setError(handleApiError(e) || 'Could not load your brief') })
+      .catch((e) => { if (alive) setError(handleApiError(e) || t('creatorTools.morningBrief.loadFailed')) })
     getBriefSubscription()
       .then((s) => { if (alive) setSub(s) })
       .catch(() => { /* delivery toggle is optional */ })
     return () => { alive = false }
+    // Mount-only on purpose: t() changes identity once the locale loads, and
+    // that must not refetch. It is only used for the fallback error text.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function toggleDelivery() {
@@ -57,7 +62,7 @@ export default function MorningBriefPanel() {
         enabled: on, timezone: sub?.subscription?.timezone || browserTimeZone(), hour: sub?.subscription?.hour ?? 7,
       }))
     } catch (e) {
-      setError(handleApiError(e) || 'Could not update delivery')
+      setError(handleApiError(e) || t('creatorTools.morningBrief.updateFailed'))
     } finally {
       setSaving(false)
     }
@@ -67,21 +72,25 @@ export default function MorningBriefPanel() {
   const tz = sub?.subscription?.timezone || browserTimeZone()
   const hour = sub?.subscription?.hour ?? 7
   const ch = sub?.subscription?.channels
-  const channelLabel = ch?.email && ch?.inApp ? 'in-app and by email' : ch?.email ? 'by email' : 'as a notification'
+  const channelLabel = ch?.email && ch?.inApp
+    ? t('creatorTools.morningBrief.channelInAppAndEmail')
+    : ch?.email ? t('creatorTools.morningBrief.channelEmail') : t('creatorTools.morningBrief.channelNotification')
 
   return (
     <div id="brief" data-testid="brief-panel" className="rounded-xl bg-surface-card border border-default p-4 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-theme-primary">Morning brief</h2>
-          <p className="text-xs text-theme-muted">What to make next, and what needs you today.</p>
+          <h2 className="text-sm font-semibold text-theme-primary">{t('creatorTools.morningBrief.title')}</h2>
+          <p className="text-xs text-theme-muted">{t('creatorTools.morningBrief.subtitle')}</p>
         </div>
         {sub && (
           <button
             type="button" data-testid="brief-delivery" onClick={toggleDelivery} disabled={saving}
             className="rounded-lg border border-strong px-2 py-1 text-xs text-theme-secondary disabled:opacity-50"
           >
-            {subscribed ? `Daily at ${fmtHour(hour)} ✓` : `Send daily at ${fmtHour(hour)}`}
+            {subscribed
+              ? t('creatorTools.morningBrief.dailyAt', { time: fmtHour(hour) })
+              : t('creatorTools.morningBrief.sendDailyAt', { time: fmtHour(hour) })}
           </button>
         )}
       </div>
@@ -89,72 +98,82 @@ export default function MorningBriefPanel() {
         data-testid="brief-settings-link" href="/dashboard/settings?tab=notifications"
         className="inline-block text-xs text-theme-secondary underline hover:text-theme-primary"
       >
-        Change time, time zone or email delivery
+        {t('creatorTools.morningBrief.changeDelivery')}
       </a>
       {subscribed && (
         <p data-testid="brief-delivery-note" className="text-xs text-theme-muted">
           {sub?.deliveryActive
-            ? `Arrives ${channelLabel} around ${fmtHour(hour)} ${tz} time.`
-            : 'Saved. Daily delivery is not switched on for this server yet, so check here each morning.'}
+            ? t('creatorTools.morningBrief.arrives', { channel: channelLabel, time: fmtHour(hour), timezone: tz })
+            : t('creatorTools.morningBrief.deliveryNotActive')}
         </p>
       )}
 
       {error && <p data-testid="brief-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-      {!brief && !error && <p data-testid="brief-loading" className="text-xs text-theme-muted">Loading your brief…</p>}
+      {!brief && !error && <p data-testid="brief-loading" className="text-xs text-theme-muted">{t('creatorTools.morningBrief.loading')}</p>}
 
       {brief && (
         <>
           <div data-testid="brief-make-next" className="rounded-lg border border-green-500/30 bg-green-500/5 p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-green-600 dark:text-green-400">Make next</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-green-600 dark:text-green-400">{t('creatorTools.morningBrief.makeNext')}</p>
             <p className="mt-1 text-sm text-theme-primary">{brief.makeNext.title}</p>
             <p className="mt-1 text-xs text-theme-secondary">{brief.makeNext.why}</p>
-            <a href="#create" className="mt-2 inline-block text-xs text-green-600 dark:text-green-400 hover:text-green-300">Write the script →</a>
+            <a href="#create" className="mt-2 inline-block text-xs text-green-600 dark:text-green-400 hover:text-green-300">{t('creatorTools.morningBrief.writeScript')}</a>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div data-testid="brief-performance" className="rounded-lg bg-background border border-default p-3 text-sm text-theme-primary">
-              <p className="text-xs text-theme-muted">{brief.performance?.window || 'Posts published in the last 7 days'}</p>
+              <p className="text-xs text-theme-muted">{brief.performance?.window || t('creatorTools.morningBrief.performanceWindow')}</p>
               {brief.performance ? (
                 <>
-                  <p>{fmtNum(brief.performance.views)} views<Change pct={brief.performance.viewsChangePct} /></p>
-                  <p>{fmtNum(brief.performance.engagement)} engagements<Change pct={brief.performance.engagementChangePct} /></p>
+                  <p>{t('creatorTools.morningBrief.views', { count: fmtNum(brief.performance.views) })}<Change pct={brief.performance.viewsChangePct} /></p>
+                  <p>{t('creatorTools.morningBrief.engagements', { count: fmtNum(brief.performance.engagement) })}<Change pct={brief.performance.engagementChangePct} /></p>
                 </>
-              ) : <p className="text-theme-muted">No analytics yet for this week&apos;s posts.</p>}
+              ) : <p className="text-theme-muted">{t('creatorTools.morningBrief.noAnalytics')}</p>}
             </div>
             <div data-testid="brief-sales" className="rounded-lg bg-background border border-default p-3 text-sm text-theme-primary">
-              <p className="text-xs text-theme-muted">Tracked sales</p>
+              <p className="text-xs text-theme-muted">{t('creatorTools.morningBrief.trackedSales')}</p>
               {brief.sales ? (
                 <>
                   <p>
-                    {brief.sales.last24h.count} in 24h · {fmtMoney(brief.sales.last24h.revenue, brief.sales.currency)}
+                    {t('creatorTools.morningBrief.salesLast24h', {
+                      count: brief.sales.last24h.count,
+                      revenue: fmtMoney(brief.sales.last24h.revenue, brief.sales.currency),
+                    })}
                     <Change pct={brief.sales.revenueChangePct} />
                   </p>
-                  <p className="text-theme-secondary">{brief.sales.last7d.count} this week · {fmtMoney(brief.sales.last7d.revenue, brief.sales.currency)}</p>
+                  <p className="text-theme-secondary">
+                    {t('creatorTools.morningBrief.salesThisWeek', {
+                      count: brief.sales.last7d.count,
+                      revenue: fmtMoney(brief.sales.last7d.revenue, brief.sales.currency),
+                    })}
+                  </p>
                 </>
-              ) : <p className="text-theme-muted">No tracked sales this week.</p>}
+              ) : <p className="text-theme-muted">{t('creatorTools.morningBrief.noSales')}</p>}
             </div>
           </div>
 
           <div data-testid="brief-audience" className="space-y-1">
             <p className="text-xs text-theme-muted">
-              Audience · {brief.audience.questions} question{brief.audience.questions === 1 ? '' : 's'} in {brief.audience.scanned} comments and DMs this week
+              {brief.audience.questions === 1
+                ? t('creatorTools.morningBrief.audienceOne', { count: brief.audience.questions, scanned: brief.audience.scanned })
+                : t('creatorTools.morningBrief.audienceOther', { count: brief.audience.questions, scanned: brief.audience.scanned })}
             </p>
             {brief.audience.themes.length > 0 ? (
               <ul className="space-y-1">
-                {brief.audience.themes.map((t) => (
-                  <li key={t.theme} data-testid="brief-theme" className="text-xs text-theme-secondary">
-                    <span className="text-theme-muted">{t.count}×</span> “{t.example}”
+                {brief.audience.themes.map((th) => (
+                  <li key={th.theme} data-testid="brief-theme" className="text-xs text-theme-secondary">
+                    <span className="text-theme-muted">{th.count}×</span> “{th.example}”
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-xs text-theme-muted">No repeated questions yet. Comments you run through the AI Responder show up here.</p>
+              <p className="text-xs text-theme-muted">{t('creatorTools.morningBrief.noQuestions')}</p>
             )}
           </div>
 
           {brief.needsYou.length > 0 && (
             <div data-testid="brief-needs-you" className="space-y-1">
-              <p className="text-xs text-theme-muted">Needs you</p>
+              <p className="text-xs text-theme-muted">{t('creatorTools.morningBrief.needsYou')}</p>
               <ul className="space-y-1">
                 {brief.needsYou.map((n) => (
                   <li key={n.id}>
