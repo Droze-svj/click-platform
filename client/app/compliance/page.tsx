@@ -13,9 +13,9 @@ export default function CompliancePage() {
         <p className="text-surface-600 dark:text-surface-400 text-lg leading-relaxed mb-12">
           A plain-language summary of the laws Click follows, how we apply them, and where to
           find authoritative documentation. This page is summary; the binding documents are our{' '}
-          <Link href="/terms" className="text-indigo-400 hover:text-indigo-300 underline">Terms</Link>{' '}
+          <Link href="/terms" className="text-primary-600 dark:text-indigo-400 hover:underline underline-offset-4">Terms</Link>{' '}
           and{' '}
-          <Link href="/privacy" className="text-indigo-400 hover:text-indigo-300 underline">Privacy Policy</Link>.
+          <Link href="/privacy" className="text-primary-600 dark:text-indigo-400 hover:underline underline-offset-4">Privacy Policy</Link>.
         </p>
 
         <div className="space-y-10">
@@ -60,8 +60,7 @@ export default function CompliancePage() {
             classification="In scope"
             details={[
               "Click is not directed to children under 13.",
-              "Signup requires date of birth and is rejected server-side for under-13.",
-              "Users 13–17 require verifiable parental/guardian consent before account activation.",
+              "Accounts are for adults: creating one means accepting the Terms, which require you to be at least 18.",
               "Children's data, if discovered, is deleted within 7 days; complaints to privacy@clickapp.io.",
             ]}
           />
@@ -100,7 +99,7 @@ export default function CompliancePage() {
             classification="Target conformance"
             details={[
               "We design for keyboard-only navigation, screen-reader landmarks, focus visibility, and 4.5:1 contrast minimum on body text.",
-              "Annual accessibility audit with remediation plan; current report available on request.",
+              "We fix reported accessibility barriers as product bugs.",
               "Found a barrier? a11y@clickapp.io.",
             ]}
           />
@@ -116,7 +115,7 @@ export default function CompliancePage() {
         </div>
 
         <p className="text-surface-500 text-sm mt-16 leading-relaxed">
-          Questions: <a href="mailto:compliance@clickapp.io" className="text-indigo-400 hover:text-indigo-300 underline">compliance@clickapp.io</a>.
+          Questions: <a href="mailto:compliance@clickapp.io" className="text-primary-600 dark:text-indigo-400 hover:underline underline-offset-4">compliance@clickapp.io</a>.
         </p>
           </LegalPage>
   );
@@ -124,10 +123,10 @@ export default function CompliancePage() {
 
 function Reg({ title, classification, details }: { title: string; classification: string; details: string[] }) {
   return (
-    <section className="border border-white/10 rounded-2xl p-6 bg-white/[0.02]">
+    <section className="ds-surface-card p-6">
       <div className="flex items-start justify-between gap-4 mb-4 flex-wrap">
         <h2 className="text-xl font-black tracking-tight">{title}</h2>
-        <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 whitespace-nowrap">
+        <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-700 dark:text-indigo-300 whitespace-nowrap">
           {classification}
         </span>
       </div>

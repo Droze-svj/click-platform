@@ -40,7 +40,7 @@ export function IntelligenceShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-surface-card backdrop-blur-[60px] rounded-[4rem] p-12 md:row-span-2 md:col-span-2 group border-2 border-surface-100 dark:border-white/5 hover:border-primary-500/30 hover:shadow-[0_80px_150px_rgba(0,0,0,0.5)] transition-all duration-700 relative overflow-hidden animate-cinematic-reveal"
+            className="bg-surface-card backdrop-blur-[60px] rounded-[2.5rem] sm:rounded-[4rem] p-7 sm:p-12 md:row-span-2 md:col-span-2 group border-2 border-surface-100 dark:border-white/5 hover:border-primary-500/30 hover:shadow-[0_80px_150px_rgba(0,0,0,0.5)] transition-all duration-700 relative overflow-hidden animate-cinematic-reveal"
           >
             <div className="absolute -top-20 -right-20 w-96 h-96 bg-primary-500/10 blur-[120px] rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-1000" />
             <div className="relative z-10 flex flex-col h-full justify-between">
@@ -78,7 +78,7 @@ export function IntelligenceShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
             transition={{ delay: 0.1, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-surface-card backdrop-blur-[40px] rounded-[3.5rem] p-10 group border-2 border-surface-100 dark:border-white/5 hover:border-primary-500/30 hover:shadow-[0_80px_150px_rgba(0,0,0,0.5)] transition-all duration-700 relative overflow-hidden animate-cinematic-reveal"
+            className="bg-surface-card backdrop-blur-[40px] rounded-[2.5rem] sm:rounded-[3.5rem] p-7 sm:p-10 group border-2 border-surface-100 dark:border-white/5 hover:border-primary-500/30 hover:shadow-[0_80px_150px_rgba(0,0,0,0.5)] transition-all duration-700 relative overflow-hidden animate-cinematic-reveal"
           >
             <div className="absolute top-0 right-0 w-48 h-48 bg-primary-500/10 blur-3xl rounded-full opacity-50 group-hover:opacity-100 transition-opacity" />
             <div className="relative z-10">
@@ -100,7 +100,7 @@ export function IntelligenceShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
             transition={{ delay: 0.2, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-surface-card backdrop-blur-[40px] rounded-[3.5rem] p-10 group border-2 border-surface-100 dark:border-white/5 hover:border-primary-500/30 hover:shadow-[0_80px_150px_rgba(0,0,0,0.5)] transition-all duration-700 relative overflow-hidden animate-cinematic-reveal"
+            className="bg-surface-card backdrop-blur-[40px] rounded-[2.5rem] sm:rounded-[3.5rem] p-7 sm:p-10 group border-2 border-surface-100 dark:border-white/5 hover:border-primary-500/30 hover:shadow-[0_80px_150px_rgba(0,0,0,0.5)] transition-all duration-700 relative overflow-hidden animate-cinematic-reveal"
           >
             <div className="absolute bottom-0 right-0 w-48 h-48 bg-emerald-500/10 blur-3xl rounded-full opacity-50 group-hover:opacity-100 transition-opacity" />
             <div className="relative z-10">
@@ -123,11 +123,11 @@ export function IntelligenceShowcase() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
             transition={{ delay: 0.3, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-surface-card backdrop-blur-[60px] rounded-[4rem] p-12 md:col-span-3 group border-2 border-surface-100 dark:border-white/5 hover:border-primary-500/30 hover:shadow-[0_80px_150px_rgba(0,0,0,0.5)] transition-all duration-700 relative overflow-hidden animate-cinematic-reveal"
+            className="bg-surface-card backdrop-blur-[60px] rounded-[2.5rem] sm:rounded-[4rem] p-7 sm:p-12 md:col-span-3 group border-2 border-surface-100 dark:border-white/5 hover:border-primary-500/30 hover:shadow-[0_80px_150px_rgba(0,0,0,0.5)] transition-all duration-700 relative overflow-hidden animate-cinematic-reveal"
           >
             <div className="absolute -inset-1 bg-gradient-to-r from-primary-500/5 via-fuchsia-500/5 to-emerald-500/5 blur-3xl opacity-30 group-hover:opacity-60 transition-opacity duration-1000" aria-hidden="true" />
-            <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-12">
-              <div className="flex items-center gap-8 md:flex-1">
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-8 md:gap-12">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8 md:flex-1">
                 <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border-2 border-amber-500/20 flex items-center justify-center text-amber-500 shadow-2xl group-hover:rotate-12 transition-transform duration-500 flex-shrink-0">
                   <Clock className="w-8 h-8" aria-hidden="true" />
                 </div>
