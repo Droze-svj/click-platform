@@ -156,9 +156,6 @@ export default function EntropyReversalNode() {
     <div className="space-y-8 font-inter pt-6">
       <div className="ds-surface-card p-4 sm:p-8 overflow-hidden relative">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.02] via-transparent to-transparent pointer-events-none" />
-        <div className="absolute top-0 right-0 p-24 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-[3s]">
-           <RefreshCw size={300} className="text-theme-primary animate-spin-slow" />
-        </div>
         
         {/* HUD Tabs */}
         <div role="tablist" className="flex gap-1 p-1 rounded-lg ds-surface-subtle mb-8 relative z-10 max-w-xl overflow-x-auto">

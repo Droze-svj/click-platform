@@ -5,10 +5,8 @@ import { useEffect } from 'react'
 import EntropyReversalNode from '../../../components/ContentRecyclingDashboard'
 import { useAuth } from '../../../hooks/useAuth'
 import { useRouter } from 'next/navigation'
-import SectionHeader from '../../../components/dashboard/SectionHeader'
-import { Recycle } from 'lucide-react'
 import { useTranslation } from '../../../hooks/useTranslation'
-import { PageShell } from '../../../components/ui'
+import { PageShell, SectionHeader } from '../../../components/ui'
 
 export default function ContentRemixPage() {
   const router = useRouter()
@@ -24,12 +22,13 @@ export default function ContentRemixPage() {
 
   return (
     <PageShell width="wide" className="min-h-screen ds-bg-mesh-soft">
+        {/* Same page header as the rest of the dashboard (the legacy
+            dashboard/SectionHeader used dark-only amber-300 / slate tones that
+            washed out in light theme). */}
         <SectionHeader
-          tone="publish"
-          icon={Recycle}
-          kicker={t('recyclingPage.kicker')}
+          as="h1"
           title={t('recyclingPage.title')}
-          subtitle={t('recyclingPage.subtitle')}
+          description={t('recyclingPage.subtitle')}
         />
         <EntropyReversalNode />
     </PageShell>
