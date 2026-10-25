@@ -77,4 +77,31 @@ describe('render status reports failures', () => {
     const res = await status(jobId);
     expect(res.status).toBe(404);
   });
+
+  it('a Repurpose variant whose reframe fails is reported as failed', async () => {
+    // The reframe runs before runRender, so its failure was only logged and
+    // the variant's status poll said "unknown" forever.
+    const smartReframe = require('../../../server/services/smartReframeService');
+    const { runVariants } = require('../../../server/services/repurposeService');
+    const jobId = 'f0f0f0f0-0000-4000-8000-000000000005';
+    const reframeSpy = jest.spyOn(smartReframe, 'reframe').mockRejectedValue(new Error('no video stream'));
+    const renderSpy = jest.spyOn(render, 'runRender');
+    try {
+      await runVariants({
+        sourcePath: '/nonexistent/source.mp4',
+        baseTree: { duration: 5 },
+        variants: [{ jobId, ratio: '9:16', platform: 'tiktok' }],
+        tier: 'pro',
+        userId: String(user._id),
+      });
+    } finally {
+      reframeSpy.mockRestore();
+      renderSpy.mockRestore();
+    }
+    expect(renderSpy).not.toHaveBeenCalled();
+    const res = await status(jobId);
+    expect(res.status).toBe(200);
+    expect(res.body.data.status).toBe('failed');
+    expect(res.body.data.error).toMatch(/reframe.*9:16.*no video stream/);
+  });
 });
