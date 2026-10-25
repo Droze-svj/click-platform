@@ -6642,7 +6642,9 @@
     "allSet": "You're all set!",
     "clickTunedFor": "CLICK is tuned for",
     "makeFirstVideoViral": "Make your first video go viral.",
-    "syncFailed": "Couldn't save your answers to your account. They still apply on this device."
+    "syncFailed": "Couldn't save your answers to your account. They still apply on this device.",
+    "makeItYours": "Make it yours",
+    "spacing": "Spacing"
   },
   "oneClickPublish": {
     "salvageLowCtr": "Low early click-through rate on TikTok. Consider trying another version.",

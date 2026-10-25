@@ -219,10 +219,11 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.92, y: 20 }}
-        className="relative w-full max-w-lg mx-4"
+        className="relative w-full max-w-lg mx-4 text-white"
       >
-        <button type="button" onClick={onComplete} title={t('onboardingWizard.closeOnboarding')}
-          className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all z-10"
+        {/* Inside the card's corner — it used to hang off the edge (-top-3 -right-3). */}
+        <button type="button" onClick={onComplete} title={t('onboardingWizard.closeOnboarding')} aria-label={t('onboardingWizard.closeOnboarding')}
+          className="absolute top-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-colors z-10"
         >
           <X className="w-4 h-4" />
         </button>
@@ -305,7 +306,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
 
                 {quizStep === 3 && (
                   <>
-                    <h3 className="text-xl font-black tracking-tight mb-1">Make it yours</h3>
+                    <h3 className="text-xl font-black tracking-tight mb-1">{t('onboardingWizard.makeItYours')}</h3>
                     <p className="text-slate-500 text-xs mb-5">
                       Both of these follow you to any device, and you can change them any time in Settings.
                     </p>
@@ -328,7 +329,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                       ))}
                     </div>
 
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">Spacing</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">{t('onboardingWizard.spacing')}</p>
                     <div className="grid grid-cols-2 gap-2">
                       {([
                         { id: 'comfortable', label: 'Comfortable', tip: 'Roomier, easier to scan' },
