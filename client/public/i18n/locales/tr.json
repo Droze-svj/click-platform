@@ -6511,6 +6511,8 @@
     "stepOfThree": "Adım {{step}} / 3",
     "quizNicheHeading": "Kimin için yaratıyorsunuz?",
     "quizNicheSubtitle": "Click, yapay zekasını tam bağlamınıza göre uyarlayacaktır.",
+    "quizNicheTopicHeading": "İçeriğin ne hakkında?",
+    "quizNicheTopicSubtitle": "Click'in yapay zekâsı bu nişin kurallarına göre yazar. Bunu daha sonra profilinden değiştirebilirsin.",
     "quizPlatformHeading": "Birincil platform mu?",
     "quizPlatformSubtitle": "Dışa aktarma ayarlarını, en boy oranını ve altyazıları optimize eder.",
     "quizGoalHeading": "Ana hedefiniz nedir?",
@@ -10232,5 +10234,41 @@
     "planCreated": "Geri dönüşüm planı oluşturuldu.",
     "createFailed": "Geri dönüşüm planı oluşturulamadı.",
     "toggleFailed": "Geri dönüşüm planı güncellenemedi."
+  },
+  "responderInbox": {
+    "copyReply": "Yanıtı kopyala",
+    "sendNeedsComment": "Click bunu senin yerine gönderemez: {{platform}} üzerindeki bir yoruma bağlı değil. Kopyala ve oraya kendin yanıt ver."
+  },
+  "editorPanels": {
+    "remediation": {
+      "noFixesToast": "Yorumlar kontrol edildi — hiçbiri düzeltme istemiyor.",
+      "scheduledToast": "{{count}} düzeltme planlandı. Gece 02.00–06.00 arasında çalışırlar.",
+      "appliedToast": "Planlanan {{count}} düzeltmeden {{applied}} tanesi uygulandı.",
+      "failedToast": "Yorumlar kontrol edilemedi: {{error}}",
+      "noFixesNeeded": "Düzeltme gerekmiyor ({{count}} yorum kontrol edildi)",
+      "planned": "Planlandı",
+      "applied": "Uygulandı",
+      "notApplied": "Uygulanmadı"
+    },
+    "culturalArbitrage": {
+      "scanFailedToast": "Trendler ve geçmiş hitler yüklenemedi: {{error}}",
+      "repostScheduledToast": "Yeniden paylaşım {{date}} için planlandı.",
+      "repostPlannedToast": "Yeniden paylaşım planlandı.",
+      "repostFailedToast": "Yeniden paylaşım planlanamadı: {{error}}",
+      "noCandidates": "Henüz uygun bir eski gönderi yok. 90 günden eski ve 10K+ görüntülenme ya da 500+ etkileşim alan gönderiler burada görünür."
+    },
+    "syndicate": {
+      "failedToast": "Değerlendirme çalıştırılamadı: {{error}}",
+      "noResult": "Sunucu hiç oy döndürmedi."
+    },
+    "growthInsights": {
+      "emptyPlan": "Şu anda bu hafta için fikir üretilemedi. Biraz sonra tekrar dene.",
+      "targetEngagement": "Hedef: {{value}}+ etkileşim"
+    },
+    "oracleSandbox": {
+      "plannedToast": "Test planı hazırlandı. Henüz hiçbir şey çalışmıyor: bağlı reklam ağı olmadığından bütçe harcanmıyor ve sonuç gelmeyecek.",
+      "planned": "Plan hazırlandı",
+      "notRunning": "Çalışmıyor — bağlı reklam ağı yok"
+    }
   }
 }

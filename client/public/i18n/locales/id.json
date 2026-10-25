@@ -6511,6 +6511,8 @@
     "stepOfThree": "Langkah {{step}} dari 3",
     "quizNicheHeading": "Untuk siapa Anda berkreasi?",
     "quizNicheSubtitle": "Click akan menyesuaikan AI-nya dengan konteks Anda.",
+    "quizNicheTopicHeading": "Konten kamu tentang apa?",
+    "quizNicheTopicSubtitle": "AI Click menulis dengan playbook untuk niche ini. Kamu bisa mengubahnya nanti di profil.",
     "quizPlatformHeading": "Platform utama?",
     "quizPlatformSubtitle": "Mengoptimalkan pengaturan ekspor, rasio aspek & keterangan.",
     "quizGoalHeading": "Apa tujuan utama Anda?",
@@ -10232,5 +10234,41 @@
     "planCreated": "Rencana daur ulang dibuat.",
     "createFailed": "Gagal membuat rencana daur ulang.",
     "toggleFailed": "Gagal memperbarui rencana daur ulang."
+  },
+  "responderInbox": {
+    "copyReply": "Salin balasan",
+    "sendNeedsComment": "Click tidak bisa memposting ini untukmu: balasan ini tidak terhubung ke komentar di {{platform}}. Salin dan balas sendiri di sana."
+  },
+  "editorPanels": {
+    "remediation": {
+      "noFixesToast": "Komentar sudah diperiksa — tidak ada yang meminta perbaikan.",
+      "scheduledToast": "{{count}} perbaikan direncanakan. Dijalankan antara pukul 02.00–06.00 dini hari.",
+      "appliedToast": "{{applied}} dari {{count}} perbaikan yang direncanakan telah diterapkan.",
+      "failedToast": "Gagal memeriksa komentar: {{error}}",
+      "noFixesNeeded": "Tidak perlu perbaikan ({{count}} komentar diperiksa)",
+      "planned": "Direncanakan",
+      "applied": "Diterapkan",
+      "notApplied": "Tidak diterapkan"
+    },
+    "culturalArbitrage": {
+      "scanFailedToast": "Gagal memuat tren dan hit sebelumnya: {{error}}",
+      "repostScheduledToast": "Repost dijadwalkan untuk {{date}}.",
+      "repostPlannedToast": "Repost direncanakan.",
+      "repostFailedToast": "Gagal menjadwalkan repost: {{error}}",
+      "noCandidates": "Belum ada postingan lama yang memenuhi syarat. Postingan berumur lebih dari 90 hari dengan 10K+ tayangan atau 500+ interaksi akan muncul di sini."
+    },
+    "syndicate": {
+      "failedToast": "Penilaian tidak dapat dijalankan: {{error}}",
+      "noResult": "Server tidak mengembalikan suara apa pun."
+    },
+    "growthInsights": {
+      "emptyPlan": "Saat ini belum ada ide yang bisa dibuat untuk minggu ini. Coba lagi sebentar lagi.",
+      "targetEngagement": "Targetkan {{value}}+ interaksi"
+    },
+    "oracleSandbox": {
+      "plannedToast": "Rencana uji disusun. Belum ada yang berjalan: tidak ada jaringan iklan yang terhubung, jadi tidak ada anggaran yang terpakai dan tidak akan ada hasil.",
+      "planned": "Rencana disusun",
+      "notRunning": "Tidak berjalan — belum ada jaringan iklan yang terhubung"
+    }
   }
 }

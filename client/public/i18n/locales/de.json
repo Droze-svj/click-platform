@@ -6511,6 +6511,8 @@
     "stepOfThree": "Schritt {{step}} von 3",
     "quizNicheHeading": "Für wen erschaffen Sie?",
     "quizNicheSubtitle": "Click passt seine KI genau an Ihren Kontext an.",
+    "quizNicheTopicHeading": "Worum geht es in deinem Content?",
+    "quizNicheTopicSubtitle": "Die KI von Click schreibt nach dem Playbook für diese Nische. Du kannst das später in deinem Profil ändern.",
     "quizPlatformHeading": "Primäre Plattform?",
     "quizPlatformSubtitle": "Optimiert Exporteinstellungen, Seitenverhältnis und Untertitel.",
     "quizGoalHeading": "Was ist Ihr Hauptziel?",
@@ -10232,5 +10234,41 @@
     "planCreated": "Recycling-Plan erstellt.",
     "createFailed": "Der Recycling-Plan konnte nicht erstellt werden.",
     "toggleFailed": "Der Recycling-Plan konnte nicht aktualisiert werden."
+  },
+  "responderInbox": {
+    "copyReply": "Antwort kopieren",
+    "sendNeedsComment": "Click kann diese Antwort nicht für dich posten: Sie ist mit keinem Kommentar auf {{platform}} verknüpft. Kopiere sie und antworte dort selbst."
+  },
+  "editorPanels": {
+    "remediation": {
+      "noFixesToast": "Kommentare geprüft – keiner verlangt eine Korrektur.",
+      "scheduledToast": "Korrekturen geplant: {{count}}. Sie laufen zwischen 2 und 6 Uhr morgens.",
+      "appliedToast": "{{applied}} von {{count}} geplanten Korrekturen angewendet.",
+      "failedToast": "Kommentare konnten nicht geprüft werden: {{error}}",
+      "noFixesNeeded": "Keine Korrekturen nötig ({{count}} Kommentare geprüft)",
+      "planned": "Geplant",
+      "applied": "Angewendet",
+      "notApplied": "Nicht angewendet"
+    },
+    "culturalArbitrage": {
+      "scanFailedToast": "Trends und frühere Hits konnten nicht geladen werden: {{error}}",
+      "repostScheduledToast": "Repost für {{date}} geplant.",
+      "repostPlannedToast": "Repost geplant.",
+      "repostFailedToast": "Repost konnte nicht geplant werden: {{error}}",
+      "noCandidates": "Noch keine früheren Posts geeignet. Hier erscheinen Posts, die älter als 90 Tage sind und 10K+ Aufrufe oder 500+ Interaktionen haben."
+    },
+    "syndicate": {
+      "failedToast": "Die Prüfung konnte nicht laufen: {{error}}",
+      "noResult": "Der Server hat keine Stimmen zurückgegeben."
+    },
+    "growthInsights": {
+      "emptyPlan": "Für diese Woche konnten gerade keine Ideen erstellt werden. Versuch es gleich noch mal.",
+      "targetEngagement": "Ziel: {{value}}+ Interaktionen"
+    },
+    "oracleSandbox": {
+      "plannedToast": "Testplan erstellt. Noch läuft nichts: Es ist kein Werbenetzwerk verbunden, daher wird kein Budget ausgegeben und es kommen keine Ergebnisse.",
+      "planned": "Plan erstellt",
+      "notRunning": "Läuft nicht – kein Werbenetzwerk verbunden"
+    }
   }
 }

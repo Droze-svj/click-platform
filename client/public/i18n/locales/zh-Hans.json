@@ -6511,6 +6511,8 @@
     "stepOfThree": "步骤 {{step}}（共 3 步）",
     "quizNicheHeading": "你为谁创作？",
     "quizNicheSubtitle": "Click 将根据您的具体情况定制其人工智能。",
+    "quizNicheTopicHeading": "你的内容是关于什么的？",
+    "quizNicheTopicSubtitle": "Click 的 AI 会按照这个领域的打法来写作。你之后可以在个人资料中更改。",
     "quizPlatformHeading": "主要平台？",
     "quizPlatformSubtitle": "优化导出设置、宽高比和字幕。",
     "quizGoalHeading": "你的主要目标是什么？",
@@ -10232,5 +10234,41 @@
     "planCreated": "已创建重新利用计划。",
     "createFailed": "无法创建重新利用计划。",
     "toggleFailed": "无法更新重新利用计划。"
+  },
+  "responderInbox": {
+    "copyReply": "复制回复",
+    "sendNeedsComment": "Click 无法替你发布这条回复：它没有关联到 {{platform}} 上的评论。请复制后自行前往回复。"
+  },
+  "editorPanels": {
+    "remediation": {
+      "noFixesToast": "评论已检查，没有需要修复的内容。",
+      "scheduledToast": "已计划 {{count}} 项修复，将在凌晨 2–6 点之间执行。",
+      "appliedToast": "已应用 {{applied}}/{{count}} 项计划的修复。",
+      "failedToast": "无法检查评论：{{error}}",
+      "noFixesNeeded": "无需修复（已检查 {{count}} 条评论）",
+      "planned": "已计划",
+      "applied": "已应用",
+      "notApplied": "未应用"
+    },
+    "culturalArbitrage": {
+      "scanFailedToast": "无法加载趋势和过往爆款：{{error}}",
+      "repostScheduledToast": "已安排在 {{date}} 重新发布。",
+      "repostPlannedToast": "已计划重新发布。",
+      "repostFailedToast": "无法安排重新发布：{{error}}",
+      "noCandidates": "暂时还没有符合条件的历史帖子。发布超过 90 天、播放量 10K+ 或互动 500+ 的帖子会显示在这里。"
+    },
+    "syndicate": {
+      "failedToast": "评估无法运行：{{error}}",
+      "noResult": "服务器未返回任何投票。"
+    },
+    "growthInsights": {
+      "emptyPlan": "暂时无法生成本周的创意，请稍后再试。",
+      "targetEngagement": "目标：{{value}}+ 互动"
+    },
+    "oracleSandbox": {
+      "plannedToast": "测试计划已起草。目前没有任何内容在运行：未连接广告网络，因此不会花费预算，也不会有结果。",
+      "planned": "已起草计划",
+      "notRunning": "未运行 — 未连接广告网络"
+    }
   }
 }

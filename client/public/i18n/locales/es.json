@@ -6511,6 +6511,8 @@
     "stepOfThree": "Paso {{step}} de 3",
     "quizNicheHeading": "¿Para quién estás creando?",
     "quizNicheSubtitle": "Click adaptará su IA a su contexto exacto.",
+    "quizNicheTopicHeading": "¿De qué trata tu contenido?",
+    "quizNicheTopicSubtitle": "La IA de Click escribe con las claves de este nicho. Puedes cambiarlo más tarde en tu perfil.",
     "quizPlatformHeading": "¿Plataforma principal?",
     "quizPlatformSubtitle": "Optimiza la configuración de exportación, la relación de aspecto y los subtítulos.",
     "quizGoalHeading": "¿Cuál es tu principal objetivo?",
@@ -10232,5 +10234,41 @@
     "planCreated": "Plan de reciclaje creado.",
     "createFailed": "No se pudo crear el plan de reciclaje.",
     "toggleFailed": "No se pudo actualizar el plan de reciclaje."
+  },
+  "responderInbox": {
+    "copyReply": "Copiar respuesta",
+    "sendNeedsComment": "Click no puede publicar esta respuesta por ti: no está vinculada a ningún comentario en {{platform}}. Cópiala y responde allí tú mismo."
+  },
+  "editorPanels": {
+    "remediation": {
+      "noFixesToast": "Comentarios revisados: ninguno pide una corrección.",
+      "scheduledToast": "Correcciones planificadas: {{count}}. Se ejecutan entre las 2 y las 6 a. m.",
+      "appliedToast": "Se aplicaron {{applied}} de {{count}} correcciones planificadas.",
+      "failedToast": "No se pudieron revisar los comentarios: {{error}}",
+      "noFixesNeeded": "No hace falta corregir nada ({{count}} comentarios revisados)",
+      "planned": "Planificado",
+      "applied": "Aplicado",
+      "notApplied": "No aplicado"
+    },
+    "culturalArbitrage": {
+      "scanFailedToast": "No se pudieron cargar las tendencias ni los éxitos anteriores: {{error}}",
+      "repostScheduledToast": "Republicación programada para el {{date}}.",
+      "repostPlannedToast": "Republicación planificada.",
+      "repostFailedToast": "No se pudo programar la republicación: {{error}}",
+      "noCandidates": "Todavía no hay publicaciones anteriores que califiquen. Aquí aparecen las de más de 90 días con 10K+ vistas o 500+ interacciones."
+    },
+    "syndicate": {
+      "failedToast": "No se pudo realizar la revisión: {{error}}",
+      "noResult": "El servidor no devolvió ningún voto."
+    },
+    "growthInsights": {
+      "emptyPlan": "Ahora mismo no se pudieron generar ideas para esta semana. Vuelve a intentarlo en un rato.",
+      "targetEngagement": "Apunta a {{value}}+ interacciones"
+    },
+    "oracleSandbox": {
+      "plannedToast": "Plan de prueba redactado. Aún no se ejecuta nada: no hay ninguna red publicitaria conectada, así que no se gasta presupuesto ni llegarán resultados.",
+      "planned": "Plan redactado",
+      "notRunning": "Sin ejecutar: no hay ninguna red publicitaria conectada"
+    }
   }
 }

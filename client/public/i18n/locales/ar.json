@@ -6511,6 +6511,8 @@
     "stepOfThree": "الخطوة {{step}} من 3",
     "quizNicheHeading": "لمن تخلق؟",
     "quizNicheSubtitle": "سيؤدي النقر إلى تخصيص الذكاء الاصطناعي الخاص به ليناسب سياقك الدقيق.",
+    "quizNicheTopicHeading": "عمّ يتحدث محتواك؟",
+    "quizNicheTopicSubtitle": "يكتب الذكاء الاصطناعي في Click وفق أسلوب هذا المجال. يمكنك تغييره لاحقًا من ملفك الشخصي.",
     "quizPlatformHeading": "منصة أساسية؟",
     "quizPlatformSubtitle": "يعمل على تحسين إعدادات التصدير ونسبة العرض إلى الارتفاع والتعليقات التوضيحية.",
     "quizGoalHeading": "ما هو هدفك الرئيسي؟",
@@ -10232,5 +10234,41 @@
     "planCreated": "تم إنشاء خطة إعادة التدوير.",
     "createFailed": "تعذّر إنشاء خطة إعادة التدوير.",
     "toggleFailed": "تعذّر تحديث خطة إعادة التدوير."
+  },
+  "responderInbox": {
+    "copyReply": "نسخ الرد",
+    "sendNeedsComment": "لا يستطيع Click نشر هذا الرد نيابةً عنك: فهو غير مرتبط بتعليق على {{platform}}. انسخه وردّ هناك بنفسك."
+  },
+  "editorPanels": {
+    "remediation": {
+      "noFixesToast": "تم فحص التعليقات — لا يطلب أيٌّ منها إصلاحًا.",
+      "scheduledToast": "تم التخطيط لـ {{count}} من الإصلاحات. تُنفّذ بين الساعة 2 و6 صباحًا.",
+      "appliedToast": "تم تطبيق {{applied}} من أصل {{count}} من الإصلاحات المخطط لها.",
+      "failedToast": "تعذّر فحص التعليقات: {{error}}",
+      "noFixesNeeded": "لا حاجة إلى إصلاحات (تم فحص {{count}} من التعليقات)",
+      "planned": "مُخطّط له",
+      "applied": "مُطبّق",
+      "notApplied": "غير مُطبّق"
+    },
+    "culturalArbitrage": {
+      "scanFailedToast": "تعذّر تحميل الترندات والمنشورات الناجحة السابقة: {{error}}",
+      "repostScheduledToast": "تمت جدولة إعادة النشر في {{date}}.",
+      "repostPlannedToast": "تم التخطيط لإعادة النشر.",
+      "repostFailedToast": "تعذّرت جدولة إعادة النشر: {{error}}",
+      "noCandidates": "لا توجد منشورات سابقة مؤهلة بعد. تظهر هنا المنشورات الأقدم من 90 يومًا التي حققت 10K+ مشاهدة أو 500+ تفاعل."
+    },
+    "syndicate": {
+      "failedToast": "تعذّر إجراء التقييم: {{error}}",
+      "noResult": "لم يُرجع الخادم أي أصوات."
+    },
+    "growthInsights": {
+      "emptyPlan": "تعذّر توليد أفكار لهذا الأسبوع حاليًا. حاول مرة أخرى بعد قليل.",
+      "targetEngagement": "استهدف {{value}}+ تفاعل"
+    },
+    "oracleSandbox": {
+      "plannedToast": "تمت صياغة خطة الاختبار. لا شيء قيد التشغيل بعد: لا توجد شبكة إعلانية متصلة، لذا لن تُنفق أي ميزانية ولن تصل أي نتائج.",
+      "planned": "تمت صياغة الخطة",
+      "notRunning": "غير قيد التشغيل — لا توجد شبكة إعلانية متصلة"
+    }
   }
 }

@@ -6511,6 +6511,8 @@
     "stepOfThree": "Passaggio {{step}} di 3",
     "quizNicheHeading": "Per chi stai creando?",
     "quizNicheSubtitle": "Click adatterà la sua intelligenza artificiale al tuo contesto esatto.",
+    "quizNicheTopicHeading": "Di cosa parlano i tuoi contenuti?",
+    "quizNicheTopicSubtitle": "L'IA di Click scrive seguendo le regole di questa nicchia. Puoi cambiarla in seguito nel tuo profilo.",
     "quizPlatformHeading": "Piattaforma principale?",
     "quizPlatformSubtitle": "Ottimizza le impostazioni di esportazione, le proporzioni e le didascalie.",
     "quizGoalHeading": "Qual è il tuo obiettivo principale?",
@@ -10232,5 +10234,41 @@
     "planCreated": "Piano di riciclo creato.",
     "createFailed": "Impossibile creare il piano di riciclo.",
     "toggleFailed": "Impossibile aggiornare il piano di riciclo."
+  },
+  "responderInbox": {
+    "copyReply": "Copia risposta",
+    "sendNeedsComment": "Click non può pubblicare questa risposta per te: non è collegata a un commento su {{platform}}. Copiala e rispondi lì direttamente."
+  },
+  "editorPanels": {
+    "remediation": {
+      "noFixesToast": "Commenti controllati: nessuno richiede una correzione.",
+      "scheduledToast": "Correzioni pianificate: {{count}}. Vengono eseguite tra le 2 e le 6 del mattino.",
+      "appliedToast": "Applicate {{applied}} correzioni su {{count}} pianificate.",
+      "failedToast": "Impossibile controllare i commenti: {{error}}",
+      "noFixesNeeded": "Nessuna correzione necessaria ({{count}} commenti controllati)",
+      "planned": "Pianificata",
+      "applied": "Applicata",
+      "notApplied": "Non applicata"
+    },
+    "culturalArbitrage": {
+      "scanFailedToast": "Impossibile caricare tendenze e successi passati: {{error}}",
+      "repostScheduledToast": "Ripubblicazione programmata per il {{date}}.",
+      "repostPlannedToast": "Ripubblicazione pianificata.",
+      "repostFailedToast": "Impossibile programmare la ripubblicazione: {{error}}",
+      "noCandidates": "Nessun post passato idoneo per ora. Qui compaiono i post più vecchi di 90 giorni con 10K+ visualizzazioni o 500+ interazioni."
+    },
+    "syndicate": {
+      "failedToast": "Impossibile eseguire la valutazione: {{error}}",
+      "noResult": "Il server non ha restituito alcun voto."
+    },
+    "growthInsights": {
+      "emptyPlan": "Al momento non è stato possibile generare idee per questa settimana. Riprova tra un po'.",
+      "targetEngagement": "Punta a {{value}}+ interazioni"
+    },
+    "oracleSandbox": {
+      "plannedToast": "Piano di test redatto. Non è ancora attivo nulla: nessuna rete pubblicitaria è collegata, quindi non viene speso budget e non arriveranno risultati.",
+      "planned": "Piano redatto",
+      "notRunning": "Non attivo: nessuna rete pubblicitaria collegata"
+    }
   }
 }

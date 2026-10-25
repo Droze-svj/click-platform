@@ -6511,6 +6511,8 @@
     "stepOfThree": "Etapa {{step}} de 3",
     "quizNicheHeading": "Para quem você está criando?",
     "quizNicheSubtitle": "Click adaptará sua IA ao seu contexto exato.",
+    "quizNicheTopicHeading": "Sobre o que é o seu conteúdo?",
+    "quizNicheTopicSubtitle": "A IA do Click escreve seguindo o playbook desse nicho. Você pode mudar isso depois no seu perfil.",
     "quizPlatformHeading": "Plataforma primária?",
     "quizPlatformSubtitle": "Otimiza configurações de exportação, proporção e legendas.",
     "quizGoalHeading": "Qual é o seu objetivo principal?",
@@ -10232,5 +10234,41 @@
     "planCreated": "Plano de reciclagem criado.",
     "createFailed": "Não foi possível criar o plano de reciclagem.",
     "toggleFailed": "Não foi possível atualizar o plano de reciclagem."
+  },
+  "responderInbox": {
+    "copyReply": "Copiar resposta",
+    "sendNeedsComment": "O Click não pode postar esta resposta por você: ela não está vinculada a um comentário no {{platform}}. Copie e responda lá você mesmo."
+  },
+  "editorPanels": {
+    "remediation": {
+      "noFixesToast": "Comentários verificados — nenhum pede correção.",
+      "scheduledToast": "Correções planejadas: {{count}}. Elas rodam entre 2h e 6h da manhã.",
+      "appliedToast": "{{applied}} de {{count}} correções planejadas aplicadas.",
+      "failedToast": "Não foi possível verificar os comentários: {{error}}",
+      "noFixesNeeded": "Nenhuma correção necessária ({{count}} comentários verificados)",
+      "planned": "Planejada",
+      "applied": "Aplicada",
+      "notApplied": "Não aplicada"
+    },
+    "culturalArbitrage": {
+      "scanFailedToast": "Não foi possível carregar tendências e sucessos anteriores: {{error}}",
+      "repostScheduledToast": "Repost agendado para {{date}}.",
+      "repostPlannedToast": "Repost planejado.",
+      "repostFailedToast": "Não foi possível agendar o repost: {{error}}",
+      "noCandidates": "Nenhum post antigo se qualifica ainda. Posts com mais de 90 dias e 10K+ visualizações ou 500+ interações aparecem aqui."
+    },
+    "syndicate": {
+      "failedToast": "Não foi possível fazer a avaliação: {{error}}",
+      "noResult": "O servidor não retornou nenhum voto."
+    },
+    "growthInsights": {
+      "emptyPlan": "Não foi possível gerar ideias para esta semana agora. Tente de novo daqui a pouco.",
+      "targetEngagement": "Mire em {{value}}+ interações"
+    },
+    "oracleSandbox": {
+      "plannedToast": "Plano de teste elaborado. Nada está rodando ainda: nenhuma rede de anúncios está conectada, então nenhum orçamento é gasto e nenhum resultado vai chegar.",
+      "planned": "Plano elaborado",
+      "notRunning": "Não está rodando — nenhuma rede de anúncios conectada"
+    }
   }
 }

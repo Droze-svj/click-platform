@@ -6511,6 +6511,8 @@
     "stepOfThree": "Stap {{step}} van 3",
     "quizNicheHeading": "Voor wie creëer jij?",
     "quizNicheSubtitle": "Click zal de AI afstemmen op uw exacte context.",
+    "quizNicheTopicHeading": "Waar gaat je content over?",
+    "quizNicheTopicSubtitle": "De AI van Click schrijft volgens het playbook voor deze niche. Je kunt dit later in je profiel wijzigen.",
     "quizPlatformHeading": "Primair platform?",
     "quizPlatformSubtitle": "Optimaliseert exportinstellingen, beeldverhouding en bijschriften.",
     "quizGoalHeading": "Wat is je belangrijkste doel?",
@@ -10232,5 +10234,41 @@
     "planCreated": "Recyclingplan aangemaakt.",
     "createFailed": "Het recyclingplan kon niet worden aangemaakt.",
     "toggleFailed": "Het recyclingplan kon niet worden bijgewerkt."
+  },
+  "responderInbox": {
+    "copyReply": "Antwoord kopiëren",
+    "sendNeedsComment": "Click kan dit antwoord niet voor je plaatsen: het is niet gekoppeld aan een reactie op {{platform}}. Kopieer het en reageer daar zelf."
+  },
+  "editorPanels": {
+    "remediation": {
+      "noFixesToast": "Reacties gecontroleerd — geen enkele vraagt om een correctie.",
+      "scheduledToast": "{{count}} correctie(s) gepland. Ze draaien tussen 2 en 6 uur 's nachts.",
+      "appliedToast": "{{applied}} van {{count}} geplande correctie(s) toegepast.",
+      "failedToast": "Kon de reacties niet controleren: {{error}}",
+      "noFixesNeeded": "Geen correcties nodig ({{count}} reacties gecontroleerd)",
+      "planned": "Gepland",
+      "applied": "Toegepast",
+      "notApplied": "Niet toegepast"
+    },
+    "culturalArbitrage": {
+      "scanFailedToast": "Kon trends en eerdere hits niet laden: {{error}}",
+      "repostScheduledToast": "Repost ingepland voor {{date}}.",
+      "repostPlannedToast": "Repost gepland.",
+      "repostFailedToast": "Kon de repost niet inplannen: {{error}}",
+      "noCandidates": "Nog geen eerdere posts die in aanmerking komen. Posts ouder dan 90 dagen met 10K+ weergaven of 500+ interacties verschijnen hier."
+    },
+    "syndicate": {
+      "failedToast": "De beoordeling kon niet worden uitgevoerd: {{error}}",
+      "noResult": "De server gaf geen stemmen terug."
+    },
+    "growthInsights": {
+      "emptyPlan": "Er konden nu geen ideeën voor deze week worden gemaakt. Probeer het zo nog eens.",
+      "targetEngagement": "Mik op {{value}}+ interacties"
+    },
+    "oracleSandbox": {
+      "plannedToast": "Testplan opgesteld. Er draait nog niets: er is geen advertentienetwerk gekoppeld, dus er wordt geen budget uitgegeven en er komen geen resultaten binnen.",
+      "planned": "Plan opgesteld",
+      "notRunning": "Niet actief — geen advertentienetwerk gekoppeld"
+    }
   }
 }

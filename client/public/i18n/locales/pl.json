@@ -6511,6 +6511,8 @@
     "stepOfThree": "Krok {{step}} z 3",
     "quizNicheHeading": "Dla kogo tworzysz?",
     "quizNicheSubtitle": "Click dostosuje swoją sztuczną inteligencję do Twojego dokładnego kontekstu.",
+    "quizNicheTopicHeading": "O czym są Twoje treści?",
+    "quizNicheTopicSubtitle": "AI w Click pisze według zasad tej niszy. Możesz to później zmienić w swoim profilu.",
     "quizPlatformHeading": "Podstawowa platforma?",
     "quizPlatformSubtitle": "Optymalizuje ustawienia eksportu, proporcje i podpisy.",
     "quizGoalHeading": "Jaki jest Twój główny cel?",
@@ -10232,5 +10234,41 @@
     "planCreated": "Utworzono plan recyklingu.",
     "createFailed": "Nie udało się utworzyć planu recyklingu.",
     "toggleFailed": "Nie udało się zaktualizować planu recyklingu."
+  },
+  "responderInbox": {
+    "copyReply": "Kopiuj odpowiedź",
+    "sendNeedsComment": "Click nie może opublikować tej odpowiedzi za Ciebie: nie jest powiązana z komentarzem na {{platform}}. Skopiuj ją i odpowiedz tam samodzielnie."
+  },
+  "editorPanels": {
+    "remediation": {
+      "noFixesToast": "Komentarze sprawdzone — żaden nie wymaga poprawki.",
+      "scheduledToast": "Zaplanowane poprawki: {{count}}. Uruchamiają się między 2:00 a 6:00 rano.",
+      "appliedToast": "Zastosowano poprawki: {{applied}} z {{count}} zaplanowanych.",
+      "failedToast": "Nie udało się sprawdzić komentarzy: {{error}}",
+      "noFixesNeeded": "Poprawki niepotrzebne (sprawdzone komentarze: {{count}})",
+      "planned": "Zaplanowano",
+      "applied": "Zastosowano",
+      "notApplied": "Nie zastosowano"
+    },
+    "culturalArbitrage": {
+      "scanFailedToast": "Nie udało się wczytać trendów i wcześniejszych hitów: {{error}}",
+      "repostScheduledToast": "Ponowna publikacja zaplanowana na {{date}}.",
+      "repostPlannedToast": "Ponowna publikacja zaplanowana.",
+      "repostFailedToast": "Nie udało się zaplanować ponownej publikacji: {{error}}",
+      "noCandidates": "Żaden wcześniejszy post jeszcze się nie kwalifikuje. Pojawiają się tu posty starsze niż 90 dni z 10K+ wyświetleń lub 500+ interakcji."
+    },
+    "syndicate": {
+      "failedToast": "Nie udało się przeprowadzić oceny: {{error}}",
+      "noResult": "Serwer nie zwrócił żadnych głosów."
+    },
+    "growthInsights": {
+      "emptyPlan": "Teraz nie udało się wygenerować pomysłów na ten tydzień. Spróbuj ponownie za chwilę.",
+      "targetEngagement": "Celuj w {{value}}+ interakcji"
+    },
+    "oracleSandbox": {
+      "plannedToast": "Plan testu przygotowany. Nic jeszcze nie działa: nie połączono żadnej sieci reklamowej, więc budżet nie jest wydawany i nie będzie wyników.",
+      "planned": "Plan przygotowany",
+      "notRunning": "Nieaktywny — brak połączonej sieci reklamowej"
+    }
   }
 }

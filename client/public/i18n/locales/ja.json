@@ -6511,6 +6511,8 @@
     "stepOfThree": "ステップ {{step}}/3",
     "quizNicheHeading": "誰のために作っているのですか？",
     "quizNicheSubtitle": "Click は AI をユーザーの正確なコンテキストに合わせて調整します。",
+    "quizNicheTopicHeading": "どんなテーマのコンテンツですか？",
+    "quizNicheTopicSubtitle": "Click の AI はこのジャンルの定石に沿って書きます。あとでプロフィールから変更できます。",
     "quizPlatformHeading": "プライマリプラットフォーム?",
     "quizPlatformSubtitle": "エクスポート設定、アスペクト比、キャプションを最適化します。",
     "quizGoalHeading": "あなたの主な目標は何ですか？",
@@ -10232,5 +10234,41 @@
     "planCreated": "再利用プランを作成しました。",
     "createFailed": "再利用プランを作成できませんでした。",
     "toggleFailed": "再利用プランを更新できませんでした。"
+  },
+  "responderInbox": {
+    "copyReply": "返信をコピー",
+    "sendNeedsComment": "この返信は Click から投稿できません。{{platform}} のコメントに紐づいていないためです。コピーして、そちらで直接返信してください。"
+  },
+  "editorPanels": {
+    "remediation": {
+      "noFixesToast": "コメントを確認しました。修正を求めるものはありません。",
+      "scheduledToast": "{{count}} 件の修正を予定しました。午前2時〜6時の間に実行されます。",
+      "appliedToast": "予定していた修正 {{count}} 件のうち {{applied}} 件を適用しました。",
+      "failedToast": "コメントを確認できませんでした: {{error}}",
+      "noFixesNeeded": "修正は不要です（{{count}} 件のコメントを確認済み）",
+      "planned": "予定済み",
+      "applied": "適用済み",
+      "notApplied": "未適用"
+    },
+    "culturalArbitrage": {
+      "scanFailedToast": "トレンドと過去のヒット投稿を読み込めませんでした: {{error}}",
+      "repostScheduledToast": "{{date}} に再投稿を予約しました。",
+      "repostPlannedToast": "再投稿を計画しました。",
+      "repostFailedToast": "再投稿を予約できませんでした: {{error}}",
+      "noCandidates": "対象となる過去の投稿はまだありません。90日以上前の投稿で、再生数10K+またはエンゲージメント500+のものがここに表示されます。"
+    },
+    "syndicate": {
+      "failedToast": "評価を実行できませんでした: {{error}}",
+      "noResult": "サーバーから投票結果が返されませんでした。"
+    },
+    "growthInsights": {
+      "emptyPlan": "今週のアイデアを今は生成できませんでした。少し時間をおいてもう一度お試しください。",
+      "targetEngagement": "目標: エンゲージメント {{value}}+"
+    },
+    "oracleSandbox": {
+      "plannedToast": "テストプランを作成しました。まだ何も実行されていません。広告ネットワークが未接続のため、予算は使われず、結果も届きません。",
+      "planned": "プラン作成済み",
+      "notRunning": "未実行 — 広告ネットワークが接続されていません"
+    }
   }
 }

@@ -6511,6 +6511,8 @@
     "stepOfThree": "Bước {{step}} trên 3",
     "quizNicheHeading": "Bạn đang tạo ra cho ai?",
     "quizNicheSubtitle": "Click sẽ điều chỉnh AI của nó phù hợp với bối cảnh chính xác của bạn.",
+    "quizNicheTopicHeading": "Nội dung của bạn về chủ đề gì?",
+    "quizNicheTopicSubtitle": "AI của Click viết theo bí quyết của ngách này. Bạn có thể đổi lại sau trong hồ sơ.",
     "quizPlatformHeading": "Nền tảng chính?",
     "quizPlatformSubtitle": "Tối ưu hóa cài đặt xuất, tỷ lệ khung hình và chú thích.",
     "quizGoalHeading": "Mục tiêu chính của bạn là gì?",
@@ -10232,5 +10234,41 @@
     "planCreated": "Đã tạo kế hoạch tái sử dụng.",
     "createFailed": "Không thể tạo kế hoạch tái sử dụng.",
     "toggleFailed": "Không thể cập nhật kế hoạch tái sử dụng."
+  },
+  "responderInbox": {
+    "copyReply": "Sao chép trả lời",
+    "sendNeedsComment": "Click không thể đăng trả lời này giúp bạn: nó chưa được liên kết với bình luận nào trên {{platform}}. Hãy sao chép và tự trả lời ở đó."
+  },
+  "editorPanels": {
+    "remediation": {
+      "noFixesToast": "Đã kiểm tra bình luận — không có bình luận nào cần sửa.",
+      "scheduledToast": "Đã lên kế hoạch {{count}} bản sửa. Chúng chạy trong khung 2–6 giờ sáng.",
+      "appliedToast": "Đã áp dụng {{applied}}/{{count}} bản sửa đã lên kế hoạch.",
+      "failedToast": "Không thể kiểm tra bình luận: {{error}}",
+      "noFixesNeeded": "Không cần sửa gì (đã kiểm tra {{count}} bình luận)",
+      "planned": "Đã lên kế hoạch",
+      "applied": "Đã áp dụng",
+      "notApplied": "Chưa áp dụng"
+    },
+    "culturalArbitrage": {
+      "scanFailedToast": "Không thể tải xu hướng và các bài từng nổi: {{error}}",
+      "repostScheduledToast": "Đã lên lịch đăng lại vào {{date}}.",
+      "repostPlannedToast": "Đã lên kế hoạch đăng lại.",
+      "repostFailedToast": "Không thể lên lịch đăng lại: {{error}}",
+      "noCandidates": "Chưa có bài đăng cũ nào đủ điều kiện. Các bài đăng hơn 90 ngày có từ 10K+ lượt xem hoặc 500+ lượt tương tác sẽ hiện ở đây."
+    },
+    "syndicate": {
+      "failedToast": "Không thể chạy đánh giá: {{error}}",
+      "noResult": "Máy chủ không trả về phiếu bầu nào."
+    },
+    "growthInsights": {
+      "emptyPlan": "Hiện chưa tạo được ý tưởng nào cho tuần này. Hãy thử lại sau ít phút.",
+      "targetEngagement": "Nhắm tới {{value}}+ lượt tương tác"
+    },
+    "oracleSandbox": {
+      "plannedToast": "Đã soạn kế hoạch thử nghiệm. Chưa có gì đang chạy: chưa kết nối mạng quảng cáo nào, nên không tốn ngân sách và sẽ không có kết quả.",
+      "planned": "Đã soạn kế hoạch",
+      "notRunning": "Chưa chạy — chưa kết nối mạng quảng cáo"
+    }
   }
 }
