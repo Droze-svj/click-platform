@@ -18,7 +18,9 @@ try {
   // Optional dependency in some local environments.
 }
 
-const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY
+// Read per call (not frozen at require time) so a key added to the env —
+// or set by a test — takes effect without a module reload.
+const elevenLabsKey = () => process.env.ELEVENLABS_API_KEY || ''
 const ELEVENLABS_BASE = 'https://api.elevenlabs.io/v1'
 
 // Bound every ElevenLabs HTTP call so a stuck upstream can't hang a dub job.
@@ -62,7 +64,8 @@ function captureDubbingError(err, context = {}) {
  * @param {string} [opts.audioSampleUrl] - URL to voice clone sample audio
  * @returns {Promise<{ jobId, audioUrl, lipSyncDataUrl }>}
  */
-async function generateDubbedTrack({ videoId, targetLanguage, voiceId, lipSyncEnabled = false, audioSampleUrl }) {
+async function generateDubbedTrack({ videoId, targetLanguage, voiceId, lipSyncEnabled = false, audioSampleUrl, sourceFilePath, sourceUrl }) {
+  const ELEVENLABS_API_KEY = elevenLabsKey()
   if (!ELEVENLABS_API_KEY) {
     logger.info('[dubbing] ELEVENLABS_API_KEY missing, trying Edge-TTS fallback...', { videoId, targetLanguage });
     try {
@@ -132,7 +135,18 @@ async function generateDubbedTrack({ videoId, targetLanguage, voiceId, lipSyncEn
     const formData = new FormData()
     formData.append('name', `click-dub-${videoId}-${targetLanguage}`)
     formData.append('target_lang', targetLanguage)
-    formData.append('source_url', `https://cdn.clickapp.io/videos/${videoId}`) // Source video URL
+    // The provider needs the actual media. Send our own file's bytes; a remote
+    // (cloud-storage) original goes as source_url. The old code sent a made-up
+    // cdn.clickapp.io URL that does not exist, so no job could ever succeed.
+    if (sourceFilePath) {
+      const fs = require('fs')
+      const path = require('path')
+      formData.append('file', await fs.openAsBlob(sourceFilePath), path.basename(sourceFilePath))
+    } else if (sourceUrl && /^https:\/\//i.test(sourceUrl)) {
+      formData.append('source_url', sourceUrl)
+    } else {
+      throw new Error('The source video file could not be found to dub.')
+    }
     formData.append('num_speakers', '1')
     if (activeVoiceId) formData.append('voice_id', activeVoiceId)
 
@@ -149,10 +163,16 @@ async function generateDubbedTrack({ videoId, targetLanguage, voiceId, lipSyncEn
 
     const dub = await dubRes.json()
 
+    // Async job: there is no playable audio yet. The provider's audio URL needs
+    // our API key (a browser can't play it, and CSP blocks the origin anyway),
+    // so the status poll copies the finished track into /uploads — see
+    // saveDubbedAudio. No lip-sync URL: there is no lip-sync service behind it.
     return {
       jobId: dub.dubbing_id,
-      audioUrl: `${ELEVENLABS_BASE}/dubbing/${dub.dubbing_id}/audio/${targetLanguage}`,
-      lipSyncDataUrl: lipSyncEnabled ? `https://api.clickapp.io/lipsync/${dub.dubbing_id}` : null,
+      audioUrl: null,
+      status: 'processing',
+      lipSyncDataUrl: null,
+      technique: 'elevenlabs',
     }
   } catch (err) {
     captureDubbingError(err, { action: 'generateDubbedTrack', videoId, targetLanguage })
@@ -176,6 +196,7 @@ async function generateDubbedTrack({ videoId, targetLanguage, voiceId, lipSyncEn
  * @returns {Promise<string>} voiceId
  */
 async function cloneVoice(sample, name) {
+  const ELEVENLABS_API_KEY = elevenLabsKey()
   // Fail honestly when the provider isn't configured, rather than firing a
   // keyless request that 401s with an opaque "Voice clone failed: 401".
   if (!ELEVENLABS_API_KEY) {
@@ -208,6 +229,7 @@ async function cloneVoice(sample, name) {
  * @returns {Promise<{ status: string, progress: number }>}
  */
 async function getDubbingStatus(dubbingId) {
+  const ELEVENLABS_API_KEY = elevenLabsKey()
   if (!ELEVENLABS_API_KEY) {
     // PRODUCTION: don't claim a job is "dubbed" when dubbing isn't configured.
     if (isProduction()) {
@@ -216,7 +238,7 @@ async function getDubbingStatus(dubbingId) {
     return { mock: true, status: 'dubbed', progress: 100 }
   }
 
-  const res = await fetchWithTimeout(`${ELEVENLABS_BASE}/dubbing/${dubbingId}`, {
+  const res = await fetchWithTimeout(`${ELEVENLABS_BASE}/dubbing/${encodeURIComponent(dubbingId)}`, {
     headers: { 'xi-api-key': ELEVENLABS_API_KEY },
   })
 
@@ -229,6 +251,35 @@ async function getDubbingStatus(dubbingId) {
   const STATUS_MAP = { dubbing: 'processing', dubbed: 'completed', failed: 'error', error: 'error' }
   const status = STATUS_MAP[data.status] || data.status
   return { status, progress: data.progress ?? 0 }
+}
+
+/**
+ * Download a finished ElevenLabs dub (the endpoint needs our API key) and store
+ * it under our own /uploads so the editor can play it same-origin.
+ *
+ * @param {string} dubbingId
+ * @param {string} targetLanguage
+ * @returns {Promise<string>} unsigned "/uploads/dubs/<random>.mp3"
+ */
+async function saveDubbedAudio(dubbingId, targetLanguage) {
+  const ELEVENLABS_API_KEY = elevenLabsKey()
+  if (!ELEVENLABS_API_KEY) throw new Error('Dubbing is not configured.')
+  const res = await fetchWithTimeout(
+    `${ELEVENLABS_BASE}/dubbing/${encodeURIComponent(dubbingId)}/audio/${encodeURIComponent(targetLanguage)}`,
+    { headers: { 'xi-api-key': ELEVENLABS_API_KEY } },
+  )
+  if (!res.ok) throw new Error(`Dubbed audio download failed: ${res.status}`)
+  const buffer = Buffer.from(await res.arrayBuffer())
+  if (!buffer.length) throw new Error('Dubbed audio download was empty')
+
+  const fs = require('fs')
+  const path = require('path')
+  const { randomMediaName } = require('../utils/mediaName')
+  const dir = path.join(__dirname, '..', '..', 'uploads', 'dubs')
+  await fs.promises.mkdir(dir, { recursive: true })
+  const filename = randomMediaName('.mp3')
+  await fs.promises.writeFile(path.join(dir, filename), buffer)
+  return `/uploads/dubs/${filename}`
 }
 
 /**
@@ -263,4 +314,4 @@ function buildMockResponse(videoId, targetLanguage, lipSyncEnabled) {
   }
 }
 
-module.exports = { generateDubbedTrack, cloneVoice, getDubbingStatus, lipSyncWarp }
+module.exports = { generateDubbedTrack, cloneVoice, getDubbingStatus, saveDubbedAudio, lipSyncWarp }
