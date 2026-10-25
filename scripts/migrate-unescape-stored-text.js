@@ -85,13 +85,17 @@ async function main() {
   const existing = new Set((await db.listCollections().toArray()).map((c) => c.name));
   let totalDocs = 0;
   let totalStrings = 0;
+  const missing = COLLECTIONS.filter((n) => !existing.has(n));
+  if (missing.length) console.log(`  (not in this database: ${missing.join(', ')})`);
   for (const name of COLLECTIONS) {
     if (!existing.has(name)) continue;
     const coll = db.collection(name);
     let docs = 0;
     let strings = 0;
+    let scanned = 0;
     const cursor = coll.find({});
     for await (const doc of cursor) {
+      scanned += 1;
       const sets = {};
       for (const [k, v] of Object.entries(doc)) {
         if (k === '_id' || k === 'oauth' || SECRET_KEY.test(k)) continue;
@@ -103,7 +107,7 @@ async function main() {
         if (APPLY) await coll.updateOne({ _id: doc._id }, { $set: sets });
       }
     }
-    if (docs) console.log(`  ${name}: ${docs} document(s), ${strings} string(s)${APPLY ? ' decoded' : ' would be decoded'}`);
+    console.log(`  ${name}: scanned ${scanned}, ${docs} document(s) / ${strings} string(s)${APPLY ? ' decoded' : ' to decode'}`);
     totalDocs += docs;
     totalStrings += strings;
   }
