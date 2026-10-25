@@ -101,6 +101,11 @@ const SEGMENT_LABEL_KEY: Record<string, string> = {
 }
 
 function segmentLabel(t: (k: string) => string, seg: string): string {
+  // Record ids (Mongo ObjectIds, UUIDs) aren't labels — the app bar showed
+  // "6addd0c00252a82c2ca67d6c" as the title of every detail page.
+  if (/^[0-9a-f]{24}$/i.test(seg) || /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(seg)) {
+    return t('nav.details')
+  }
   const key = SEGMENT_LABEL_KEY[seg]
   // When a key exists, t() returns the translated value; when it doesn't,
   // pass the raw segment so t()'s humanise() turns e.g. "marketing-ai" into

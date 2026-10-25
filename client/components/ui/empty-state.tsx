@@ -22,7 +22,7 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
       {...props}
     >
       {IconComp ? (
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent text-theme-muted">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
           <IconComp className="h-6 w-6" aria-hidden />
         </div>
       ) : null}

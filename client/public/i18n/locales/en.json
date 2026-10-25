@@ -457,7 +457,8 @@
     "toolbox": "Toolbox",
     "neural": "Trend Intelligence",
     "suggestions": "Suggestions",
-    "ops": "Operations"
+    "ops": "Operations",
+    "details": "Details"
   },
   "workflow": {
     "niche": "Niche",
@@ -605,33 +606,33 @@
     "nav": {
       "forge": {
         "label": "AI Video Creator",
-        "desc": "Instantly transform raw footage into viral short-form packs with AI.",
+        "desc": "Turn raw footage into short clips ready to post.",
         "badge": "AI"
       },
       "studio": {
         "label": "Video Editor",
-        "desc": "Advanced timeline editor with AI-powered cuts, captions, and b-roll.",
-        "badge": "ADVANCED"
+        "desc": "Timeline editor with AI cuts, captions and B-roll.",
+        "badge": "Pro"
       },
       "script": {
-        "label": "Script Architect",
-        "desc": "Generate high-retention scripts for TikTok, Reels, and YouTube Shorts.",
-        "badge": "AI WRITER"
+        "label": "Scripts",
+        "desc": "Write scripts for TikTok, Reels and YouTube Shorts.",
+        "badge": "AI"
       },
       "scheduler": {
-        "label": "Global Scheduler",
-        "desc": "Coordinate and automate your content distribution across all platforms.",
-        "badge": "Sync"
+        "label": "Scheduler",
+        "desc": "Plan and schedule posts across all your platforms.",
+        "badge": "Plan"
       },
       "discover": {
-        "label": "Market Discover",
-        "desc": "Uncover trending hooks, viral sounds, and industry-leading formats.",
-        "badge": "LIVE"
+        "label": "Trends",
+        "desc": "Find trending hooks, sounds and formats in your niche.",
+        "badge": "Live"
       },
       "vault": {
-        "label": "Platform Vault",
-        "desc": "Manage and connect your TikTok, Instagram, YouTube, and X accounts.",
-        "badge": "SECURE"
+        "label": "Accounts",
+        "desc": "Connect your TikTok, Instagram, YouTube and X accounts.",
+        "badge": "Setup"
       }
     },
     "connect": {
@@ -647,17 +648,26 @@
       "night": "Good night"
     },
     "hero": {
-      "subtitle": "Forge a clip, write a script, or schedule your next post — Click is ready when you are."
+      "subtitle": "Make a clip, write a script, or schedule your next post — Click is ready when you are."
     },
     "insight": {
       "cta": {
-        "forge": "Open Forge",
+        "forge": "Make a clip",
         "start": "Start a clip"
       },
       "empty": "Publish your first few clips and Click will surface your learned style here — top hooks, presets, and best publish hours.",
       "peak": "Audience peak",
       "style": "Your style",
-      "title": "AI insight"
+      "title": "AI insight",
+      "sourceLearned": "Learned",
+      "sourceTeam": "Team",
+      "sourceStarter": "Starter",
+      "partPreset": "preset {{preset}}",
+      "partHooks": "{{hook}} hooks",
+      "partBestHour": "best at {{hour}}:00",
+      "learning": "Click is learning your style — publish more clips to refine it.",
+      "summary": "Across {{count}} clips: {{parts}}.",
+      "peakBody": "Engagement is strongest around {{hour}}:00."
     },
     "quickActions": {
       "subtitle": "Jump straight into a workflow",
@@ -665,15 +675,40 @@
     },
     "recent": {
       "empty": {
-        "desc": "Forge your first clip and it will show up here.",
+        "desc": "Make your first clip and it will show up here.",
         "title": "No content yet"
       },
       "title": "Recent content",
-      "untitled": "Untitled"
+      "untitled": "Untitled",
+      "status": {
+        "draft": "Draft",
+        "scheduled": "Scheduled",
+        "published": "Published",
+        "cancelled": "Cancelled",
+        "failed": "Failed",
+        "processing": "Processing",
+        "completed": "Ready"
+      }
     },
     "refresh": {
       "subtitle": "Pull the latest metrics",
       "title": "Up to date"
+    },
+    "time": {
+      "justNow": "just now",
+      "minutesAgo": "{{count}}m ago",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago"
+    },
+    "welcomeBanner": {
+      "titleNiche": "Your {{niche}} workspace is ready",
+      "title": "Welcome to Click",
+      "bodyNiche": "Click is tuned to your niche. Finish setup or make your first clip.",
+      "body": "Pick your niche so Click matches your style, or jump straight into your first clip.",
+      "openPlaybook": "Open your playbook",
+      "finishSetup": "Finish setup",
+      "makeClip": "Make a clip",
+      "dismiss": "Dismiss welcome"
     }
   },
   "auth": {
@@ -812,8 +847,8 @@
     "syncArchive": "Refresh",
     "payloadInventory": "Total videos",
     "neuralProcessed": "Processed",
-    "syntheticYields": "Synthetic Yields",
-    "initializeIntake": "Initialize Intake",
+    "syntheticYields": "Clips made",
+    "initializeIntake": "Upload a video",
     "payloadArchive": "Your videos",
     "searchArchive": "Search videos...",
     "dropPayload": "Drop your video here",
@@ -828,12 +863,12 @@
     "highVelocity": "Auto clips",
     "intakeHint": "Upload raw footage and Click will analyze it and suggest clips you can edit and post.",
     "secureStorage": "Everything you've uploaded",
-    "all": "all",
-    "completed": "completed",
-    "processing": "processing",
-    "failed": "failed",
-    "queued": "queued",
-    "yields": "YIELDS",
+    "all": "All",
+    "completed": "Ready",
+    "processing": "Processing",
+    "failed": "Failed",
+    "queued": "Queued",
+    "yields": "clips",
     "uploadStable": "✓ Uploaded. Analyzing your video...",
     "uploadFailed": "Upload failed",
     "missingContentId": "Upload couldn't be saved. Try again.",
@@ -841,7 +876,20 @@
     "syncingPayloadProgress": "Uploading...",
     "analysisComplete": "✓ Analysis done: {count} clips created",
     "processingFailure": "Processing failed. Try uploading again.",
-    "refreshing": "Refreshing"
+    "refreshing": "Refreshing",
+    "clipsMade": "Clips made",
+    "uploadTitle": "Upload a video",
+    "uploadHint": "MP4, MOV, WebM and other video files · up to 1 GB",
+    "analyzingVideo": "Analyzing your video",
+    "filter": {
+      "all": "All",
+      "completed": "Ready",
+      "processing": "Processing",
+      "failed": "Failed"
+    },
+    "clipsCount": "{count} clips",
+    "moreOptions": "More options",
+    "openInEditor": "Open {title} in editor"
   },
   "achievementsPage": {
     "loading": "Loading achievements...",
@@ -1090,19 +1138,19 @@
     "errorSynthLogicDiffraction": "Generation failed. Please try again.",
     "errorMinLogicSeed": "Add at least 50 characters of source text.",
     "successTransmitting": "Generating your posts…",
-    "successForgingComplete": "Forging complete",
-    "errorForgeFailed": "Forge failed",
-    "errorThermalOverload": "Forge error: thermal overload",
+    "successForgingComplete": "Your posts are ready",
+    "errorForgeFailed": "Generation failed",
+    "errorThermalOverload": "Generation failed. Please try again in a moment.",
     "backToDashboard": "Back to Dashboard",
     "neuralForgeMatrix": "Content generator",
-    "forgeCoreIgnited": "Forge core ignited",
-    "title": "Content AI",
-    "subtitle": "Turn your ideas into ready-to-post content.",
+    "forgeCoreIgnited": "Generating…",
+    "title": "Content",
+    "subtitle": "Turn an article, transcript or notes into ready-to-post social content.",
     "deployPayloads": "Schedule posts",
-    "dismissError": "Dismiss Error",
-    "dismissSuccess": "Dismiss Success",
+    "dismissError": "Dismiss error",
+    "dismissSuccess": "Dismiss message",
     "logicInjection": "Source text",
-    "syncActive": "Sync active",
+    "syncActive": "Live",
     "operationalDesignation": "Title",
     "designationPlaceholder": "Title (optional)...",
     "logicSeedMatrix": "Your idea",
@@ -1110,15 +1158,15 @@
     "particles": "{{count}} words",
     "logicSeedPlaceholder": "Paste an article, transcript or notes (at least 50 characters)…",
     "platforms": "Platforms",
-    "toggleNode": "Toggle {{node}}",
-    "ignitingForge": "Igniting forge...",
+    "toggleNode": "Include {{node}}",
+    "ignitingForge": "Generating…",
     "forgeContent": "Generate posts",
     "neuralPayloads": "Generated content",
     "deployAll": "Schedule all",
-    "forgingSyntheticLogic": "Forging Synthetic Logic",
+    "forgingSyntheticLogic": "Writing your posts…",
     "nodeLinkEstablished": "Connected",
-    "forgeBufferEmpty": "Forge Buffer Empty",
-    "forgeBufferEmptyDesc": "Add an idea to generate posts.",
+    "forgeBufferEmpty": "Nothing generated yet",
+    "forgeBufferEmptyDesc": "Paste your source text, pick platforms and generate — your posts appear here.",
     "resonanceArrayMatrix": "Social posts",
     "bitsResonance": "{{count}} / {{limit}} characters",
     "copyContent": "Copy content",
@@ -1127,19 +1175,19 @@
     "strategicCoreNarrative": "Long-form summary",
     "syntheticCoreManifest": "Blog summary",
     "forgeOrchestrationData": "Generated content",
-    "captured": "Captured",
+    "captured": "Copied",
     "captureManifest": "Copy",
-    "exponentialLogicPhantoms": "Exponential Logic Phantoms",
+    "exponentialLogicPhantoms": "Key takeaways",
     "platformNode": "For {{platform}}",
     "viralCoefficientMax": "Top viral score",
     "deployAllTrajectories": "Schedule all",
-    "purgeForgeBuffer": "Purge Forge Buffer",
+    "purgeForgeBuffer": "Clear results",
     "neuralHeuristics": "Suggestions",
     "neuralHeuristicsDesc": "Ways to improve your content.",
     "decryptingHeuristics": "Analyzing…",
     "predictiveTelemetry": "Performance forecast",
     "predictiveTelemetryDesc": "Forecasts of how your content may perform.",
-    "scanningTrajectories": "Scanning Trajectories...",
+    "scanningTrajectories": "Loading…",
     "errorStatusCheckFailed": "Couldn't check on your content. It may still finish; look for it in your library.",
     "errorGenerationTimeout": "This is taking longer than usual. It may still finish; look for it in your library in a few minutes.",
     "errorTemplateLoadFailed": "Couldn't load that template. You can still write your own."
@@ -2966,11 +3014,11 @@
     "sortRating": "Your rating",
     "sortDuration": "Duration",
     "emptyTitle": "No AI clips yet",
-    "initiateUpload": "Initiate Upload",
+    "initiateUpload": "Upload a video",
     "sourceClips": "Source · {{count}} clips",
-    "untitledArchive": "Untitled Archive",
-    "manageArchive": "Manage Archive",
-    "selectionsCount": "{{count}} selections",
+    "untitledArchive": "Untitled video",
+    "manageArchive": "Manage clips",
+    "selectionsCount": "{{count}} selected",
     "selectAll": "Select all",
     "clear": "Clear",
     "download": "Download"
@@ -10657,7 +10705,25 @@
       "noFixesNeeded": "No fixes needed ({{count}} comments checked)",
       "planned": "Planned",
       "applied": "Applied",
-      "notApplied": "Not applied"
+      "notApplied": "Not applied",
+      "title": "Auto-fix from comments",
+      "subtitle": "Fixes issues viewers mention in comments.",
+      "windowOpen": "Fix window: open now",
+      "windowHours": "Fix window: 2–6 AM",
+      "plannedFixes": "Planned fixes",
+      "actionVolume": "Adjust volume",
+      "actionStabilize": "Stabilize footage",
+      "actionText": "Enlarge text",
+      "value": "Value: {{value}}",
+      "notChecked": "Not checked yet",
+      "checkComments": "Check comments",
+      "checkCommentsDesc": "Reads the comments on this video and plans fixes, like lowering loud music, enlarging small text or steadying shaky footage.",
+      "checking": "Checking…",
+      "run": "Run auto-fix",
+      "lastRun": "Last run:",
+      "lastRunNow": "Just now",
+      "lastRunScheduled": "Scheduled",
+      "lastRunNever": "Not run yet"
     },
     "culturalArbitrage": {
       "scanFailedToast": "Couldn't load trends and past hits: {{error}}",
@@ -11211,5 +11277,60 @@
     "versionBadge": "v{{version}}",
     "revisionFallback": "Revision",
     "loading": "Loading…"
+  },
+  "contentDetailPage": {
+    "notFound": "Content not found",
+    "notFoundDesc": "It may have been deleted, or the link is wrong.",
+    "backToContent": "Back to content",
+    "tabOverview": "Overview",
+    "tabVersions": "Versions",
+    "tabComments": "Comments",
+    "tabPerformance": "Performance",
+    "tabTranslations": "Translations",
+    "breadcrumbContent": "Content",
+    "untitled": "Untitled",
+    "subtitle": "{{type}} · created {{date}}",
+    "unfavorite": "Remove from favorites",
+    "favorite": "Add to favorites",
+    "organize": "Organize",
+    "sections": "Content sections",
+    "quickActions": "Quick actions",
+    "suggestionToast": "Suggestion: {{suggestion}}",
+    "details": "Details",
+    "fieldType": "Type",
+    "fieldStatus": "Status",
+    "fieldCategory": "Category",
+    "fieldCreated": "Created",
+    "fieldUpdated": "Last updated",
+    "categoryGeneral": "General",
+    "tags": "Tags",
+    "noTags": "No tags yet.",
+    "addTag": "Add a tag and press Enter",
+    "description": "Description",
+    "transcript": "Transcript",
+    "generatedContent": "Generated content",
+    "aiGenerated": "AI generated",
+    "copy": "Copy",
+    "copied": "Copied",
+    "noGenerated": "No social posts were generated for this item.",
+    "emptyBodyTitle": "Nothing here yet",
+    "emptyBodyDesc": "This item has no description, transcript or generated posts yet.",
+    "translateDesc": "Translate this item into another language.",
+    "body": "Body",
+    "favoriteAdded": "Added to favorites",
+    "favoriteRemoved": "Removed from favorites",
+    "favoriteFailed": "Couldn't update favorite",
+    "tagAdded": "Tag added",
+    "tagFailed": "Couldn't add tag",
+    "loadFailed": "Failed to load content"
+  },
+  "whatToMakeNext": {
+    "title": "What to make next",
+    "learningTitle": "Still learning your style",
+    "learningBody": "Publish and rate a few more clips — once Click has enough of your own data it will recommend exactly what to make next, grounded in what already works for you.",
+    "makeClip": "Make a clip",
+    "potential": "{{lift}} potential",
+    "voteUp": "Good suggestion",
+    "voteDown": "Not for me"
   }
 }
