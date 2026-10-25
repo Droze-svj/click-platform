@@ -4,6 +4,7 @@
 // carry the payload, and the last is the CTA. Distinct from the Series Planner
 // (which schedules separate content pieces over days) and Repurpose (cross-platform
 // reformat of finished copy). Pure prompt/parse core + injectable AI, unit-testable.
+const { splitListFallback } = require('../utils/aiListFallback');
 
 const FORMATS = {
   thread: 'an X/Threads thread — each slide is one short post (<= ~280 chars), numbered.',
@@ -65,7 +66,8 @@ function shapeSlides(raw, count) {
   if (Array.isArray(parsed)) {
     items = parsed.map((x) => (typeof x === 'string' ? x : (x && (x.text || x.slide)) || '')).filter(Boolean);
   } else {
-    items = text.split('\n')
+    // A refusal or a paragraph of prose is not a set of slides ([] → 503).
+    items = splitListFallback(text, { requested: cap })
       .map((l) => l.replace(/^\s*(?:\d+[.)]|[-*•])\s*/, '').replace(/^["']|["']$/g, '').trim())
       .filter(Boolean);
   }

@@ -3,6 +3,7 @@
 // to spark early comment velocity (which most feeds reward), push a CTA, or point
 // to a link without dropping a bare URL in the caption. Returns a few options to
 // choose from. Pure prompt/parse core + injectable AI so it is unit-testable.
+const { splitListFallback } = require('../utils/aiListFallback');
 
 // Supported goals + the guidance injected into the prompt.
 const GOALS = {
@@ -55,7 +56,8 @@ function shapeOptions(raw, goal) {
     items = parsed.map((x) => (typeof x === 'string' ? x : (x && x.text) || '')).filter(Boolean);
   } else {
     // Fallback: line split, strip leading numbering/bullets/quotes.
-    items = text.split('\n')
+    // A refusal or a paragraph of prose is not a set of options ([] → 503).
+    items = splitListFallback(text, { requested: 3 })
       .map((l) => l.replace(/^\s*(?:\d+[.)]|[-*•])\s*/, '').replace(/^["']|["']$/g, '').trim())
       .filter(Boolean);
   }

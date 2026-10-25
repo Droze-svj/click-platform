@@ -4,6 +4,7 @@
 // several NICHE (targeted intent), some COMMUNITY (engaged micro-tags), and a
 // BRANDED slot. Pure prompt/parse core + injectable AI so it is unit-testable,
 // mirroring the other feature services.
+const { splitListFallback } = require('../utils/aiListFallback');
 
 const TIERS = {
   broad: 'High-volume, wide-reach tags (big audience, high competition).',
@@ -88,9 +89,12 @@ function shapeTags(raw, count) {
         : { tag: x && (x.tag || x.hashtag || x.text), tier: x && x.tier }
     ));
   } else {
-    rows = text.split(/[\n,]/)
+    // A refusal or a paragraph of prose is not a tag list ([] → 503); and a
+    // piece of more than three words is a sentence fragment, not a hashtag
+    // (normalizeTag would glue it into "#useamixofbroadtags").
+    rows = splitListFallback(text, { separator: /[\n,]/, requested: cap })
       .map((l) => l.replace(/^\s*(?:\d+[.)]|[-*•])\s*/, '').trim())
-      .filter(Boolean)
+      .filter((l) => l && l.split(/\s+/).length <= 3)
       .map((t) => ({ tag: t, tier: DEFAULT_TIER }));
   }
 

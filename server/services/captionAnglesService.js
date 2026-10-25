@@ -5,6 +5,7 @@
 // abVariantService (which builds persisted variants from a saved Content asset for
 // scheduling/learning), this just returns drafts to copy. Pure prompt/parse core +
 // injectable AI so it is unit-testable, mirroring the other feature services.
+const { splitListFallback } = require('../utils/aiListFallback');
 
 const ANGLES = {
   hook: 'Open with a scroll-stopping hook line, then deliver the payoff.',
@@ -83,7 +84,8 @@ function shapeCaptions(raw, count) {
         : { angle: (x && x.angle), text: x && (x.text || x.caption), _i: i }
     ));
   } else {
-    rows = text.split('\n')
+    // A refusal or a paragraph of prose is not a set of captions ([] → 503).
+    rows = splitListFallback(text, { requested: cap })
       .map((l) => l.replace(/^\s*(?:\d+[.)]|[-*•])\s*/, '').trim())
       .filter(Boolean)
       .map((t, i) => ({ angle: order[i] || DEFAULT_ANGLE, text: t }));

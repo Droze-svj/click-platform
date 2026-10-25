@@ -3,6 +3,7 @@
 // first 1–2 seconds that decide whether a viewer keeps watching/reading. Returns
 // several distinct options in a chosen style (or a mix). Pure prompt/parse core +
 // injectable AI so it is unit-testable, mirroring the other feature services.
+const { splitListFallback } = require('../utils/aiListFallback');
 
 // Supported hook styles + the guidance injected into the prompt.
 const STYLES = {
@@ -70,7 +71,8 @@ function shapeHooks(raw, style, count) {
   if (Array.isArray(parsed)) {
     items = parsed.map((x) => (typeof x === 'string' ? x : (x && x.text) || '')).filter(Boolean);
   } else {
-    items = text.split('\n')
+    // A refusal or a paragraph of prose is not a list of hooks ([] → 503).
+    items = splitListFallback(text, { requested: cap })
       .map((l) => l.replace(/^\s*(?:\d+[.)]|[-*•])\s*/, '').replace(/^["']|["']$/g, '').trim())
       .filter(Boolean);
   }
