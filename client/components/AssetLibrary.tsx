@@ -336,7 +336,7 @@ export default function AssetLibrary({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 aria-label={t('assetLibrary.searchPlaceholder')}
-                className="w-full h-10 pl-9 pr-3 rounded-lg border border-input bg-background text-sm text-theme-primary placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="w-full h-10 py-0 pl-9 pr-3 rounded-lg border border-input bg-background text-sm text-theme-primary placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
             <button

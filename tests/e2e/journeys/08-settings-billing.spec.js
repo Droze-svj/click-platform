@@ -64,20 +64,27 @@ test.describe('settings and billing', () => {
     await expect(page.getByText('$69').first()).toBeVisible();
 
     // A new account is on the Pro trial (trial ⇒ pro), so Pro is the current
-    // plan. Start an Agency checkout: terms first, then "Proceed to Whop".
+    // plan. Start an Agency checkout: terms first, then "Continue to Whop".
     await expect(page.getByRole('button', { name: 'Current plan' })).toBeDisabled();
     await page.getByRole('button', { name: 'Get Agency' }).click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();
-    const proceed = dialog.getByRole('button', { name: 'Proceed to Whop' });
+    const proceed = dialog.getByRole('button', { name: 'Continue to Whop' });
     await expect(proceed).toBeDisabled();
     await dialog.getByRole('checkbox').check();
     await expect(proceed).toBeEnabled();
     await proceed.click();
 
+    // The redirect to Whop happens after an API round-trip, so wait for one of
+    // the two outcomes instead of checking `wentToCheckout` straight away.
+    const unavailable = page.getByText(/Checkout for this plan is not available right now\. Nothing was changed\./).first();
+    await expect.poll(async () => wentToCheckout !== null || await unavailable.isVisible().catch(() => false), { timeout: 15000 }).toBe(true);
     if (wentToCheckout === null) {
-      // No checkout link configured (CI, local): say so — nothing changed.
-      await expect(page.getByText(/Checkout for this plan is not available right now\. Nothing was changed\./).first()).toBeVisible();
+      // No checkout link configured (CI): say so — nothing changed.
+      await expect(unavailable).toBeVisible();
+    } else {
+      expect(wentToCheckout).toMatch(/^https:\/\/(www\.)?whop\.com\//);
+      await page.goBack();
     }
     await expect(page.getByText(/Upgrade started/)).toHaveCount(0);
     expect(upgradePosts, 'the page must not record an "upgrade" outside Whop checkout').toEqual([]);
