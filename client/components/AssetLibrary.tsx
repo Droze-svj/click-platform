@@ -318,47 +318,33 @@ export default function AssetLibrary({
   const cosmicBg = "relative overflow-hidden before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.05),transparent_70%)] after:absolute after:inset-0 after:bg-[url('data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E')] after:opacity-[0.02] after:pointer-events-none"
 
   return (
-    <div className={`h-full flex flex-col bg-[#020202] text-slate-200 selection:bg-indigo-500/30 relative overflow-hidden`}>
-      {/* Reactive Nebula */}
-      <m.div
-        animate={{
-          x: mousePos.x / 80,
-          y: mousePos.y / 80,
-        }}
-        className="fixed inset-0 pointer-events-none opacity-30 mix-blend-screen z-0"
-      >
-        <div className={`absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-${currentTheme.accent}/10 blur-[130px] rounded-full animate-pulse`} />
-        <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-indigo-600/5 blur-[160px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
-      </m.div>
-
+    <div className="h-full flex flex-col ds-surface-card p-0 text-theme-primary relative overflow-hidden">
       {/* Header Panel */}
-      <div className={`p-8 border-b border-white/5 relative z-10 ${glassStyle} border-none`}>
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mb-8">
-          <div className="space-y-4">
-            <div className={`inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-${currentTheme.accent}/10 border border-${currentTheme.accent}/20 text-${currentTheme.accent} text-[9px] font-black uppercase tracking-[0.4em]`}>
-              <Orbit className="w-3.5 h-3.5 animate-spin-slow" />
-              {t('assetLibrary.repositoryIndexer')}
-            </div>
-            <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter flex items-center gap-4">
-              {t('assetLibrary.intelligenceLibrary')}
-            </h3>
+      <div className="p-5 sm:p-6 border-b border-[var(--border-subtle)] relative z-10">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-5">
+          <div className="space-y-1">
+            <h3 className="ds-text-h2 text-theme-primary">{t('assetLibrary.intelligenceLibrary')}</h3>
+            <p className="text-sm text-theme-muted">{t('assetLibrary.repositoryIndexer')}</p>
           </div>
 
-          <div className="flex items-center gap-4 w-full md:w-auto">
+          <div className="flex items-center gap-2 w-full md:w-auto">
             <div className="relative flex-1 md:w-80 group">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-white transition-colors" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted pointer-events-none" aria-hidden />
               <input
                 type="text"
                 placeholder={t('assetLibrary.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white/[0.03] border border-white/10 text-white placeholder-slate-600 focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent transition-all font-medium text-sm"
+                aria-label={t('assetLibrary.searchPlaceholder')}
+                className="w-full h-10 pl-9 pr-3 rounded-lg border border-input bg-background text-sm text-theme-primary placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </div>
             <button
               type="button"
               onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-              className="p-3.5 bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] rounded-2xl transition-all"
+              aria-label={viewMode === 'grid' ? t('assetLibrary.listView') : t('assetLibrary.gridView')}
+              title={viewMode === 'grid' ? t('assetLibrary.listView') : t('assetLibrary.gridView')}
+              className="h-10 w-10 inline-flex items-center justify-center shrink-0 rounded-lg border border-input bg-background hover:bg-accent transition-colors"
             >
               {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid3x3 className="w-5 h-5" />}
             </button>
@@ -366,15 +352,16 @@ export default function AssetLibrary({
         </div>
 
         {/* Categories / Navigation */}
-        <div className="flex flex-wrap gap-3 mb-8">
+        <div className="flex flex-wrap gap-2 mb-5">
           {(['all', 'music', 'image', 'broll', 'hook', 'favorites', 'recent', 'uploads'] as AssetType[]).map(type => (
             <button
               type="button"
               key={type}
               onClick={() => setSelectedType(type)}
-              className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 flex items-center gap-3 border shadow-2xl ${selectedType === type
-                ? `bg-${platformThemes[type].accent} border-white/20 text-white shadow-${platformThemes[type].accent}/20 scale-105 -translate-y-0.5`
-                : 'bg-white/[0.03] border-white/5 text-slate-500 hover:text-slate-200 hover:bg-white/[0.05]'
+              aria-pressed={selectedType === type}
+              className={`h-8 px-3 rounded-lg text-xs font-medium transition-colors flex items-center gap-2 border ${selectedType === type
+                ? 'bg-primary border-primary text-primary-foreground'
+                : 'border-input bg-background text-theme-muted hover:text-theme-primary hover:bg-accent'
                 }`}
             >
               {type === 'all' && <Sparkles className="w-3.5 h-3.5" />}
@@ -384,13 +371,13 @@ export default function AssetLibrary({
               {type === 'favorites' && <Star className="w-3.5 h-3.5" />}
               {type === 'recent' && <History className="w-3.5 h-3.5" />}
               {type === 'uploads' && <Upload className="w-3.5 h-3.5" />}
-              {type === 'favorites' ? t('assetLibrary.categoryFavorites') : type === 'recent' ? t('assetLibrary.categoryRecent') : type === 'uploads' ? t('assetLibrary.categoryMyNodes') : type}
+              {type === 'favorites' ? t('assetLibrary.categoryFavorites') : type === 'recent' ? t('assetLibrary.categoryRecent') : type === 'uploads' ? t('assetLibrary.categoryMyNodes') : t(`assetLibrary.type.${type}`)}
             </button>
           ))}
         </div>
 
         {/* Digital Intake Area */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {[
             { type: 'music', label: t('assetLibrary.uploadDigitizeWaveform'), color: 'bg-blue-600', icon: Music },
             { type: 'image', label: t('assetLibrary.uploadSynchronizeVisuals'), color: 'bg-emerald-600', icon: ImageIcon },
@@ -409,10 +396,10 @@ export default function AssetLibrary({
               <m.div
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className={`flex items-center justify-center gap-4 px-6 py-4 rounded-2xl border-2 border-dashed border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all cursor-pointer relative overflow-hidden shadow-inner`}
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-[var(--border-subtle)] hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-colors cursor-pointer"
               >
-                <upload.icon className={`w-5 h-5 text-slate-500 group-hover:text-white transition-colors`} />
-                <span className="text-[10px] font-black text-slate-500 group-hover:text-white uppercase tracking-[0.3em]">{upload.label}</span>
+                <upload.icon className="w-4 h-4 text-theme-muted group-hover:text-indigo-500 transition-colors" aria-hidden />
+                <span className="text-sm font-medium text-theme-muted group-hover:text-theme-primary">{upload.label}</span>
               </m.div>
             </label>
           ))}
@@ -420,7 +407,7 @@ export default function AssetLibrary({
       </div>
 
       {/* Main Container */}
-      <div className="flex-1 overflow-y-auto p-10 relative z-10 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-5 sm:p-6 relative z-10">
         {loading ? (
           <div className="flex flex-col items-center justify-center h-96 space-y-8">
             <m.div
@@ -430,16 +417,16 @@ export default function AssetLibrary({
             >
               <Cpu className="w-10 h-10 text-indigo-400" />
             </m.div>
-            <div className={`text-[11px] font-black text-slate-500 uppercase tracking-[0.5em] animate-pulse`}>{t('assetLibrary.analyzingStrands')}</div>
+            <div className="ds-text-label text-theme-muted">{t('assetLibrary.analyzingStrands')}</div>
           </div>
         ) : filteredAssets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-96 text-center space-y-6">
-            <div className="w-24 h-24 rounded-full bg-white/[0.03] border border-white/5 flex items-center justify-center">
-              <Sparkles className="w-10 h-10 text-slate-700" />
+          <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
+            <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-indigo-500" aria-hidden />
             </div>
             <div className="space-y-2">
-              <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight">{t('assetLibrary.repositoryEmpty')}</h4>
-              <p className="text-slate-500 text-sm font-medium">{t('assetLibrary.repositoryEmptyDescription')}</p>
+              <h4 className="ds-text-h3 text-theme-primary">{t('assetLibrary.repositoryEmpty')}</h4>
+              <p className="text-theme-muted text-sm">{t('assetLibrary.repositoryEmptyDescription')}</p>
             </div>
           </div>
         ) : viewMode === 'grid' ? (
@@ -447,7 +434,7 @@ export default function AssetLibrary({
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4"
           >
             {filteredAssets.map(asset => (
               <m.div
@@ -455,15 +442,15 @@ export default function AssetLibrary({
                 variants={itemVariants}
                 draggable
                 onDragStart={(e) => handleDragStart(e as any, asset)}
-                whileHover={{ y: -10, scale: 1.02 }}
-                className={`group relative ${glassStyle} rounded-[2rem] overflow-hidden cursor-pointer transition-all border-white/5 hover:border-white/20 hover:shadow-indigo-500/10 ${selectedAsset?.id === asset.id ? 'ring-2 ring-indigo-500 border-transparent shadow-[0_0_40px_rgba(99,102,241,0.2)]' : ''}`}
+                whileHover={{ y: -2 }}
+                className={`group relative ds-surface-subtle p-0 rounded-2xl overflow-hidden cursor-pointer transition-all ${selectedAsset?.id === asset.id ? 'ring-2 ring-indigo-500' : ''}`}
                 onClick={() => {
                   setSelectedAsset(asset)
                   onSelectAsset(asset)
                 }}
               >
                 {/* Visual Area */}
-                <div className="aspect-[4/3] bg-black relative overflow-hidden">
+                <div className="aspect-video bg-black relative overflow-hidden">
                   {asset.type === 'image' ? (
                     <img
                       src={asset.thumbnail || asset.url}
@@ -473,9 +460,9 @@ export default function AssetLibrary({
                   ) : asset.type === 'music' ? (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-600 to-blue-700 relative overflow-hidden">
                       <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E')] opacity-20" />
-                      <Music className="w-16 h-16 text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]" />
-                      <div className="absolute bottom-0 inset-x-0 h-16 bg-white/10 backdrop-blur-md flex items-center px-4">
-                        <div className="flex gap-1 items-end h-8">
+                      <Music className="w-10 h-10 text-white/90" aria-hidden />
+                      <div className="absolute bottom-0 inset-x-0 h-10 bg-black/15 flex items-center px-3">
+                        <div className="flex gap-1 items-end h-6">
                           {[...Array(12)].map((_, i) => (
                             <m.div
                               key={i}
@@ -491,7 +478,7 @@ export default function AssetLibrary({
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-600 to-teal-800 relative overflow-hidden group/video">
                       <img src={asset.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60 transition-opacity group-hover/video:opacity-40" />
                       <div className="absolute inset-0 bg-black/20" />
-                      <Video className="w-16 h-16 text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] relative z-10" />
+                      <Video className="w-10 h-10 text-white/90 relative z-10" aria-hidden />
                       {asset.duration && (
                         <div className="absolute bottom-3 right-3 bg-black/70 text-white text-[10px] font-black px-2.5 py-1 rounded-lg backdrop-blur-md border border-white/10 tracking-widest">
                           {formatDuration(asset.duration)}
@@ -536,33 +523,24 @@ export default function AssetLibrary({
                   </div>
 
                   {/* Neural ID Tag */}
-                  <div className="absolute top-4 left-4 flex flex-col gap-2">
-                    <div className={`px-2.5 py-1.5 rounded-xl bg-black/60 border border-white/10 flex items-center gap-2.5 backdrop-blur-xl shadow-2xl`}>
-                      <div className={`w-1.5 h-1.5 rounded-full bg-${platformThemes[asset.type]?.accent || 'white'} animate-pulse`} />
-                      <span className="text-[9px] font-black text-white uppercase tracking-[0.2em]">{asset.type}</span>
-                    </div>
-                    {!(asset as any).isUserUpload && (
-                      <div className="bg-indigo-600/90 text-[8px] font-black text-white px-2 py-1 rounded-lg uppercase tracking-tighter shadow-lg backdrop-blur-md self-start border border-white/10">
-                        {t('assetLibrary.neuralNode')}
-                      </div>
-                    )}
+                  <div className="absolute top-3 left-3 flex flex-col gap-2">
+                    <span className="px-2 py-0.5 rounded-md bg-black/60 text-[11px] font-medium text-white backdrop-blur">
+                      {t(`assetLibrary.type.${asset.type}`)}{!(asset as any).isUserUpload ? ` · ${t('assetLibrary.neuralNode')}` : ''}
+                    </span>
                   </div>
                 </div>
 
                 {/* Info Area */}
-                <div className="p-6 space-y-3">
-                  <h4 className="text-lg font-black text-[var(--text-main)] tracking-tight italic truncate group-hover:text-indigo-400 transition-colors">
+                <div className="p-4 space-y-1.5">
+                  <h4 className="text-sm font-semibold text-theme-primary truncate">
                     {asset.title || t('assetLibrary.untitledNode')}
                   </h4>
-                  <div className="flex items-center justify-between text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  <div className="flex items-center justify-between ds-text-caption text-theme-muted">
                     <div className="flex items-center gap-2">
                       <Clock className="w-3.5 h-3.5" />
                       {formatDuration(asset.duration)}
                     </div>
-                    <div className="flex items-center gap-2 group-hover:text-slate-300 transition-colors">
-                      <Fingerprint className="w-3.5 h-3.5" />
-                      {t('assetLibrary.idLabel')} {asset.id?.slice(-4)}
-                    </div>
+                    {asset.artist ? <span className="truncate max-w-[60%]">{asset.artist}</span> : null}
                   </div>
                 </div>
               </m.div>
@@ -573,40 +551,40 @@ export default function AssetLibrary({
             {filteredAssets.map(asset => (
               <m.div
                 key={asset.id}
-                whileHover={{ x: 10, backgroundColor: 'rgba(255,255,255,0.05)' }}
-                className={`flex items-center gap-8 p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 cursor-pointer transition-all group ${selectedAsset?.id === asset.id ? 'border-indigo-500/50 bg-indigo-500/5' : ''}`}
+                whileHover={{ x: 2 }}
+                className={`ds-surface-subtle flex items-center gap-4 p-3 cursor-pointer transition-all group ${selectedAsset?.id === asset.id ? 'ring-2 ring-indigo-500' : ''}`}
                 onClick={() => {
                   setSelectedAsset(asset)
                   onSelectAsset(asset)
                 }}
               >
-                <div className={`w-20 h-20 rounded-[1.5rem] flex items-center justify-center flex-shrink-0 transition-all duration-700 ${asset.type === 'music' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${asset.type === 'music' ? 'bg-indigo-500/10 text-indigo-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
                   {getAssetIcon(asset.type)}
                 </div>
                 <div className="flex-1 min-w-0 space-y-1">
-                  <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tight group-hover:text-indigo-400 transition-colors">
+                  <h4 className="text-sm font-semibold text-theme-primary truncate">
                     {asset.title || t('assetLibrary.untitledNode')}
                   </h4>
-                  <div className="flex items-center gap-8 text-[11px] font-black text-slate-500 uppercase tracking-widest">
+                  <div className="flex items-center gap-4 ds-text-caption text-theme-muted">
                     <span className="flex items-center gap-2"><Clock className="w-3.5 h-3.5" /> {formatDuration(asset.duration)}</span>
-                    <span className="flex items-center gap-2"><Cpu className="w-3.5 h-3.5" /> {asset.type}</span>
-                    <span className="opacity-40">{asset.artist || t('assetLibrary.neuralGenerated')}</span>
+                    <span className="flex items-center gap-2">{t(`assetLibrary.type.${asset.type}`)}</span>
+                    <span>{asset.artist || t('assetLibrary.neuralGenerated')}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <button type="button" aria-label="Preview asset" className="p-3.5 rounded-xl bg-white/[0.03] border border-white/5 text-slate-500 hover:text-white hover:bg-white/10 transition-all">
-                    <Maximize2 className="w-5 h-5" />
+                  <button type="button" aria-label={t('assetLibrary.preview')} onClick={(e) => { e.stopPropagation(); handlePreview(asset) }} className="p-2.5 rounded-lg border border-input text-theme-muted hover:text-theme-primary hover:bg-accent transition-colors">
+                    <Maximize2 className="w-4 h-4" aria-hidden />
                   </button>
                   {onAddToTimeline && (
                     <button
                       type="button"
-                      aria-label="Add to timeline"
+                      aria-label={t('assetLibrary.addToTimeline')}
                       onClick={(e) => {
                         e.stopPropagation()
                         onAddToTimeline(asset, currentTime)
                         showToast(t('assetLibrary.assetIntegrated'), 'success')
                       }}
-                      className="p-3.5 bg-indigo-600 text-white rounded-xl shadow-xl shadow-indigo-500/20 hover:scale-110 transition-all"
+                      className="p-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                     >
                       <Plus className="w-5 h-5" />
                     </button>
@@ -627,14 +605,14 @@ export default function AssetLibrary({
             exit={{ y: 100, opacity: 0 }}
             className="fixed bottom-10 inset-x-0 mx-auto max-w-sm z-[100]"
           >
-            <div className="bg-black/80 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 shadow-[0_0_50px_rgba(99,102,241,0.3)] flex items-center gap-6">
+            <div className="ds-surface-elevated rounded-2xl p-4 flex items-center gap-4">
               <div className="relative">
                 <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin" />
                 <div className="absolute inset-0 bg-indigo-500/20 blur-[10px] rounded-full" />
               </div>
               <div className="space-y-1">
-                <div className="text-[11px] font-black text-white uppercase tracking-widest leading-none">{t('assetLibrary.intakeActive')}</div>
-                <div className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">{t('assetLibrary.digitizingStrands')}</div>
+                <div className="text-sm font-semibold text-theme-primary">{t('assetLibrary.intakeActive')}</div>
+                <div className="ds-text-caption text-theme-muted">{t('assetLibrary.digitizingStrands')}</div>
               </div>
             </div>
           </m.div>
@@ -657,28 +635,28 @@ export default function AssetLibrary({
               ref={panelRef}
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
-              className={`max-w-5xl w-full rounded-[4rem] overflow-hidden ${glassStyle} border-white/5 relative`}
+              className="max-w-5xl w-full rounded-2xl overflow-hidden ds-surface-elevated p-0 relative"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Custom Preview UI... */}
-              <div className="p-10 space-y-8">
+              <div className="p-6 space-y-5">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter">{previewAsset.title}</h2>
-                  <button type="button" aria-label="Close preview" onClick={() => setPreviewAsset(null)} className="p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-all"><X className="w-6 h-6" /></button>
+                  <h2 className="ds-text-h2 text-theme-primary truncate">{previewAsset.title}</h2>
+                  <button type="button" aria-label={t('assetLibrary.closePreview')} onClick={() => setPreviewAsset(null)} className="p-2 rounded-lg hover:bg-accent transition-colors"><X className="w-5 h-5" /></button>
                 </div>
-                <div className="aspect-video bg-black/50 rounded-[3rem] border border-white/5 flex items-center justify-center relative overflow-hidden shadow-inner">
+                <div className="aspect-video bg-black rounded-xl flex items-center justify-center relative overflow-hidden">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.1),transparent_70%)]" />
                   {previewAsset.type === 'image' ? (
                     <img src={previewAsset.url} alt={previewAsset.title || 'Asset preview'} className="max-h-full object-contain relative z-10" />
                   ) : (
                     <div className="text-white relative z-10 flex flex-col items-center gap-6">
                       <Play className="w-20 h-20 opacity-20" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-600">{t('assetLibrary.neuralPlayerNode')}</span>
+                      <span className="ds-text-caption text-white/60">{t('assetLibrary.neuralPlayerNode')}</span>
                     </div>
                   )}
                 </div>
-                <div className="flex justify-end gap-6 pt-4">
-                  <button className="px-10 py-4 rounded-2xl bg-indigo-600 text-white font-black uppercase tracking-widest text-xs shadow-3xl shadow-indigo-600/30 border border-white/10">{t('assetLibrary.integrateIntoWorkspace')}</button>
+                <div className="flex justify-end gap-3">
+                  <button type="button" className="h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90">{t('assetLibrary.integrateIntoWorkspace')}</button>
                 </div>
               </div>
             </m.div>
