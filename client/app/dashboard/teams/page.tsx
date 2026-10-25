@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -63,7 +64,7 @@ export default function SwarmCollectiveNodePage() {
   useEffect(() => {
     if (authLoading) return
     if (!user) {
-      router.push('/login')
+      router.push(loginPathForCurrentPage())
       return
     }
     loadSwarmData()

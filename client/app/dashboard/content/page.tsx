@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiGet, apiPost } from '../../../lib/api'
@@ -61,7 +62,7 @@ export default function NeuralForgePage() {
   const [payloadId, setPayloadId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  useEffect(() => { if (!authLoading && !user) router.push('/login') }, [user, authLoading, router])
+  useEffect(() => { if (!authLoading && !user) router.push(loginPathForCurrentPage()) }, [user, authLoading, router])
 
   // Templates page → "Use template" lands here with ?template=<id>.
   useEffect(() => {

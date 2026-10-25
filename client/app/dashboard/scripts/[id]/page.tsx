@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../../lib/authRedirect'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import axios from 'axios'
@@ -78,7 +79,7 @@ export default function ScriptDetailPage() {
   useEffect(() => {
     if (authLoading) return // user is null until /auth/me answers
     if (!user) {
-      router.push('/login')
+      router.push(loginPathForCurrentPage())
       return
     }
     loadScript()

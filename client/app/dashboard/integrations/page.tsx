@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
@@ -107,7 +108,7 @@ export default function IntegrationsPage() {
 
   useEffect(() => {
     if (authLoading) return
-    if (!user) { router.push('/login'); return }
+    if (!user) { router.push(loginPathForCurrentPage()); return }
     loadAll()
   }, [user, authLoading, router, loadAll])
 

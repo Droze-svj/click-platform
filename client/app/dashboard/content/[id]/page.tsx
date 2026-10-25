@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../../lib/authRedirect'
 import { useState, useEffect, lazy, Suspense, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import axios from 'axios'
@@ -86,7 +87,7 @@ export default function ContentDetailPage() {
 
   useEffect(() => {
     if (authLoading) return // user is null until /auth/me answers
-    if (!user) { router.push('/login'); return }
+    if (!user) { router.push(loginPathForCurrentPage()); return }
     if (params.id) loadContent()
   }, [user, authLoading, router, params.id, loadContent])
 

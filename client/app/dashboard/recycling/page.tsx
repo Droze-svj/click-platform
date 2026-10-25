@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useEffect } from 'react'
 import EntropyReversalNode from '../../../components/ContentRecyclingDashboard'
 import { useAuth } from '../../../hooks/useAuth'
@@ -16,7 +17,7 @@ export default function ContentRemixPage() {
 
   useEffect(() => {
     if (authLoading) return // user is null until /auth/me answers
-    if (!user) router.push('/login')
+    if (!user) router.push(loginPathForCurrentPage())
   }, [user, authLoading, router])
 
   if (!user) return null

@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import ToastContainer from '../../../components/ToastContainer'
@@ -67,7 +68,7 @@ export default function JobsPage() {
   const loadLattice = useCallback(async () => {
     setRefreshing(true)
     try {
-      if (!getAuthToken()) return router.push('/login')
+      if (!getAuthToken()) return router.push(loginPathForCurrentPage())
       const [jobsRes, metricsRes]: any[] = await Promise.all([
         apiGet('/jobs/user', undefined, false),
         apiGet(`/jobs/metrics/user?timeRange=${encodeURIComponent(timeRange)}`, undefined, false).catch(() => ({ data: null }))

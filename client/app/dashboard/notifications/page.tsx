@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiGet, apiPut, apiDelete } from '../../../lib/api'
@@ -97,7 +98,7 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     if (authLoading) return // user is null until /auth/me answers
-    if (!user) { router.push('/login'); return }
+    if (!user) { router.push(loginPathForCurrentPage()); return }
     loadSignals()
     loadLiveStatus()
   }, [user, authLoading, loadSignals, loadLiveStatus, router])

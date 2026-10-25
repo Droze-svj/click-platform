@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
@@ -45,7 +46,7 @@ export default function SectorResonanceMatrixPage() {
   const loadLattice = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
-      if (!token) { router.push('/login'); return }
+      if (!token) { router.push(loginPathForCurrentPage()); return }
       const [userRes, packRes] = await Promise.all([
         axios.get(`${API_URL}/auth/me`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API_URL}/niche/packs`, { headers: { Authorization: `Bearer ${token}` } })

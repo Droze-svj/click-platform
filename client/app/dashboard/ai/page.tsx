@@ -1,5 +1,6 @@
 'use client';
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../hooks/useAuth';
@@ -30,7 +31,7 @@ export default function CognitiveLogicMatrixPage() {
     setIsClient(true);
     if (authLoading) return; // user is null until /auth/me answers
     if (!user && typeof window !== 'undefined') {
-      router.push('/login');
+      router.push(loginPathForCurrentPage());
     }
   }, [user, authLoading, router]);
 

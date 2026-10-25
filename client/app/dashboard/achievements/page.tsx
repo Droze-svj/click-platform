@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
@@ -88,7 +89,7 @@ export default function AscensionLedgerPage() {
 
   useEffect(() => {
     if (!user && !loading) {
-      router.push('/login')
+      router.push(loginPathForCurrentPage())
       return
     }
     loadMilestoneData()

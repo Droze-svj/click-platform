@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -230,7 +231,7 @@ export default function BillingPage() {
 
   useEffect(() => {
     if (authLoading) return
-    if (!user) { router.push('/login'); return }
+    if (!user) { router.push(loginPathForCurrentPage()); return }
     loadAll()
   }, [user, authLoading, router, loadAll])
 

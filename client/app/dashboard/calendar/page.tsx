@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
@@ -103,7 +104,7 @@ export default function ContentCalendarPage() {
 
   useEffect(() => {
     if (authLoading) return
-    if (!user) { router.push('/login'); return }
+    if (!user) { router.push(loginPathForCurrentPage()); return }
     loadCalendar()
   }, [user, authLoading, currentDate, view, router, loadCalendar])
 

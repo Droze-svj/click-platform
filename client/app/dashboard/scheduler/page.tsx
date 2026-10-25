@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { apiGet, apiPost, handleApiError } from '../../../lib/api'
@@ -226,7 +227,7 @@ export default function SchedulerPage() {
     // while it validates the token, so redirecting on !user before it resolves
     // bounced authenticated users (and the Export→Scheduler hand-off) to /login.
     if (authLoading) return
-    if (!user) router.push('/login')
+    if (!user) router.push(loginPathForCurrentPage())
     else loadPosts()
   }, [user, authLoading, router, loadPosts])
 

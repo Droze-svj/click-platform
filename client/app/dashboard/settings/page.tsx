@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useEffect, useState, useRef, useCallback, useMemo, createContext, useContext } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import axios from 'axios'
@@ -200,7 +201,7 @@ export default function SettingsPage() {
   const loadSettings = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
-      if (!token) { router.push('/login'); return }
+      if (!token) { router.push(loginPathForCurrentPage()); return }
       const response = await axios.get(`${API_URL}/user/settings`, { headers: { Authorization: `Bearer ${token}` } })
       const data = extractApiData<UserSettings>(response)
       if (!data || typeof data !== 'object') throw new Error('empty settings response')
@@ -210,7 +211,7 @@ export default function SettingsPage() {
       // Apply persisted appearance to the live document.
       applyAppearance(data.appearance)
     } catch (error: any) {
-      if (error.response?.status === 401) { router.push('/login'); return }
+      if (error.response?.status === 401) { router.push(loginPathForCurrentPage()); return }
       setLoadError(true)
     } finally { setLoading(false) }
   }, [router, setLanguage])
@@ -224,7 +225,7 @@ export default function SettingsPage() {
       const data = extractApiData<BrandKit>(response)
       if (data && typeof data === 'object') setBrandKit({ ...DEFAULT_BRAND_KIT, ...data })
     } catch (e) {
-      if ((e as any)?.response?.status === 401) router.push('/login')
+      if ((e as any)?.response?.status === 401) router.push(loginPathForCurrentPage())
     } finally { setBrandKitLoading(false) }
   }, [router])
 

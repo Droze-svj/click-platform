@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -91,7 +92,7 @@ export default function ScriptsPage() {
     // useAuth starts with user=null while /auth/me is in flight — wait for it,
     // or a direct link / refresh bounces a signed-in user to /login.
     if (authLoading) return
-    if (!user) router.push('/login'); else loadScripts()
+    if (!user) router.push(loginPathForCurrentPage()); else loadScripts()
   }, [user, authLoading, router, loadScripts])
 
   // Templates page → "Use template" lands here with ?template=<id>.

@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -92,7 +93,7 @@ export default function VideoStudioPage() {
       setError('')
     } catch (err: any) {
       const e = extractApiError(err)
-      if (err?.response?.status === 401) { router.push('/login'); return }
+      if (err?.response?.status === 401) { router.push(loginPathForCurrentPage()); return }
       setError(typeof e === 'string' ? e : e?.message || 'Failed to load videos')
       setVideos([])
     } finally { setLoading(false) }
@@ -100,7 +101,7 @@ export default function VideoStudioPage() {
 
   useEffect(() => {
     if (authLoading) return
-    if (!user) { router.push('/login'); return }
+    if (!user) { router.push(loginPathForCurrentPage()); return }
     loadVideos()
   }, [user, authLoading, loadVideos, router])
 
