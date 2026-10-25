@@ -69,6 +69,9 @@ export default function AdminDashboardPage() {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // 403 = signed in but not an admin. That is not an error to retry — it used
+  // to read "Oversight Error · Request failed with status code 403 · Try again".
+  const [forbidden, setForbidden] = useState(false)
   const [data, setData] = useState<DashboardData | null>(null)
 
   useEffect(() => {
@@ -79,11 +82,13 @@ export default function AdminDashboardPage() {
     try {
       setLoading(true)
       setError(null)
+      setForbidden(false)
       const response = await apiGet<DashboardData>('/admin/dashboard')
       setData(response)
     } catch (err: any) {
       console.error('Failed to load admin dashboard:', err)
-      setError(err.message || t('adminPage.failedToLoad'))
+      if (err?.response?.status === 403) setForbidden(true)
+      setError(t('adminPage.failedToLoad'))
     } finally {
       setLoading(false)
     }
@@ -109,12 +114,14 @@ export default function AdminDashboardPage() {
       <div className="ds-surface-card p-8 max-w-lg w-full">
         <EmptyState
           icon={ShieldAlert}
-          title={t('adminPage.errorTitle')}
-          description={error || t('adminPage.unauthorized')}
+          title={forbidden ? t('deadLetterPage.adminAccessRequired') : t('adminPage.errorTitle')}
+          description={forbidden ? t('adminPage.unauthorized') : (error || t('adminPage.unauthorized'))}
           action={
-            <Button variant="primary" leftIcon={<RefreshCw size={16} aria-hidden />} onClick={loadDashboard}>
-              {t('adminPage.retrySync')}
-            </Button>
+            forbidden ? undefined : (
+              <Button variant="primary" leftIcon={<RefreshCw size={16} aria-hidden />} onClick={loadDashboard}>
+                {t('adminPage.retrySync')}
+              </Button>
+            )
           }
         />
       </div>

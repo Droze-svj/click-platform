@@ -196,7 +196,7 @@ export default function SectorResonanceMatrixPage() {
                   <input type="color" value={identitySettings.primaryColor}
                     onChange={e => setIdentitySettings({ ...identitySettings, primaryColor: e.target.value })}
                     aria-label={t('nichePage.primaryColourPicker')} title={t('nichePage.primaryColour')}
-                    className="h-10 w-12 rounded-lg border border-input cursor-pointer bg-transparent" />
+                    className="h-10 w-12 shrink-0 rounded-lg border border-input cursor-pointer bg-transparent p-1 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-0" />
                   <Input value={identitySettings.primaryColor}
                     onChange={e => setIdentitySettings({ ...identitySettings, primaryColor: e.target.value })}
                     aria-label={t('nichePage.primaryColourHexValue')} title={t('nichePage.primaryColourHex')}
@@ -208,7 +208,7 @@ export default function SectorResonanceMatrixPage() {
                   <input type="color" value={identitySettings.secondaryColor}
                     onChange={e => setIdentitySettings({ ...identitySettings, secondaryColor: e.target.value })}
                     aria-label={t('nichePage.secondaryColourPicker')} title={t('nichePage.secondaryColour')}
-                    className="h-10 w-12 rounded-lg border border-input cursor-pointer bg-transparent" />
+                    className="h-10 w-12 shrink-0 rounded-lg border border-input cursor-pointer bg-transparent p-1 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-0" />
                   <Input value={identitySettings.secondaryColor}
                     onChange={e => setIdentitySettings({ ...identitySettings, secondaryColor: e.target.value })}
                     aria-label={t('nichePage.secondaryColourHexValue')} title={t('nichePage.secondaryColourHex')}

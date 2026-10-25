@@ -145,7 +145,7 @@ export default function ClickLearningPage() {
   // they start publishing.
   if (totalPicks === 0) {
     return (
-      <PageShell className="min-h-screen ds-bg-mesh-soft max-w-5xl">
+      <PageShell className="min-h-screen max-w-5xl">
           <ClickEmptyState
             intent="empty.analytics"
             title={t('clickLearningPage.emptyTitle')}
@@ -171,7 +171,7 @@ export default function ClickLearningPage() {
     // three columns and reads as a wall at max-w-7xl. twMerge lets the override
     // win over the token. The cold-start state above now matches it (it was
     // max-w-4xl), so the page does not change width as data arrives.
-    <PageShell className="min-h-screen ds-bg-mesh-soft max-w-5xl ds-anim-fade-in">
+    <PageShell className="min-h-screen max-w-5xl ds-anim-fade-in">
         {/* Headline */}
         <div className="space-y-3">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">

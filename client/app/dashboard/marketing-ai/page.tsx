@@ -308,13 +308,16 @@ function TrendsPanel({ niche, platform, load, data, loading, error }: any) {
         )}
 
         {!report && !loading.trendReport && !error.trendReport && (
-          <EmptyState icon={Globe} title={t('marketingAiPage.trendsEmptyState')} />
+          <EmptyState icon={Globe} title={t('marketingAiPage.trendsEmptyTitle')} description={t('marketingAiPage.trendsEmptyState')} />
         )}
       </div>
 
       {/* Knowledge Base */}
       <div className="ds-surface-card p-5 sm:p-6 space-y-5">
         <PanelHead icon={BookOpen} title={t('marketingAiPage.knowledgeBase')} />
+        {!knowledge && !loading.knowledge && !error.knowledge && (
+          <p className="text-sm text-theme-muted">{t('marketingAiPage.knowledgeEmpty')}</p>
+        )}
         <Button variant="secondary" size="sm" loading={loading.knowledge}
           leftIcon={!loading.knowledge ? <Lightbulb size={14} /> : undefined}
           onClick={() => load('knowledge', `/knowledge-insights?niche=${encodeURIComponent(niche)}&format=video`)}>
