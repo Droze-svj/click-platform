@@ -54,7 +54,10 @@ class OracleSandboxService {
 
     return {
       sandboxId,
-      status: 'active',
+      // Nothing is launched: no ad-delivery integration exists, so no budget is
+      // spent and no results will arrive. This is a plan, not a running test.
+      status: 'planned',
+      running: false,
       scalingLogic: 'velocity_threshold_trigger',
       variants,
       scheduledScaleTime: new Date(Date.now() + 1.5 * 60 * 60 * 1000), // 90 min window (config)

@@ -10264,6 +10264,11 @@
     "growthInsights": {
       "emptyPlan": "No ideas could be generated for this week right now. Try again in a little while.",
       "targetEngagement": "Aim for {{value}}+ engagements"
+    },
+    "oracleSandbox": {
+      "plannedToast": "Test plan drafted. Nothing is running yet: no ad network is connected, so no budget is spent and no results will come in.",
+      "planned": "Plan drafted",
+      "notRunning": "Not running — no ad network connected"
     }
   }
 }

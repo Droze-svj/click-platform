@@ -9,6 +9,7 @@ import React from 'react'
 import { RemediationHUD } from '../RemediationHUD'
 import { CulturalArbitrageHUD } from '../CulturalArbitrageHUD'
 import { SyndicateConsensusView } from '../SyndicateConsensusView'
+import { OracleSandboxHUD } from '../../OracleSandboxHUD'
 import * as api from '../../../../lib/api'
 
 jest.mock('../../../../lib/api', () => ({
@@ -73,6 +74,19 @@ describe('CulturalArbitrageHUD', () => {
     render(<CulturalArbitrageHUD showToast={toast} />)
     fireEvent.click(await screen.findByRole('button', { name: /Deploy Resurrection/i }))
     await waitFor(() => expect(toast).toHaveBeenCalledWith(expect.stringContaining('already being recycled'), 'error'))
+  })
+})
+
+describe('OracleSandboxHUD', () => {
+  it('says a plan was drafted, not that a sandbox was deployed', async () => {
+    mPost.mockResolvedValue({ sandboxId: 'sb_1', status: 'planned', running: false, scalingLogic: 'x', variants: [{ variantId: 'v_1', type: 'ASMR Edit', budget: 5, status: 'PENDING_DATA', velocity: 0 }] })
+    const toast = jest.fn()
+    render(<OracleSandboxHUD showToast={toast} />)
+    fireEvent.click(screen.getByRole('button', { name: /Deploy Concept Array/i }))
+    await waitFor(() => expect(toast).toHaveBeenCalledWith('editorPanels.oracleSandbox.plannedToast', 'info'))
+    expect(toast).not.toHaveBeenCalledWith(expect.anything(), 'success')
+    expect(screen.getByRole('button', { name: 'editorPanels.oracleSandbox.planned' })).toBeDisabled()
+    expect(screen.queryByText(/Sandbox Active|Scanning viral nodes/)).not.toBeInTheDocument()
   })
 })
 
