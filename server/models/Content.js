@@ -425,6 +425,9 @@ const contentSchema = new mongoose.Schema({
     words: { type: [mongoose.Schema.Types.Mixed], default: [] },
     formatted: String,
     generatedAt: Date,
+    // 'measured' (provider word timestamps), 'aligned' (snapped to the speech
+    // in the audio) or 'estimated' (spread evenly — not safe to cut on).
+    timingSource: String,
     translations: { type: mongoose.Schema.Types.Mixed, default: {} },
   },
 });
