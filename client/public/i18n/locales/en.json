@@ -10260,6 +10260,10 @@
     "syndicate": {
       "failedToast": "The review couldn't run: {{error}}",
       "noResult": "The server returned no votes."
+    },
+    "growthInsights": {
+      "emptyPlan": "No ideas could be generated for this week right now. Try again in a little while.",
+      "targetEngagement": "Aim for {{value}}+ engagements"
     }
   }
 }

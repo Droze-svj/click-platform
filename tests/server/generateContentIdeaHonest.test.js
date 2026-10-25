@@ -108,6 +108,13 @@ describe('getFutureContentSuggestions', () => {
     expect(spy).toHaveBeenCalledWith(['tiktok', 'linkedin', 'tiktok', 'linkedin', 'tiktok']);
   });
 
+  it('pins every idea to options.platforms when the caller plans for one platform', async () => {
+    const spy = jest.spyOn(aiService, 'generateContentIdeaBatch').mockResolvedValue({ ideas: [], degraded: true });
+    const gaps = [{ category: 'platform', description: 'Not posting on LinkedIn', impact: 'high', priority: 8 }];
+    await getFutureContentSuggestions('user-1', gaps, 3, { platforms: ['TikTok'] });
+    expect(spy).toHaveBeenCalledWith(['tiktok', 'tiktok', 'tiktok']);
+  });
+
   it('never asks for more than 10 ideas', async () => {
     const spy = jest.spyOn(aiService, 'generateContentIdeaBatch').mockResolvedValue({ ideas: [], degraded: true });
     await getFutureContentSuggestions('user-1', [], 1000);

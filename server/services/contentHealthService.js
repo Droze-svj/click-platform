@@ -589,7 +589,7 @@ async function performContentHealthCheck(userId, contentId = null) {
 /**
  * Get future content suggestions based on health gaps
  */
-async function getFutureContentSuggestions(userId, gaps = [], count = 5) {
+async function getFutureContentSuggestions(userId, gaps = [], count = 5, options = {}) {
   try {
     const { generateContentIdeaBatch } = require('./aiService');
 
@@ -601,7 +601,12 @@ async function getFutureContentSuggestions(userId, gaps = [], count = 5) {
     const gapByPlatform = new Map(
       platformGaps.map((g) => [g.description.replace(/^Not posting on /i, '').trim().toLowerCase(), g])
     );
-    const platforms = gapByPlatform.size > 0 ? [...gapByPlatform.keys()] : ['twitter', 'linkedin', 'instagram'];
+    // options.platforms pins the ideas to the platform(s) the caller is planning
+    // for (e.g. a TikTok weekly plan must not be filled with LinkedIn posts).
+    const pinned = Array.isArray(options.platforms) ? options.platforms.filter((p) => typeof p === 'string' && p) : [];
+    const platforms = pinned.length > 0
+      ? pinned.map((p) => p.toLowerCase())
+      : gapByPlatform.size > 0 ? [...gapByPlatform.keys()] : ['twitter', 'linkedin', 'instagram'];
 
     // One model call for the whole list, capped at 10 ideas. This used to be one
     // Gemini request per suggestion.

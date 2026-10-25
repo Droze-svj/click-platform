@@ -297,7 +297,7 @@ async function getNextWeekRecommendations(userId, platform) {
 
     // Get future content suggestions
     const { getFutureContentSuggestions } = require('./contentHealthService');
-    const suggestions = await getFutureContentSuggestions(userId, healthCheck.gaps, 7);
+    const suggestions = await getFutureContentSuggestions(userId, healthCheck.gaps, 7, { platforms: [platform] });
 
     // Generate specific recommendations
     const recommendations = {
@@ -316,17 +316,23 @@ async function getNextWeekRecommendations(userId, platform) {
         day: days[index % 7],
         content: {
           title: suggestion.title,
+          idea: suggestion.idea || null,
           type: suggestion.type,
           category: suggestion.category,
-          platforms: suggestion.platforms || [platform],
+          platforms: suggestion.platforms || [suggestion.platform || platform],
           estimatedEngagement: estimateEngagementFromSuggestion(suggestion, benchmark)
         },
+        targetEngagement: Math.round(benchmark.industry.top25) || null,
         goal: `Target: ${Math.round(benchmark.industry.top25)} engagement`
       });
     });
 
-    // Generate posting schedule
+    // Generate posting schedule, and put each day's slot on the day itself so
+    // the calendar can show it (the editor only ever received day names).
     recommendations.postingSchedule = generateOptimalSchedule(platform, recommendations.weeklyPlan);
+    recommendations.weeklyPlan.forEach((plan, i) => {
+      plan.time = recommendations.postingSchedule[i]?.time || null;
+    });
 
     // Optimization tips. The competitor-derived tips are only included when
     // competitor data actually exists — otherwise they rendered as
