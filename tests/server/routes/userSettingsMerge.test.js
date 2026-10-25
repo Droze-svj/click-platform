@@ -9,6 +9,7 @@ const app = require('../../../server/index');
 const User = require('../../../server/models/User');
 const UserSettings = require('../../../server/models/UserSettings');
 const { getJwtSecret } = require('../../../server/utils/jwtSecret');
+const { decryptToken } = require('../../../server/utils/dataEncryption');
 
 describe('/api/user/settings', () => {
   let user;
@@ -37,7 +38,8 @@ describe('/api/user/settings', () => {
     // The client never has the key, so its next save sends none (or an empty one).
     await put({ agentic: { autonomousSwarm: false, heygenApiKey: '' } });
     const stored = await UserSettings.findOne({ userId: String(user._id) }).lean();
-    expect(stored.agentic.heygenApiKey).toBe('hg_secret_value_1234');
+    // Encrypted at rest (see agenticKeysEncrypted.test.js), same key inside.
+    expect(decryptToken(stored.agentic.heygenApiKey)).toBe('hg_secret_value_1234');
     expect(stored.agentic.autonomousSwarm).toBe(false);
     expect(stored.agentic.digitalTwinProvider).toBe('heygen');
 
