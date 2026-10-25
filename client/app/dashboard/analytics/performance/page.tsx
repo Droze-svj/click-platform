@@ -167,6 +167,12 @@ export default function FluxForecastingMatrixPage() {
             as="h2"
             title={t('analyticsPerformancePage.temporalVelocity')}
             description={t('analyticsPerformancePage.temporalVelocitySubtitle')}
+            actions={
+              <div className="flex items-center gap-4 ds-text-caption text-theme-muted">
+                <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />{t('analyticsPerformancePage.legendViews')}</span>
+                <span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" aria-hidden />{t('analyticsPerformancePage.legendEngagement')}</span>
+              </div>
+            }
             className="mb-6"
           />
           {data.length > 0 ? (
@@ -234,7 +240,7 @@ export default function FluxForecastingMatrixPage() {
                           {t('analyticsPerformancePage.likesShares', { likes: formatFmt(day.likes), shares: formatFmt(day.shares) })}
                         </td>
                         <td className="px-5 py-4 ds-text-body text-theme-primary tabular-nums">{formatFmt(engage)}</td>
-                        <td className="px-5 py-4 ds-text-caption text-indigo-500">{t('analyticsPerformancePage.phantoms', { count: day.posts_count })}</td>
+                        <td className="px-5 py-4 ds-text-caption text-theme-secondary">{t('analyticsPerformancePage.phantoms', { count: day.posts_count })}</td>
                         <td className="px-5 py-4">
                           <span className="inline-flex rounded-lg bg-emerald-500/10 px-2.5 py-1 ds-text-caption font-semibold text-emerald-500 tabular-nums">{rate}%</span>
                         </td>

@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import MorningBriefPanel from '../MorningBriefPanel'
 import * as api from '@/lib/featuresApi'
 
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
 jest.mock('@/lib/featuresApi')
 jest.mock('@/lib/api', () => ({
   handleApiError: (e: any) => e?.message ?? '',

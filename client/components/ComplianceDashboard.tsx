@@ -368,33 +368,18 @@ export default function ComplianceDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
-
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <div className="p-3 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg">
-            <Shield className="w-7 h-7 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-[var(--text-main)]">
-              {t('complianceDashboard.headerTitle')}
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {t('complianceDashboard.headerSubtitle')}
-            </p>
-          </div>
-        </div>
+    <div>
+      <div className="max-w-5xl space-y-6">
 
         {/* Tabs */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
-          <div className="flex border-b border-gray-200 dark:border-gray-800">
+          <div className="flex overflow-x-auto border-b border-gray-200 dark:border-gray-800">
             {TABS.map(tab => (
               <button
                 type="button"
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
-                className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-all border-b-2 -mb-px ${
+                className={`flex shrink-0 items-center gap-2 whitespace-nowrap px-4 sm:px-5 py-3.5 text-sm font-medium transition-all border-b-2 -mb-px ${
                   activeTab === tab.id
                     ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
                     : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'

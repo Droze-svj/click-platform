@@ -2,12 +2,10 @@
 
 import React from 'react';
 import BrandKit from '../../../components/BrandKit';
-import { Palette, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Type, Clapperboard, HardDrive } from 'lucide-react';
 import ToastContainer from '../../../components/ToastContainer';
 import { useTranslation } from '../../../hooks/useTranslation';
-import { Panel, SectionHeader, Badge,
-  PageShell,
-} from '../../../components/ui';
+import { Panel, SectionHeader, PageShell } from '../../../components/ui';
 
 export default function BrandKitPage() {
   const { t } = useTranslation();
@@ -20,35 +18,28 @@ export default function BrandKitPage() {
       <SectionHeader
         as="h1"
         title={t('brandKitPage.title')}
-        description={t('brandKitPage.identityCoreDesc')}
+        description={t('brandKitPage.description')}
         className="mb-6"
-        actions={
-          <Badge className="bg-primary/10 text-primary gap-1.5">
-            <Palette size={14} aria-hidden />
-            {t('brandKitPage.multiProfileReady')}
-          </Badge>
-        }
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 space-y-6">
           <Panel variant="glass">
-            <h2 className="ds-text-h3 text-theme-primary mb-2">{t('brandKitPage.identityCore')}</h2>
-            <p className="ds-text-body text-theme-muted mb-6">{t('brandKitPage.identityCoreDesc')}</p>
-            <div className="space-y-3 pt-6 border-t border-[var(--border-subtle)]">
-              <div className="ds-surface-subtle flex items-center gap-3 p-3">
-                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
-                  <ShieldCheck size={20} aria-hidden />
-                </span>
-                <span className="ds-text-label text-theme-secondary">{t('brandKitPage.featureEncryption')}</span>
-              </div>
-              <div className="ds-surface-subtle flex items-center gap-3 p-3">
-                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-accent text-primary">
-                  <RefreshCw size={20} aria-hidden />
-                </span>
-                <span className="ds-text-label text-theme-secondary">{t('brandKitPage.featureSync')}</span>
-              </div>
-            </div>
+            <h2 className="ds-text-h3 text-theme-primary mb-4">{t('brandKitPage.howUsedTitle')}</h2>
+            <ul className="space-y-3">
+              {[
+                { icon: Clapperboard, text: t('brandKitPage.howUsedClips') },
+                { icon: Type, text: t('brandKitPage.howUsedEditor') },
+                { icon: HardDrive, text: t('brandKitPage.howUsedStorage') },
+              ].map(({ icon: ItemIcon, text }) => (
+                <li key={text} className="ds-surface-subtle flex items-start gap-3 p-3">
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <ItemIcon size={18} aria-hidden />
+                  </span>
+                  <span className="text-sm text-theme-secondary pt-1.5">{text}</span>
+                </li>
+              ))}
+            </ul>
           </Panel>
         </div>
 

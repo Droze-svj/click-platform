@@ -86,6 +86,7 @@ export default function SovereignPostDiagnosticHub() {
       <EmptyState
         icon={Target}
         title={t('analyticsPostPage.nodeNotFound')}
+        description={t('analyticsPostPage.nodeNotFoundDesc')}
         className="py-24"
         action={
           <Button variant="secondary" size="md" onClick={() => router.push('/dashboard/analytics')}>

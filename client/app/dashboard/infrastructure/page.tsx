@@ -1,5 +1,6 @@
 'use client';
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Server, ShieldAlert, ArrowLeft, RefreshCw } from 'lucide-react';
@@ -25,7 +26,7 @@ export default function InfrastructurePage() {
   useEffect(() => {
     if (authLoading) return // user is null until /auth/me answers
     if (!user) {
-      router.push('/login');
+      router.push(loginPathForCurrentPage());
       return;
     }
 

@@ -1,48 +1,34 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { m, AnimatePresence } from 'framer-motion'
-import { 
-  Zap, 
-  Sparkles, 
-  Scissors, 
-  Layers, 
-  Video, 
-  Type, 
-  User, 
-  Box, 
-  Cpu, 
-  Shield,
-  ArrowRight,
+import {
+  Zap,
+  Sparkles,
+  Scissors,
+  Layers,
+  Video,
+  Type,
+  User,
+  Box,
+  Cpu,
   Loader2,
-  CheckCircle2,
-  AlertCircle,
   Wand2,
-  Music,
   ExternalLink,
-  Info,
-  Activity,
-  Globe,
-  Terminal,
-  Fingerprint,
-  Orbit,
-  Mic2,
-  Film
+  X,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { apiGet, apiPost } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useDialogBehavior } from './ui/modal'
-
-const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/5 shadow-3xl transition-all duration-700'
+import { Button, EmptyState } from './ui'
 
 interface Tool {
   id: string;
   name: string;
   description: string;
-  implementation: string;
-  upgrade: string;
+  implementation?: string;
+  upgrade?: string;
   roi?: number;
 }
 
@@ -98,7 +84,7 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
 
     try {
       setExecutingToolId(toolId)
-      showToast(t('sovereignToolbox.initializing', { tool: toolId }), 'info')
+      showToast(t('sovereignToolbox.initializing', { tool: labelFor(toolId) }), 'info')
 
       const res = await apiPost('/toolbox/execute', {
         toolId,
@@ -110,7 +96,7 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
       })
 
       if (res.success) {
-        showToast(t('sovereignToolbox.synthesisComplete', { tool: toolId }), 'success')
+        showToast(t('sovereignToolbox.synthesisComplete', { tool: labelFor(toolId) }), 'success')
       } else {
         throw new Error(res.error || 'Execution diffraction')
       }
@@ -137,215 +123,121 @@ export default function SovereignToolbox({ videoId }: { videoId?: string } = {})
     }
   }
 
-  const getColor = (id: string) => {
-    switch (id) {
-      case 'silence-removal': return 'text-amber-400'
-      case 'viral-clips': return 'text-primary-400'
-      case 'auto-cut': return 'text-emerald-400'
-      case 'bg-swap': return 'text-rose-400'
-      case 'blog-to-video': return 'text-blue-400'
-      case 'auto-captions': return 'text-violet-400'
-      case 'text-editor': return 'text-orange-400'
-      case 'ai-avatar': return 'text-cyan-400'
-      case 'cinematic-3d': return 'text-fuchsia-400'
-      case 'script-to-video': return 'text-sky-400'
-      default: return 'text-white'
-    }
-  }
+  // The API names these tools after other companies' products ("Wisecut Elite",
+  // "Opus Sovereign", "Descript V3", "Synthesia Gaze"…) and attaches an invented
+  // "next upgrade" to each. Showing a competitor's brand on a Click feature is
+  // misleading, so the page names each tool by what it does, from en.json, and
+  // drops the upgrade blurbs. Unknown ids fall back to the API description.
+  const KNOWN = new Set(['silence-removal', 'viral-clips', 'auto-cut', 'bg-swap', 'blog-to-video', 'auto-captions', 'text-editor', 'ai-avatar', 'cinematic-3d', 'script-to-video'])
+  const toolKey = (id: string) => id.replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase())
+  const toolName = (tool: Tool) => (KNOWN.has(tool.id) ? t(`sovereignToolbox.tool.${toolKey(tool.id)}.name`) : tool.id)
+  const labelFor = (id: string) => { const found = tools.find((x) => x.id === id); return found ? toolName(found) : id }
+  const toolDesc = (tool: Tool) => (KNOWN.has(tool.id) ? t(`sovereignToolbox.tool.${toolKey(tool.id)}.desc`) : tool.description)
 
   if (loading) {
     return (
-      <div role="status" aria-live="polite" className="flex flex-col items-center justify-center py-48 space-y-12 bg-transparent min-h-[600px]">
-        <Loader2 size={80} className="text-primary-500 animate-spin" />
-        <p className="text-[12px] font-black text-slate-500 uppercase tracking-[0.8em] italic animate-pulse">{t('sovereignToolbox.syncingModules')}</p>
+      <div role="status" aria-live="polite" className="flex flex-col items-center justify-center gap-4 py-32">
+        <Loader2 size={32} className="text-primary animate-spin" aria-hidden="true" />
+        <p className="text-sm text-theme-muted">{t('sovereignToolbox.syncingModules')}</p>
       </div>
     )
   }
 
+  const selected = tools.find((item) => item.id === selectedToolId) || null
+
   return (
-    <div className="p-6 sm:p-12 lg:p-20 space-y-12 sm:space-y-16 bg-black/40 backdrop-blur-3xl rounded-[3rem] sm:rounded-[5rem] border-2 border-white/5 relative overflow-hidden shadow-2xl">
-      {/* HUD Header */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-10 border-b-2 border-white/5 pb-12 relative z-10">
-        <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
-          <div className="w-20 h-20 rounded-[2.5rem] bg-primary-500/5 border-2 border-primary-500/20 flex items-center justify-center shadow-inner group overflow-hidden relative">
-             <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-             <Box size={40} className="text-primary-400 relative z-10" />
-          </div>
-          <div className="text-center sm:text-left">
-            <div className="flex items-center gap-3 mb-2 justify-center sm:justify-start">
-               <Cpu size={14} className="text-primary-400 animate-pulse" />
-               <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] italic">{t('sovereignToolbox.forgeMatrix')}</span>
-            </div>
-            <h2 className="text-4xl sm:text-6xl font-black text-white italic uppercase tracking-tighter leading-none">{t('sovereignToolbox.sovereignForge')}</h2>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 px-8 py-4 rounded-full bg-emerald-500/5 border-2 border-emerald-500/20 shadow-inner group hover:bg-emerald-500/10 transition-colors">
-           <Shield size={16} className="text-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-           <span className="text-[11px] font-black text-emerald-400 tracking-[0.3em] uppercase italic leading-none">{t('sovereignToolbox.quantumSecure')}</span>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="ds-text-h1 text-theme-primary">{t('sovereignToolbox.sovereignForge')}</h1>
+        <p className="mt-1 max-w-2xl ds-text-body text-theme-muted">{t('sovereignToolbox.intro')}</p>
       </div>
 
-      {/* Grid Configuration */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 sm:gap-12 relative z-10">
-        {tools.map((tool, i) => {
-          const Icon = getIcon(tool.id)
-          const colorClass = getColor(tool.id)
-          const isExecuting = executingToolId === tool.id
-
-          return (
-            <m.div
-              key={tool.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              onClick={() => setSelectedToolId(tool.id)}
-              className="bg-white/[0.02] backdrop-blur-3xl border-2 border-white/5 rounded-[3.5rem] p-8 sm:p-10 cursor-pointer hover:border-primary-500/30 hover:bg-white/[0.04] transition-all duration-700 active:scale-[0.98] group relative overflow-hidden shadow-xl hover:shadow-[0_40px_80px_rgba(0,0,0,0.5)]"
-            >
-              <div className={`absolute -top-32 -right-32 w-64 h-64 blur-[100px] rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-1000 pointer-events-none bg-current ${colorClass}`} />
-
-              <div className="flex items-start justify-between relative z-10 mb-8">
-                <div className="w-16 h-16 rounded-[2rem] bg-black/40 border-2 border-white/5 flex items-center justify-center group-hover:rotate-[15deg] group-hover:scale-110 transition-all duration-700 shadow-2xl">
-                   <Icon size={32} className={`${colorClass}`} />
-                </div>
-                <div className="px-4 py-2 rounded-2xl bg-black/40 border-2 border-white/5 flex items-center gap-2 shadow-inner">
-                   <div className={`w-2 h-2 rounded-full bg-emerald-500 ${isExecuting ? 'animate-ping shadow-[0_0_8px_rgba(16,185,129,0.8)]' : 'shadow-[0_0_4px_rgba(16,185,129,0.5)]'}`} />
-                   <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic leading-none">{t('sovereignToolbox.statusReady')}</span>
-                </div>
-              </div>
-
-              <div className="space-y-4 relative z-10">
-                <h3 className="text-2xl sm:text-3xl font-black text-white italic uppercase tracking-tighter leading-none flex items-center gap-4 truncate">
-                  {tool.name}
-                  {tool.id === 'ai-avatar' && (
-                    <span className="text-[9px] font-black bg-primary-500/20 text-primary-400 px-3 py-1 rounded-full border border-primary-500/20 animate-pulse">{t('sovereignToolbox.elite')}</span>
-                  )}
-                </h3>
-                <p className="text-[12px] font-bold text-slate-500 uppercase tracking-tight leading-relaxed line-clamp-2 h-10 italic">
-                  {tool.description}
-                </p>
-
-                <div className="flex items-center gap-4 mt-8 pt-8 border-t-2 border-white/5">
-                  {typeof tool.roi === 'number' && (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/5 border border-emerald-500/10 shadow-sm">
-                      <Zap size={14} className="text-emerald-400" />
-                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">{t('sovereignToolbox.roi', { value: tool.roi.toFixed(1) })}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary-500/5 border border-primary-500/10 shadow-sm">
-                    <Cpu size={14} className="text-primary-400" />
-                    <span className="text-[10px] font-black text-primary-400 uppercase tracking-widest italic">{t('sovereignToolbox.ultraSync')}</span>
+      {tools.length === 0 ? (
+        <EmptyState icon={Box} title={t('sovereignToolbox.emptyTitle')} description={t('sovereignToolbox.indexingFailed')} />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {tools.map((tool) => {
+            const Icon = getIcon(tool.id)
+            const isExecuting = executingToolId === tool.id
+            const needsVideo = VIDEO_DEPENDENT_TOOLS.has(tool.id) && !videoId
+            return (
+              <div key={tool.id} className="ds-surface-card p-5 flex flex-col gap-4">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Icon size={20} aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="ds-text-h3 text-theme-primary">{toolName(tool)}</h2>
+                    <p className="mt-1 text-sm text-theme-muted">{toolDesc(tool)}</p>
                   </div>
                 </div>
-              </div>
-
-              {/* Upgrade HUD Section */}
-              <div className="mt-8 pt-8 border-t-2 border-white/5 relative z-10 group/upgrade">
-                 <div className="flex items-center gap-3 mb-4">
-                    <Sparkles size={14} className="text-primary-400 group-hover/upgrade:rotate-180 transition-transform duration-1000" />
-                    <span className="text-[10px] font-black text-primary-400 uppercase tracking-[0.4em] italic">{t('sovereignToolbox.sovereignSynthesis')}</span>
-                 </div>
-                 <p className="text-[11px] font-black text-slate-400 italic leading-relaxed uppercase opacity-80 group-hover:text-white group-hover:opacity-100 transition-all duration-500">
-                    {tool.upgrade}
-                 </p>
-              </div>
-
-              {isExecuting && (
-                <div className="absolute inset-0 bg-primary-900/40 backdrop-blur-md flex items-center justify-center z-50 transition-all duration-500">
-                   <div className="flex flex-col items-center gap-6">
-                      <Loader2 size={48} className="text-primary-400 animate-spin" />
-                      <span className="text-[12px] font-black text-white uppercase tracking-[0.5em] italic animate-pulse">{t('sovereignToolbox.synthesizing')}</span>
-                   </div>
+                <div className="mt-auto flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    loading={isExecuting}
+                    disabled={isExecuting}
+                    onClick={() => executeTool(tool.id)}
+                  >
+                    {needsVideo ? t('sovereignToolbox.pickVideo') : t('sovereignToolbox.run')}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedToolId(tool.id)}>
+                    {t('sovereignToolbox.details')}
+                  </Button>
                 </div>
-              )}
-            </m.div>
-          )
-        })}
-      </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
-      <AnimatePresence>
-        {selectedToolId && (
-          <m.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSelectedToolId(null)}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 bg-black/95 backdrop-blur-3xl"
-            role="dialog"
-            aria-modal="true"
+      {selected && (
+        <div
+          onClick={() => setSelectedToolId(null)}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="toolbox-dialog-title"
+        >
+          <div
+            ref={panelRef}
+            onClick={(e) => e.stopPropagation()}
+            className="ds-surface-elevated w-full max-w-lg p-6 space-y-5"
           >
-            <m.div
-              ref={panelRef}
-              initial={{ scale: 0.9, opacity: 0, y: 50 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 50 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-black/80 backdrop-blur-3xl border-2 border-white/5 max-w-5xl w-full rounded-[4rem] sm:rounded-[6rem] p-8 sm:p-16 lg:p-24 relative overflow-hidden shadow-[0_80px_150px_rgba(0,0,0,0.6)]"
-            >
-              <div className="absolute -top-60 -right-60 w-[800px] h-[800px] bg-primary-600/5 blur-[200px] rounded-full pointer-events-none" />
-
-              {(() => {
-                const tool = tools.find(item => item.id === selectedToolId)
-                if (!tool) return null
-                const Icon = getIcon(tool.id)
-                const colorClass = getColor(tool.id)
-
-                return (
-                  <div className="space-y-12 sm:space-y-16 relative z-10">
-                    <div className="flex flex-col md:flex-row items-center gap-8 sm:gap-12">
-                       <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-[3rem] sm:rounded-[3.5rem] bg-black/60 border-2 border-white/10 flex items-center justify-center shadow-3xl group hover:rotate-12 transition-transform duration-700">
-                          <Icon size={56} className={`${colorClass} sm:w-16 sm:h-16`} />
-                       </div>
-                       <div className="text-center md:text-left">
-                          <p className="text-[12px] font-black text-slate-500 uppercase tracking-[0.8em] italic mb-4">{t('sovereignToolbox.moduleSig', { id: tool.id.toUpperCase() })}</p>
-                          <h2 className="text-5xl sm:text-7xl font-black text-white italic uppercase tracking-tighter leading-none">{tool.name}</h2>
-                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
-                       <div className="p-8 sm:p-10 rounded-[3rem] sm:rounded-[3.5rem] bg-white/[0.02] border-2 border-white/5 space-y-6 shadow-inner">
-                          <div className="flex items-center gap-4">
-                             <Info size={16} className="text-slate-500" />
-                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none">{t('sovereignToolbox.diagnosticTrace')}</span>
-                          </div>
-                          <p className="text-2xl sm:text-3xl font-black text-slate-300 leading-tight uppercase tracking-tighter italic">
-                             {tool.description}
-                          </p>
-                       </div>
-
-                       <div className="p-8 sm:p-10 rounded-[3rem] sm:rounded-[3.5rem] bg-primary-500/5 border-2 border-primary-500/20 space-y-6 shadow-[0_40px_100px_rgba(99,102,241,0.2)]">
-                          <div className="flex items-center gap-4">
-                             <Sparkles size={16} className="text-primary-400" />
-                             <span className="text-[10px] font-black text-primary-400 uppercase tracking-[0.4em] italic leading-none">{t('sovereignToolbox.sovereignLogic')}</span>
-                          </div>
-                          <p className="text-3xl sm:text-4xl font-black text-white leading-tight uppercase tracking-tighter italic">
-                             {tool.upgrade}
-                          </p>
-                       </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 pt-8">
-                       <button
-                         onClick={() => executeTool(tool.id)}
-                         disabled={executingToolId === tool.id}
-                         className="flex-[2] py-8 sm:py-10 rounded-[2.5rem] sm:rounded-[3rem] bg-primary-600 text-white font-black text-lg sm:text-xl uppercase tracking-[0.6em] italic shadow-[0_40px_100px_rgba(99,102,241,0.4)] hover:bg-primary-500 active:scale-95 transition-all flex items-center justify-center gap-6 sm:gap-10 border-none group"
-                       >
-                          {executingToolId === tool.id ? <Loader2 size={32} className="animate-spin" /> : <Zap size={32} className="group-hover:scale-125 transition-transform" />}
-                          {t('sovereignToolbox.initialiseSynthesis')}
-                       </button>
-                       <button
-                         onClick={() => setSelectedToolId(null)}
-                         className="flex-1 px-8 sm:px-12 py-8 sm:py-10 rounded-[2.5rem] sm:rounded-[3rem] bg-white/5 border-2 border-white/10 text-slate-500 font-black text-lg sm:text-xl uppercase tracking-[0.4em] italic hover:text-white hover:bg-white/10 transition-all active:scale-95"
-                       >
-                          {t('sovereignToolbox.closeLink')}
-                       </button>
-                    </div>
-                  </div>
-                )
-              })()}
-            </m.div>
-          </m.div>
-        )}
-      </AnimatePresence>
+            <div className="flex items-start gap-3">
+              {(() => { const Icon = getIcon(selected.id); return (
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon size={22} aria-hidden="true" /></span>
+              ) })()}
+              <div className="min-w-0 flex-1">
+                <h2 id="toolbox-dialog-title" className="ds-text-h2 text-theme-primary">{toolName(selected)}</h2>
+                <p className="mt-1 text-sm text-theme-secondary">{toolDesc(selected)}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedToolId(null)}
+                aria-label={t('sovereignToolbox.closeLink')}
+                className="rounded-lg p-1.5 text-theme-muted hover:bg-muted hover:text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+            </div>
+            {VIDEO_DEPENDENT_TOOLS.has(selected.id) && !videoId ? (
+              <p className="rounded-lg bg-muted px-3 py-2 text-sm text-theme-secondary">{t('sovereignToolbox.needsVideoHint')}</p>
+            ) : null}
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+              <Button variant="secondary" onClick={() => setSelectedToolId(null)}>{t('sovereignToolbox.closeLink')}</Button>
+              <Button
+                variant="primary"
+                loading={executingToolId === selected.id}
+                disabled={executingToolId === selected.id}
+                onClick={() => executeTool(selected.id)}
+              >
+                {VIDEO_DEPENDENT_TOOLS.has(selected.id) && !videoId ? t('sovereignToolbox.pickVideo') : t('sovereignToolbox.run')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -18,6 +18,7 @@ import {
 import { m, AnimatePresence } from 'framer-motion'
 import { apiPost, handleApiError } from '../../../lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
+import { Panel, SectionHeader, Button } from '../../ui'
 
 interface RemediationAction {
   type: string
@@ -38,7 +39,6 @@ interface RemediationStatus {
 
 type ToastFn = (message: string, type?: 'success' | 'error' | 'info' | 'warning') => unknown
 
-const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
 
 export const RemediationHUD: React.FC<{ contentId: string; showToast?: ToastFn }> = ({ contentId, showToast }) => {
     const { t } = useTranslation()
@@ -69,129 +69,111 @@ export const RemediationHUD: React.FC<{ contentId: string; showToast?: ToastFn }
         }
     }
 
+    const ACTION_LABEL: Record<string, string> = {
+        ADJUST_VOLUME: t('editorPanels.remediation.actionVolume'),
+        STABILIZE: t('editorPanels.remediation.actionStabilize'),
+        ENLARGE_TEXT: t('editorPanels.remediation.actionText'),
+    }
+    const lastRun = status?.status === 'EVOLVED' || status?.status === 'CLEAN'
+        ? t('editorPanels.remediation.lastRunNow')
+        : status?.status === 'SCHEDULED' ? t('editorPanels.remediation.lastRunScheduled') : t('editorPanels.remediation.lastRunNever')
+
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Header */}
-            <div className="flex items-center justify-between gap-6">
-                <div className="flex items-center gap-6">
-                    <div className="p-4 rounded-[1.2rem] bg-amber-500 text-white shadow-xl shadow-amber-500/20">
-                        <RefreshCw className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Auto-fix from comments</h4>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-amber-500/70">Fixes issues viewers mention in comments</span>
-                    </div>
-                </div>
-
-                <div className={`px-6 py-4 rounded-2xl flex items-center gap-4 border transition-all ${
-                    isEvolutionWindow 
-                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
-                    : 'bg-white/5 border-white/10 text-slate-500'
-                }`}>
-                    <Clock className="w-4 h-4" />
-                    <span className="text-[9px] font-black uppercase tracking-widest italic leading-none">
-                        Fix window: {isEvolutionWindow ? 'open now' : '2–6 AM'}
+        <Panel>
+            <SectionHeader
+                as="h3"
+                title={
+                    <span className="inline-flex items-center gap-2">
+                        <RefreshCw className="w-5 h-5 text-amber-500" aria-hidden />
+                        {t('editorPanels.remediation.title')}
                     </span>
-                </div>
-            </div>
+                }
+                description={t('editorPanels.remediation.subtitle')}
+                actions={
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${
+                        isEvolutionWindow
+                        ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400'
+                        : 'border-[var(--border-subtle)] text-theme-muted'
+                    }`}>
+                        <Clock className="w-3.5 h-3.5" aria-hidden />
+                        {isEvolutionWindow ? t('editorPanels.remediation.windowOpen') : t('editorPanels.remediation.windowHours')}
+                    </span>
+                }
+                className="mb-5"
+            />
 
-            {/* Status & Actions */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
-                {/* Proposed Actions */}
-                <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-8`}>
-                    <div className="flex items-center justify-between">
-                        <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Planned fixes</h5>
-                        <Sparkles className="w-5 h-5 text-amber-400" />
-                    </div>
-
-                    <div className="space-y-4">
-                        {status?.actionPlan && status.actionPlan.length > 0 ? (
-                            status.actionPlan.map((action, i) => (
-                                <m.div 
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Planned fixes */}
+                <div className="ds-surface-subtle p-4">
+                    <h4 className="ds-text-label text-theme-primary mb-3">{t('editorPanels.remediation.plannedFixes')}</h4>
+                    {status?.actionPlan && status.actionPlan.length > 0 ? (
+                        <ul className="space-y-2">
+                            {status.actionPlan.map((action, i) => (
+                                <m.li
                                     key={i}
-                                    initial={{ x: -20, opacity: 0 }}
+                                    initial={{ x: -8, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
-                                    transition={{ delay: i * 0.1 }}
-                                    className="p-5 bg-black/40 border border-white/5 rounded-2xl flex items-center justify-between"
+                                    transition={{ delay: i * 0.05 }}
+                                    className="flex items-center justify-between gap-3 rounded-lg border border-[var(--border-subtle)] p-3"
                                 >
-                                    <div className="flex items-center gap-5">
-                                        <div className="p-3 bg-white/5 rounded-xl">
-                                            {action.type === 'ADJUST_VOLUME' && <Volume2 className="w-4 h-4 text-indigo-400" />}
-                                            {action.type === 'STABILIZE' && <Zap className="w-4 h-4 text-amber-400" />}
-                                            {action.type === 'ENLARGE_TEXT' && <Maximize className="w-4 h-4 text-blue-400" />}
-                                        </div>
-                                        <div>
-                                            <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none block mb-1">
-                                                {action.type.replace(/_/g, ' ')}
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        {action.type === 'ADJUST_VOLUME' && <Volume2 className="w-4 h-4 text-indigo-500 shrink-0" aria-hidden />}
+                                        {action.type === 'STABILIZE' && <Zap className="w-4 h-4 text-amber-500 shrink-0" aria-hidden />}
+                                        {action.type === 'ENLARGE_TEXT' && <Maximize className="w-4 h-4 text-sky-500 shrink-0" aria-hidden />}
+                                        <div className="min-w-0">
+                                            <span className="block text-sm font-medium text-theme-primary">
+                                                {ACTION_LABEL[action.type] || action.type.replace(/_/g, ' ').toLowerCase()}
                                             </span>
-                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                                                Value: {action.value ?? '—'}
+                                            <span className="ds-text-caption text-theme-muted">
+                                                {t('editorPanels.remediation.value', { value: action.value ?? '—' })}
                                             </span>
                                         </div>
                                     </div>
                                     {status.status === 'EVOLVED' && status.applied?.includes(action.type) ? (
                                         <CheckCircle2 className="w-4 h-4 text-emerald-500" aria-label={t('editorPanels.remediation.applied')} />
                                     ) : (
-                                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                                        <span className="ds-text-caption text-theme-muted">
                                             {status.status === 'EVOLVED' ? t('editorPanels.remediation.notApplied') : t('editorPanels.remediation.planned')}
                                         </span>
                                     )}
-                                </m.div>
-                            ))
-                        ) : (
-                            <div className="h-48 flex flex-col items-center justify-center space-y-4 opacity-30 italic">
-                                <AlertCircle className="w-8 h-8" />
-                                <span className="text-[10px] font-black uppercase tracking-widest">
-                                    {status?.status === 'CLEAN'
-                                        ? t('editorPanels.remediation.noFixesNeeded', { count: status.commentsChecked ?? 0 })
-                                        : 'Not checked yet'}
-                                </span>
-                            </div>
-                        )}
-                    </div>
+                                </m.li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center gap-2 py-8 text-center text-theme-muted">
+                            <AlertCircle className="w-6 h-6" aria-hidden />
+                            <span className="text-sm">
+                                {status?.status === 'CLEAN'
+                                    ? t('editorPanels.remediation.noFixesNeeded', { count: status.commentsChecked ?? 0 })
+                                    : t('editorPanels.remediation.notChecked')}
+                            </span>
+                        </div>
+                    )}
                 </div>
 
-                {/* Evolution Trigger */}
-                <div className="flex flex-col gap-6">
-                    <div className={`${glassStyle} rounded-[2.5rem] p-10 flex-1 flex flex-col items-center justify-center text-center space-y-8 border-2 border-dashed border-white/5 group hover:border-amber-500/20 transition-all`}>
-                        <div className="p-8 rounded-[3rem] bg-white/5 group-hover:bg-amber-500 text-white transition-all shadow-2xl relative">
-                            <RefreshCw className={`w-12 h-12 ${loading ? 'animate-spin' : ''}`} />
-                            {loading && (
-                                <div className="absolute inset-0 rounded-[3rem] border-4 border-amber-500 border-t-transparent animate-spin" />
-                            )}
-                        </div>
-                        <div className="space-y-4">
-                            <h3 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter uppercase leading-none">Check comments</h3>
-                            <p className="text-xs font-bold text-slate-500 max-w-xs mx-auto leading-relaxed">
-                                Reads the comments on this video and plans fixes, like lowering loud music, enlarging small text or steadying shaky footage.
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={triggerRemediation}
-                            disabled={loading}
-                            className={`w-full py-6 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.3em] italic transition-all ${
-                                loading ? 'bg-slate-800 text-slate-600' : 'bg-amber-500 hover:bg-amber-400 text-white shadow-xl shadow-amber-500/20'
-                            }`}
-                        >
-                            {loading ? 'Checking…' : 'Run auto-fix'}
-                        </button>
+                {/* Run */}
+                <div className="ds-surface-subtle p-4 flex flex-col gap-4">
+                    <div>
+                        <h4 className="ds-text-label text-theme-primary">{t('editorPanels.remediation.checkComments')}</h4>
+                        <p className="mt-1 text-sm text-theme-muted">{t('editorPanels.remediation.checkCommentsDesc')}</p>
                     </div>
-
-                    <div className="p-6 bg-indigo-600 rounded-[2rem] flex items-center justify-between text-white">
-                        <div className="flex items-center gap-4">
-                            <History className="w-6 h-6 opacity-60" />
-                            <div>
-                                <span className="text-[9px] font-black uppercase tracking-widest opacity-80 block mb-1 leading-none">Last run</span>
-                                <h6 className="text-sm font-black italic tracking-tighter uppercase leading-none">{status?.status === 'EVOLVED' || status?.status === 'CLEAN' ? 'Just now' : status?.status === 'SCHEDULED' ? 'Scheduled' : 'Not run yet'}</h6>
-                            </div>
-                        </div>
-                        <ChevronRight className="w-5 h-5 opacity-40" />
+                    <Button
+                        variant="primary"
+                        onClick={triggerRemediation}
+                        disabled={loading}
+                        loading={loading}
+                        leftIcon={!loading ? <Sparkles className="w-4 h-4" aria-hidden /> : undefined}
+                        className="w-full"
+                    >
+                        {loading ? t('editorPanels.remediation.checking') : t('editorPanels.remediation.run')}
+                    </Button>
+                    <div className="mt-auto flex items-center gap-2 border-t border-[var(--border-subtle)] pt-3 ds-text-caption text-theme-muted">
+                        <History className="w-4 h-4" aria-hidden />
+                        <span>{t('editorPanels.remediation.lastRun')}</span>
+                        <span className="font-medium text-theme-primary">{lastRun}</span>
                     </div>
                 </div>
-
             </div>
-        </div>
+        </Panel>
     )
 }

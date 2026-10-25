@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -91,7 +92,7 @@ export default function ScriptsPage() {
     // useAuth starts with user=null while /auth/me is in flight — wait for it,
     // or a direct link / refresh bounces a signed-in user to /login.
     if (authLoading) return
-    if (!user) router.push('/login'); else loadScripts()
+    if (!user) router.push(loginPathForCurrentPage()); else loadScripts()
   }, [user, authLoading, router, loadScripts])
 
   // Templates page → "Use template" lands here with ?template=<id>.
@@ -342,8 +343,8 @@ export default function ScriptsPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                        <h4 className="text-base font-semibold text-theme-primary truncate">{s.topic || s.title || t('scriptsPage.nullIdentifier')}</h4>
-                        <Badge variant="secondary">{cfg.label}</Badge>
+                        <h4 className="text-base font-semibold text-theme-primary truncate">{s.title || s.topic || t('scriptsPage.nullIdentifier')}</h4>
+                        <Badge variant="outline">{cfg.label}</Badge>
                       </div>
                       <div className="flex flex-wrap items-center gap-3 ds-text-caption text-theme-muted">
                         <span className="inline-flex items-center gap-1.5"><Type size={13} className="text-primary" aria-hidden /> {t('scriptsPage.wordsCount', { count: s.wordCount })}</span>

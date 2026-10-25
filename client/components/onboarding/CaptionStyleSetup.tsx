@@ -79,17 +79,17 @@ export default function CaptionStyleSetup({ onComplete }: CaptionStyleSetupProps
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-10 text-white">
+    <div className="max-w-3xl mx-auto px-6 py-10 text-theme-primary">
       <div className="flex items-center gap-2 mb-1">
-        <Sparkles className="w-5 h-5 text-emerald-400" />
-        <span className="text-[11px] font-black uppercase tracking-widest text-emerald-400">{t('captionSetup.stepBadge')}</span>
+        <Sparkles className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+        <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{t('captionSetup.stepBadge')}</span>
       </div>
       <h1 className="text-2xl font-extrabold mb-1">{t('captionSetup.title')}</h1>
-      <p className="text-sm text-slate-400 mb-8">{t('captionSetup.subtitle')}</p>
+      <p className="text-sm text-theme-muted mb-8">{t('captionSetup.subtitle')}</p>
 
       {/* Platforms */}
       <div className="mb-8">
-        <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">{t('captionSetup.platformsLabel')}</div>
+        <div className="text-xs font-bold uppercase tracking-wider text-theme-muted mb-3">{t('captionSetup.platformsLabel')}</div>
         <div className="flex flex-wrap gap-2">
           {PLATFORM_OPTIONS.map((p) => {
             const on = platforms.includes(p.value)
@@ -98,7 +98,7 @@ export default function CaptionStyleSetup({ onComplete }: CaptionStyleSetupProps
                 key={p.value}
                 type="button"
                 onClick={() => togglePlatform(p.value)}
-                className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${on ? 'bg-emerald-600 border-emerald-400 text-white' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
+                className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${on ? 'bg-emerald-600 border-emerald-400 text-white' : 'border-[var(--border-subtle)] bg-background text-theme-secondary hover:text-theme-primary hover:bg-accent'}`}
               >
                 {on && <Check className="w-3.5 h-3.5 inline -mt-0.5 mr-1" />}
                 {p.label}
@@ -110,7 +110,7 @@ export default function CaptionStyleSetup({ onComplete }: CaptionStyleSetupProps
 
       {/* Caption style picker (live preview) */}
       <div className="mb-8">
-        <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">{t('captionSetup.styleLabel')}</div>
+        <div className="text-xs font-bold uppercase tracking-wider text-theme-muted mb-3">{t('captionSetup.styleLabel')}</div>
         <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
           {CAPTION_TEXT_STYLES.map((s) => {
             const selected = s.id === style
@@ -126,7 +126,7 @@ export default function CaptionStyleSetup({ onComplete }: CaptionStyleSetupProps
               >
                 {selected && <Check className="w-4 h-4 text-emerald-400 absolute top-2 right-2" />}
                 <span style={{ fontSize: 19, fontWeight: 700, textAlign: 'center', ...(css as any) }}>{t('captionSetup.sampleWord')}</span>
-                <span className="text-[9px] uppercase tracking-wider text-slate-500">{s.label}</span>
+                <span className="text-[10px] uppercase tracking-wider text-slate-400">{s.label}</span>
               </button>
             )
           })}
@@ -134,12 +134,12 @@ export default function CaptionStyleSetup({ onComplete }: CaptionStyleSetupProps
       </div>
 
       {/* Snap-to-Speech */}
-      <div className="flex items-center justify-between mb-10 p-4 rounded-xl bg-white/5 border border-white/10">
+      <div className="flex items-center justify-between mb-10 p-4 ds-surface-subtle">
         <div className="flex items-center gap-3">
           <MessageSquare className={`w-5 h-5 ${snapToSpeech ? 'text-emerald-400' : 'text-slate-500'}`} />
           <div>
             <div className="text-sm font-bold">{t('captionSetup.snapTitle')}</div>
-            <div className="text-xs text-slate-400">{t('captionSetup.snapDesc')}</div>
+            <div className="text-xs text-theme-muted">{t('captionSetup.snapDesc')}</div>
           </div>
         </div>
         <button
@@ -148,7 +148,7 @@ export default function CaptionStyleSetup({ onComplete }: CaptionStyleSetupProps
           aria-label={t('captionSetup.snapAria')}
           title={t('captionSetup.snapAria')}
           onClick={() => setSnapToSpeech((v) => !v)}
-          className={`w-12 h-6 rounded-full border transition-all relative ${snapToSpeech ? 'bg-emerald-600 border-emerald-400' : 'bg-black/40 border-white/10'}`}
+          className={`w-12 h-6 rounded-full border transition-all relative ${snapToSpeech ? 'bg-emerald-600 border-emerald-400' : 'bg-accent border-[var(--border-subtle)]'}`}
         >
           <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${snapToSpeech ? 'left-7' : 'left-1'}`} />
         </button>
@@ -164,7 +164,7 @@ export default function CaptionStyleSetup({ onComplete }: CaptionStyleSetupProps
           {saving ? t('captionSetup.saving') : t('captionSetup.save')}
           <ArrowRight className="w-4 h-4" />
         </button>
-        <button type="button" onClick={() => (onComplete ? onComplete() : router.push(nextDest()))} className="text-sm text-slate-400 hover:text-white">
+        <button type="button" onClick={() => (onComplete ? onComplete() : router.push(nextDest()))} className="text-sm text-theme-muted hover:text-theme-primary">
           {t('captionSetup.skip')}
         </button>
       </div>

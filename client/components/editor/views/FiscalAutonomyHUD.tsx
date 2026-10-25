@@ -34,7 +34,7 @@ interface MonetizationOffer {
     velocity?: string
 }
 
-const glassStyle = "backdrop-blur-3xl bg-white/[0.02] border border-white/5 shadow-2xl"
+const glassStyle = "backdrop-blur-3xl bg-white/[0.02] border border-subtle shadow-2xl"
 
 const money = (v: unknown, digits = 2) =>
     Number.isFinite(Number(v)) ? `$${Number(v).toFixed(digits)}` : '—'
@@ -72,7 +72,7 @@ export const FiscalAutonomyHUD: React.FC = () => {
         { label: 'Revenue per hour', value: velocity ? `${money(velocity.velocity)}/hr` : '—', sub: 'Average over the last 24 hours', icon: Zap, color: 'text-indigo-400' },
         { label: 'Revenue per post', value: money(velocity?.rpd), sub: 'Last 24 hours', icon: Globe, color: 'text-emerald-400' },
         { label: 'Earnings per click', value: money(velocity?.epc), sub: 'Last 24 hours', icon: TrendingUp, color: 'text-blue-400' },
-        { label: 'Revenue (24h)', value: money(velocity?.pulseRevenue, 0), sub: Number.isFinite(Number(velocity?.pulseClicks)) ? `${Number(velocity?.pulseClicks).toLocaleString()} clicks` : 'Last 24 hours', icon: DollarSign, color: 'text-white' },
+        { label: 'Revenue (24h)', value: money(velocity?.pulseRevenue, 0), sub: Number.isFinite(Number(velocity?.pulseClicks)) ? `${Number(velocity?.pulseClicks).toLocaleString()} clicks` : 'Last 24 hours', icon: DollarSign, color: 'text-theme-primary' },
     ]
 
     return (
@@ -85,7 +85,7 @@ export const FiscalAutonomyHUD: React.FC = () => {
                     </div>
                     <div>
                         <h4 className="text-3xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Revenue</h4>
-                        <span className="text-[11px] font-bold text-slate-500 mt-2 block">What your links and offers earned in the last 24 hours.</span>
+                        <span className="text-[11px] font-bold text-theme-muted mt-2 block">What your links and offers earned in the last 24 hours.</span>
                     </div>
                 </div>
                 <button
@@ -93,7 +93,7 @@ export const FiscalAutonomyHUD: React.FC = () => {
                     onClick={fetchAll}
                     disabled={loading}
                     aria-label="Refresh revenue"
-                    className="p-4 rounded-xl bg-white/5 border border-white/5 text-white hover:bg-white/10 transition-all self-start lg:self-auto"
+                    className="p-4 rounded-xl bg-white/5 border border-subtle text-theme-primary hover:bg-white/10 transition-all self-start lg:self-auto"
                 >
                     <RefreshCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
                 </button>
@@ -118,8 +118,8 @@ export const FiscalAutonomyHUD: React.FC = () => {
                         <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity" aria-hidden="true">
                             <stat.icon className="w-12 h-12" />
                         </div>
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{stat.label}</span>
-                        <h5 className="text-3xl font-black text-white italic mt-3 tracking-tighter">{stat.value}</h5>
+                        <span className="text-[10px] font-black text-theme-muted uppercase tracking-widest">{stat.label}</span>
+                        <h5 className="text-3xl font-black text-theme-primary italic mt-3 tracking-tighter">{stat.value}</h5>
                         <p className={`text-[10px] font-bold mt-2 ${stat.color}`}>{stat.sub}</p>
                     </m.div>
                 ))}
@@ -129,34 +129,34 @@ export const FiscalAutonomyHUD: React.FC = () => {
             <div className={`${glassStyle} rounded-[3rem] p-10 relative overflow-hidden`}>
                 <div className="flex items-center justify-between mb-10">
                     <div>
-                        <h5 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">Your offers</h5>
-                        <p className="text-[11px] font-bold text-slate-500 mt-2">Products from your monetization plans, best performing first (last 30 days).</p>
+                        <h5 className="text-2xl font-black text-theme-primary italic tracking-tighter uppercase leading-none">Your offers</h5>
+                        <p className="text-[11px] font-bold text-theme-muted mt-2">Products from your monetization plans, best performing first (last 30 days).</p>
                     </div>
                     <Activity className="w-6 h-6 text-indigo-500" aria-hidden="true" />
                 </div>
 
                 {offers.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-slate-500">
+                    <p className="py-8 text-center text-sm text-theme-muted">
                         {loading ? 'Loading…' : 'No active offers yet. Add a product to a monetization plan to see it here.'}
                     </p>
                 ) : (
                     <div className="space-y-6">
                         {offers.map((offer) => (
-                            <div key={offer.id} className="p-6 rounded-3xl bg-white/5 border border-white/5 flex items-center justify-between gap-4 hover:bg-white/[0.08] transition-all">
+                            <div key={offer.id} className="p-6 rounded-3xl bg-white/5 border border-subtle flex items-center justify-between gap-4 hover:bg-white/[0.08] transition-all">
                                 <div className="flex items-center gap-6 min-w-0">
                                     <div className="w-12 h-12 rounded-2xl bg-indigo-500 flex items-center justify-center text-white shadow-lg shrink-0">
                                         <Target className="w-6 h-6" aria-hidden="true" />
                                     </div>
                                     <div className="min-w-0">
-                                        <h6 className="text-[13px] font-black text-white uppercase italic truncate">{offer.name}</h6>
-                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2 py-0.5 rounded bg-white/5 mt-1 block w-fit">
+                                        <h6 className="text-[13px] font-black text-theme-primary uppercase italic truncate">{offer.name}</h6>
+                                        <span className="text-[9px] font-bold text-theme-muted uppercase tracking-widest px-2 py-0.5 rounded bg-white/5 mt-1 block w-fit">
                                             {offer.platform || 'custom'}{offer.velocity ? ` · ${offer.velocity}` : ''}
                                         </span>
                                     </div>
                                 </div>
                                 <div className="text-right shrink-0">
-                                    <div className="text-[14px] font-black text-white italic">{Number(offer.conversions ?? 0).toLocaleString()} sales</div>
-                                    <div className="text-[10px] font-black text-slate-400 mt-1">
+                                    <div className="text-[14px] font-black text-theme-primary italic">{Number(offer.conversions ?? 0).toLocaleString()} sales</div>
+                                    <div className="text-[10px] font-black text-theme-secondary mt-1">
                                         {Number.isFinite(Number(offer.conversionRate)) ? `${(Number(offer.conversionRate) * 100).toFixed(1)}% of clicks` : '—'}
                                         {Number(offer.pcv) > 0 ? ` · ${money(offer.pcv)}` : ''}
                                     </div>

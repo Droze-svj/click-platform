@@ -7,6 +7,7 @@ import { useToast } from '../../../../contexts/ToastContext'
 import ToastContainer from '../../../../components/ToastContainer'
 import { apiGet, apiPost } from '../../../../lib/api'
 import { extractApiError } from '../../../../utils/apiResponse'
+import { useTranslation } from '@/hooks/useTranslation'
 import {
   Panel,
   Button,
@@ -50,9 +51,37 @@ function fmtDate(iso?: string): string {
   return isNaN(d.getTime()) ? '' : d.toLocaleString()
 }
 
+type TFn = (key: string, params?: Record<string, string | number>) => string
+
+/** Plain-language approval status; unknown values pass through unchanged. */
+function statusLabel(status: string, t: TFn): string {
+  switch (status) {
+    case 'pending': return t('approvalCollaboratePage.statusPending')
+    case 'in_progress': return t('approvalCollaboratePage.statusInProgress')
+    case 'approved': return t('approvalCollaboratePage.statusApproved')
+    case 'rejected': return t('approvalCollaboratePage.statusRejected')
+    case 'changes_requested': return t('approvalCollaboratePage.statusChangesRequested')
+    case 'cancelled': return t('approvalCollaboratePage.statusCancelled')
+    default: return status
+  }
+}
+
+/** Plain-language comment-author role; free-form roles pass through. */
+function roleLabel(role: string, t: TFn): string {
+  switch (role) {
+    case 'reviewer': return t('approvalCollaboratePage.roleReviewer')
+    case 'owner': return t('approvalCollaboratePage.roleOwner')
+    case 'admin': return t('approvalCollaboratePage.roleAdmin')
+    case 'approver': return t('approvalCollaboratePage.roleApprover')
+    case 'editor': return t('approvalCollaboratePage.roleEditor')
+    default: return role
+  }
+}
+
 function CollaborateInner() {
   const params = useSearchParams()
   const toast = useToast()
+  const { t } = useTranslation()
 
   const [approvalId, setApprovalId] = useState('')
   const [idInput, setIdInput] = useState('')
@@ -84,12 +113,12 @@ function CollaborateInner() {
       const res = await apiGet<{ data: ApprovalStatus }>(`/approvals/${id}/status`)
       setStatus(res?.data || null)
     } catch (err) {
-      toast.error(extractApiError(err).message || 'Could not load approval')
+      toast.error(extractApiError(err).message || t('approvalCollaboratePage.errLoad'))
       setStatus(null)
     } finally {
       setLoading(false)
     }
-  }, [toast])
+  }, [toast, t])
 
   useEffect(() => {
     if (approvalId) load(approvalId)
@@ -109,13 +138,13 @@ function CollaborateInner() {
         targetField: targetField.trim() || undefined,
         parentId: replyTo || undefined,
       })
-      toast.success('Comment added')
+      toast.success(t('approvalCollaboratePage.commentAddedToast'))
       setCommentText('')
       setTargetField('')
       setReplyTo(null)
       await load(approvalId)
     } catch (err) {
-      toast.error(extractApiError(err).message || 'Could not add comment')
+      toast.error(extractApiError(err).message || t('approvalCollaboratePage.errAddComment'))
     } finally {
       setPostingComment(false)
     }
@@ -126,7 +155,7 @@ function CollaborateInner() {
       await apiPost(`/approvals/${approvalId}/comments/${commentId}/resolve`, { resolved: !resolved })
       await load(approvalId)
     } catch (err) {
-      toast.error(extractApiError(err).message || 'Could not update comment')
+      toast.error(extractApiError(err).message || t('approvalCollaboratePage.errUpdateComment'))
     }
   }
 
@@ -135,11 +164,11 @@ function CollaborateInner() {
     setPostingRevision(true)
     try {
       await apiPost(`/approvals/${approvalId}/revisions`, { note: revisionNote.trim() || undefined })
-      toast.success('Revision recorded')
+      toast.success(t('approvalCollaboratePage.revisionRecordedToast'))
       setRevisionNote('')
       await load(approvalId)
     } catch (err) {
-      toast.error(extractApiError(err).message || 'Could not record revision')
+      toast.error(extractApiError(err).message || t('approvalCollaboratePage.errRecordRevision'))
     } finally {
       setPostingRevision(false)
     }
@@ -151,10 +180,10 @@ function CollaborateInner() {
       className={`rounded-xl border border-border/60 p-3 ${isReply ? 'ml-6 bg-accent/40' : 'bg-surface'}`}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-medium text-theme-primary">{c.authorName || 'Reviewer'}</span>
-        {c.authorRole ? <Badge variant="secondary">{c.authorRole}</Badge> : null}
-        {c.targetField ? <Badge variant="outline">on: {c.targetField}</Badge> : null}
-        {c.resolved ? <Badge variant="default">Resolved</Badge> : null}
+        <span className="font-medium text-theme-primary">{c.authorName || t('approvalCollaboratePage.defaultAuthor')}</span>
+        {c.authorRole ? <Badge variant="secondary">{roleLabel(c.authorRole, t)}</Badge> : null}
+        {c.targetField ? <Badge variant="outline">{t('approvalCollaboratePage.onField', { field: c.targetField })}</Badge> : null}
+        {c.resolved ? <Badge variant="default">{t('approvalCollaboratePage.resolved')}</Badge> : null}
         <span className="ml-auto text-xs text-theme-muted">{fmtDate(c.createdAt)}</span>
       </div>
       <p className="mt-2 whitespace-pre-wrap text-sm text-theme-secondary">{c.text}</p>
@@ -165,7 +194,7 @@ function CollaborateInner() {
             className="inline-flex items-center gap-1 text-xs text-theme-muted hover:text-theme-primary"
             onClick={() => setReplyTo(replyTo === c.id ? null : c.id)}
           >
-            <CornerDownRight className="h-3 w-3" /> {replyTo === c.id ? 'Cancel reply' : 'Reply'}
+            <CornerDownRight className="h-3 w-3" /> {replyTo === c.id ? t('approvalCollaboratePage.cancelReply') : t('approvalCollaboratePage.reply')}
           </button>
         ) : null}
         <button
@@ -173,7 +202,7 @@ function CollaborateInner() {
           className="inline-flex items-center gap-1 text-xs text-theme-muted hover:text-emerald-500"
           onClick={() => toggleResolve(c.id, !!c.resolved)}
         >
-          <Check className="h-3 w-3" /> {c.resolved ? 'Reopen' : 'Resolve'}
+          <Check className="h-3 w-3" /> {c.resolved ? t('approvalCollaboratePage.reopen') : t('approvalCollaboratePage.resolve')}
         </button>
       </div>
     </div>
@@ -185,15 +214,16 @@ function CollaborateInner() {
     <PageShell className="max-w-4xl">
       <SectionHeader
         as="h1"
-        title="Approval Collaboration"
-        description="Inline comment threads + revision history for a content approval."
+        title={t('approvalCollaboratePage.title')}
+        description={t('approvalCollaboratePage.subtitle')}
       />
 
       {/* Approval id picker */}
       <Panel variant="glass" className="flex flex-wrap items-end gap-3">
         <div className="flex-1 min-w-[240px]">
           <Input
-            placeholder="Content approval ID"
+            placeholder={t('approvalCollaboratePage.idPlaceholder')}
+            aria-label={t('approvalCollaboratePage.idPlaceholder')}
             value={idInput}
             onChange={(e) => setIdInput(e.target.value)}
           />
@@ -204,26 +234,27 @@ function CollaborateInner() {
           loading={loading}
           onClick={() => setApprovalId(idInput.trim())}
         >
-          Load
+          {t('approvalCollaboratePage.loadButton')}
         </Button>
       </Panel>
 
       {!approvalId ? (
         <EmptyState
           icon={MessageSquare}
-          title="Enter an approval to collaborate"
-          description="Paste a content approval ID above (or open this page with ?id=…) to view its comment threads and revision history."
+          title={t('approvalCollaboratePage.emptyTitle')}
+          description={t('approvalCollaboratePage.emptyDescription')}
         />
       ) : (
         <>
           {/* Comments */}
           <Panel variant="bento" className="space-y-4">
-            <SectionHeader as="h3" title="Comments" description={status?.status ? `Approval status: ${status.status}` : undefined} />
+            <SectionHeader as="h3" title={t('approvalCollaboratePage.commentsTitle')} description={status?.status ? t('approvalCollaboratePage.approvalStatus', { status: statusLabel(status.status, t) }) : undefined} />
 
             <div className="space-y-3">
               <Textarea
                 rows={3}
-                placeholder={replyTo ? 'Write a reply…' : 'Add a comment on the content…'}
+                aria-label={replyTo ? t('approvalCollaboratePage.replyPlaceholder') : t('approvalCollaboratePage.commentPlaceholder')}
+                placeholder={replyTo ? t('approvalCollaboratePage.replyPlaceholder') : t('approvalCollaboratePage.commentPlaceholder')}
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
               />
@@ -231,13 +262,13 @@ function CollaborateInner() {
                 {!replyTo ? (
                   <div className="min-w-[200px] flex-1">
                     <Input
-                      placeholder="Target field (optional, e.g. caption)"
+                      placeholder={t('approvalCollaboratePage.targetFieldPlaceholder')}
                       value={targetField}
                       onChange={(e) => setTargetField(e.target.value)}
                     />
                   </div>
                 ) : (
-                  <Badge variant="outline">Replying — <button type="button" className="underline" onClick={() => setReplyTo(null)}>cancel</button></Badge>
+                  <Badge variant="outline">{t('approvalCollaboratePage.replying')} — <button type="button" className="underline" onClick={() => setReplyTo(null)}>{t('approvalCollaboratePage.cancel')}</button></Badge>
                 )}
                 <Button
                   variant="primary"
@@ -247,13 +278,13 @@ function CollaborateInner() {
                   onClick={submitComment}
                   className="ml-auto"
                 >
-                  {replyTo ? 'Reply' : 'Comment'}
+                  {replyTo ? t('approvalCollaboratePage.reply') : t('approvalCollaboratePage.commentButton')}
                 </Button>
               </div>
             </div>
 
             {topLevel.length === 0 ? (
-              <EmptyState icon={MessageSquare} title="No comments yet" description="Be the first to leave feedback on this content." />
+              <EmptyState icon={MessageSquare} title={t('approvalCollaboratePage.noCommentsTitle')} description={t('approvalCollaboratePage.noCommentsDescription')} />
             ) : (
               <div className="space-y-3">
                 {topLevel.map((c) => (
@@ -268,12 +299,13 @@ function CollaborateInner() {
 
           {/* Revisions */}
           <Panel variant="bento" className="space-y-4">
-            <SectionHeader as="h3" title="Revision history" description="Each re-submission after changes-requested." />
+            <SectionHeader as="h3" title={t('approvalCollaboratePage.revisionsTitle')} description={t('approvalCollaboratePage.revisionsDescription')} />
 
             <div className="flex flex-wrap items-end gap-3">
               <div className="min-w-[240px] flex-1">
                 <Input
-                  placeholder="Revision note (what changed)"
+                  placeholder={t('approvalCollaboratePage.revisionNotePlaceholder')}
+                  aria-label={t('approvalCollaboratePage.revisionNotePlaceholder')}
                   value={revisionNote}
                   onChange={(e) => setRevisionNote(e.target.value)}
                 />
@@ -284,19 +316,19 @@ function CollaborateInner() {
                 loading={postingRevision}
                 onClick={submitRevision}
               >
-                Record revision
+                {t('approvalCollaboratePage.recordRevisionButton')}
               </Button>
             </div>
 
             {revisions.length === 0 ? (
-              <EmptyState icon={History} title="No revisions yet" description="Recorded revisions will appear here." />
+              <EmptyState icon={History} title={t('approvalCollaboratePage.noRevisionsTitle')} description={t('approvalCollaboratePage.noRevisionsDescription')} />
             ) : (
               <ol className="space-y-2">
                 {[...revisions].sort((a, b) => (b.version || 0) - (a.version || 0)).map((r) => (
                   <li key={r.version} className="flex items-start gap-3 rounded-xl border border-border/60 bg-surface p-3">
-                    <Badge variant="secondary">v{r.version}</Badge>
+                    <Badge variant="secondary">{t('approvalCollaboratePage.versionBadge', { version: r.version })}</Badge>
                     <div className="min-w-0">
-                      <p className="text-sm text-theme-secondary">{r.note || 'Revision'}</p>
+                      <p className="text-sm text-theme-secondary">{r.note || t('approvalCollaboratePage.revisionFallback')}</p>
                       <span className="text-xs text-theme-muted">{fmtDate(r.createdAt)}</span>
                     </div>
                   </li>
@@ -312,9 +344,14 @@ function CollaborateInner() {
   )
 }
 
+function CollaborateFallback() {
+  const { t } = useTranslation()
+  return <PageShell className="max-w-4xl text-theme-muted">{t('approvalCollaboratePage.loading')}</PageShell>
+}
+
 export default function ApprovalCollaboratePage() {
   return (
-    <Suspense fallback={<PageShell className="max-w-4xl text-theme-muted">Loading…</PageShell>}>
+    <Suspense fallback={<CollaborateFallback />}>
       <CollaborateInner />
     </Suspense>
   )

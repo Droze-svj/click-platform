@@ -36,7 +36,7 @@ interface ArbitrageManifest {
   recommendation?: string
 }
 
-const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
+const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-default shadow-2xl"
 
 const num = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0)
 
@@ -105,7 +105,7 @@ export const ArbitrageSteererView: React.FC = () => {
                 </div>
                 <div>
                     <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Offer ranking</h4>
-                    <span className="text-[11px] font-bold text-slate-500 mt-1 block">Which of your offers earns the most per click.</span>
+                    <span className="text-[11px] font-bold text-theme-muted mt-1 block">Which of your offers earns the most per click.</span>
                 </div>
             </div>
 
@@ -117,7 +117,7 @@ export const ArbitrageSteererView: React.FC = () => {
             )}
 
             {!failed && offers.length === 0 ? (
-                <div className={`${glassStyle} rounded-[2.5rem] p-10 text-center text-sm text-slate-400`}>
+                <div className={`${glassStyle} rounded-[2.5rem] p-10 text-center text-sm text-theme-secondary`}>
                     {manifest?.recommendation || 'No active offers yet. Add a product to a monetization plan to see it ranked here.'}
                 </div>
             ) : !failed && (
@@ -127,25 +127,25 @@ export const ArbitrageSteererView: React.FC = () => {
                     <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-8 relative overflow-hidden`}>
                         <div className="flex items-center gap-4">
                             <Target className="w-6 h-6 text-indigo-400" aria-hidden="true" />
-                            <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Top offer</h5>
+                            <h5 className="text-xl font-black text-theme-primary italic tracking-tighter uppercase leading-none">Top offer</h5>
                         </div>
 
                         <div className="space-y-6 relative z-10">
                             <div className="space-y-2">
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Expected earnings per click</span>
+                                <span className="text-[10px] font-black text-theme-muted uppercase tracking-widest">Expected earnings per click</span>
                                 <h3 className="text-4xl font-black text-emerald-400 italic tracking-tighter uppercase leading-none">
                                     {best ? `$${num(best.priority).toFixed(2)}` : '—'}
                                 </h3>
-                                {best && <p className="text-xs font-bold text-white">{best.name}</p>}
+                                {best && <p className="text-xs font-bold text-theme-primary">{best.name}</p>}
                             </div>
 
                             {manifest?.recommendation && (
                                 <div className="p-6 bg-indigo-500/10 border border-indigo-500/20 rounded-3xl space-y-3">
                                     <div className="flex items-center gap-3">
                                         <Zap className="w-4 h-4 text-indigo-400" aria-hidden="true" />
-                                        <span className="text-[10px] font-black text-white uppercase tracking-widest">Suggestion</span>
+                                        <span className="text-[10px] font-black text-theme-primary uppercase tracking-widest">Suggestion</span>
                                     </div>
-                                    <p className="text-xs font-bold text-white leading-relaxed">
+                                    <p className="text-xs font-bold text-theme-primary leading-relaxed">
                                         {manifest.recommendation}
                                     </p>
                                 </div>
@@ -158,8 +158,8 @@ export const ArbitrageSteererView: React.FC = () => {
                 <div className="xl:col-span-2 space-y-6">
                     <div className={`${glassStyle} rounded-[2.5rem] p-10 space-y-8`}>
                         <div className="flex items-center justify-between">
-                            <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Your offers</h5>
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{offers.length} active</span>
+                            <h5 className="text-xl font-black text-theme-primary italic tracking-tighter uppercase leading-none">Your offers</h5>
+                            <span className="text-[10px] font-black text-theme-muted uppercase tracking-widest">{offers.length} active</span>
                         </div>
 
                         <div className="space-y-4">
@@ -167,26 +167,26 @@ export const ArbitrageSteererView: React.FC = () => {
                                 const isSteered = steeredId === offer.id
                                 const busy = steeringId === offer.id
                                 return (
-                                <div key={offer.id} className="p-6 bg-black/40 border border-white/5 rounded-3xl group hover:border-indigo-500/30 transition-all">
+                                <div key={offer.id} className="p-6 bg-surface-card border border-subtle rounded-3xl group hover:border-indigo-500/30 transition-all">
                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                       <div className="flex items-center gap-6 min-w-0">
-                                         <div className={`p-4 rounded-2xl ${isSteered ? 'bg-indigo-500 text-white' : 'bg-white/5 text-slate-500'} transition-colors`}>
+                                         <div className={`p-4 rounded-2xl ${isSteered ? 'bg-indigo-500 text-white' : 'bg-white/5 text-theme-muted'} transition-colors`}>
                                              <DollarSign className="w-6 h-6" aria-hidden="true" />
                                          </div>
                                          <div className="space-y-1 min-w-0">
-                                            <h6 className="text-lg font-black text-white italic tracking-tighter uppercase leading-none truncate">{offer.name}</h6>
-                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{offer.platform}</span>
+                                            <h6 className="text-lg font-black text-theme-primary italic tracking-tighter uppercase leading-none truncate">{offer.name}</h6>
+                                            <span className="text-[9px] font-black text-theme-muted uppercase tracking-widest">{offer.platform}</span>
                                          </div>
                                       </div>
 
                                       <div className="flex flex-wrap items-center gap-6">
                                          <div className="text-right">
-                                            <span className="text-[8px] font-black text-slate-500 uppercase block mb-1">Per click</span>
+                                            <span className="text-[8px] font-black text-theme-muted uppercase block mb-1">Per click</span>
                                             <span className="text-xl font-black text-emerald-400 italic">${num(offer.priority).toFixed(2)}</span>
                                          </div>
                                          <div className="text-right">
-                                            <span className="text-[8px] font-black text-slate-500 uppercase block mb-1">Conversion rate</span>
-                                            <span className="text-xl font-black text-white italic">{(num(offer.cvr) * 100).toFixed(1)}%</span>
+                                            <span className="text-[8px] font-black text-theme-muted uppercase block mb-1">Conversion rate</span>
+                                            <span className="text-xl font-black text-theme-primary italic">{(num(offer.cvr) * 100).toFixed(1)}%</span>
                                          </div>
                                          <button
                                             type="button"

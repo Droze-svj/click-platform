@@ -37,21 +37,21 @@ const PacingHeatmap = ({ segments }: { segments: any[] }) => {
   return (
     <div className="space-y-4 pt-4 border-t border-white/[0.05]">
       <div className="flex items-center justify-between">
-        <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{t('neuralStrategyHub.pacingHeatmapWordDensity')}</div>
+        <div className="text-[10px] font-black text-theme-muted uppercase tracking-[0.2em]">{t('neuralStrategyHub.pacingHeatmapWordDensity')}</div>
         <div className="flex gap-4">
-          <div className="flex items-center gap-1.5 text-[8px] font-bold text-slate-500 uppercase">
+          <div className="flex items-center gap-1.5 text-[8px] font-bold text-theme-muted uppercase">
             <div className="w-2 h-2 rounded-full bg-emerald-500/40" /> {t('neuralStrategyHub.optimal')}
           </div>
-          <div className="flex items-center gap-1.5 text-[8px] font-bold text-slate-500 uppercase">
+          <div className="flex items-center gap-1.5 text-[8px] font-bold text-theme-muted uppercase">
             <div className="w-2 h-2 rounded-full bg-amber-500/40" /> {t('neuralStrategyHub.slow')}
           </div>
-          <div className="flex items-center gap-1.5 text-[8px] font-bold text-slate-500 uppercase">
+          <div className="flex items-center gap-1.5 text-[8px] font-bold text-theme-muted uppercase">
             <div className="w-2 h-2 rounded-full bg-rose-500/40" /> {t('neuralStrategyHub.dense')}
           </div>
         </div>
       </div>
       {hasData ? (
-        <div className="flex h-4 w-full rounded-2xl overflow-hidden bg-white/5 border border-white/5 p-0.5">
+        <div className="flex h-4 w-full rounded-2xl overflow-hidden bg-white/5 border border-subtle p-0.5">
           {segments.map((s, i) => {
             const color = s.status === 'too-dense' ? 'bg-rose-500/60' : s.status === 'too-slow' ? 'bg-amber-500/60' : 'bg-emerald-500/60'
             return (
@@ -60,7 +60,7 @@ const PacingHeatmap = ({ segments }: { segments: any[] }) => {
                 style={{ width: `${(s.duration / segments.reduce((acc, curr) => acc + curr.duration, 0)) * 100}%` }}
                 className={`${color} h-full border-r border-black/20 last:border-0 relative group first:rounded-l-xl last:rounded-r-xl`}
               >
-                <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl bg-[#080810]/95 text-[9px] text-white opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 whitespace-nowrap pointer-events-none border border-white/10 shadow-2xl z-20">
+                <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-xl bg-[#080810]/95 text-[9px] text-theme-primary opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 whitespace-nowrap pointer-events-none border border-default shadow-2xl z-20">
                   <span className="font-black italic uppercase text-indigo-400 mr-2">{s.section}</span>
                   <span className="font-bold">{typeof s.density === 'number' ? `${s.density.toFixed(1)} W/S` : '—'}</span>
                 </div>
@@ -69,7 +69,7 @@ const PacingHeatmap = ({ segments }: { segments: any[] }) => {
           })}
         </div>
       ) : (
-        <div className="flex items-center justify-center h-12 w-full rounded-2xl bg-white/5 border border-white/5 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
+        <div className="flex items-center justify-center h-12 w-full rounded-2xl bg-white/5 border border-subtle text-[10px] font-bold text-theme-muted uppercase tracking-widest">
           {t('neuralStrategyHub.noPacingDataYet')}
         </div>
       )}
@@ -139,7 +139,7 @@ export default function NeuralStrategyHub() {
             {t('neuralStrategyHub.predictive')}<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">{t('neuralStrategyHub.signals')}</span>
           </h1>
-          <p className="text-slate-500 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+          <p className="text-theme-muted text-sm font-bold uppercase tracking-widest flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             {t('neuralStrategyHub.neuralConsensusLayerActive')}
           </p>
@@ -151,9 +151,9 @@ export default function NeuralStrategyHub() {
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder={t('neuralStrategyHub.queryTopicPlaceholder')}
-                className="px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/10 text-white font-bold text-sm w-72 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all placeholder:text-slate-600 focus:bg-white/[0.05]"
+                className="px-6 py-4 rounded-2xl bg-white/[0.02] border border-default text-theme-primary font-bold text-sm w-72 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all placeholder:text-slate-600 focus:bg-white/[0.05]"
               />
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted group-focus-within:text-indigo-400 transition-colors" />
             </div>
            <button
              type="button"
@@ -183,11 +183,11 @@ export default function NeuralStrategyHub() {
                   </div>
                   <div>
                     <h2 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">{t('neuralStrategyHub.signalIngestion')}</h2>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{t('neuralStrategyHub.realtimeCrossPlatformLedger')}</p>
+                    <p className="text-[10px] font-bold text-theme-muted uppercase tracking-widest mt-0.5">{t('neuralStrategyHub.realtimeCrossPlatformLedger')}</p>
                   </div>
                </div>
-               <button type="button" onClick={fetchTrends} className="p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all hover:rotate-180 duration-500">
-                 <RefreshCw className="w-4 h-4 text-slate-400" />
+               <button type="button" onClick={fetchTrends} className="p-3 rounded-xl bg-white/5 border border-subtle hover:bg-white/10 transition-all hover:rotate-180 duration-500">
+                 <RefreshCw className="w-4 h-4 text-theme-secondary" />
                </button>
              </div>
  
@@ -202,24 +202,24 @@ export default function NeuralStrategyHub() {
                         {t('neuralStrategyHub.highDeltaPotential')}
                       </div>
                     </div>
-                    <div className="text-4xl font-black text-white italic uppercase leading-none">{trends.strategy.mold}</div>
-                    <p className="text-sm text-slate-400 leading-relaxed italic border-l-2 border-indigo-500/30 pl-4 py-1">
+                    <div className="text-4xl font-black text-theme-primary italic uppercase leading-none">{trends.strategy.mold}</div>
+                    <p className="text-sm text-theme-secondary leading-relaxed italic border-l-2 border-indigo-500/30 pl-4 py-1">
                       &quot;{trends.strategy.explanation}&quot;
                     </p>
                     <div className="flex flex-wrap gap-2 pt-2">
                        {trends.strategy.keyThemes?.map((theme: string, i: number) => (
-                         <span key={i} className="px-3 py-1 rounded-lg bg-white/5 border border-white/5 text-[9px] text-slate-300 font-black uppercase tracking-wider">#{theme}</span>
+                         <span key={i} className="px-3 py-1 rounded-lg bg-white/5 border border-subtle text-[9px] text-theme-secondary font-black uppercase tracking-wider">#{theme}</span>
                        ))}
                     </div>
                   </div>
                 )}
                 <div className="space-y-6">
-                  <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <div className="text-[10px] font-black text-theme-muted uppercase tracking-[0.2em] flex items-center gap-2">
                     <Activity className="w-3 h-3 text-indigo-400" /> {t('neuralStrategyHub.trendingPulse')}
                   </div>
                   <div className="grid grid-cols-1 gap-4">
                     {trendItems.length === 0 && (
-                      <div className="p-5 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05] text-sm text-slate-400">
+                      <div className="p-5 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05] text-sm text-theme-secondary">
                         {trends === null
                           ? t('common.loading')
                           : (trends?.trends?.error || t('neuralStrategyHub.noTrendsYet'))}
@@ -235,11 +235,11 @@ export default function NeuralStrategyHub() {
                       return (
                         <div key={`${tr.kind}-${i}`} className="flex items-center justify-between p-5 rounded-[1.5rem] bg-white/[0.02] border border-white/[0.05] transition-all hover:bg-white/[0.05] hover:border-white/20 group cursor-default">
                           <div className="flex flex-col min-w-0">
-                            <span className="text-sm text-slate-200 font-black group-hover:text-white transition-colors uppercase italic tracking-wider break-words">
+                            <span className="text-sm text-theme-primary font-black group-hover:text-white transition-colors uppercase italic tracking-wider break-words">
                               {tr.kind === 'hashtag' && !trendText.startsWith('#') ? `#${trendText}` : trendText}
                             </span>
                             {tr.whyNow && (
-                              <span className="text-[10px] text-slate-500 font-bold mt-1 tracking-wide">{tr.whyNow}</span>
+                              <span className="text-[10px] text-theme-muted font-bold mt-1 tracking-wide">{tr.whyNow}</span>
                             )}
                           </div>
                           <div className="flex flex-col items-end shrink-0 ml-3">
@@ -266,7 +266,7 @@ export default function NeuralStrategyHub() {
                 className={`${glassStyle} p-10 space-y-12 bg-gradient-to-br from-indigo-500/[0.08] via-transparent to-emerald-500/5`}
               >
                 <div className="absolute top-0 right-0 p-10 opacity-[0.03]">
-                  <Gauge className="w-64 h-64 text-white -rotate-12" />
+                  <Gauge className="w-64 h-64 text-theme-primary -rotate-12" />
                 </div>
  
                 <div className="flex items-center justify-between relative">
@@ -276,7 +276,7 @@ export default function NeuralStrategyHub() {
                     </div>
                     <div>
                       <h2 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter">{t('neuralStrategyHub.viralForecast')}</h2>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">{t('neuralStrategyHub.crossValidationResult')}</p>
+                      <p className="text-[10px] font-bold text-theme-muted uppercase tracking-widest mt-1">{t('neuralStrategyHub.crossValidationResult')}</p>
                     </div>
                   </div>
                   <div className={`px-10 py-4 rounded-full font-black text-xs italic uppercase tracking-[0.25em] border-2 shadow-2xl transition-all ${
@@ -290,12 +290,12 @@ export default function NeuralStrategyHub() {
  
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
                   <div className="space-y-6">
-                    <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t('neuralStrategyHub.growthProbability')}</div>
+                    <div className="text-[10px] font-black text-theme-muted uppercase tracking-widest">{t('neuralStrategyHub.growthProbability')}</div>
                     <div className="flex items-baseline gap-2">
-                       <span className="text-8xl font-black text-white italic leading-[0.7]">{typeof prediction.probability === 'number' && !isNaN(prediction.probability) ? prediction.probability : '—'}</span>
+                       <span className="text-8xl font-black text-theme-primary italic leading-[0.7]">{typeof prediction.probability === 'number' && !isNaN(prediction.probability) ? prediction.probability : '—'}</span>
                        <span className="text-3xl font-black text-indigo-400 italic">%</span>
                     </div>
-                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
+                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden p-0.5 border border-subtle">
                        <m.div
                          initial={{ width: 0 }}
                          animate={{ width: `${(typeof prediction.probability !== 'number' || isNaN(prediction.probability)) ? 0 : prediction.probability}%` }}
@@ -308,14 +308,14 @@ export default function NeuralStrategyHub() {
                   {/* Reach & ROI Metrics */}
                   <div className="flex flex-col justify-center space-y-6">
                     <div className="space-y-4">
-                       <div className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-all group overflow-hidden relative">
+                       <div className="p-6 rounded-[2rem] bg-white/[0.02] border border-subtle hover:bg-white/[0.04] transition-all group overflow-hidden relative">
                           <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                           <div className="flex items-center gap-2 text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-2 relative z-10">
                              <Users className="w-3.5 h-3.5" /> {t('neuralStrategyHub.forecastedAudience')}
                           </div>
-                          <div className="text-2xl font-black text-white italic uppercase tracking-tighter relative z-10">
+                          <div className="text-2xl font-black text-theme-primary italic uppercase tracking-tighter relative z-10">
                              {prediction.forecastedReach?.[0]?.toLocaleString() ?? '—'}
-                             <span className="text-slate-700 mx-2">/</span>
+                             <span className="text-theme-muted mx-2">/</span>
                              {prediction.forecastedReach?.[1]?.toLocaleString() ?? '—'}
                           </div>
                        </div>
@@ -324,9 +324,9 @@ export default function NeuralStrategyHub() {
                           <div className="flex items-center gap-2 text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-2 relative z-10">
                              <DollarSign className="w-3.5 h-3.5" /> {t('neuralStrategyHub.roiProjection')}
                           </div>
-                          <div className="text-2xl font-black text-white italic tracking-tighter relative z-10">
+                          <div className="text-2xl font-black text-theme-primary italic tracking-tighter relative z-10">
                              {prediction.roi?.minRevenue != null ? `$${prediction.roi.minRevenue}` : '—'}
-                             <span className="text-slate-700 mx-2">{t('neuralStrategyHub.to')}</span>
+                             <span className="text-theme-muted mx-2">{t('neuralStrategyHub.to')}</span>
                              {prediction.roi?.maxRevenue != null ? `$${prediction.roi.maxRevenue}` : '—'}
                           </div>
                        </div>
@@ -334,11 +334,11 @@ export default function NeuralStrategyHub() {
                   </div>
  
                   <div className="space-y-8">
-                    <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t('neuralStrategyHub.neuralConfidenceChain')}</div>
+                    <div className="text-[10px] font-black text-theme-muted uppercase tracking-widest">{t('neuralStrategyHub.neuralConfidenceChain')}</div>
                     <div className="space-y-3">
                       {Array.isArray(prediction.factors) && prediction.factors.length > 0 ? (
                         prediction.factors.map((f: string, i: number) => (
-                          <div key={i} className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/[0.04] text-slate-200 text-xs font-bold transition-all hover:bg-white/[0.05] group">
+                          <div key={i} className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/[0.04] text-theme-primary text-xs font-bold transition-all hover:bg-white/[0.05] group">
                             <div className="w-5 h-5 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
                                <CheckCircle2 className="w-3 h-3 text-emerald-400 group-hover:scale-125 transition-transform" />
                             </div>
@@ -346,7 +346,7 @@ export default function NeuralStrategyHub() {
                           </div>
                         ))
                       ) : (
-                        <div className="px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/[0.04] text-slate-600 text-xs font-bold uppercase tracking-widest">
+                        <div className="px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/[0.04] text-theme-muted text-xs font-bold uppercase tracking-widest">
                           {t('neuralStrategyHub.noConfidenceFactorsYet')}
                         </div>
                       )}
@@ -367,7 +367,7 @@ export default function NeuralStrategyHub() {
                       <div className="text-[10px] font-black text-amber-500 uppercase tracking-widest flex items-center justify-center md:justify-start gap-2 mb-2">
                          <ShieldCheck className="w-3 h-3" /> {t('neuralStrategyHub.actionableSovereignty')}
                       </div>
-                      <p className="text-xl text-white font-black italic group-hover:text-amber-200 transition-colors leading-[1.1] uppercase">
+                      <p className="text-xl text-theme-primary font-black italic group-hover:text-amber-200 transition-colors leading-[1.1] uppercase">
                         &quot;{prediction.improvementTip}&quot;
                       </p>
                     </div>
@@ -383,7 +383,7 @@ export default function NeuralStrategyHub() {
                     <Activity className="w-6 h-6 text-indigo-400" />
                     <div>
                       <h3 className="text-lg font-black text-[var(--text-main)] italic uppercase tracking-tight">{t('neuralStrategyHub.swarmNodeReasoning')}</h3>
-                      <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mt-0.5">{t('neuralStrategyHub.secureAiConsensusLog')}</p>
+                      <p className="text-[9px] font-black text-theme-muted uppercase tracking-widest mt-0.5">{t('neuralStrategyHub.secureAiConsensusLog')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
@@ -401,10 +401,10 @@ export default function NeuralStrategyHub() {
                     t('neuralStrategyHub.logSovereigntyLedgerUpdated'),
                     t('neuralStrategyHub.logOptimizationRecommendation')
                   ].map((log, i) => (
-                    <div key={i} className={`flex gap-4 text-[10px] font-mono border-l-2 border-white/5 pl-6 py-2 transition-colors hover:border-indigo-500/40 relative group`}>
+                    <div key={i} className={`flex gap-4 text-[10px] font-mono border-l-2 border-subtle pl-6 py-2 transition-colors hover:border-indigo-500/40 relative group`}>
                        <div className="absolute left-[-2px] top-0 bottom-0 w-[2px] bg-indigo-500 scale-y-0 group-hover:scale-y-100 transition-transform origin-top duration-300" />
-                       <span className="text-slate-600 font-bold shrink-0">[{new Date().toLocaleTimeString()}]</span>
-                       <span className={`${i % 2 === 0 ? 'text-slate-300' : 'text-indigo-300/80'} font-medium`}>{log}</span>
+                       <span className="text-theme-muted font-bold shrink-0">[{new Date().toLocaleTimeString()}]</span>
+                       <span className={`${i % 2 === 0 ? 'text-theme-secondary' : 'text-indigo-300/80'} font-medium`}>{log}</span>
                     </div>
                   ))}
                </div>
@@ -428,13 +428,13 @@ export default function NeuralStrategyHub() {
                    <div className="text-[10px] font-black text-purple-400 uppercase tracking-widest flex items-center gap-2 mb-1">
                       <Zap className="w-3 h-3" /> {t('neuralStrategyHub.engineV26Sovereign')}
                    </div>
-                   <div className="text-2xl font-black text-white italic uppercase leading-none">{t('neuralStrategyHub.theSatireSetup')}</div>
+                   <div className="text-2xl font-black text-theme-primary italic uppercase leading-none">{t('neuralStrategyHub.theSatireSetup')}</div>
                 </div>
                 <div className="flex items-center justify-between pt-4 border-t border-white/[0.05]">
-                   <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{t('neuralStrategyHub.optimizedFor')}</p>
+                   <p className="text-[10px] text-theme-muted font-bold uppercase tracking-widest">{t('neuralStrategyHub.optimizedFor')}</p>
                    <div className="flex gap-2">
-                      <div className="px-2 py-1 rounded-lg bg-white/5 text-[8px] font-black text-slate-400 uppercase tracking-widest">TikTok</div>
-                      <div className="px-2 py-1 rounded-lg bg-white/5 text-[8px] font-black text-slate-400 uppercase tracking-widest">Reels</div>
+                      <div className="px-2 py-1 rounded-lg bg-white/5 text-[8px] font-black text-theme-secondary uppercase tracking-widest">TikTok</div>
+                      <div className="px-2 py-1 rounded-lg bg-white/5 text-[8px] font-black text-theme-secondary uppercase tracking-widest">Reels</div>
                    </div>
                 </div>
               </div>
@@ -454,10 +454,10 @@ export default function NeuralStrategyHub() {
                 </div>
                 <h3 className="text-lg font-black text-[var(--text-main)] italic uppercase tracking-tight">{t('neuralStrategyHub.neuralIntegrity')}</h3>
              </div>
-             <p className="text-sm text-slate-400 font-medium leading-relaxed mb-8 italic">
+             <p className="text-sm text-theme-secondary font-medium leading-relaxed mb-8 italic">
                {t('neuralStrategyHub.neuralIntegrityDescription')}
              </p>
-             <button className="w-full py-5 rounded-2xl bg-white/[0.02] border border-white/10 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/[0.05] hover:border-white/20 transition-all shadow-2xl relative overflow-hidden group/btn">
+             <button className="w-full py-5 rounded-2xl bg-white/[0.02] border border-default text-theme-primary text-[10px] font-black uppercase tracking-[0.2em] hover:bg-white/[0.05] hover:border-white/20 transition-all shadow-2xl relative overflow-hidden group/btn">
                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/10 to-indigo-500/0 -translate-x-full group-hover/btn:animate-shimmer" />
                {t('neuralStrategyHub.executeFullIntegrityAudit')}
              </button>
@@ -482,9 +482,9 @@ export default function NeuralStrategyHub() {
                      <div className={`w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform`}>
                        <asset.icon className={`w-5 h-5 ${asset.color}`} />
                      </div>
-                     <span className="text-[11px] font-black text-slate-300 uppercase italic tracking-widest group-hover:text-white transition-colors">{t(asset.labelKey)}</span>
+                     <span className="text-[11px] font-black text-theme-secondary uppercase italic tracking-widest group-hover:text-white transition-colors">{t(asset.labelKey)}</span>
                    </div>
-                   <div className={`w-12 h-6 rounded-full relative transition-all duration-300 ${asset.active ? 'bg-indigo-600/40 border border-indigo-600/50' : 'bg-white/5 border border-white/10'}`}>
+                   <div className={`w-12 h-6 rounded-full relative transition-all duration-300 ${asset.active ? 'bg-indigo-600/40 border border-indigo-600/50' : 'bg-white/5 border border-default'}`}>
                       <div className={`absolute top-1 w-3.5 h-3.5 rounded-full bg-white shadow-xl transition-all duration-300 ${asset.active ? 'right-1' : 'left-1'}`} />
                    </div>
                  </div>

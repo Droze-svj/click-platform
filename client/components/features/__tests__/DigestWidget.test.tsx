@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import DigestWidget from '../DigestWidget'
 import * as api from '@/lib/featuresApi'
 
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
 jest.mock('@/lib/featuresApi')
 const mGet = api.getLatestDigest as jest.MockedFunction<typeof api.getLatestDigest>
 

@@ -197,7 +197,7 @@ export default function TrendsPage() {
                 onChange={(e) => setSelectedNiche(e.target.value)}
                 className="w-full appearance-none rounded-lg border border-input bg-background px-3 h-10 pr-9 text-sm text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               >
-                {NICHES.map(n => <option key={n} value={n}>{t('trendsPage.nicheOption', { niche: n })}</option>)}
+                {NICHES.map(n => <option key={n} value={n}>{n === 'All' ? t('trendsPage.allNiches') : t('trendsPage.nicheOption', { niche: n })}</option>)}
               </select>
               <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted pointer-events-none" aria-hidden />
             </div>
@@ -213,7 +213,7 @@ export default function TrendsPage() {
                 onChange={(e) => setSelectedPlatform(e.target.value)}
                 className="w-full appearance-none rounded-lg border border-input bg-background px-3 h-10 pr-9 text-sm text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               >
-                {PLATFORMS.map(p => <option key={p} value={p}>{p}</option>)}
+                {PLATFORMS.map(p => <option key={p} value={p}>{p === 'All' ? t('trendsPage.allPlatforms') : p}</option>)}
               </select>
               <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted pointer-events-none" aria-hidden />
             </div>

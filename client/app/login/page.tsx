@@ -38,14 +38,14 @@ function destination(): string {
   return '/dashboard'
 }
 
-function friendlyError(err: any): string {
+function friendlyError(err: any, t: (k: string, p?: Record<string, string | number>) => string): string {
   if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout') || err?.name === 'DatabaseTimeoutError') {
-    return 'The server is taking a while to respond. It may be waking up — please try again in a moment.'
+    return t('loginPage.errSlow')
   }
   if (err?.code === 'ECONNREFUSED' || err?.code === 'ERR_NETWORK' || err?.message?.includes('Network Error')) {
-    return 'Can\'t reach Click right now. Check your connection and try again.'
+    return t('loginPage.errOffline')
   }
-  return handleApiError(err) || 'Something went wrong. Please try again.'
+  return handleApiError(err) || t('loginPage.errGeneric')
 }
 
 export default function Login() {
@@ -84,7 +84,7 @@ export default function Login() {
     const token = res.data?.token || res.token
     const refreshToken = res.data?.refreshToken || res.refreshToken
     if (!token) {
-      setError('Signed in, but no session was returned. Please try again.')
+      setError(t('loginPage.errNoSession'))
       return false
     }
     setTokens(token, refreshToken)
@@ -114,7 +114,7 @@ export default function Login() {
     const emailToUse = email || (document.getElementById('field-email') as HTMLInputElement | null)?.value || ''
     const passwordToUse = password || (document.getElementById('field-password') as HTMLInputElement | null)?.value || ''
     if (!emailToUse || !passwordToUse) {
-      setError('Enter your email and password.')
+      setError(t('loginPage.errMissing'))
       return
     }
     run(async () => {
@@ -128,7 +128,7 @@ export default function Login() {
         }
         finish(res)
       } catch (err) {
-        setError(friendlyError(err))
+        setError(friendlyError(err, t))
       }
     })
   }
@@ -136,21 +136,21 @@ export default function Login() {
   const handleCode = (e: React.FormEvent) => {
     e.preventDefault()
     if (!code.trim()) {
-      setError('Enter the 6-digit code from your authenticator app, or a backup code.')
+      setError(t('loginPage.errNoCode'))
       return
     }
     run(async () => {
       try {
         const res = await apiPost<LoginResponse>('/auth/2fa/verify', { tempToken, token: code.trim() })
         const left = res.data?.backupCodesRemaining
-        if (typeof left === 'number') setNotice(`Backup code used. ${left} left.`)
+        if (typeof left === 'number') setNotice(t('loginPage.backupUsed', { count: left }))
         finish(res)
       } catch (err: any) {
         if (err?.response?.data?.code === 'TWO_FACTOR_EXPIRED') {
           setStep('password')
           setPassword('')
         }
-        setError(friendlyError(err))
+        setError(friendlyError(err, t))
       }
     })
   }
@@ -171,16 +171,16 @@ export default function Login() {
           </div>
           {step === 'password' ? (
             <>
-              <h1 className="ds-text-h1 text-theme-primary">Welcome back</h1>
+              <h1 className="ds-text-h1 text-theme-primary">{t('loginPage.title')}</h1>
               <p className="ds-text-body text-theme-secondary">
-                Your style profile, drafts, and every learned pick are right where you left them.
+                {t('loginPage.subtitle')}
               </p>
             </>
           ) : (
             <>
-              <h1 className="ds-text-h1 text-theme-primary">Check your authenticator</h1>
+              <h1 className="ds-text-h1 text-theme-primary">{t('loginPage.codeTitle')}</h1>
               <p className="ds-text-body text-theme-secondary">
-                Enter the 6-digit code for Click from your authenticator app.
+                {t('loginPage.codeSubtitle')}
               </p>
             </>
           )}
@@ -203,7 +203,7 @@ export default function Login() {
 
         {step === 'password' ? (
           <form method="post" onSubmit={handlePassword} className="space-y-5" noValidate data-testid="login-password-step">
-            <FormField label="Email" htmlFor="field-email">
+            <FormField label={t('auth.email')} htmlFor="field-email">
               <Input
                 id="field-email"
                 name="email"
@@ -211,7 +211,7 @@ export default function Login() {
                 inputMode="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder={t('loginPage.emailPlaceholder')}
                 autoComplete="email"
                 required
                 autoFocus
@@ -222,12 +222,14 @@ export default function Login() {
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between gap-2">
-                <label htmlFor="field-password" className="ds-text-label text-theme-secondary">Password</label>
+                <label htmlFor="field-password" className="ds-text-label text-theme-secondary">{t('auth.password')}</label>
+                {/* inline-flex + items-center: on touch screens every link gets a
+                    44px min-height, which pushed this text above the label. */}
                 <Link
                   href="/forgot-password"
-                  className="text-xs font-medium text-primary hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex items-center text-xs font-medium text-primary hover:underline rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  Forgot password?
+                  {t('auth.forgotPassword')}
                 </Link>
               </div>
               <div className="relative">
@@ -237,7 +239,7 @@ export default function Login() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Your password"
+                  placeholder={t('loginPage.passwordPlaceholder')}
                   autoComplete="current-password"
                   required
                   className="pr-11"
@@ -248,7 +250,7 @@ export default function Login() {
                   type="button"
                   data-testid="toggle-password"
                   onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? t('loginPage.hidePassword') : t('loginPage.showPassword')}
                   aria-pressed={showPassword}
                   className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg text-theme-muted hover:text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
@@ -258,12 +260,12 @@ export default function Login() {
             </div>
 
             <Button type="submit" variant="primary" size="lg" loading={loading} disabled={!hydrated} className="w-full">
-              {loading ? 'Signing in…' : t('auth.login')}
+              {loading ? t('loginPage.signingIn') : t('auth.login')}
             </Button>
           </form>
         ) : (
           <form method="post" onSubmit={handleCode} className="space-y-5" noValidate data-testid="login-code-step">
-            <FormField label="Authentication code" htmlFor="field-code" hint="Lost your phone? Enter one of your backup codes instead.">
+            <FormField label={t('loginPage.codeLabel')} htmlFor="field-code" hint={t('loginPage.codeHint')}>
               <Input
                 id="field-code"
                 name="code"
@@ -282,21 +284,21 @@ export default function Login() {
               />
             </FormField>
             <Button type="submit" variant="primary" size="lg" loading={loading} disabled={!hydrated} className="w-full">
-              {loading ? 'Checking…' : 'Verify and sign in'}
+              {loading ? t('loginPage.checking') : t('loginPage.verify')}
             </Button>
             <button
               type="button"
               onClick={backToPassword}
               className="block w-full text-center text-sm text-theme-muted hover:text-theme-primary rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              Use a different account
+              {t('loginPage.differentAccount')}
             </button>
           </form>
         )}
 
         {loading && slowHint && (
           <p className="text-center text-xs text-theme-muted" role="status" aria-live="polite">
-            Still working… the server may be waking up (this can take up to a minute).
+            {t('loginPage.slowHint')}
           </p>
         )}
 
@@ -304,15 +306,15 @@ export default function Login() {
         <ul className="grid grid-cols-3 gap-3 pt-2 border-t border-[var(--border-subtle)]">
           <li className="flex flex-col items-center gap-1.5 text-center pt-4">
             <Icon icon={Lock} size="sm" className="text-emerald-500" aria-hidden="true" />
-            <span className="text-xs text-theme-muted leading-tight">Encrypted connection</span>
+            <span className="text-xs text-theme-muted leading-tight">{t('loginPage.trustEncrypted')}</span>
           </li>
           <li className="flex flex-col items-center gap-1.5 text-center pt-4">
             <Icon icon={KeyRound} size="sm" className="text-primary" aria-hidden="true" />
-            <span className="text-xs text-theme-muted leading-tight">Passwords stored only as salted hashes</span>
+            <span className="text-xs text-theme-muted leading-tight">{t('loginPage.trustHashed')}</span>
           </li>
           <li className="flex flex-col items-center gap-1.5 text-center pt-4">
             <Icon icon={step === 'code' ? ShieldCheck : Smartphone} size="sm" className="text-fuchsia-500" aria-hidden="true" />
-            <span className="text-xs text-theme-muted leading-tight">Optional two-step sign-in</span>
+            <span className="text-xs text-theme-muted leading-tight">{t('loginPage.trust2fa')}</span>
           </li>
         </ul>
 

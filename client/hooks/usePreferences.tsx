@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, createContext, useContext } from 'react'
+import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react'
 import { supportedLanguages, defaultLanguage, type SupportedLanguage } from '../i18n/config'
 import { apiGet, apiPut } from '../lib/api'
 
@@ -126,19 +126,26 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     return () => { if (syncTimerRef.current) clearTimeout(syncTimerRef.current) }
   }, [preferences, isLoaded])
 
-  const updatePreference = <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => {
+  // Stable identities. useTranslation's setLanguage is a useCallback over
+  // updatePreference, and screens put setLanguage in their effect deps (the
+  // settings page loads /user/settings in one). A fresh function every render
+  // made that effect re-run after each load → setLanguage → re-render → load…
+  // ~150 GET /user/settings a second, and every toggle the user flipped was
+  // overwritten by the next load before it could be saved.
+  const updatePreference = useCallback(<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => {
     setPreferences(prev => {
+      if (prev[key] === value) return prev
       const next = { ...prev, [key]: value }
       if (key === 'language' && typeof value === 'string' && !isValidLanguage(value)) {
         next.language = defaultLanguage
       }
       return next
     })
-  }
+  }, [])
 
-  const resetPreferences = () => {
+  const resetPreferences = useCallback(() => {
     setPreferences(DEFAULT_PREFERENCES)
-  }
+  }, [])
 
   return (
     <PreferencesContext.Provider value={{ preferences, updatePreference, resetPreferences }}>

@@ -5,6 +5,7 @@ import SeriesPlannerPanel from '../SeriesPlannerPanel'
 import { paths } from '@/lib/featuresApi'
 import * as api from '@/lib/featuresApi'
 
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
 jest.mock('@/lib/featuresApi', () => {
   const actual = jest.requireActual('@/lib/featuresApi')
   return { ...actual, repurposeStudio: jest.fn(), generateFirstComments: jest.fn(), planSeries: jest.fn() }

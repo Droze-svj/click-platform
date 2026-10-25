@@ -15,7 +15,7 @@ import { useTranslation } from '@/hooks/useTranslation'
 import { useDialogBehavior } from './ui/modal'
 
 
-const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-1000'
+const glassStyle = 'ds-surface-card transition-colors'
 
 interface RecyclableContent {
   postId: string
@@ -142,53 +142,32 @@ export default function EntropyReversalNode() {
 
   if (loading) {
     return (
-      <div role="status" aria-live="polite" className="py-32 flex flex-col items-center justify-center gap-10 bg-[var(--page-bg)] rounded-[5rem] border-2 border-white/5 shadow-2xl backdrop-blur-3xl">
+      <div role="status" aria-live="polite" className="py-32 flex flex-col items-center justify-center gap-10 bg-[var(--page-bg)] rounded-[5rem] border-2 border-subtle shadow-2xl backdrop-blur-3xl">
         <RefreshCw size={64} className="text-indigo-500 animate-spin" />
         <div className="space-y-4 text-center">
            <p className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">{t('contentRecyclingDashboard.loadingPrimary')}</p>
-           <p className="text-[10px] font-black text-slate-800 uppercase tracking-[0.4em] leading-none">{t('contentRecyclingDashboard.loadingSecondary')}</p>
+           <p className="text-[10px] font-black text-theme-muted uppercase tracking-[0.4em] leading-none">{t('contentRecyclingDashboard.loadingSecondary')}</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-12 font-inter pt-10">
-      <div className={`${glassStyle} rounded-[6rem] p-24 overflow-hidden relative group border-indigo-500/20 shadow-[0_100px_250px_rgba(0,0,0,1)]`}>
+    <div className="space-y-8 font-inter pt-6">
+      <div className="ds-surface-card p-4 sm:p-8 overflow-hidden relative">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.02] via-transparent to-transparent pointer-events-none" />
-        <div className="absolute top-0 right-0 p-24 opacity-5 pointer-events-none group-hover:scale-110 transition-transform duration-[3s]">
-           <RefreshCw size={300} className="text-white animate-spin-slow" />
-        </div>
         
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 mb-20 relative z-10">
-          <div className="flex items-center gap-10">
-             <div className="w-24 h-24 bg-indigo-500/10 border-2 border-indigo-500/20 rounded-[3rem] flex items-center justify-center shadow-3xl group-hover:rotate-12 transition-all duration-1000">
-                <Shield className="text-indigo-400" size={48} />
-             </div>
-             <div>
-                <div className="flex items-center gap-4 mb-4">
-                  <Fingerprint className="text-indigo-400 animate-pulse" size={16} />
-                  <span className="text-[12px] font-black text-indigo-400 uppercase tracking-[0.6em] italic leading-none">{t('contentRecyclingDashboard.protocolVersion')}</span>
-                </div>
-                <h2 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">{t('contentRecyclingDashboard.matrixTitle')}</h2>
-                <p className="text-slate-800 text-[13px] uppercase font-black tracking-[0.6em] mt-6 italic leading-none">{t('contentRecyclingDashboard.matrixSubtitle')}</p>
-             </div>
-          </div>
-          <div className="flex items-center gap-4 px-8 py-4 rounded-full bg-black/60 border-2 border-white/5 shadow-inner">
-             <Radio size={14} className="text-indigo-500 animate-pulse" />
-             <span className="text-[10px] font-black text-slate-800 tracking-widest uppercase italic leading-none">{t('contentRecyclingDashboard.clusterFluxCalibrated')}</span>
-          </div>
-        </div>
-
         {/* HUD Tabs */}
-        <div className="flex gap-6 p-4 bg-black/80 backdrop-blur-3xl rounded-[3rem] border-2 border-white/5 mb-20 relative z-10 shadow-inner max-w-4xl mx-auto">
+        <div role="tablist" className="flex gap-1 p-1 rounded-lg ds-surface-subtle mb-8 relative z-10 max-w-xl overflow-x-auto">
           {(['suggestions', 'plans', 'stats'] as const).map((tab) => (
             <button
               type="button"
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-6 rounded-[2rem] text-[12px] font-black uppercase tracking-[0.4em] transition-all duration-700 italic border-4 ${
-                activeTab === tab ? 'bg-white text-black border-indigo-500 shadow-3xl scale-105' : 'text-slate-800 border-transparent hover:text-white hover:bg-white/5'
+              role="tab"
+              aria-selected={activeTab === tab}
+              className={`flex-1 whitespace-nowrap h-9 px-3 rounded-md text-sm font-medium transition-colors ${
+                activeTab === tab ? 'bg-primary text-primary-foreground' : 'text-theme-secondary hover:text-theme-primary'
               }`}
             >
               {tab === 'suggestions' ? t('contentRecyclingDashboard.tabResonanceExtraction') : tab === 'plans' ? t('contentRecyclingDashboard.tabReversionSequences') : t('contentRecyclingDashboard.tabDissipationLedger')}
@@ -199,24 +178,24 @@ export default function EntropyReversalNode() {
         {/* Resonance Extraction (Suggestions) */}
         {activeTab === 'suggestions' && (
           <div className="relative z-10 pt-10">
-            <div className="flex items-center justify-between mb-12 border-b-2 border-white/5 pb-8">
+            <div className="flex items-center justify-between mb-6 border-b border-default pb-4">
                <div className="flex items-center gap-6">
                   <div className="w-12 h-12 bg-amber-500/10 border-2 border-amber-500/20 rounded-2xl flex items-center justify-center shadow-3xl"><Zap size={24} className="text-amber-400 animate-pulse" /></div>
-                  <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">{t('contentRecyclingDashboard.highResonanceTitle')}</h3>
+                  <h3 className="ds-text-h3 text-theme-primary">{t('contentRecyclingDashboard.highResonanceTitle')}</h3>
                </div>
-               <span className="text-[12px] font-black text-slate-900 uppercase tracking-[0.4em] italic leading-none">{t('contentRecyclingDashboard.sectorScanComplete')}</span>
+               <span className="text-xs text-theme-muted">{t('contentRecyclingDashboard.sectorScanComplete')}</span>
             </div>
             {suggestions.length === 0 ? (
-              <div className="text-center py-48 border-4 border-dashed border-white/5 rounded-[5rem] bg-white/[0.01]">
-                <Radio className="w-24 h-24 mx-auto mb-10 text-slate-800 animate-pulse" />
-                <p className="text-[16px] font-black text-slate-800 uppercase tracking-[0.6em] italic leading-none">{t('contentRecyclingDashboard.noRecyclableParticles')}</p>
+              <div className="text-center py-16 border-2 border-dashed border-default rounded-2xl">
+                <Radio className="w-10 h-10 mx-auto mb-4 text-theme-muted" />
+                <p className="text-sm text-theme-muted">{t('contentRecyclingDashboard.noRecyclableParticles')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 {suggestions.map((item) => (
                   <m.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                     key={item.postId}
-                    className={`${glassStyle} rounded-[4rem] p-12 hover:border-indigo-500/40 transition-all group relative overflow-hidden flex flex-col`}
+                    className={`${glassStyle} rounded-2xl p-5 sm:p-8 hover:border-indigo-500/40 transition-all group relative overflow-hidden flex flex-col`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                     <div className="flex flex-col h-full relative z-10">
@@ -232,19 +211,19 @@ export default function EntropyReversalNode() {
                       <h3 className="text-3xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-6 group-hover:text-indigo-400 transition-colors duration-700 leading-tight line-clamp-2">{item.title}</h3>
                       
                       <div className="grid grid-cols-2 gap-8 mb-10">
-                         <div className="p-8 rounded-[2.5rem] bg-black/60 border-2 border-white/5 shadow-inner group-hover:border-indigo-500/20 transition-all">
-                            <p className="text-[10px] font-black text-slate-900 uppercase tracking-[0.4em] mb-3 italic leading-none">{t('contentRecyclingDashboard.saturation')}</p>
-                            <p className="text-4xl font-black text-white italic tabular-nums leading-none tracking-tighter">{formatNumber(item.engagement)}</p>
+                         <div className="p-8 rounded-[2.5rem] bg-surface-card border-2 border-subtle shadow-inner group-hover:border-indigo-500/20 transition-all">
+                            <p className="text-[10px] font-black text-theme-muted uppercase tracking-[0.4em] mb-3 italic leading-none">{t('contentRecyclingDashboard.saturation')}</p>
+                            <p className="text-4xl font-black text-theme-primary italic tabular-nums leading-none tracking-tighter">{formatNumber(item.engagement)}</p>
                          </div>
-                         <div className="p-8 rounded-[2.5rem] bg-black/60 border-2 border-white/5 shadow-inner group-hover:border-emerald-500/20 transition-all">
-                            <p className="text-[10px] font-black text-slate-900 uppercase tracking-[0.4em] mb-3 italic leading-none">{t('contentRecyclingDashboard.resonance')}</p>
+                         <div className="p-8 rounded-[2.5rem] bg-surface-card border-2 border-subtle shadow-inner group-hover:border-emerald-500/20 transition-all">
+                            <p className="text-[10px] font-black text-theme-muted uppercase tracking-[0.4em] mb-3 italic leading-none">{t('contentRecyclingDashboard.resonance')}</p>
                             <p className="text-4xl font-black text-emerald-400 italic tabular-nums leading-none tracking-tighter">{item.engagementRate.toFixed(2)}%</p>
                          </div>
                       </div>
 
                       {item.recommendation && (
                         <div className="mb-12 p-6 rounded-3xl bg-indigo-500/[0.03] border-2 border-indigo-500/10 flex-1">
-                          <p className="text-[12px] text-slate-700 font-black uppercase tracking-tight italic leading-relaxed">
+                          <p className="text-[12px] text-theme-muted font-black uppercase tracking-tight italic leading-relaxed">
                             <span className="text-indigo-400 mr-2">{t('contentRecyclingDashboard.protocolAdvisory')}</span> {item.recommendation.toUpperCase()}
                           </p>
                         </div>
@@ -270,16 +249,16 @@ export default function EntropyReversalNode() {
         {activeTab === 'plans' && (
           <div className="relative z-10 pt-10">
             {plans.length === 0 ? (
-              <div className="text-center py-64 border-4 border-dashed border-white/5 rounded-[5rem] bg-white/[0.01]">
-                <Clock className="w-24 h-24 mx-auto mb-10 text-slate-800 animate-pulse" />
-                <p className="text-[16px] font-black text-slate-800 uppercase tracking-[0.6em] italic leading-none">{t('contentRecyclingDashboard.noActiveCascades')}</p>
+              <div className="text-center py-64 border-4 border-dashed border-subtle rounded-[5rem] bg-white/[0.01]">
+                <Clock className="w-24 h-24 mx-auto mb-10 text-theme-muted animate-pulse" />
+                <p className="text-[16px] font-black text-theme-muted uppercase tracking-[0.6em] italic leading-none">{t('contentRecyclingDashboard.noActiveCascades')}</p>
               </div>
             ) : (
               <div className="space-y-10">
                 {plans.map((plan) => (
                   <m.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }}
                     key={plan._id}
-                    className={`${glassStyle} rounded-[5rem] p-16 flex flex-col lg:flex-row items-center gap-16 hover:border-indigo-500/30 group relative overflow-hidden transition-all duration-1000`}
+                    className={`${glassStyle} rounded-2xl p-5 sm:p-8 flex flex-col lg:flex-row items-center gap-16 hover:border-indigo-500/30 group relative overflow-hidden transition-all duration-1000`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                     <div className="flex-1 min-w-0 relative z-10">
@@ -288,7 +267,7 @@ export default function EntropyReversalNode() {
                         {plan.isEvergreen && (
                           <span className="px-6 py-2 bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-[0.4em] rounded-full border-2 border-emerald-500/20 italic">{t('contentRecyclingDashboard.eternalPulseScore', { score: plan.evergreenScore })}</span>
                         )}
-                        <div className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] border-2 transition-all italic flex items-center gap-3 ${plan.repostSchedule.isActive ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.2)]' : 'bg-slate-900 text-slate-900 border-slate-900'}`}>
+                        <div className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] border-2 transition-all italic flex items-center gap-3 ${plan.repostSchedule.isActive ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.2)]' : 'bg-slate-900 text-theme-muted border-slate-900'}`}>
                            <div className={`w-3 h-3 rounded-full ${plan.repostSchedule.isActive ? 'bg-amber-400 animate-ping' : 'bg-slate-800'}`} />
                            {plan.repostSchedule.isActive ? t('contentRecyclingDashboard.statusCascading') : t('contentRecyclingDashboard.statusDormant')}
                         </div>
@@ -297,23 +276,23 @@ export default function EntropyReversalNode() {
                       
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
                         <div className="space-y-4">
-                          <p className="text-[10px] font-black text-slate-900 uppercase tracking-[0.4em] italic leading-none">{t('contentRecyclingDashboard.cycleCount')}</p>
-                          <p className="text-3xl font-black text-white italic tabular-nums leading-none tracking-tighter">
-                            {plan.repostSchedule.currentRepostCount} <span className="text-slate-800 text-sm ml-2">/ {plan.repostSchedule.maxReposts}</span>
+                          <p className="text-[10px] font-black text-theme-muted uppercase tracking-[0.4em] italic leading-none">{t('contentRecyclingDashboard.cycleCount')}</p>
+                          <p className="text-3xl font-black text-theme-primary italic tabular-nums leading-none tracking-tighter">
+                            {plan.repostSchedule.currentRepostCount} <span className="text-theme-muted text-sm ml-2">/ {plan.repostSchedule.maxReposts}</span>
                           </p>
                         </div>
                         <div className="space-y-4">
-                          <p className="text-[10px] font-black text-slate-900 uppercase tracking-[0.4em] italic leading-none">{t('contentRecyclingDashboard.fluxFrequency')}</p>
+                          <p className="text-[10px] font-black text-theme-muted uppercase tracking-[0.4em] italic leading-none">{t('contentRecyclingDashboard.fluxFrequency')}</p>
                           <p className="text-3xl font-black text-indigo-400 italic uppercase leading-none tracking-tighter">{plan.repostSchedule.frequency}</p>
                         </div>
                         <div className="space-y-4">
-                          <p className="text-[10px] font-black text-slate-900 uppercase tracking-[0.4em] italic leading-none">{t('contentRecyclingDashboard.nextPulse')}</p>
-                          <p className="text-3xl font-black text-white italic tabular-nums leading-none tracking-tighter uppercase">
+                          <p className="text-[10px] font-black text-theme-muted uppercase tracking-[0.4em] italic leading-none">{t('contentRecyclingDashboard.nextPulse')}</p>
+                          <p className="text-3xl font-black text-theme-primary italic tabular-nums leading-none tracking-tighter uppercase">
                             {plan.repostSchedule.nextRepostDate ? formatDate(plan.repostSchedule.nextRepostDate) : t('contentRecyclingDashboard.indefinite')}
                           </p>
                         </div>
                         <div className="space-y-4">
-                          <p className="text-[10px] font-black text-slate-900 uppercase tracking-[0.4em] italic leading-none">{t('contentRecyclingDashboard.signalGain')}</p>
+                          <p className="text-[10px] font-black text-theme-muted uppercase tracking-[0.4em] italic leading-none">{t('contentRecyclingDashboard.signalGain')}</p>
                           <p className="text-4xl font-black text-emerald-400 italic tabular-nums leading-none tracking-tighter">
                             {plan.repostPerformance ? formatNumber(plan.repostPerformance.engagement) : formatNumber(plan.originalPerformance.engagement)}
                           </p>
@@ -353,31 +332,31 @@ export default function EntropyReversalNode() {
                     { key: 'cumulativeFlux', label: t('contentRecyclingDashboard.statCumulativeFlux'), val: stats.totalReposts, icon: Zap, color: 'text-amber-400' },
                     { key: 'signalVelocity', label: t('contentRecyclingDashboard.statSignalVelocity'), val: `${(stats.averagePerformanceChange || 0) > 0 ? '+' : ''}${stats.averagePerformanceChange.toFixed(1)}%`, icon: TrendingUp, color: 'text-purple-400' }
                   ].map(s => (
-                    <div key={s.key} className={`${glassStyle} rounded-[4rem] p-12 flex flex-col items-center text-center group hover:scale-110 transition-transform duration-1000`}>
-                       <div className="w-16 h-16 rounded-[2rem] bg-white/5 border-2 border-white/5 flex items-center justify-center mb-8 group-hover:rotate-12 transition-transform duration-700">
+                    <div key={s.key} className={`${glassStyle} rounded-2xl p-5 sm:p-8 flex flex-col items-center text-center group transition-colors`}>
+                       <div className="w-16 h-16 rounded-[2rem] bg-white/5 border-2 border-subtle flex items-center justify-center mb-8 group-hover:rotate-12 transition-transform duration-700">
                           <s.icon size={28} className={s.color} />
                        </div>
-                       <p className="text-5xl font-black text-white italic tabular-nums mb-4 tracking-tighter leading-none">{s.val}</p>
-                       <p className="text-[10px] font-black text-slate-800 uppercase tracking-[0.4em] italic leading-none">{s.label}</p>
+                       <p className="text-3xl font-bold text-theme-primary tabular-nums mb-2 leading-none">{s.val}</p>
+                       <p className="text-[10px] font-black text-theme-muted uppercase tracking-[0.4em] italic leading-none">{s.label}</p>
                     </div>
                   ))}
                 </div>
 
                 {stats.topPerformers && stats.topPerformers.length > 0 && (
-                  <div className={`${glassStyle} rounded-[5rem] p-16 relative overflow-hidden`}>
+                  <div className={`${glassStyle} rounded-2xl p-5 sm:p-8 relative overflow-hidden`}>
                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/[0.03] to-transparent pointer-events-none" />
                     <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-12 flex items-center gap-6">
                        <Target size={32} className="text-indigo-400 animate-pulse" /> {t('contentRecyclingDashboard.highIntensityReposts')}
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                       {stats.topPerformers.map((performer, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-8 bg-black/60 rounded-[2.5rem] border-2 border-white/5 group hover:border-indigo-500/40 transition-all duration-700 shadow-inner">
+                        <div key={idx} className="flex items-center justify-between p-8 bg-surface-card rounded-[2.5rem] border-2 border-subtle group hover:border-indigo-500/40 transition-all duration-700 shadow-inner">
                           <div className="flex items-center gap-6">
                             <span className="w-14 h-14 bg-indigo-500/20 text-indigo-400 rounded-2xl flex items-center justify-center font-black text-xl tabular-nums italic border-2 border-indigo-500/30">
                               #{idx + 1}
                             </span>
                             <div>
-                              <p className="text-[12px] font-black text-white uppercase italic truncate w-40 leading-none">{t('contentRecyclingDashboard.nodePrefix', { platform: performer.platform.toUpperCase() })}</p>
+                              <p className="text-[12px] font-black text-theme-primary uppercase italic truncate w-40 leading-none">{t('contentRecyclingDashboard.nodePrefix', { platform: performer.platform.toUpperCase() })}</p>
                               <p className="text-[14px] font-black text-emerald-400 italic tabular-nums mt-3 leading-none">{t('contentRecyclingDashboard.signalValue', { value: formatNumber(performer.engagement) })}</p>
                             </div>
                           </div>
@@ -389,18 +368,18 @@ export default function EntropyReversalNode() {
                 )}
               </div>
             ) : (
-              <div className="text-center py-48 border-4 border-dashed border-white/5 rounded-[5rem] bg-white/[0.01]">
-                <BarChart3 className="w-24 h-24 mx-auto mb-10 text-slate-800" />
-                <p className="text-[16px] font-black text-slate-800 uppercase tracking-[0.6em] italic leading-none">{t('contentRecyclingDashboard.noSpectralAnalytics')}</p>
+              <div className="text-center py-48 border-4 border-dashed border-subtle rounded-[5rem] bg-white/[0.01]">
+                <BarChart3 className="w-24 h-24 mx-auto mb-10 text-theme-muted" />
+                <p className="text-[16px] font-black text-theme-muted uppercase tracking-[0.6em] italic leading-none">{t('contentRecyclingDashboard.noSpectralAnalytics')}</p>
               </div>
             )}
 
             <div className="mt-20">
                <div className="flex items-center gap-6 mb-12 border-l-8 border-indigo-500 pl-8">
                   <Activity size={32} className="text-indigo-400 animate-pulse" />
-                  <h3 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">{t('contentRecyclingDashboard.deepSpectralAnalytics')}</h3>
+                  <h3 className="ds-text-h2 text-theme-primary">{t('contentRecyclingDashboard.deepSpectralAnalytics')}</h3>
                </div>
-               <div className={`${glassStyle} rounded-[5rem] overflow-hidden`}>
+               <div className={`${glassStyle} rounded-2xl overflow-hidden`}>
                  <AdvancedRecyclingAnalytics period={30} />
                </div>
             </div>
@@ -413,19 +392,19 @@ export default function EntropyReversalNode() {
         {selectedContent && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-12 bg-black/90 backdrop-blur-2xl" onClick={() => setSelectedContent(null)}>
             <m.div initial={{ opacity: 0, scale: 0.8, rotate: -2 }} animate={{ opacity: 1, scale: 1, rotate: 0 }} exit={{ opacity: 0, scale: 0.8, rotate: 2 }}
-              className={`${glassStyle} rounded-[6rem] p-24 max-w-3xl w-full border-white/20 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-[0_0_500px_rgba(79,70,229,0.3)]`}
+              className={`${glassStyle} rounded-2xl p-6 sm:p-10 max-w-3xl w-full border-white/20 max-h-[90vh] overflow-y-auto custom-scrollbar `}
               onClick={e => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-16 px-4">
                 <div className="flex items-center gap-6">
                    <div className="w-16 h-16 bg-indigo-500/10 border-2 border-indigo-500/30 rounded-[2rem] flex items-center justify-center rotate-12"><RefreshCw size={32} className="text-indigo-400" /></div>
-                   <h3 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">{t('contentRecyclingDashboard.reversalCalibrations')}</h3>
+                   <h3 className="ds-text-h2 text-theme-primary">{t('contentRecyclingDashboard.reversalCalibrations')}</h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedContent(null)}
                   title={t('contentRecyclingDashboard.abortCalibrationTitle')}
-                  className="w-16 h-16 bg-white/5 border-2 border-white/10 rounded-[2rem] text-slate-800 hover:text-white hover:border-rose-500/50 transition-all duration-700 hover:rotate-90 active:scale-90 flex items-center justify-center"
+                  className="w-16 h-16 bg-white/5 border-2 border-default rounded-[2rem] text-theme-muted hover:text-white hover:border-rose-500/50 transition-all duration-700 hover:rotate-90 active:scale-90 flex items-center justify-center"
                 >
                   <X size={32} />
                 </button>
@@ -433,13 +412,13 @@ export default function EntropyReversalNode() {
 
               <div className="mb-16 p-12 bg-indigo-500/5 border-4 border-indigo-500/20 rounded-[4rem] shadow-inner relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-12 opacity-5 group-hover:rotate-12 transition-transform duration-1000"><Target size={120} className="text-indigo-400" /></div>
-                <p className="text-4xl font-black text-white italic uppercase tracking-tighter mb-6 leading-tight group-hover:text-indigo-400 transition-colors duration-700">
+                <p className="text-4xl font-black text-theme-primary italic uppercase tracking-tighter mb-6 leading-tight group-hover:text-indigo-400 transition-colors duration-700">
                   {selectedContent.title}
                 </p>
-                <div className="flex flex-wrap gap-6 pt-6 border-t-2 border-white/5">
-                  <span className="px-6 py-2 bg-black/60 rounded-full text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] italic border-2 border-indigo-500/20 shadow-3xl">{t('contentRecyclingDashboard.nodePrefix', { platform: selectedContent.platform.toUpperCase() })}</span>
-                  <span className="px-6 py-2 bg-black/60 rounded-full text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] italic border-2 border-emerald-500/20 shadow-3xl">{t('contentRecyclingDashboard.particlesValue', { value: formatNumber(selectedContent.engagement) })}</span>
-                  <span className="px-6 py-2 bg-black/60 rounded-full text-[10px] font-black text-purple-400 uppercase tracking-[0.4em] italic border-2 border-purple-500/20 shadow-3xl">{t('contentRecyclingDashboard.resonanceValue', { value: selectedContent.engagementRate.toFixed(2) })}</span>
+                <div className="flex flex-wrap gap-6 pt-6 border-t-2 border-subtle">
+                  <span className="px-6 py-2 bg-surface-card rounded-full text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] italic border-2 border-indigo-500/20 shadow-3xl">{t('contentRecyclingDashboard.nodePrefix', { platform: selectedContent.platform.toUpperCase() })}</span>
+                  <span className="px-6 py-2 bg-surface-card rounded-full text-[10px] font-black text-emerald-400 uppercase tracking-[0.4em] italic border-2 border-emerald-500/20 shadow-3xl">{t('contentRecyclingDashboard.particlesValue', { value: formatNumber(selectedContent.engagement) })}</span>
+                  <span className="px-6 py-2 bg-surface-card rounded-full text-[10px] font-black text-purple-400 uppercase tracking-[0.4em] italic border-2 border-purple-500/20 shadow-3xl">{t('contentRecyclingDashboard.resonanceValue', { value: selectedContent.engagementRate.toFixed(2) })}</span>
                 </div>
               </div>
 
@@ -478,7 +457,7 @@ function MultiplexOptions({ content, onCancel, onCreate }: any) {
     <div className="space-y-16">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         <div className="space-y-6">
-          <label htmlFor="frequency-id" className="text-[12px] font-black text-slate-900 uppercase tracking-[0.4em] italic leading-none border-l-4 border-indigo-500 pl-4 py-1">{t('contentRecyclingDashboard.fluxFrequency')}</label>
+          <label htmlFor="frequency-id" className="text-[12px] font-black text-theme-muted uppercase tracking-[0.4em] italic leading-none border-l-4 border-indigo-500 pl-4 py-1">{t('contentRecyclingDashboard.fluxFrequency')}</label>
           <select
             id="frequency-id"
             title={t('contentRecyclingDashboard.frequencyModeTitle')}
@@ -488,7 +467,7 @@ function MultiplexOptions({ content, onCancel, onCreate }: any) {
               const intervals: any = { daily: 1, weekly: 7, monthly: 30, quarterly: 90 }
               if (intervals[e.target.value]) setInterval(intervals[e.target.value])
             }}
-            className="w-full bg-black/80 border-2 border-white/5 rounded-[2rem] px-8 py-6 text-[14px] font-black text-white uppercase tracking-[0.2em] focus:outline-none focus:border-indigo-500/40 transition-all italic shadow-inner"
+            className="w-full bg-black/80 border-2 border-subtle rounded-[2rem] px-8 py-6 text-[14px] font-black text-theme-primary uppercase tracking-[0.2em] focus:outline-none focus:border-indigo-500/40 transition-all italic shadow-inner"
           >
             <option value="daily">{t('contentRecyclingDashboard.frequencyDaily')}</option>
             <option value="weekly">{t('contentRecyclingDashboard.frequencyWeekly')}</option>
@@ -499,20 +478,20 @@ function MultiplexOptions({ content, onCancel, onCreate }: any) {
         </div>
 
         <div className="space-y-6">
-          <label htmlFor="max-reposts-id" className="text-[12px] font-black text-slate-900 uppercase tracking-[0.4em] italic leading-none border-l-4 border-indigo-500 pl-4 py-1">{t('contentRecyclingDashboard.maxReversionCascades')}</label>
+          <label htmlFor="max-reposts-id" className="text-[12px] font-black text-theme-muted uppercase tracking-[0.4em] italic leading-none border-l-4 border-indigo-500 pl-4 py-1">{t('contentRecyclingDashboard.maxReversionCascades')}</label>
           <input
             id="max-reposts-id"
             title={t('contentRecyclingDashboard.maxCascadesTitle')}
             type="number" 
             value={maxReposts} 
             onChange={(e) => setMaxReposts(parseInt(e.target.value) || 5)}
-            className="w-full bg-black/80 border-2 border-white/5 rounded-[2rem] px-8 py-6 text-[14px] font-black text-white uppercase tracking-[0.2em] focus:outline-none focus:border-indigo-500/40 transition-all italic shadow-inner"
+            className="w-full bg-black/80 border-2 border-subtle rounded-[2rem] px-8 py-6 text-[14px] font-black text-theme-primary uppercase tracking-[0.2em] focus:outline-none focus:border-indigo-500/40 transition-all italic shadow-inner"
           />
         </div>
       </div>
 
       <div className="space-y-8">
-        <label className="text-[12px] font-black text-slate-900 uppercase tracking-[0.4em] italic leading-none border-l-4 border-indigo-500 pl-4 py-1">{t('contentRecyclingDashboard.fluxModulationParameters')}</label>
+        <label className="text-[12px] font-black text-theme-muted uppercase tracking-[0.4em] italic leading-none border-l-4 border-indigo-500 pl-4 py-1">{t('contentRecyclingDashboard.fluxModulationParameters')}</label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[
             { key: 'updateHashtags', state: updateHashtags, set: setUpdateHashtags, label: t('contentRecyclingDashboard.latticeTagRefresh') },
@@ -522,7 +501,7 @@ function MultiplexOptions({ content, onCancel, onCreate }: any) {
           ].map(opt => (
             <button key={opt.key} onClick={() => opt.set(!opt.state)}
               title={opt.label}
-              className={`flex items-center justify-between p-8 rounded-[2.5rem] border-2 transition-all duration-700 italic group/opt shadow-3xl ${opt.state ? 'bg-indigo-600 border-indigo-400 text-white translate-y-[-4px]' : 'bg-black/60 border-white/5 text-slate-800 hover:border-indigo-500/30'}`}
+              className={`flex items-center justify-between p-8 rounded-[2.5rem] border-2 transition-all duration-700 italic group/opt shadow-3xl ${opt.state ? 'bg-indigo-600 border-indigo-400 text-white translate-y-[-4px]' : 'bg-surface-card border-subtle text-theme-muted hover:border-indigo-500/30'}`}
             >
               <span className="text-[12px] font-black uppercase tracking-[0.4em]">{opt.label}</span>
               <div className={`w-6 h-6 rounded-full border-4 transition-all duration-700 ${opt.state ? 'bg-white border-white shadow-[0_0_20px_rgba(255,255,255,1)] scale-110' : 'border-slate-900 group-hover/opt:border-indigo-500/30'}`} />
@@ -536,7 +515,7 @@ function MultiplexOptions({ content, onCancel, onCreate }: any) {
           type="button"
           onClick={onCancel}
           title={t('contentRecyclingDashboard.abortProcessTitle')}
-          className="flex-1 py-8 bg-black/80 border-4 border-white/5 text-slate-800 hover:text-white rounded-[3rem] text-[14px] font-black uppercase tracking-[0.4em] transition-all duration-1000 italic hover:border-rose-500/50 shadow-3xl"
+          className="flex-1 py-8 bg-black/80 border-4 border-subtle text-theme-muted hover:text-white rounded-[3rem] text-[14px] font-black uppercase tracking-[0.4em] transition-all duration-1000 italic hover:border-rose-500/50 shadow-3xl"
         >
           {t('contentRecyclingDashboard.abortProcess')}
         </button>

@@ -262,8 +262,8 @@ export default function WorkflowsPage() {
         {workflows.length === 0 ? (
           <EmptyState
             icon={Layers}
-            title={t('workflowsPage.title')}
-            description={t('workflowsPage.noDescription')}
+            title={t('workflowsPage.emptyTitle')}
+            description={t('workflowsPage.emptyBody')}
             className="ds-surface-subtle"
             action={<Button variant="primary" size="md" leftIcon={<Plus size={16} aria-hidden />} onClick={openCreate}>{t('workflowsPage.initializeSequence')}</Button>}
           />

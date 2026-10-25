@@ -88,27 +88,28 @@ export default function FormField({
 
   const Icon = type === 'email' ? Mail : type === 'password' ? Lock : type === 'number' ? Hash : Type
 
+  // Same look as the design-system Input (components/ui/form-field): what the
+  // user types is shown as typed — no forced uppercase/italic.
   const baseInputClasses = `
-    w-full px-6 py-5 bg-surface-page dark:bg-black/40 text-surface-900 dark:text-white border-2 rounded-2xl transition-all duration-500
-    focus:outline-none focus:bg-surface-card dark:focus:bg-black/60
-    disabled:bg-surface-page/50 disabled:cursor-not-allowed disabled:opacity-50 text-sm font-black uppercase tracking-widest italic
+    w-full h-11 rounded-lg border bg-background px-3 text-sm text-theme-primary
+    placeholder:text-muted-foreground ring-offset-background transition-colors
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+    disabled:cursor-not-allowed disabled:opacity-50
+    ${type === 'password' && showPasswordToggle ? 'pr-11' : 'pr-10'}
     ${hasError
-      ? 'border-rose-500/50 focus:border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.1)]'
+      ? 'border-rose-500 focus-visible:ring-rose-500'
       : hasSuccess
-        ? 'border-emerald-500/50 focus:border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.1)]'
-        : 'border-surface-100 dark:border-white/5 hover:border-primary-500/30 focus:border-primary-500 shadow-inner'
+        ? 'border-emerald-500/60'
+        : 'border-input'
     }
   `
 
   return (
-    <div className="mb-6">
+    <div className="flex flex-col gap-1.5">
       {label && (
-        <label
-          htmlFor={inputId}
-          className="block text-[10px] font-black uppercase tracking-[0.4em] text-surface-400 dark:text-slate-600 mb-3 italic leading-none pl-1"
-        >
+        <label htmlFor={inputId} className="ds-text-label text-theme-secondary">
           {label}
-          {required && <span className="text-rose-500/80 ml-2 font-black">*</span>}
+          {required && <span className="ml-0.5 text-rose-500">*</span>}
         </label>
       )}
 
@@ -127,7 +128,7 @@ export default function FormField({
             autoFocus={autoFocus}
             disabled={disabled}
             rows={rows}
-            className={`${baseInputClasses} resize-none custom-scrollbar`}
+            className={`${baseInputClasses} h-auto py-2 resize-none custom-scrollbar`}
             aria-describedby={hasError ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
           />
         ) : (
@@ -149,7 +150,6 @@ export default function FormField({
               className={baseInputClasses}
               aria-describedby={hasError ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
             />
-            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-500 opacity-0 group-focus-within/field:opacity-100 transition-opacity rounded-l-2xl" />
           </div>
         )}
 
@@ -158,20 +158,20 @@ export default function FormField({
           <button
            type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-6 top-1/2 -translate-y-1/2 text-surface-300 dark:text-slate-800 hover:text-primary-500 transition-colors border-none bg-transparent"
+            className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg text-theme-muted hover:text-theme-primary transition-colors border-none bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label={showPassword ? t('formField.hidePassword') : t('formField.showPassword')}
           >
-            {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         )}
 
         {/* Validation icons */}
         {touched && !isValidating && !showPasswordToggle && (
-          <div className="absolute right-6 top-1/2 -translate-y-1/2">
+          <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
             {hasError ? (
-              <AlertCircle size={24} className="text-rose-500 animate-pulse" />
+              <AlertCircle size={18} className="text-rose-500" />
             ) : hasSuccess ? (
-              <CheckCircle size={24} className="text-emerald-500" />
+              <CheckCircle size={18} className="text-emerald-500" />
             ) : null}
           </div>
         )}
@@ -179,7 +179,7 @@ export default function FormField({
 
       {/* Character counter */}
       {maxLength && (
-        <div className="mt-2 text-[9px] font-black text-surface-300 dark:text-slate-800 text-right uppercase tracking-widest italic">
+        <div className="text-xs text-theme-muted text-right tabular-nums">
           {value.length} / {maxLength} {t('formField.bitsData')}
         </div>
       )}
@@ -192,7 +192,7 @@ export default function FormField({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             id={`${inputId}-error`}
-            className="mt-3 text-[11px] font-black text-rose-500 flex items-center gap-2 uppercase tracking-widest italic"
+            className="text-xs font-medium text-rose-500 flex items-center gap-1.5"
             role="alert"
           >
             <AlertCircle size={14} />
@@ -205,7 +205,7 @@ export default function FormField({
       {!hasError && hint && (
         <p
           id={`${inputId}-hint`}
-          className="mt-3 text-[11px] font-black text-surface-400 dark:text-slate-700 uppercase tracking-widest italic"
+          className="text-xs text-theme-muted"
         >
           {hint}
         </p>

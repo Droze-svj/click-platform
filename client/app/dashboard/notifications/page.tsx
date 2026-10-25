@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiGet, apiPut, apiDelete } from '../../../lib/api'
@@ -97,7 +98,7 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     if (authLoading) return // user is null until /auth/me answers
-    if (!user) { router.push('/login'); return }
+    if (!user) { router.push(loginPathForCurrentPage()); return }
     loadSignals()
     loadLiveStatus()
   }, [user, authLoading, loadSignals, loadLiveStatus, router])
@@ -262,7 +263,7 @@ export default function NotificationsPage() {
                     type="button"
                     onClick={() => setFilter(f)}
                     className={cn(
-                      'rounded-md px-3 h-8 text-xs font-medium transition-colors',
+                      'rounded-md px-3 h-8 text-xs font-medium whitespace-nowrap transition-colors',
                       filter === f ? 'bg-primary text-primary-foreground' : 'text-theme-secondary hover:text-theme-primary'
                     )}
                   >

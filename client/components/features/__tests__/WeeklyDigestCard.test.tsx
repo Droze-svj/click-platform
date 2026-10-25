@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react'
 import WeeklyDigestCard, { type Digest } from '../WeeklyDigestCard'
 
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
+
 const digest: Digest = {
   summary: { trend: 'up', changePct: 40, totalEngagement: 12500, totalReach: 2_400_000, avgEngagementRate: 5.2, postCount: 4 },
   wins: [{ platform: 'tiktok', engagement: 9000 }],

@@ -7,7 +7,7 @@ import {
   Hammer, Video, FileText, Send, Flame, Plug,
   Eye, Heart, Megaphone, Signal,
   Sparkles, ArrowRight, ArrowUpRight, Rocket, Clock,
-  LayoutGrid, RefreshCw, Target, Fingerprint, Link2, X,
+  RefreshCw, Target, Fingerprint, Link2, X,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { isPlatformConnected } from '../../lib/connections'
@@ -91,18 +91,24 @@ const NICHE_LABELS: Record<string, string> = {
   gaming: 'Gaming', other: 'creator',
 }
 
-function timeAgo(iso?: string | null): string {
+// Brand casing for the account rows — CSS `capitalize` turned these into
+// "Tiktok" / "Youtube".
+const PLATFORM_LABELS: Record<string, string> = {
+  tiktok: 'TikTok', instagram: 'Instagram', youtube: 'YouTube', twitter: 'X (Twitter)',
+}
+
+function timeAgo(iso: string | null | undefined, t: (k: string, v?: Record<string, string | number>) => string): string {
   if (!iso) return ''
   const then = new Date(iso).getTime()
   if (Number.isNaN(then)) return ''
   const diff = Date.now() - then
   const mins = Math.round(diff / 60_000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
+  if (mins < 1) return t('dashboard.time.justNow')
+  if (mins < 60) return t('dashboard.time.minutesAgo', { count: mins })
   const hrs = Math.round(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
+  if (hrs < 24) return t('dashboard.time.hoursAgo', { count: hrs })
   const days = Math.round(hrs / 24)
-  return `${days}d ago`
+  return t('dashboard.time.daysAgo', { count: days })
 }
 
 export default function DashboardHome() {
@@ -211,23 +217,23 @@ export default function DashboardHome() {
             <div className="flex-1 min-w-0">
               <h3 className="ds-text-h3 text-theme-primary">
                 {welcomeNicheLabel
-                  ? `Your ${welcomeNicheLabel} workspace is ready`
-                  : 'Welcome to Click'}
+                  ? t('dashboard.welcomeBanner.titleNiche', { niche: welcomeNicheLabel })
+                  : t('dashboard.welcomeBanner.title')}
               </h3>
               <p className="ds-text-caption text-theme-muted mt-1">
                 {welcomeNicheLabel
-                  ? 'Click is tuned to your niche playbook. Finish setup or forge your first clip.'
-                  : 'Pick your niche to tune Click to your style, or jump straight into your first clip.'}
+                  ? t('dashboard.welcomeBanner.bodyNiche')
+                  : t('dashboard.welcomeBanner.body')}
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <Link href="/dashboard/onboarding">
                   <Button variant="primary" size="md" rightIcon={<ArrowRight size={16} aria-hidden />}>
-                    {welcomeNicheLabel ? 'Open your playbook' : 'Finish setup'}
+                    {welcomeNicheLabel ? t('dashboard.welcomeBanner.openPlaybook') : t('dashboard.welcomeBanner.finishSetup')}
                   </Button>
                 </Link>
                 <Link href="/dashboard/forge">
                   <Button variant="secondary" size="md" leftIcon={<Hammer size={16} aria-hidden />}>
-                    Forge a clip
+                    {t('dashboard.welcomeBanner.makeClip')}
                   </Button>
                 </Link>
               </div>
@@ -235,7 +241,7 @@ export default function DashboardHome() {
             <button
               type="button"
               onClick={() => setWelcomeDismissed(true)}
-              aria-label="Dismiss welcome"
+              aria-label={t('dashboard.welcomeBanner.dismiss')}
               className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-lg text-theme-muted hover:bg-accent hover:text-theme-primary transition-colors"
             >
               <X size={18} aria-hidden />
@@ -243,14 +249,32 @@ export default function DashboardHome() {
           </Panel>
         )}
 
+        {/* Both render nothing when there is nothing to say; `empty:hidden`
+            then collapses the wrapper so no gap is left behind. */}
+        <div className="flex flex-col gap-3 empty:hidden mb-[clamp(0.75rem,2vw,1.25rem)]">
+          <ErrorBoundary><GetStartedStrip /></ErrorBoundary>
+          <ErrorBoundary><AILearningIndicator /></ErrorBoundary>
+        </div>
+
         <div ref={gridRef} className="ds-bento-grid">
 
           {/* ── Hero / welcome (2x1) ───────────────────────────────────── */}
           <Panel
             variant="bento"
-            className="ds-bento-2x1 ds-anim-rise relative overflow-hidden flex flex-col justify-between p-6 sm:p-8 ds-bg-mesh"
+            className="col-span-full ds-anim-rise relative overflow-hidden flex flex-col justify-between p-6 sm:p-8 ds-bg-mesh"
           >
-            <div className="relative z-10">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={fetchData}
+              loading={loading}
+              leftIcon={!loading ? <RefreshCw size={14} aria-hidden /> : undefined}
+              className="absolute right-4 top-4 z-20 text-theme-muted"
+              title={t('dashboard.refresh.subtitle')}
+            >
+              {t('common.refresh')}
+            </Button>
+            <div className="relative z-10 pr-24">
               <p className="ds-text-label text-theme-muted">{greeting}</p>
               <h2 className="ds-text-display text-theme-primary mt-1 break-words">{firstName}</h2>
               <p className="ds-text-body text-theme-muted mt-2 max-w-md">
@@ -277,11 +301,12 @@ export default function DashboardHome() {
           </Panel>
 
           {/* ── Stat tiles (real /analytics/dashboard) ─────────────────── */}
+          <div className="col-span-full grid grid-cols-2 lg:grid-cols-4 gap-[clamp(0.75rem,2vw,1.25rem)]">
           {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <Panel key={`s-${i}`} variant="subtle" className="p-5 animate-pulse">
-                <div className="h-3 w-16 rounded bg-theme-muted/20" />
-                <div className="mt-4 h-8 w-20 rounded bg-theme-muted/20" />
+                <div className="h-3 w-16 rounded bg-accent" />
+                <div className="mt-4 h-8 w-20 rounded bg-accent" />
               </Panel>
             ))
           ) : (
@@ -312,6 +337,7 @@ export default function DashboardHome() {
               />
             </>
           )}
+          </div>
 
           {/* ── Quick actions (2x2) ────────────────────────────────────── */}
           <Panel variant="bento" className="ds-bento-2x2 ds-anim-rise p-6">
@@ -365,7 +391,7 @@ export default function DashboardHome() {
                   </span>
                   {styleInsight && styleInsight.totalPicks > 0 && (
                     <span className="ml-auto rounded-md bg-indigo-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-indigo-500">
-                      {styleInsight.source === 'user' ? 'Learned' : styleInsight.source === 'team' ? 'Team' : 'Starter'}
+                      {styleInsight.source === 'user' ? t('dashboard.insight.sourceLearned') : styleInsight.source === 'team' ? t('dashboard.insight.sourceTeam') : t('dashboard.insight.sourceStarter')}
                     </span>
                   )}
                 </div>
@@ -377,13 +403,13 @@ export default function DashboardHome() {
                     }
                     const top = styleInsight.topPicks || {}
                     const parts: string[] = []
-                    if (top.preset) parts.push(`preset ${top.preset}`)
-                    if (top.hookStyle) parts.push(`${top.hookStyle} hooks`)
-                    if (top.publishHour) parts.push(`best at ${top.publishHour}:00`)
+                    if (top.preset) parts.push(t('dashboard.insight.partPreset', { preset: top.preset }))
+                    if (top.hookStyle) parts.push(t('dashboard.insight.partHooks', { hook: top.hookStyle }))
+                    if (top.publishHour) parts.push(t('dashboard.insight.partBestHour', { hour: top.publishHour }))
                     if (parts.length === 0) {
-                      return styleInsight.hint || 'Click is learning your style — publish more clips to refine.'
+                      return styleInsight.hint || t('dashboard.insight.learning')
                     }
-                    return `Across ${styleInsight.totalPicks} clips: ${parts.join(', ')}.`
+                    return t('dashboard.insight.summary', { count: styleInsight.totalPicks, parts: parts.join(', ') })
                   })()}
                 </p>
               </div>
@@ -397,7 +423,7 @@ export default function DashboardHome() {
                     </span>
                   </div>
                   <p className="ds-text-body mt-2 text-sm text-theme-muted">
-                    {`Engagement is strongest around ${styleInsight.topPicks.publishHour}:00.`}
+                    {t('dashboard.insight.peakBody', { hour: styleInsight.topPicks.publishHour })}
                   </p>
                 </div>
               )}
@@ -422,8 +448,6 @@ export default function DashboardHome() {
               unreachable dashboard components went to the surfaces they belong
               to (engagement → /achievements, templates → /templates,
               workflow suggestions → /workflows) rather than piling up here. */}
-          <ErrorBoundary><GetStartedStrip /></ErrorBoundary>
-          <ErrorBoundary><AILearningIndicator /></ErrorBoundary>
 
           {/* ── Recent content (real recent_posts) (2x1) ───────────────── */}
           <Panel variant="bento" className="ds-bento-2x1 ds-anim-rise p-6">
@@ -440,7 +464,7 @@ export default function DashboardHome() {
             {loading ? (
               <div className="space-y-2">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-12 animate-pulse rounded-xl bg-theme-muted/10" />
+                  <div key={i} className="h-12 animate-pulse rounded-xl bg-accent" />
                 ))}
               </div>
             ) : recentPosts.length === 0 ? (
@@ -478,12 +502,12 @@ export default function DashboardHome() {
                             {post.title || (t('dashboard.recent.untitled') || 'Untitled')}
                           </p>
                           <p className="ds-text-caption flex items-center gap-2">
-                            <span className="capitalize">{post.status || 'draft'}</span>
+                            <span>{t(`dashboard.recent.status.${post.status || 'draft'}`)}</span>
                             {(post.published_at || post.created_at) && (
                               <>
                                 <span aria-hidden>·</span>
                                 <Clock size={11} aria-hidden />
-                                {timeAgo(post.published_at || post.created_at)}
+                                {timeAgo(post.published_at || post.created_at, t)}
                               </>
                             )}
                           </p>
@@ -511,7 +535,7 @@ export default function DashboardHome() {
             {loading ? (
               <div className="space-y-2">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-11 animate-pulse rounded-xl bg-theme-muted/10" />
+                  <div key={i} className="h-11 animate-pulse rounded-xl bg-accent" />
                 ))}
               </div>
             ) : (
@@ -525,7 +549,7 @@ export default function DashboardHome() {
                         href="/dashboard/social"
                         className="ds-surface-subtle flex items-center justify-between p-3 transition-colors hover:border-[var(--glass-border-strong)]"
                       >
-                        <span className="ds-text-label text-theme-primary capitalize">{p}</span>
+                        <span className="ds-text-label text-theme-primary">{PLATFORM_LABELS[p]}</span>
                         {linked ? (
                           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-500">
                             <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
@@ -550,31 +574,6 @@ export default function DashboardHome() {
                 )}
               </>
             )}
-          </Panel>
-
-          {/* ── Footer utility tile ────────────────────────────────────── */}
-          <Panel variant="bento" className="ds-anim-rise flex items-center justify-between gap-4 p-6">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
-                <LayoutGrid size={20} aria-hidden />
-              </span>
-              <div className="min-w-0">
-                <p className="ds-text-label text-theme-primary truncate">
-                  {t('dashboard.refresh.title') || 'Up to date'}
-                </p>
-                <p className="ds-text-caption">{t('dashboard.refresh.subtitle') || 'Pull the latest metrics'}</p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="md"
-              onClick={fetchData}
-              loading={loading}
-              leftIcon={!loading ? <RefreshCw size={16} aria-hidden /> : undefined}
-              aria-label={t('common.refresh') || 'Refresh'}
-            >
-              {t('common.refresh') || 'Refresh'}
-            </Button>
           </Panel>
 
         </div>

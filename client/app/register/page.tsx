@@ -14,7 +14,7 @@ import FormField from '../../components/FormField'
 import { AuthShell } from '../../components/ui'
 import { cn } from '@/lib/utils'
 import {
-  ArrowLeft, ArrowRight, Check, ChevronRight, RefreshCw, Target, Lock, ShieldCheck,
+  ArrowLeft, ArrowRight, Check, ChevronRight, RefreshCw, Target, Lock, KeyRound, Smartphone,
 } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
 import ClickLogo from '../../components/ClickLogo'
@@ -108,7 +108,7 @@ export default function Register() {
     const feedback: string[] = []
 
     if (!pwd || pwd.length < 8) {
-      errors.push('Password must be at least 8 characters long')
+      errors.push(t('registerPage.errPasswordLength'))
     }
 
     const hasUppercase = /[A-Z]/.test(pwd)
@@ -118,7 +118,7 @@ export default function Register() {
     const charTypeCount = [hasUppercase, hasLowercase, hasNumbers, hasSpecialChars].filter(Boolean).length
 
     if (charTypeCount < 3) {
-      errors.push('Add more complexity: uppercase, numbers, or symbols')
+      errors.push(t('registerPage.errPasswordComplexity'))
     }
 
     let strength: 'weak' | 'fair' | 'good' | 'strong' = 'weak'
@@ -129,7 +129,7 @@ export default function Register() {
     }
 
     return { isValid: errors.length === 0, errors, strength, feedback }
-  }, [])
+  }, [t])
 
   const validateEmail = useCallback((email: string): boolean => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -166,10 +166,10 @@ export default function Register() {
   const handleContinue = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (!name.trim() || name.trim().length < 2) { setError('Name is required'); return }
-    if (!validateEmail(email)) { setError('Invalid email address'); return }
-    if (!passwordValidation?.isValid) { setError(passwordValidation?.errors[0] || 'Invalid password'); return }
-    if (!acceptedTerms) { setError('Accept the terms to proceed'); return }
+    if (!name.trim() || name.trim().length < 2) { setError(t('registerPage.errName')); return }
+    if (!validateEmail(email)) { setError(t('registerPage.errEmail')); return }
+    if (!passwordValidation?.isValid) { setError(passwordValidation?.errors[0] || t('registerPage.errPassword')); return }
+    if (!acceptedTerms) { setError(t('registerPage.errTerms')); return }
     setStep(2)
   }
 
@@ -255,7 +255,7 @@ export default function Register() {
     // width="xl" keeps the max-w-2xl this page shipped at — the other six auth
     // pages are a single credential card, this one is a two-step form.
     // py-16 overrides the shell's py-12, also as shipped.
-    <AuthShell width="xl" corner={<LanguagePicker />} className="py-16 text-theme-primary" contentClassName="relative z-10">
+    <AuthShell width="xl" corner={<LanguagePicker />} className="pt-24 pb-16 sm:py-16 text-theme-primary" contentClassName="relative z-10">
       {/* The outer rise was a hand-rolled framer wrapper duplicating what
           AuthShell's ds-anim-rise now does for every auth page (and which both
           the OS query and Settings → Reduced motion neutralise). The inner
@@ -266,36 +266,36 @@ export default function Register() {
               <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/10 border border-[var(--border-subtle)] mb-4">
                 <ClickLogo size={32} />
               </span>
-              <h1 className="ds-text-h1 text-theme-primary">Meet Click</h1>
+              <h1 className="ds-text-h1 text-theme-primary">{t('registerPage.title')}</h1>
               <p className="ds-text-body text-theme-muted mt-2 max-w-md">
                 {niche
-                  ? `Tuned for ${nicheLabel(niche)} creators — Click gets sharper with every post you ship.`
-                  : 'Click learns your niche on signup and gets sharper with every post you ship.'}
+                  ? t('registerPage.subtitleNiche', { niche: nicheLabel(niche) })
+                  : t('registerPage.subtitle')}
               </p>
 
               {/* Plan teaser — confirms the picked plan / nudges free users. */}
               {selectedPlan && selectedPlan.id !== 'free' ? (
                 <div className="mt-4 inline-flex items-center gap-3 px-4 py-2 rounded-full bg-indigo-500/10 border border-[var(--border-subtle)]">
-                  <span className="ds-text-caption text-theme-muted">You picked</span>
+                  <span className="ds-text-caption text-theme-muted">{t('registerPage.youPicked')}</span>
                   <span className="ds-text-label text-theme-primary">
-                    {selectedPlan.name} · ${periodFromUrl === 'yearly' ? selectedPlan.priceYearly : selectedPlan.priceMonthly}/{periodFromUrl === 'yearly' ? 'yr' : 'mo'}
+                    {selectedPlan.name} · ${periodFromUrl === 'yearly' ? selectedPlan.priceYearly : selectedPlan.priceMonthly}/{periodFromUrl === 'yearly' ? t('registerPage.perYear') : t('registerPage.perMonth')}
                   </span>
-                  <Link href="/#pricing" className="ds-text-caption text-indigo-500 hover:text-indigo-400 underline underline-offset-4">Change</Link>
+                  <Link href="/#pricing" className="ds-text-caption text-indigo-500 hover:text-indigo-400 underline underline-offset-4">{t('registerPage.change')}</Link>
                 </div>
               ) : (
-                <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent border border-[var(--border-subtle)]">
-                  <span className="ds-text-caption text-theme-muted">Starting on Free</span>
-                  <Link href="/#pricing" className="ds-text-caption text-indigo-500 hover:text-indigo-400 underline underline-offset-4">See Pro &amp; Agency</Link>
+                <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full ds-surface-subtle border border-[var(--border-subtle)]">
+                  <span className="ds-text-caption text-theme-muted">{t('registerPage.startingFree')}</span>
+                  <Link href="/#pricing" className="inline-flex items-center ds-text-caption text-indigo-500 hover:text-indigo-400 underline underline-offset-4">{t('registerPage.seePlans')}</Link>
                 </div>
               )}
             </div>
 
             {/* ── Step indicator ─────────────────────────────────────── */}
-            <div className="mb-8" aria-label={`Step ${step} of 2`}>
+            <div className="mb-8" aria-label={t('registerPage.stepOf', { step })}>
               <div className="flex items-center justify-between mb-2">
-                <span className="ds-text-caption text-theme-muted">Step {step} of 2</span>
+                <span className="ds-text-caption text-theme-muted">{t('registerPage.stepOf', { step })}</span>
                 <span className="ds-text-caption text-theme-muted">
-                  {step === 1 ? 'Create your account' : 'Personalize Click'}
+                  {step === 1 ? t('registerPage.stepAccount') : t('registerPage.stepPersonalize')}
                 </span>
               </div>
               <div className="flex gap-2">
@@ -304,7 +304,7 @@ export default function Register() {
                     key={s}
                     className={cn(
                       'h-1.5 flex-1 rounded-full transition-all duration-500',
-                      s <= step ? accentBg : 'bg-accent'
+                      s <= step ? accentBg : 'bg-muted'
                     )}
                   />
                 ))}
@@ -321,14 +321,14 @@ export default function Register() {
             {step === 1 && (
               <>
               <form method="post" onSubmit={handleContinue} className="space-y-5">
-                <FormField label="Name" name="name" type="text" value={name} onChange={setName} placeholder="Jane Doe" required autoFocus />
-                <FormField label="Email" name="email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" required />
+                <FormField label={t('registerPage.name')} name="name" type="text" value={name} onChange={setName} placeholder={t('registerPage.namePlaceholder')} required autoFocus />
+                <FormField label={t('auth.email')} name="email" type="email" value={email} onChange={setEmail} placeholder={t('loginPage.emailPlaceholder')} required />
                 {gated && (
-                  <FormField label="Invite code" name="inviteCode" type="text" value={inviteCode} onChange={setInviteCode} placeholder="Enter your beta invite code" />
+                  <FormField label={t('registerPage.inviteCode')} name="inviteCode" type="text" value={inviteCode} onChange={setInviteCode} placeholder={t('registerPage.invitePlaceholder')} />
                 )}
 
                 <div className="space-y-3">
-                  <FormField label="Password" name="password" type="password" value={password} onChange={handlePasswordChange} placeholder="••••••••••••" required showPasswordToggle />
+                  <FormField label={t('auth.password')} name="password" type="password" value={password} onChange={handlePasswordChange} placeholder="••••••••••••" required showPasswordToggle />
                   <AnimatePresence>
                     {passwordValidation && password.length > 0 && (
                       <m.div
@@ -338,7 +338,7 @@ export default function Register() {
                         className="overflow-hidden"
                       >
                         <div className="flex items-center gap-3 px-1">
-                          <div className="flex-1 h-1.5 rounded-full bg-accent overflow-hidden">
+                          <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
                             <div
                               className={cn(
                                 'h-full transition-[width] duration-300',
@@ -349,7 +349,7 @@ export default function Register() {
                               )}
                             />
                           </div>
-                          <span className="ds-text-caption text-theme-muted capitalize">{passwordValidation.strength}</span>
+                          <span className="ds-text-caption text-theme-muted">{t(`registerPage.strength_${passwordValidation.strength}`)}</span>
                         </div>
                       </m.div>
                     )}
@@ -369,10 +369,10 @@ export default function Register() {
                     </span>
                   </span>
                   <span className="ds-text-caption text-theme-muted leading-relaxed">
-                    I accept the{' '}
-                    <Link href="/terms" target="_blank" className="text-theme-primary underline underline-offset-4">Terms</Link>
-                    {' '}and{' '}
-                    <Link href="/privacy" target="_blank" className="text-theme-primary underline underline-offset-4">Privacy Policy</Link>
+                    {t('registerPage.acceptPrefix')}{' '}
+                    <Link href="/terms" target="_blank" className="text-theme-primary underline underline-offset-4">{t('registerPage.terms')}</Link>
+                    {' '}{t('registerPage.and')}{' '}
+                    <Link href="/privacy" target="_blank" className="text-theme-primary underline underline-offset-4">{t('registerPage.privacy')}</Link>
                   </span>
                 </label>
 
@@ -381,7 +381,7 @@ export default function Register() {
                   disabled={!step1Valid}
                   className={cn('w-full h-12 rounded-xl font-medium text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none inline-flex items-center justify-center gap-2', accentBg)}
                 >
-                  Continue
+                  {t('registerPage.continue')}
                   <ArrowRight size={18} aria-hidden />
                 </button>
               </form>
@@ -390,15 +390,15 @@ export default function Register() {
               <div className="grid grid-cols-3 gap-3 mt-6 pt-5 border-t border-[var(--border-subtle)]">
                 <div className="flex flex-col items-center gap-1.5 text-center">
                   <Lock size={16} className="text-emerald-500" aria-hidden />
-                  <span className="ds-text-caption text-theme-muted leading-tight">256-bit encrypted</span>
+                  <span className="ds-text-caption text-theme-muted leading-tight">{t('loginPage.trustEncrypted')}</span>
                 </div>
                 <div className="flex flex-col items-center gap-1.5 text-center">
-                  <ShieldCheck size={16} className="text-indigo-500" aria-hidden />
-                  <span className="ds-text-caption text-theme-muted leading-tight">Bcrypt + JWT</span>
+                  <KeyRound size={16} className="text-indigo-500" aria-hidden />
+                  <span className="ds-text-caption text-theme-muted leading-tight">{t('loginPage.trustHashed')}</span>
                 </div>
                 <div className="flex flex-col items-center gap-1.5 text-center">
-                  <Check size={16} className="text-fuchsia-500" aria-hidden />
-                  <span className="ds-text-caption text-theme-muted leading-tight">Never stored</span>
+                  <Smartphone size={16} className="text-fuchsia-500" aria-hidden />
+                  <span className="ds-text-caption text-theme-muted leading-tight">{t('loginPage.trust2fa')}</span>
                 </div>
               </div>
               </>
@@ -414,8 +414,8 @@ export default function Register() {
                       <Target size={18} aria-hidden />
                     </span>
                     <div>
-                      <h3 className="ds-text-h3 text-theme-primary">What do you create?</h3>
-                      <p className="ds-text-caption text-theme-muted">Click tunes every edit to your niche&apos;s real playbook.</p>
+                      <h3 className="ds-text-h3 text-theme-primary">{t('registerPage.nicheTitle')}</h3>
+                      <p className="ds-text-caption text-theme-muted">{t('registerPage.nicheSubtitle')}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mt-4">
@@ -432,7 +432,7 @@ export default function Register() {
                             'flex flex-col gap-1.5 rounded-xl border p-3 text-left transition-colors',
                             selected
                               ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-500'
-                              : 'border-[var(--border-subtle)] text-theme-secondary hover:bg-accent hover:text-theme-primary'
+                              : 'border-[var(--border-subtle)] text-theme-secondary hover:bg-muted hover:text-theme-primary'
                           )}
                         >
                           <OptIcon size={20} aria-hidden />
@@ -459,7 +459,7 @@ export default function Register() {
 
                 {/* Platform focus (multi-select) */}
                 <div>
-                  <h3 className="ds-text-label text-theme-primary mb-3">Where do you post? <span className="ds-text-caption text-theme-muted font-normal">(pick any)</span></h3>
+                  <h3 className="ds-text-label text-theme-primary mb-3">{t('registerPage.platformsTitle')} <span className="ds-text-caption text-theme-muted font-normal">{t('registerPage.pickAny')}</span></h3>
                   <div className="flex flex-wrap gap-2">
                     {PLATFORM_OPTIONS.map((p) => {
                       const selected = platforms.includes(p.value)
@@ -473,7 +473,7 @@ export default function Register() {
                             'inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 ds-text-caption transition-colors',
                             selected
                               ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-500'
-                              : 'border-[var(--border-subtle)] text-theme-secondary hover:bg-accent hover:text-theme-primary'
+                              : 'border-[var(--border-subtle)] text-theme-secondary hover:bg-muted hover:text-theme-primary'
                           )}
                         >
                           {selected && <Check size={13} aria-hidden />}
@@ -486,7 +486,7 @@ export default function Register() {
 
                 {/* Primary goal */}
                 <div>
-                  <h3 className="ds-text-label text-theme-primary mb-3">What&apos;s your #1 goal?</h3>
+                  <h3 className="ds-text-label text-theme-primary mb-3">{t('registerPage.goalTitle')}</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {GOAL_OPTIONS.map((g) => {
                       const selected = goal === g.value
@@ -501,7 +501,7 @@ export default function Register() {
                             'flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors',
                             selected
                               ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-500'
-                              : 'border-[var(--border-subtle)] text-theme-secondary hover:bg-accent hover:text-theme-primary'
+                              : 'border-[var(--border-subtle)] text-theme-secondary hover:bg-muted hover:text-theme-primary'
                           )}
                         >
                           <GoalIcon size={18} aria-hidden />
@@ -518,10 +518,10 @@ export default function Register() {
                     type="button"
                     onClick={() => { setError(''); setStep(1) }}
                     disabled={loading}
-                    className="inline-flex items-center justify-center gap-2 h-12 px-4 rounded-xl border border-[var(--border-subtle)] ds-text-label text-theme-secondary hover:bg-accent transition-colors disabled:opacity-50 w-full sm:w-auto"
+                    className="inline-flex items-center justify-center gap-2 h-12 px-4 rounded-xl border border-[var(--border-subtle)] ds-text-label text-theme-secondary hover:bg-muted transition-colors disabled:opacity-50 w-full sm:w-auto"
                   >
                     <ArrowLeft size={18} aria-hidden />
-                    Back
+                    {t('registerPage.back')}
                   </button>
                   <button
                     type="button"
@@ -530,9 +530,9 @@ export default function Register() {
                     className={cn('flex-1 h-12 rounded-xl font-medium text-white shadow-sm transition-all hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none inline-flex items-center justify-center gap-2 w-full', accentBg)}
                   >
                     {loading ? (
-                      <><RefreshCw className="animate-spin" size={18} aria-hidden /> Creating account…</>
+                      <><RefreshCw className="animate-spin" size={18} aria-hidden /> {t('registerPage.creating')}</>
                     ) : (
-                      <>Create account <ChevronRight size={18} aria-hidden /></>
+                      <>{t('registerPage.create')} <ChevronRight size={18} aria-hidden /></>
                     )}
                   </button>
                 </div>
@@ -542,7 +542,7 @@ export default function Register() {
                   disabled={loading}
                   className="w-full text-center ds-text-caption text-theme-muted hover:text-theme-primary transition-colors disabled:opacity-50"
                 >
-                  Skip for now — set this up later
+                  {t('registerPage.skip')}
                 </button>
               </div>
             )}

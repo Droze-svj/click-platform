@@ -34,7 +34,7 @@ interface DNAAnalysis {
   recommendation: string
 }
 
-const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
+const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-default shadow-2xl"
 
 export const ExpertDNAView: React.FC = () => {
     const [dna, setDna] = useState<DNAAnalysis | null>(null)
@@ -84,7 +84,7 @@ export const ExpertDNAView: React.FC = () => {
                     </div>
                     <div>
                         <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Expert Style DNA</h4>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-indigo-500/70">Autonomous Stylistic Extraction Engine</span>
+                        <span className="text-[9px] font-black text-theme-muted uppercase tracking-[0.4em] mt-1 block italic text-indigo-500/70">Autonomous Stylistic Extraction Engine</span>
                     </div>
                 </div>
 
@@ -92,7 +92,7 @@ export const ExpertDNAView: React.FC = () => {
                    <div className={`${glassStyle} px-6 py-3 rounded-2xl flex items-center gap-8`}>
                       <div className="space-y-2 flex-1 min-w-[120px]">
                          <div className="flex items-center justify-between">
-                             <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Creative Randomness</span>
+                             <span className="text-[9px] font-black text-theme-muted uppercase tracking-widest italic">Creative Randomness</span>
                              <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest italic">{(randomness * 100).toFixed(0)}%</span>
                          </div>
                          <input 
@@ -125,8 +125,8 @@ export const ExpertDNAView: React.FC = () => {
                 <div className="xl:col-span-2 space-y-6">
                     <div className={`${glassStyle} rounded-[2.5rem] p-10 space-y-8`}>
                         <div className="flex items-center justify-between">
-                            <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Genetic Markers</h5>
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{dna?.geneticMarkers.length} Patterns Extracted</span>
+                            <h5 className="text-xl font-black text-theme-primary italic tracking-tighter uppercase leading-none">Genetic Markers</h5>
+                            <span className="text-[10px] font-black text-theme-muted uppercase tracking-widest">{dna?.geneticMarkers.length} Patterns Extracted</span>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -137,17 +137,17 @@ export const ExpertDNAView: React.FC = () => {
                                     initial={{ scale: 0.95, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                     transition={{ delay: idx * 0.05 }}
-                                    className="p-6 bg-black/40 border border-white/5 rounded-3xl group hover:border-indigo-500/30 transition-all relative overflow-hidden"
+                                    className="p-6 bg-surface-card border border-subtle rounded-3xl group hover:border-indigo-500/30 transition-all relative overflow-hidden"
                                 >
                                     <div className="flex flex-col gap-4 relative z-10">
                                        <div className="flex items-center justify-between">
-                                          <h6 className="text-xs font-black text-white uppercase tracking-widest italic truncate max-w-[140px]">{marker.markerName}</h6>
+                                          <h6 className="text-xs font-black text-theme-primary uppercase tracking-widest italic truncate max-w-[140px]">{marker.markerName}</h6>
                                           {marker.isMutated && <Split className="w-3 h-3 text-amber-500" />}
                                        </div>
                                        
                                        <div className="space-y-2">
                                           <div className="flex items-center justify-between">
-                                             <span className="text-[8px] font-black text-slate-600 uppercase">Viral Affinity</span>
+                                             <span className="text-[8px] font-black text-theme-muted uppercase">Viral Affinity</span>
                                              <span className="text-[8px] font-black text-indigo-400 uppercase">{(marker.strength * 100).toFixed(0)}%</span>
                                           </div>
                                           <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
@@ -161,7 +161,7 @@ export const ExpertDNAView: React.FC = () => {
 
                                        <div className="flex flex-wrap gap-2 pt-2">
                                           {Object.entries(marker.attributes).map(([k, v], i) => (
-                                              <span key={i} className="px-2 py-1 rounded-md bg-white/5 border border-white/5 text-[7px] font-black text-slate-400 uppercase tracking-widest">
+                                              <span key={i} className="px-2 py-1 rounded-md bg-white/5 border border-subtle text-[7px] font-black text-theme-secondary uppercase tracking-widest">
                                                   {v}
                                               </span>
                                           ))}
@@ -179,12 +179,12 @@ export const ExpertDNAView: React.FC = () => {
                     <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-8`}>
                         <div className="flex items-center gap-4">
                             <Activity className="w-6 h-6 text-emerald-400" />
-                            <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Stability Analaysis</h5>
+                            <h5 className="text-xl font-black text-theme-primary italic tracking-tighter uppercase leading-none">Stability Analaysis</h5>
                         </div>
 
                         <div className="space-y-6">
-                            <div className="p-8 bg-black/40 border border-white/5 rounded-[2rem] flex flex-col items-center justify-center text-center space-y-4">
-                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Consensus Stability</span>
+                            <div className="p-8 bg-surface-card border border-subtle rounded-[2rem] flex flex-col items-center justify-center text-center space-y-4">
+                                <span className="text-[10px] font-black text-theme-muted uppercase tracking-widest">Consensus Stability</span>
                                 <h3 className={`text-5xl font-black italic tracking-tighter leading-none uppercase ${
                                     (dna?.consensusStability ?? 0) > 0.7 ? 'text-emerald-400' : 'text-amber-400'
                                 }`}>
@@ -195,9 +195,9 @@ export const ExpertDNAView: React.FC = () => {
                             <div className="p-6 bg-indigo-500/10 border border-indigo-500/20 rounded-3xl space-y-4 relative overflow-hidden">
                                 <div className="flex items-center gap-3">
                                     <Sparkles className="w-4 h-4 text-indigo-400" />
-                                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Growth Recommendation</span>
+                                    <span className="text-[10px] font-black text-theme-primary uppercase tracking-widest">Growth Recommendation</span>
                                 </div>
-                                <p className="text-xs font-bold text-white italic leading-relaxed relative z-10">
+                                <p className="text-xs font-bold text-theme-primary italic leading-relaxed relative z-10">
                                     {dna?.recommendation}
                                 </p>
                                 <div className="absolute bottom-0 right-0 p-4 opacity-5">

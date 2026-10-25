@@ -14,7 +14,7 @@ import { PageShell } from '../../../components/ui'
 
 export default function ToolboxPage() {
   return (
-    <PageShell width="wide" flush>
+    <PageShell width="wide">
       <ErrorBoundary>
         <SovereignToolbox />
       </ErrorBoundary>

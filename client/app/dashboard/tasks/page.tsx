@@ -217,7 +217,7 @@ export default function TasksPage() {
                   onDragLeave={() => setDragOverStatus(null)}
                   onDrop={e => { e.preventDefault(); const id = e.dataTransfer.getData('text/plain'); if (id) updateTask(id, { status: s }); setDragOverStatus(null) }}
                   className={cn(
-                    'flex flex-col rounded-2xl border transition-colors min-h-[500px]',
+                    'flex flex-col rounded-2xl border transition-colors min-h-[160px] lg:min-h-[500px]',
                     dragOverStatus === s ? 'border-primary bg-primary/5' : 'border-[var(--border-subtle)] ds-surface-subtle'
                   )}
                 >
@@ -233,7 +233,7 @@ export default function TasksPage() {
                       <TaskCard key={task._id} task={task} onSelect={() => setSelectedTask(task)} onDragStart={() => setDraggedTaskId(task._id)} reduceMotion={reduceMotion} />
                     ))}
                     {byStatus(s).length === 0 && (
-                      <div className="h-full flex flex-col items-center justify-center py-16 text-theme-muted opacity-50">
+                      <div className="h-full flex flex-col items-center justify-center py-8 lg:py-16 text-theme-muted opacity-50">
                         <Inbox size={28} className="mb-2" aria-hidden />
                         <p className="ds-text-caption">{t('tasksPage.emptyNode')}</p>
                       </div>
@@ -302,7 +302,7 @@ export default function TasksPage() {
         </main>
 
         {/* ── Floating Quick-Add ── */}
-        <footer className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 z-[90]">
+        <footer className="fixed bottom-24 lg:bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 z-[90]">
           <div className="ds-surface-elevated flex items-center gap-3 p-2.5">
             <IconButton variant="primary" size="md" onClick={() => createTask(addingForParent)} aria-label={t('tasksPage.initialize')}>
               <Plus size={18} aria-hidden />

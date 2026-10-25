@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { apiGet, apiPost, handleApiError } from '../../../lib/api'
@@ -226,7 +227,7 @@ export default function SchedulerPage() {
     // while it validates the token, so redirecting on !user before it resolves
     // bounced authenticated users (and the Export→Scheduler hand-off) to /login.
     if (authLoading) return
-    if (!user) router.push('/login')
+    if (!user) router.push(loginPathForCurrentPage())
     else loadPosts()
   }, [user, authLoading, router, loadPosts])
 
@@ -406,11 +407,11 @@ export default function SchedulerPage() {
                         <button type="button" key={p.id} onClick={() => setForm(f => ({ ...f, platform: p.id }))}
                           aria-label={t('schedulerPage.selectPlatform', { platform: p.label })}
                           aria-pressed={active ? true : false}
-                          className={cn('flex flex-col items-center gap-1.5 rounded-xl border p-3 transition-colors',
+                          className={cn('flex flex-col items-center gap-1.5 rounded-xl border px-1 py-3 transition-colors',
                             active ? 'border-primary bg-primary/10 text-primary' : 'border-input text-theme-muted hover:bg-accent hover:text-theme-primary')}
                         >
                           <PIcon size={20} aria-hidden />
-                          <span className="text-[9px] font-semibold capitalize">{p.id}</span>
+                          <span className="text-[11px] font-semibold leading-tight text-center">{p.label}</span>
                         </button>
                       )
                     })}

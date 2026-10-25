@@ -610,7 +610,9 @@ function buildCutFilter(silencePeriods, sceneChanges, duration) {
     segments.push({ start: currentTime, end: duration });
   }
 
-  if (segments.length === 0 || segments.length === 1) return null;
+  // Nothing to keep, or nothing was cut (one segment covering everything).
+  if (segments.length === 0) return null;
+  if (segments.length === 1 && segments[0].start <= 0.05 && segments[0].end >= duration - 0.05) return null;
 
   // Build select filter - keep segments that are NOT in cut periods
   const selectParts = segments.map(seg =>
@@ -621,8 +623,207 @@ function buildCutFilter(silencePeriods, sceneChanges, duration) {
 
   return {
     videoFilter: `select='${selectStr}',setpts=N/FRAME_RATE/TB`,
-    audioFilter: `aselect='${selectStr}',asetpts=N/SR/TB`
+    audioFilter: `aselect='${selectStr}',asetpts=N/SR/TB`,
+    segments, // kept source ranges — used to re-time captions/overlays onto the output clock
   };
+}
+
+/**
+ * Subtitle lines from word timings: short phrases (≤ ~22 chars, ≤ 2.4 s) that
+ * break at sentence punctuation and at pauses, timed to the words.
+ */
+function buildSpokenCaptions(words, { maxChars = 22, maxDur = 2.4, pause = 0.45 } = {}) {
+  if (!Array.isArray(words) || !words.length) return [];
+  const clean = words
+    .map((w) => ({ text: String(w.word ?? w.text ?? '').trim(), start: Number(w.start), end: Number(w.end) }))
+    .filter((w) => w.text && Number.isFinite(w.start) && Number.isFinite(w.end) && w.end >= w.start);
+  const lines = [];
+  let cur = null;
+  const flush = () => { if (cur && cur.words.length) lines.push({ text: cur.words.join(' '), startTime: cur.start, endTime: cur.end, style: 'default' }); cur = null; };
+  for (const w of clean) {
+    if (cur) {
+      const nextText = `${cur.words.join(' ')} ${w.text}`;
+      const gap = w.start - cur.end;
+      if (nextText.length > maxChars || (w.end - cur.start) > maxDur || gap > pause) flush();
+    }
+    if (!cur) cur = { words: [], start: w.start, end: w.end };
+    cur.words.push(w.text);
+    cur.end = w.end;
+    if (/[.!?]$/.test(w.text)) flush();
+  }
+  flush();
+  // No overlaps; each line shows at least 0.6 s where room allows.
+  for (let i = 0; i < lines.length; i++) {
+    const next = lines[i + 1];
+    lines[i].endTime = Math.max(lines[i].endTime, lines[i].startTime + 0.6);
+    if (next && lines[i].endTime > next.startTime) lines[i].endTime = next.startTime;
+  }
+  return lines.filter((l) => l.endTime > l.startTime);
+}
+
+/**
+ * drawtext can't wrap. Split any caption wider than the frame into chunks
+ * shown one after another (time divided by length), and stop overlapping
+ * lines from stacking on top of each other.
+ */
+function fitCaptionsToFrame(captions, { frameWidth = 1080, baseFontSize = 58, charWidth = 0.7 } = {}) {
+  const out = [];
+  const sorted = (captions || []).filter((c) => c && String(c.text || '').trim()).slice().sort((a, b) => Number(a.startTime || 0) - Number(b.startTime || 0));
+  for (const c of sorted) {
+    const text = String(c.text).trim();
+    const fontSize = c.style === 'hook' ? 82 : c.style === 'punchline' ? 76 : c.style === 'stat' ? 72 : c.style === 'question' ? 64 : c.style === 'CTA' ? 60 : baseFontSize;
+    const maxChars = Math.max(10, Math.floor((frameWidth * 0.86) / (fontSize * charWidth)));
+    const start = Number(c.startTime ?? 0);
+    const end = Number(c.endTime ?? start + 3);
+    if (text.length <= maxChars) { out.push({ ...c, text, startTime: start, endTime: end }); continue; }
+    const ws = text.split(/\s+/);
+    const chunks = [];
+    let line = '';
+    for (const w of ws) {
+      if (line && `${line} ${w}`.length > maxChars) { chunks.push(line); line = w; } else line = line ? `${line} ${w}` : w;
+    }
+    if (line) chunks.push(line);
+    const total = chunks.reduce((a, ch) => a + ch.length, 0) || 1;
+    let t = start;
+    chunks.forEach((ch) => {
+      const d = (end - start) * (ch.length / total);
+      out.push({ ...c, text: ch, startTime: t, endTime: t + d });
+      t += d;
+    });
+  }
+  // Same-position lines must not overlap (CTA at the top is its own track).
+  const byTrack = {};
+  out.forEach((c) => { const k = c.position || 'bottom'; (byTrack[k] = byTrack[k] || []).push(c); });
+  Object.values(byTrack).forEach((list) => {
+    list.sort((a, b) => a.startTime - b.startTime);
+    for (let i = 0; i < list.length - 1; i++) if (list[i].endTime > list[i + 1].startTime) list[i].endTime = list[i + 1].startTime;
+  });
+  return out.filter((c) => c.endTime > c.startTime + 0.05);
+}
+
+// Clip lengths behind the auto-edit page's "Clip length" choices.
+const CLIP_LENGTHS = {
+  short: { minLen: 8, maxLen: 30 },
+  'mid-3-5': { minLen: 30, maxLen: 60 },
+  'mid-5-10': { minLen: 60, maxLen: 180 },
+};
+
+/**
+ * Pick up to `count` non-overlapping clip windows on the EDITED video (all
+ * times on the output clock). Windows start and end on sentence boundaries
+ * from the word timings, so no clip begins or ends mid-word; they're ranked by
+ * the AI's engagement peaks / reactions / clip suggestions inside them. A
+ * window covering (nearly) the whole edit is dropped — that's the main clip.
+ */
+function planHighlightClips({ words = [], keyMoments = {}, duration = 0, count = 1, minLen = 8, maxLen = 30 } = {}) {
+  const dur = Number(duration) || 0;
+  if (!(dur > 0) || count < 1) return [];
+  const clean = (Array.isArray(words) ? words : [])
+    .map((w) => ({ text: String(w.word ?? w.text ?? '').trim(), start: Number(w.start), end: Number(w.end) }))
+    .filter((w) => w.text && Number.isFinite(w.start) && Number.isFinite(w.end) && w.end >= w.start && w.start < dur)
+    .sort((a, b) => a.start - b.start);
+
+  // Sentence-sized units. Without words, fixed slices of the timeline.
+  const units = [];
+  if (clean.length) {
+    let cur = null;
+    for (const w of clean) {
+      if (cur && w.start - cur.end > 0.6) { units.push(cur); cur = null; }
+      if (!cur) cur = { start: w.start, end: w.end, words: [] };
+      cur.words.push(w.text);
+      cur.end = Math.min(dur, w.end);
+      if (/[.!?]$/.test(w.text)) { units.push(cur); cur = null; }
+    }
+    if (cur) units.push(cur);
+  } else {
+    const step = Math.max(1, minLen / 2);
+    for (let t = 0; t < dur; t += step) units.push({ start: t, end: Math.min(dur, t + step), words: [] });
+  }
+
+  const km = keyMoments || {};
+  const signals = [];
+  (Array.isArray(km.highlights) ? km.highlights : []).forEach((h) => {
+    const t = Number(h && h.time);
+    if (Number.isFinite(t)) signals.push({ t, w: Number.isFinite(Number(h.confidence)) ? Number(h.confidence) : 0.6 });
+  });
+  (Array.isArray(km.reactions) ? km.reactions : []).forEach((r) => {
+    const t = Number(r && r.time);
+    if (Number.isFinite(t)) signals.push({ t, w: CLIP_TRIGGER_WEIGHT[String(r.triggerType || '').toLowerCase()] || 0.7 });
+  });
+  const suggestions = (Array.isArray(km.clipSuggestions) ? km.clipSuggestions : [])
+    .map((s) => ({ a: Number(s && (s.start ?? s.startTime)), b: Number(s && (s.end ?? s.endTime)) }))
+    .filter((s) => Number.isFinite(s.a) && Number.isFinite(s.b) && s.b > s.a);
+
+  // When the asked-for number of clips fits, size them to fit (3 clips from a
+  // 68 s edit ≈ 22 s each) instead of two 30 s clips and no room for a third.
+  const target = Math.max(minLen, Math.min(maxLen, (dur / count) * 0.95));
+  const candidates = [];
+  for (let i = 0; i < units.length; i++) {
+    let j = i;
+    while (j + 1 < units.length && units[j + 1].end - units[i].start <= target) j++;
+    // A single sentence longer than the limit: cut it at the limit.
+    const start = Math.max(0, units[i].start - 0.15);
+    const end = Math.min(dur, units[j].end + 0.25, start + maxLen);
+    const len = end - start;
+    if (len < Math.min(minLen, dur) || len > dur * 0.9) continue;
+    const peak = signals.filter((s) => s.t >= start && s.t <= end).reduce((acc, s) => acc + s.w, 0);
+    const suggested = suggestions.reduce((acc, s) => acc + Math.max(0, Math.min(end, s.b) - Math.max(start, s.a)) / (s.b - s.a), 0);
+    const text = units.slice(i, j + 1).map((u) => u.words.join(' ')).join(' ').trim();
+    // core = the spoken span without padding; neighbours may share the padding.
+    candidates.push({ startTime: start, endTime: end, coreStart: units[i].start, coreEnd: Math.min(units[j].end, end), score: peak + 2 * suggested + (i === 0 ? 0.3 : 0), text });
+  }
+
+  candidates.sort((a, b) => b.score - a.score || a.startTime - b.startTime);
+  const picked = [];
+  for (const c of candidates) {
+    if (picked.length >= count) break;
+    if (picked.some((p) => c.coreStart < p.coreEnd - 1e-6 && p.coreStart < c.coreEnd - 1e-6)) continue;
+    picked.push(c);
+  }
+  return picked.map((c, i) => ({
+    rank: i + 1,
+    startTime: Number(c.startTime.toFixed(2)),
+    endTime: Number(c.endTime.toFixed(2)),
+    durationSec: Number((c.endTime - c.startTime).toFixed(2)),
+    text: c.text,
+    score: Number(c.score.toFixed(2)),
+  }));
+}
+
+/** Cut [start, end] out of the edited file (re-encoded, so the cut is frame-exact). */
+function cutClipFromEdit(inputPath, outputPath, start, end) {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .seekInput(Math.max(0, start))
+      .duration(Math.max(0.5, end - start))
+      .outputOptions(['-c:v libx264', '-preset veryfast', '-crf 20', '-pix_fmt yuv420p', '-c:a aac', '-b:a 160k', '-movflags +faststart'])
+      .output(outputPath)
+      .on('end', () => resolve(outputPath))
+      .on('error', reject)
+      .run();
+  });
+}
+
+/**
+ * Map a time on the filter-graph INPUT clock to the OUTPUT clock, given the
+ * kept segments ({ start, end, speed }) in order. A time inside a removed gap
+ * snaps to where the next kept segment starts. Without a timeline (nothing
+ * cut or sped up) time is unchanged.
+ */
+function makeTimeMapper(timeline) {
+  if (!Array.isArray(timeline) || !timeline.length) return { map: (t) => t, outDuration: null };
+  const map = (t) => {
+    let acc = 0;
+    for (const seg of timeline) {
+      const speed = seg.speed > 0 ? seg.speed : 1;
+      if (t < seg.start) return acc;
+      if (t <= seg.end) return acc + (t - seg.start) / speed;
+      acc += (seg.end - seg.start) / speed;
+    }
+    return acc;
+  };
+  const outDuration = timeline.reduce((a, seg) => a + (seg.end - seg.start) / (seg.speed > 0 ? seg.speed : 1), 0);
+  return { map, outDuration };
 }
 
 /**
@@ -1849,6 +2050,22 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
       customInstructions = null, // free-text creative direction from user
     } = editingOptions;
 
+    // The AI Auto Edit page sends its switches under its own names
+    // (addCaptions, enhanceColor, …). None of them were read, so the page's
+    // "Captions: Off" still burned captions, colour grading always ran and
+    // "Generate clips: off" still made clips. An explicit boolean from the
+    // page wins over the defaults. (viralOverlays isn't mapped: the page sends
+    // it as a hidden default with no switch, so it must not silently change
+    // the output.)
+    const uiSwitch = (k) => (typeof editingOptions[k] === 'boolean' ? editingOptions[k] : undefined);
+    if (uiSwitch('addCaptions') !== undefined) enableSmartCaptions = uiSwitch('addCaptions');
+    if (uiSwitch('enhanceColor') !== undefined) enableColorGrading = uiSwitch('enhanceColor');
+    if (editingOptions.colorGrade && editingOptions.colorGrade !== 'auto') enableColorGrading = true; // a grade the user picked is applied
+    if (uiSwitch('stabilizeVideo') !== undefined) enableStabilization = uiSwitch('stabilizeVideo');
+    if (uiSwitch('hookDetection') !== undefined) optimizeHook = uiSwitch('hookDetection');
+    if (uiSwitch('beatMatchedCuts') !== undefined) editingOptions.enableBeatSync = uiSwitch('beatMatchedCuts');
+    if (uiSwitch('generateClips') === false) clipCount = 1;
+
     // Bridge UI field names to the internal variable names used throughout
     // the pipeline. Any dimension the user explicitly set in the AI Director
     // HUD must survive through to Gemini analysis and FFmpeg filter building.
@@ -2122,9 +2339,14 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
     let globalTimeOffset = 0;
     let globalDuration = duration;
     let transcript = content.captions?.text || (typeof content.transcript === 'string' ? content.transcript : content.transcript?.text) || content.metadata?.transcript || null;
+    // Older uploads stored this error sentence as the transcript when
+    // transcription failed; treat it as no transcript so we transcribe again.
+    if (typeof transcript === 'string' && /^transcript generation failed\.?$/i.test(transcript.trim())) transcript = null;
     // Word timing now lives in the Caption collection (read-through to embedded).
     const _capWords = await captionStore.getWords(videoId, { content });
     let transcriptWords = (_capWords && _capWords.length) ? _capWords : (content.transcript?.words || null);
+    // Only provider-measured word times are precise enough to cut on.
+    let wordTimingSource = content.captions?.timingSource || null;
 
     // Auto-transcribe when no transcript exists yet. Without this every
     // dev-uploaded video skipped Gemini's smart caption / hook / viral
@@ -2154,6 +2376,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
             if (txResult?.text) {
               transcript = txResult.text;
               transcriptWords = txResult.words || null;
+              wordTimingSource = txResult.timingSource || null;
               logger.info('Transcription generated for auto-edit', {
                 videoId,
                 provider: txResult.provider,
@@ -2174,6 +2397,7 @@ async function autoEditVideo(videoId, editingOptions = {}, userId = null) {
               content.captions = {
                 text: transcript,
                 language: txResult.language,
+                timingSource: txResult.timingSource,
                 generatedAt: new Date()
               };
             }
@@ -2320,6 +2544,8 @@ Transcript: "${transcript.substring(0, 3500)}"`;
           ...(editingOptions.voiceTone && editingOptions.voiceTone !== 'auto' ? { voiceTone: true } : {}),
           ...(editingOptions.brollFrequency && editingOptions.brollFrequency !== 'balanced' ? { brollFrequency: true } : {}),
           ...(editingOptions.ctaStyle && editingOptions.ctaStyle !== 'auto' ? { ctaStyle: true } : {}),
+          // The page's colour switch (or a picked grade) is the user's call.
+          ...(typeof editingOptions.enhanceColor === 'boolean' || (editingOptions.colorGrade && editingOptions.colorGrade !== 'auto') ? { enableColorGrading: true } : {}),
         };
         // Enum whitelists prevent garbage AI output from corrupting pipeline state.
         const VALID = {
@@ -2333,6 +2559,13 @@ Transcript: "${transcript.substring(0, 3500)}"`;
           visualTheme:      new Set(['cyberpunk_neon', 'vintage_film', 'high_contrast_luma', 'dreamy_pastel', 'hyper_pop']),
         };
         const valid = (key, val) => val && VALID[key] && VALID[key].has(val);
+        // Snapshot so the summary can list only the AI choices that took effect.
+        const snap = () => ({
+          pacing: pacingIntensity, captions: captionStyle, autoZoom: enableAutoZoom, colourGrading: enableColorGrading,
+          hook: preferredHookStyle, transition: aestheticTransition, voice: preferredVoiceTone,
+          bRoll: editingOptions.brollFrequency, cta: editingOptions.ctaStyle, look: aestheticColorGrade,
+        });
+        const beforeAi = snap();
 
         if (valid('pacingIntensity', preflightData.pacingIntensity) && !locked.pacingIntensity) pacingIntensity = preflightData.pacingIntensity;
         if (valid('captionStyle', preflightData.captionStyle) && !locked.captionStyle) captionStyle = preflightData.captionStyle;
@@ -2379,7 +2612,14 @@ Transcript: "${transcript.substring(0, 3500)}"`;
         }
 
         logger.info('Autonomous Pre-Flight Orchestration Applied', { overrides: preflightData });
-        appliedEdits.push(`Autonomous Override: ${preflightData.reasoning || 'AI selected optimal pacing and style'}`);
+        // List what the AI actually changed. Its free-text reasoning described
+        // choices that the user's locks had blocked (e.g. "aggressive pacing",
+        // "colour grading") as if they were applied.
+        const afterAi = snap();
+        const changed = Object.keys(afterAi)
+          .filter((k) => afterAi[k] !== beforeAi[k] && afterAi[k] !== undefined && afterAi[k] !== null)
+          .map((k) => `${k}: ${typeof afterAi[k] === 'boolean' ? (afterAi[k] ? 'on' : 'off') : afterAi[k]}`);
+        appliedEdits.push(changed.length ? `AI choices: ${changed.join(', ')}` : 'AI kept your settings');
         creativeFeatures.push('Autonomous Architecture');
       } catch (err) {
         logger.warn('Pre-flight analysis failed, proceeding with standard options', { error: err.message, videoId });
@@ -2517,7 +2757,11 @@ Transcript: "${transcript.substring(0, 3500)}"`;
     let silencePeriods = [];
     if (removeSilence || removePauses) {
       logger.info('Detecting silence periods', { videoId });
-      if (transcriptWords && transcriptWords.length > 0) {
+      // Word gaps are only trusted when the provider measured them. Estimated
+      // or aligned timings come from sentence-level guesses; cutting on them
+      // removed real speech (a 17.6 s test lost 4.6 s of talking). The audio
+      // silence detector below is the ground truth in that case.
+      if (transcriptWords && transcriptWords.length > 0 && wordTimingSource === 'measured') {
         logger.info('Using transcript-aware segmentation for precise cuts', { videoId, words: transcriptWords.length });
         
         for (let i = 0; i < transcriptWords.length - 1; i++) {
@@ -2694,8 +2938,15 @@ Transcript: "${transcript.substring(0, 3500)}"`;
     if (isHorizontal) {
       // For horizontal footage: create blurred-background vertical canvas
       // This is a complete sub-graph; its output label is 'v_shield'
-      videoFilters.push('split[bg_s][fg_s];[bg_s]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:10[bg_out];[fg_s]scale=-1:1920[fg_out];[bg_out][fg_out]overlay=(W-w)/2:(H-h)/2,format=yuv420p');
+      // "Stabilize video" was read into enableStabilization and never used.
+      // deshake is single-pass, so it fits this one filter graph.
+      videoFilters.push(`${enableStabilization ? 'deshake,' : ''}split[bg_s][fg_s];[bg_s]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:10[bg_out];[fg_s]scale=-1:1920[fg_out];[bg_out][fg_out]overlay=(W-w)/2:(H-h)/2,format=yuv420p`);
       appliedEdits.push('Vertical Shielding (9:16 Optimization)');
+      if (enableStabilization) appliedEdits.push('Stabilized');
+    } else if (enableStabilization) {
+      // Stabilize means a steady frame: no simulated camera drift.
+      videoFilters.push('deshake,scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,format=yuv420p');
+      appliedEdits.push('Stabilized');
     } else {
       // For vertical footage: apply Dynamic Cameraman Drift (Organic Breathing)
       // Uses non-repeating Lissajous curves + detected face region for subject-biased drift.
@@ -2717,46 +2968,21 @@ Transcript: "${transcript.substring(0, 3500)}"`;
 
     // Quality: 2026 Diverse Color Grades
     if (enableColorGrading) {
-      let avoidedThemes = [];
-      if (userId) {
-        try {
-          const SuggestionHistory = require('../models/SuggestionHistory');
-          const recentHistory = await SuggestionHistory.find({ 
-            userId, 
-            kind: 'auto-edit-theme' 
-          })
-            .sort({ createdAt: -1 })
-            .limit(3)
-            .lean();
-          avoidedThemes = recentHistory.map(h => h.label).filter(Boolean);
-        } catch (err) {
-          logger.warn('Failed to fetch recent auto-edit themes', { error: err.message });
-        }
-      }
-
-      const themes = ['cyberpunk_neon', 'vintage_film', 'high_contrast_luma', 'dreamy_pastel', 'hyper_pop', 'bw'];
-      let availableThemes = themes.filter(t => !avoidedThemes.includes(t));
-      if (availableThemes.length === 0) availableThemes = themes;
-
+      // "Color correction" with no grade picked used to apply a RANDOM look
+      // (cyberpunk neon, black & white, …) and never the same one twice in a
+      // row. Now: the grade the user picked, else the AI's pick for this
+      // video, else the creator's best-performing grade, else a light
+      // correction that keeps the footage looking like itself.
       let chosenTheme = null;
-
-      // 🧠 creator-dna performance biasing
       if (userId && !aestheticColorGrade && !requestVisualTheme) {
         try {
           const UserStyleProfile = require('../models/UserStyleProfile');
           const profile = await UserStyleProfile.findOne({ userId });
           if (profile && profile.weightedColorGrades && profile.weightedColorGrades.length > 0) {
-            // Retrieve top performing grades that are NOT avoided
-            const topPerformers = profile.topPerformers('weightedColorGrades', 5)
-              .map(p => p.key)
-              .filter(key => availableThemes.includes(key));
-            
-            if (topPerformers.length > 0) {
-              // 70% chance to pick their top performer, 30% chance to keep it fresh
-              if (Math.random() < 0.70) {
-                chosenTheme = topPerformers[0];
-                logger.info('🧠 Personalization Bias: Selected top-performing visual theme', { chosenTheme });
-              }
+            const top = profile.topPerformers('weightedColorGrades', 1).map(p => p.key)[0];
+            if (top) {
+              chosenTheme = top;
+              logger.info('Personalization: using top-performing visual theme', { chosenTheme });
             }
           }
         } catch (profileError) {
@@ -2764,29 +2990,27 @@ Transcript: "${transcript.substring(0, 3500)}"`;
         }
       }
 
-      const theme = aestheticColorGrade || requestVisualTheme || chosenTheme || availableThemes[Math.floor(Math.random() * availableThemes.length)];
-
-      if (userId && !aestheticColorGrade && !requestVisualTheme) {
+      const theme = aestheticColorGrade || requestVisualTheme || chosenTheme;
+      if (userId && theme && !aestheticColorGrade) {
         try {
           const SuggestionHistory = require('../models/SuggestionHistory');
-          await SuggestionHistory.create({
-            userId,
-            kind: 'auto-edit-theme',
-            label: theme
-          });
+          await SuggestionHistory.create({ userId, kind: 'auto-edit-theme', label: theme });
         } catch (err) {
           logger.warn('Failed to save selected theme to SuggestionHistory', { error: err.message });
         }
       }
       // Color grade via the shared registry (single source of truth) so the
       // autonomous forge renders the SAME grades as the manual editor + AI Director.
-      // Unknown/legacy theme names resolve via aliases; anything else falls back to
-      // luma-cinematic (the prior `else` default).
       const gradeReg = require('./colorGradeRegistry');
-      const gradeDef = gradeReg.resolveGrade(theme) || gradeReg.resolveGrade('luma-cinematic');
-      const gradeChain = videoRenderService.buildVideoFilterChain(gradeReg.gradeToVideoFilter(gradeDef.id));
-      if (gradeChain.length) videoFilters.push(gradeChain.join(','));
-      appliedEdits.push(`${gradeDef.label} Grade`);
+      const gradeDef = theme ? gradeReg.resolveGrade(theme) : null;
+      const gradeChain = gradeDef ? videoRenderService.buildVideoFilterChain(gradeReg.gradeToVideoFilter(gradeDef.id)) : [];
+      if (gradeDef && gradeChain.length) {
+        videoFilters.push(gradeChain.join(','));
+        appliedEdits.push(`${gradeDef.label} Grade`);
+      } else {
+        videoFilters.push('eq=contrast=1.05:saturation=1.08');
+        appliedEdits.push('Color Correction');
+      }
     }
 
     // Video quality enhancements (adaptive sharpening, denoising, dynamic range)
@@ -2807,11 +3031,19 @@ Transcript: "${transcript.substring(0, 3500)}"`;
     // accelerating through them (1.15x). Applying the select-based cut filter
     // on top of the speed-ramp's trim+concat chain produces wrong timestamps
     // because select resets PTS before the trim segments can operate on them.
-    if (!optimizePacing && (silencePeriods.length > 0 || sceneChanges.length > 0)) {
-      const cuts = buildCutFilter(silencePeriods, sceneChanges, duration);
+    // Silences are in SOURCE time; the filter graph runs on the clip clock
+    // (0 = globalTimeOffset when a viral excerpt is extracted). Rebase them.
+    const graphSilences = (silencePeriods || [])
+      .map((sp) => ({ ...sp, start: Math.max(0, sp.start - globalTimeOffset), end: Math.min(duration, sp.end - globalTimeOffset) }))
+      .filter((sp) => sp.end > sp.start + 0.05);
+    // Kept segments of the output, set by whichever path cuts or retimes.
+    let outputTimeline = null;
+    if (!optimizePacing && (graphSilences.length > 0 || sceneChanges.length > 0)) {
+      const cuts = buildCutFilter(graphSilences, sceneChanges, duration);
       if (cuts && cuts.videoFilter && cuts.audioFilter) {
         videoFilters.push(cuts.videoFilter);
         audioFilters.push(cuts.audioFilter);
+        outputTimeline = cuts.segments.map((sg) => ({ start: sg.start, end: sg.end, speed: 1 }));
         appliedEdits.push('Precise Cut Removal');
       } else {
         // buildCutFilter returns null when it resolves to 0 (or 1) keep-segments
@@ -2849,29 +3081,6 @@ Transcript: "${transcript.substring(0, 3500)}"`;
     // Resample to guarantee encoder compatibility; loudnorm already applied above.
     audioFilters.push('aresample=44100');
 
-    // Creative: Cinematic Sub-Bass Boom on key impacts
-    const bassBoomChain = generateSubBassBoomFilter(keyMoments?.reactions || [], duration);
-    if (bassBoomChain) {
-      audioFilters.push(bassBoomChain);
-      creativeFeatures.push('Cinematic Sub-Bass Boom');
-    }
-
-    // Creative: Cinematic Vacuum Drop (Mute before impact to build tension)
-    const vacuumDropChain = generateVacuumDropFilter(keyMoments?.reactions || []);
-    if (vacuumDropChain) {
-      audioFilters.push(vacuumDropChain);
-      creativeFeatures.push('Audio Vacuum Drop');
-      appliedEdits.push('Cinematic Silence Cut');
-    }
-
-    // Creative: Telephone Voice Effect (EQ shift on secret/conspiracy moments)
-    const telephoneChain = generateSecretTelephoneFilter(keyMoments?.reactions || [], duration);
-    if (telephoneChain) {
-      audioFilters.push(telephoneChain);
-      creativeFeatures.push('Telephone Voice EQ');
-      appliedEdits.push('Thematic Audio EQ');
-    }
-
     // Audio ducking is handled post-render during music mixing to prevent muting the voice track.
     if (enableAudioDucking && transcript) {
       creativeFeatures.push('Audio Ducking (Post-Mix)');
@@ -2888,7 +3097,7 @@ Transcript: "${transcript.substring(0, 3500)}"`;
       const hasAudio = metadata.streams && metadata.streams.some(s => s.codec_type === 'audio');
       
       const punchlines = keyMoments?.reactions || [];
-      const pauses = silencePeriods || [];
+      const pauses = graphSilences;
       const boundaries = new Set([0, duration]);
       
       // Punchline intervals: 1.5s centered around reaction times, speed = 0.95 (decelerate for focus)
@@ -2917,7 +3126,9 @@ Transcript: "${transcript.substring(0, 3500)}"`;
           const start = Math.max(0, s.start);
           const end = Math.min(duration, s.end);
           if (end > start + 0.1) {
-            pauseIntervals.push({ start, end, speed: silenceSpeed, priority: 1 });
+            // "Remove silence" means remove: with it on, a pause is dropped
+            // rather than played 1.15x faster (which left a 2.5 s gap at 2.2 s).
+            pauseIntervals.push({ start, end, speed: silenceSpeed, priority: 1, drop: !!(removeSilence || removePauses) });
             boundaries.add(start);
             boundaries.add(end);
           }
@@ -2933,6 +3144,7 @@ Transcript: "${transcript.substring(0, 3500)}"`;
         
         let speed = baseVelocity;
         let highestPriority = 0;
+        let drop = false;
         
         punchlineIntervals.forEach(inv => {
           if (mid >= inv.start && mid <= inv.end) {
@@ -2948,11 +3160,12 @@ Transcript: "${transcript.substring(0, 3500)}"`;
             if (inv.priority > highestPriority) {
               highestPriority = inv.priority;
               speed = inv.speed;
+              drop = !!inv.drop;
             }
           }
         });
         
-        rawSegments.push({ start, end, speed });
+        rawSegments.push({ start, end, speed, drop });
       }
       
       // Merge adjacent segments with identical speeds
@@ -2960,7 +3173,7 @@ Transcript: "${transcript.substring(0, 3500)}"`;
       if (rawSegments.length > 0) {
         let current = { ...rawSegments[0] };
         for (let i = 1; i < rawSegments.length; i++) {
-          if (Math.abs(rawSegments[i].speed - current.speed) < 0.001) {
+          if (Math.abs(rawSegments[i].speed - current.speed) < 0.001 && !!rawSegments[i].drop === !!current.drop) {
             current.end = rawSegments[i].end;
           } else {
             pacingSegments.push(current);
@@ -2971,7 +3184,10 @@ Transcript: "${transcript.substring(0, 3500)}"`;
       }
       
       // Exclude sub-0.05s intervals to protect FFmpeg execution
-      const finalSegments = pacingSegments.filter(s => (s.end - s.start) >= 0.05);
+      // …and drop removed pauses (keeping at least one segment to render).
+      const kept = pacingSegments.filter(s => (s.end - s.start) >= 0.05 && !s.drop);
+      const finalSegments = kept.length ? kept : pacingSegments.filter(s => (s.end - s.start) >= 0.05).slice(0, 1);
+      if (kept.length && kept.length < pacingSegments.length) appliedEdits.push('Silence Removal');
       
       if (finalSegments.length > 1) {
         // Render Video split-trim-concat chain
@@ -2998,17 +3214,97 @@ Transcript: "${transcript.substring(0, 3500)}"`;
           audioFilters.push(audioSpeedFilter);
         }
         
-        appliedEdits.push('Neural Speed Ramping (Dynamic)');
+        outputTimeline = finalSegments.map((sg) => ({ start: sg.start, end: sg.end, speed: sg.speed }));
+        appliedEdits.push('Dynamic Speed Ramping');
         creativeFeatures.push('Dynamic Speed Ramping');
       } else if (finalSegments.length === 1) {
-        const speed = finalSegments[0].speed;
-        if (Math.abs(speed - 1.0) > 0.01) {
+        const seg = finalSegments[0];
+        const speed = seg.speed;
+        const trimmed = seg.start > 0.05 || seg.end < duration - 0.05; // a leading/trailing silence was dropped
+        if (trimmed) {
+          videoFilters.push(`trim=start=${seg.start.toFixed(3)}:end=${seg.end.toFixed(3)},setpts=PTS-STARTPTS${Math.abs(speed - 1.0) > 0.01 ? `,setpts=PTS/${speed}` : ''}`);
+          if (hasAudio) audioFilters.push(`atrim=start=${seg.start.toFixed(3)}:end=${seg.end.toFixed(3)},asetpts=PTS-STARTPTS${Math.abs(speed - 1.0) > 0.01 ? `,atempo=${speed}` : ''}`);
+        } else if (Math.abs(speed - 1.0) > 0.01) {
           videoFilters.push(`setpts=PTS/${speed}`);
           if (hasAudio) audioFilters.push(`atempo=${speed}`);
-          appliedEdits.push(`Neural Speed Ramping (${speed.toFixed(2)}x)`);
+        }
+        if (trimmed || Math.abs(speed - 1.0) > 0.01) {
+          outputTimeline = [{ start: seg.start, end: seg.end, speed }];
+          appliedEdits.push(Math.abs(speed - 1.0) > 0.01 ? `Pacing (${speed.toFixed(2)}x)` : 'Silence Trim');
           creativeFeatures.push('Pacing Optimization');
         }
       }
+    }
+
+    // Everything placed by time below (captions, word highlights, overlays,
+    // effect moments, b-roll, product inlays) was timed against the SOURCE.
+    // Cutting silences or speed-ramping shortens the output, so a caption at
+    // 9.0 s in the source would burn ~3 s early. Re-time all of it onto the
+    // output clock. Times keep the `+ globalTimeOffset` convention because the
+    // render code subtracts the offset again.
+    const sourceSpan = duration; // graph-input length, before it becomes the output length
+    if (outputTimeline) {
+      const { map, outDuration } = makeTimeMapper(outputTimeline);
+      const mapAbs = (t) => (typeof t === 'number' && Number.isFinite(t) ? map(t - globalTimeOffset) + globalTimeOffset : t);
+      const retime = (o, startKey, endKey) => {
+        if (!o || typeof o !== 'object') return o;
+        const out = { ...o };
+        if (startKey in out) out[startKey] = mapAbs(Number(out[startKey]));
+        if (endKey && endKey in out) out[endKey] = mapAbs(Number(out[endKey]));
+        return out;
+      };
+      if (Array.isArray(keyMoments.suggestedCaptions)) keyMoments.suggestedCaptions = keyMoments.suggestedCaptions.map((c) => retime(c, 'startTime', 'endTime'));
+      if (Array.isArray(keyMoments.reactions)) keyMoments.reactions = keyMoments.reactions.map((r) => retime(r, 'time'));
+      if (Array.isArray(keyMoments.highlights)) keyMoments.highlights = keyMoments.highlights.map((h) => retime(h, 'time'));
+      if (Array.isArray(keyMoments.clipSuggestions)) keyMoments.clipSuggestions = keyMoments.clipSuggestions.map((s) => retime(s, 'start', 'end'));
+      if (Array.isArray(smartCaptions)) smartCaptions = smartCaptions.map((c) => retime(c, 'startTime', 'endTime'));
+      if (Array.isArray(textOverlays)) textOverlays = textOverlays.map((o) => retime(o, 'startTime', 'endTime'));
+      if (Array.isArray(transcriptWords)) transcriptWords = transcriptWords.map((w) => retime(w, 'start', 'end'));
+      if (Array.isArray(commerceInlays)) commerceInlays = commerceInlays.map((i) => retime(i, 'time'));
+      if (Array.isArray(sceneChanges)) sceneChanges = sceneChanges.map((t) => (typeof t === 'number' ? mapAbs(t) : (t && typeof t.time === 'number' ? { ...t, time: mapAbs(t.time) } : t)));
+      if (Array.isArray(bRollPlan)) {
+        bRollPlan = bRollPlan.map((b) => {
+          if (!b || typeof b.startTime !== 'number') return b;
+          const st = mapAbs(b.startTime);
+          const en = mapAbs(b.startTime + (Number(b.duration) || 0));
+          return { ...b, startTime: st, duration: Math.max(0.1, en - st) };
+        });
+      }
+      if (typeof outDuration === 'number' && outDuration > 0) duration = outDuration; // closing CTA, overlay ends, etc.
+      logger.info('Re-timed captions/overlays onto the edited timeline', { videoId, segments: outputTimeline.length, outDuration });
+    }
+
+    // Time-based audio effects run AFTER any cut/speed-ramp in the chain, on
+    // the output clock, using the re-timed key moments above. (They used to be
+    // added before the speed ramp but after the cut filter, so in the cut path
+    // they fired at source times on the shortened output.)
+    // Creative: Cinematic Sub-Bass Boom on key impacts
+    const bassBoomChain = generateSubBassBoomFilter(keyMoments?.reactions || [], duration);
+    if (bassBoomChain) {
+      audioFilters.push(bassBoomChain);
+      creativeFeatures.push('Cinematic Sub-Bass Boom');
+    }
+
+    // Creative: Cinematic Vacuum Drop (Mute before impact to build tension)
+    // Muting 0.3 s before an "impact" eats the end of a spoken word, so it's
+    // skipped whenever the video has speech — judged from the transcript OR
+    // the audio itself (a failed transcription must not make a talking video
+    // look silent). Only clearly non-speech audio (mostly silence) gets it.
+    const silentShare = (graphSilences || []).reduce((acc, sp) => acc + (sp.end - sp.start), 0) / Math.max(0.001, sourceSpan);
+    const hasSpeech = !!transcript || !(graphSilences && graphSilences.length && silentShare > 0.7);
+    const vacuumDropChain = hasSpeech ? null : generateVacuumDropFilter(keyMoments?.reactions || []);
+    if (vacuumDropChain) {
+      audioFilters.push(vacuumDropChain);
+      creativeFeatures.push('Audio Vacuum Drop');
+      appliedEdits.push('Cinematic Silence Cut');
+    }
+
+    // Creative: Telephone Voice Effect (EQ shift on secret/conspiracy moments)
+    const telephoneChain = generateSecretTelephoneFilter(keyMoments?.reactions || [], duration);
+    if (telephoneChain) {
+      audioFilters.push(telephoneChain);
+      creativeFeatures.push('Telephone Voice EQ');
+      appliedEdits.push('Thematic Audio EQ');
     }
 
     // 5b. KINETIC ZOOM JOLTS & RANDOMIZED VFX DIVERSITY (New for 2026)
@@ -3089,30 +3385,49 @@ Transcript: "${transcript.substring(0, 3500)}"`;
       }
     }
 
-    // === PREMIUM AI CAPTION SYSTEM ===
-    // Priority: Use Gemini-suggested captions if available, fall back to smartCaptions
+    // === CAPTIONS ===
+    // Subtitles are what was SAID: built from the transcript's word timings
+    // (provider-measured, or aligned to the speech in the audio). They used to
+    // prefer the model's "suggested captions" — invented marketing lines like
+    // "VIEWER RETENTION IS NON-NEGOTIABLE" — and burned them even with
+    // captions switched off. Those are now only a fallback with no transcript.
     const captionsToRender = [];
-
-    // Gemini-sourced captions take highest priority (most creative and accurate)
     const geminiCaptions = keyMoments?.suggestedCaptions || [];
-    if (geminiCaptions.length > 0) {
+    const spokenCaptions = enableSmartCaptions ? buildSpokenCaptions(transcriptWords) : [];
+    if (spokenCaptions.length > 0) {
+      spokenCaptions.forEach((cap) => captionsToRender.push({ ...cap, source: 'transcript' }));
+      appliedEdits.push(`Captions (${spokenCaptions.length} lines from what was said)`);
+      creativeFeatures.push('Spoken-Word Captions');
+    } else if (enableSmartCaptions && geminiCaptions.length > 0) {
       geminiCaptions.slice(0, 8).forEach(cap => captionsToRender.push({ ...cap, source: 'gemini' }));
-      appliedEdits.push('Gemini AI Captions');
+      appliedEdits.push('AI Captions (no transcript available)');
       creativeFeatures.push('AI-Generated Captions');
-    } else if (smartCaptions && smartCaptions.length > 0) {
+    } else if (enableSmartCaptions && smartCaptions && smartCaptions.length > 0) {
       smartCaptions.slice(0, 8).forEach(cap => captionsToRender.push({ ...cap, source: 'analysis' }));
       appliedEdits.push('Smart Captions');
     }
 
-    // Add CTA overlay from Gemini at the end of the video
+    // Closing call-to-action overlay. With subtitles on it sits at the top so
+    // the two never collide in the last seconds.
     if (typeof keyMoments?.cta === 'string' && keyMoments.cta.trim()) {
       captionsToRender.push({
         text: keyMoments.cta.trim().toUpperCase(),
-        startTime: Math.max(0, duration - 4),
-        endTime: duration,
+        startTime: Math.max(0, duration - 4) + globalTimeOffset,
+        endTime: duration + globalTimeOffset,
         style: 'CTA',
         source: 'gemini-cta',
+        ...(spokenCaptions.length ? { position: 'top' } : {}),
       });
+    }
+
+    // Every line must fit the 1080 px frame (drawtext doesn't wrap): split
+    // long lines into consecutive chunks, and never let two lines of the same
+    // track overlap in time.
+    {
+      const fitted = fitCaptionsToFrame(captionsToRender.filter((c) => c.source !== 'gemini-cta'), { frameWidth: 1080 });
+      const ctas = captionsToRender.filter((c) => c.source === 'gemini-cta');
+      captionsToRender.length = 0;
+      captionsToRender.push(...fitted, ...fitCaptionsToFrame(ctas, { frameWidth: 1080 }));
     }
 
     if (captionsToRender.length > 0) {
@@ -3170,7 +3485,7 @@ Transcript: "${transcript.substring(0, 3500)}"`;
         }[subtitlePosition];
 
         // Kinetic displacement for hooks/punchlines (more aggressive bounce)
-        let finalY = subtitlePosY || sty.y;
+        let finalY = caption.position === 'top' ? '160' : (subtitlePosY || sty.y);
         if (!subtitlePosY && (caption.style === 'hook' || caption.style === 'punchline')) {
           // Add a snappy periodic bounce: + 15px oscillation
           finalY = `${sty.y}-15*sin(2*PI*t/0.4)`;
@@ -3816,6 +4131,78 @@ Transcript: "${transcript.substring(0, 3500)}"`;
               voiceTone: preferredVoiceTone || editingOptions.voiceTone || null,
               niche: keyMoments.niche || null,
             });
+            const mainClipIndex = content.generatedContent.shortVideos.length - 1;
+            const runClipIndexes = [mainClipIndex];
+
+            // CLIPS: "Generate clips" with a count and a length used to be
+            // logged only — the user asked for 5 × <30 s and got the one full
+            // edit. Cut the requested number of clips out of the EDITED video
+            // (so they carry the cuts, captions and grade) at its best moments.
+            const clipSpec = CLIP_LENGTHS[clipTargetLength] || null;
+            const wantClips = editingOptions.generateClips !== false && clipSpec && Number(clipCount) >= 1;
+            const editedDuration = Number(finalMetadata.format.duration) || duration;
+            // An edit that already fits the clip length IS the clip.
+            if (wantClips && editedDuration > clipSpec.maxLen) {
+              emitProgress('export', 97, `Cutting ${clipCount} clip${Number(clipCount) === 1 ? '' : 's'}...`);
+              const toOut = (t) => (typeof t === 'number' && Number.isFinite(t) ? t - globalTimeOffset : t);
+              const plan = planHighlightClips({
+                words: (transcriptWords || []).map((w) => ({ ...w, start: toOut(Number(w.start)), end: toOut(Number(w.end)) })),
+                keyMoments: {
+                  highlights: (keyMoments.highlights || []).map((h) => ({ ...h, time: toOut(Number(h.time)) })),
+                  reactions: (keyMoments.reactions || []).map((r) => ({ ...r, time: toOut(Number(r.time)) })),
+                  clipSuggestions: (keyMoments.clipSuggestions || []).map((s) => ({ ...s, start: toOut(Number(s.start ?? s.startTime)), end: toOut(Number(s.end ?? s.endTime)) })),
+                },
+                duration: editedDuration,
+                count: Math.min(20, Math.max(1, Math.round(Number(clipCount)))),
+                ...clipSpec,
+              });
+              let made = 0;
+              for (const c of plan) {
+                const clipName = `auto-clip-${videoId}-${Date.now()}-${c.rank}.mp4`;
+                const clipPath = path.join(path.dirname(finalVideoPath), clipName);
+                let keepLocal = false;
+                try {
+                  await cutClipFromEdit(finalVideoPath, clipPath, c.startTime, c.endTime);
+                  const up = await uploadFile(clipPath, `videos/${clipName}`, 'video/mp4', { videoId, type: 'auto-edit-clip' });
+                  keepLocal = up.storage === 'local'; // served from /uploads
+                  content.generatedContent.shortVideos.push({
+                    url: up.url,
+                    thumbnail: thumbnailUrl,
+                    createdAt: new Date(),
+                    aiGenerated: true,
+                    source: 'ai-auto-edit-clip',
+                    name: `Clip ${c.rank}`,
+                    duration: c.durationSec,
+                    startTime: c.startTime,
+                    endTime: c.endTime,
+                    // The words spoken in this clip; no placeholder when there are none.
+                    caption: c.text ? c.text.slice(0, 180) : undefined,
+                    hookText: c.text ? c.text.split(/(?<=[.!?])\s/)[0].slice(0, 120) : undefined,
+                    platform,
+                    highlight: true,
+                    editsApplied: appliedEdits,
+                    viralScore: compositeScore,
+                    hookScore,
+                    sentimentEnergy,
+                    stylePresetId: editingOptions.stylePresetId || null,
+                    colorGrade: aestheticColorGrade || editingOptions.colorGrade || null,
+                  });
+                  runClipIndexes.push(content.generatedContent.shortVideos.length - 1);
+                  made += 1;
+                } catch (clipErr) {
+                  logger.warn('Clip cut failed', { videoId, rank: c.rank, error: clipErr.message });
+                } finally {
+                  // Uploaded to cloud storage (or failed) → the local cut is a temp file.
+                  try { if (!keepLocal && fs.existsSync(clipPath)) fs.unlinkSync(clipPath); } catch (_) { /* best effort */ }
+                }
+              }
+              const asked = Math.round(Number(clipCount));
+              appliedEdits.push(made >= asked
+                ? `${made} clip${made === 1 ? '' : 's'} cut from the edit`
+                : `${made} of ${asked} clips cut — the edited video has room for ${made} without repeating`);
+            } else if (wantClips) {
+              appliedEdits.push(`The edit is ${Math.round(editedDuration)}s — no longer than the clip length you picked, so it is your clip`);
+            }
 
             // PHASE 6: NEURO-MARKETING METADATA GENERATION (2026 Premium Standard)
             try {
@@ -3833,7 +4220,7 @@ Transcript: "${transcript.substring(0, 3500)}"`;
                 content.generatedContent.marketingStrategy = marketingStrategy;
                 
                 // Attach the strategy and scheduling details directly to the clip record
-                const latestClipIndex = content.generatedContent.shortVideos.length - 1;
+                const latestClipIndex = mainClipIndex; // the full edit, not the last highlight clip
                 if (latestClipIndex >= 0) {
                   content.generatedContent.shortVideos[latestClipIndex].marketingStrategy = marketingStrategy;
                   // Pre-load scheduling matrix info directly onto the clip
@@ -3874,6 +4261,22 @@ Transcript: "${transcript.substring(0, 3500)}"`;
                 improvement: (finalQualityScore - qualityScore).toFixed(1),
               },
               metadata: content.metadata.autoEditHistory,
+              // This run's clips (the full edit first). The route used to list
+              // every clip the video ever had, so old runs showed up as new.
+              clips: runClipIndexes
+                .map((i) => content.generatedContent.shortVideos[i])
+                .filter((c) => c && c._id && c.url)
+                .map((c) => ({
+                  id: String(c._id),
+                  name: c.name || 'Auto-edited clip',
+                  url: c.url,
+                  caption: c.caption,
+                  duration: c.duration,
+                  startTime: c.startTime,
+                  endTime: c.endTime,
+                  highlight: !!c.highlight,
+                  editsApplied: c.editsApplied || appliedEdits,
+                })),
             };
 
             // Emit completion event
@@ -5965,6 +6368,16 @@ async function exportAspectRatios(videoId, aspectRatios = ['9:16', '1:1', '16:9'
     throw new Error(`No supported aspect ratios in: ${aspectRatios.join(', ')}`);
   }
 
+  // Source shape decides crop vs blurred fit per ratio.
+  let srcAspect = null;
+  if (!/^https?:\/\//i.test(inputPath)) {
+    try {
+      const meta = await new Promise((resolve, reject) => ffmpeg.ffprobe(inputPath, (e, m) => (e ? reject(e) : resolve(m))));
+      const vs = (meta.streams || []).find((st) => st.codec_type === 'video');
+      if (vs && vs.width && vs.height) srcAspect = vs.width / vs.height;
+    } catch (_) { srcAspect = null; }
+  }
+
   const exports = await Promise.all(ratios.map(async (ratio) => {
     const cfg = RATIO_CONFIGS[ratio];
     const safeRatio = ratio.replace(':', 'x');
@@ -5974,12 +6387,21 @@ async function exportAspectRatios(videoId, aspectRatios = ['9:16', '1:1', '16:9'
     // crop = centered crop to the target ratio, scale = pad to canonical
     // resolution, setsar = correct aspect metadata for downstream readers.
     const cropFilter = `crop='min(iw,ih*${cfg.w}/${cfg.h}):min(ih,iw*${cfg.h}/${cfg.w})',scale=${cfg.w}:${cfg.h}:flags=lanczos,setsar=1`;
+    // A centre crop across an orientation flip (9:16 → 16:9 keeps ~1/3 of the
+    // frame) cuts off faces and burned-in captions. When more than ~35% would
+    // be lost, fit the whole picture over a blurred fill of itself instead.
+    const keepShare = (srcAspect && srcAspect > 0)
+      ? Math.min(srcAspect / (cfg.w / cfg.h), (cfg.w / cfg.h) / srcAspect)
+      : 1;
+    const useBlurFit = keepShare < 0.65;
+    const blurFit = `[0:v]split[bgsrc][fgsrc];[bgsrc]scale=${cfg.w}:${cfg.h}:force_original_aspect_ratio=increase,crop=${cfg.w}:${cfg.h},boxblur=20:10[bg];[fgsrc]scale=${cfg.w}:${cfg.h}:force_original_aspect_ratio=decrease:flags=lanczos[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1[vout]`;
 
     await new Promise((resolve, reject) => {
       const cmd = ffmpeg(inputPath);
       if (seek) cmd.seekInput(seek.start).duration(seek.duration);
+      if (useBlurFit) cmd.complexFilter(blurFit).outputOptions(['-map', '[vout]', '-map', '0:a?']);
+      else cmd.videoFilters(cropFilter);
       cmd
-        .videoFilters(cropFilter)
         .videoCodec('libx264')
         .audioCodec('aac')
         .outputOptions(['-preset', 'veryfast', '-crf', '21', '-pix_fmt', 'yuv420p', '-movflags', '+faststart'])
@@ -6015,6 +6437,11 @@ async function exportAspectRatios(videoId, aspectRatios = ['9:16', '1:1', '16:9'
 }
 
 module.exports = {
+  makeTimeMapper,
+  buildSpokenCaptions,
+  fitCaptionsToFrame,
+  buildCutFilter,
+  planHighlightClips,
   analyzeVideoForEditing,
   autoEditVideo,
   computeVideoScore,

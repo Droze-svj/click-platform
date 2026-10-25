@@ -63,7 +63,7 @@ export default function StrategicSynthesisHub() {
       <EmptyState
         icon={AlertCircle}
         title={t('analyticsInsightPage.linkError')}
-        description={error}
+        description={/status code|network error/i.test(String(error)) ? t('analyticsInsightPage.linkErrorDesc') : error}
         className="py-24"
         action={
           <Button variant="primary" size="md" onClick={() => router.back()}>

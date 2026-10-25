@@ -44,3 +44,36 @@ describe('cacheMiddleware — user-scoped key (no cross-user leak)', () => {
     expect(keyGen({ ...base })).toContain('anon'); // unauthenticated → shared bucket
   });
 });
+
+describe('cacheMiddleware — credentialed requests never use the shared bucket', () => {
+  // The global /api GET cache runs before route auth, so req.user is unset
+  // there. Found by the e2e journeys: with Redis on (the CI e2e job), signed-in
+  // users were served each other's cached GETs and status polls never moved.
+  let inner;
+  let cacheMiddleware;
+  beforeEach(() => {
+    jest.resetModules();
+    inner = jest.fn((req, res, next) => next());
+    jest.doMock('../../server/services/cacheService', () => ({ cacheMiddleware: jest.fn(() => inner) }));
+    ({ cacheMiddleware } = require('../../server/middleware/cacheMiddleware'));
+  });
+
+  const run = (req) => { const next = jest.fn(); cacheMiddleware(300)(req, {}, next); return next; };
+
+  it('skips the cache for a bearer-token request that has no req.user yet', () => {
+    const next = run({ method: 'GET', originalUrl: '/api/video', query: {}, headers: { authorization: 'Bearer abc' } });
+    expect(inner).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalled();
+  });
+
+  it('skips the cache for a cookie-carrying request that has no req.user yet', () => {
+    run({ method: 'GET', originalUrl: '/api/video', query: {}, headers: { cookie: 'token=abc' } });
+    expect(inner).not.toHaveBeenCalled();
+  });
+
+  it('still caches anonymous requests and authenticated (req.user) ones', () => {
+    run({ method: 'GET', originalUrl: '/api/plans', query: {}, headers: {} });
+    run({ method: 'GET', originalUrl: '/api/me', query: {}, headers: { authorization: 'Bearer abc' }, user: { _id: 'AAA' } });
+    expect(inner).toHaveBeenCalledTimes(2);
+  });
+});

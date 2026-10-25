@@ -90,7 +90,7 @@ export default function PostsPage() {
 
   if (loading && posts.length === 0) return (
     <div className="ds-bg-mesh-soft min-h-screen px-4 sm:px-6 lg:px-10 py-8 max-w-[1700px] mx-auto" aria-busy="true" aria-label={t('postsPage.loadingAria')}>
-      <div className="ds-bento-grid mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {Array.from({ length: 4 }).map((_, i) => <StatsCardSkeleton key={i} />)}
       </div>
       <div className="space-y-4">
@@ -145,9 +145,11 @@ export default function PostsPage() {
         )}
 
         {/* Metrics (real counts only — no fabricated deltas) */}
-        <div className="ds-bento-grid mb-8">
+        {/* Four equal tiles in one row — ds-bento-2x1 made each span two
+            auto-fit tracks, so they stacked one per row on a laptop. */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {STATS.map((s) => (
-            <StatCard key={s.label} label={s.label} value={s.val} icon={s.icon} className="ds-bento-2x1" />
+            <StatCard key={s.label} label={s.label} value={s.val} icon={s.icon} />
           ))}
         </div>
 
@@ -184,11 +186,11 @@ export default function PostsPage() {
             }
           />
         ) : (
-          <div className="ds-bento-grid">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {posts.map((post) => {
               const status = post.status || 'draft'
               return (
-                <Panel key={post.id} variant="bento" className="ds-bento-2x1 flex flex-col">
+                <Panel key={post.id} variant="bento" className="flex flex-col">
                   <div className="flex items-center justify-between mb-4">
                     <Badge className={STATUS_BADGE[status] || STATUS_BADGE.draft}>
                       {STATUS_LABELS[status] || STATUS_LABELS.draft}

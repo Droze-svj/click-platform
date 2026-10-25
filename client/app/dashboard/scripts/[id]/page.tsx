@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../../lib/authRedirect'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import axios from 'axios'
@@ -14,7 +15,7 @@ import { API_URL } from '../../../../lib/api'
 import { useDraftAutosave } from '../../../../hooks/useDraftAutosave'
 import ClickAutosaveBadge from '../../../../components/click/ClickAutosaveBadge'
 import { useTranslation } from '@/hooks/useTranslation'
-import { PageShell } from '../../../../components/ui'
+import { PageShell, PageHeader, Panel, SectionHeader, Button, Textarea, EmptyState } from '../../../../components/ui'
 
 interface Script {
   _id: string
@@ -73,12 +74,12 @@ export default function ScriptDetailPage() {
     } finally {
       setLoading(false)
     }
-  }, [params.id, router, showToast])
+  }, [params.id, router, showToast, t])
 
   useEffect(() => {
     if (authLoading) return // user is null until /auth/me answers
     if (!user) {
-      router.push('/login')
+      router.push(loginPathForCurrentPage())
       return
     }
     loadScript()
@@ -159,247 +160,191 @@ export default function ScriptDetailPage() {
 
   if (loading) {
     return (
-      <PageShell width="full" flush className="min-h-screen flex flex-col items-center justify-center bg-[var(--page-bg)] gap-8" aria-busy="true">
-        <div className="relative">
-           <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse" />
-           <RefreshCw size={80} className="text-indigo-500 animate-spin relative z-10" />
+      <PageShell width="default" aria-busy="true">
+        <div className="flex flex-col items-center justify-center gap-3 py-24 text-theme-muted">
+          <RefreshCw size={28} className="animate-spin text-indigo-500" aria-hidden />
+          <p className="ds-text-label">{t('scriptDetailPage.loading')}</p>
         </div>
-        <p className="text-[14px] font-black text-indigo-400 uppercase tracking-[0.8em] animate-pulse italic leading-none">{t('scriptDetailPage.loading')}</p>
       </PageShell>
     )
   }
 
   if (!script) {
     return (
-      <PageShell width="full" flush className="min-h-screen flex flex-col items-center justify-center bg-[var(--page-bg)] p-12 text-center">
-        <div className="w-48 h-48 rounded-[3rem] bg-white/[0.02] border-2 border-white/5 flex items-center justify-center mb-10 shadow-3xl">
-           <X size={80} className="text-rose-500/40" />
-        </div>
-        <h2 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter mb-6">{t('scriptDetailPage.notFoundTitle')}</h2>
-        <p className="text-slate-500 text-[14px] font-black uppercase tracking-[0.4em] mb-12 italic">{t('scriptDetailPage.notFoundDescription')}</p>
-        <button onClick={() => router.push('/dashboard/scripts')} className="px-10 py-5 bg-white text-black rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.6em] hover:bg-indigo-500 hover:text-white transition-all italic">{t('scriptDetailPage.backToScripts')}</button>
+      <PageShell width="narrow">
+        <EmptyState
+          icon={FileText}
+          title={t('scriptDetailPage.notFoundTitle')}
+          description={t('scriptDetailPage.notFoundDescription')}
+          action={
+            <Button variant="primary" onClick={() => router.push('/dashboard/scripts')} leftIcon={<ArrowLeft size={16} aria-hidden />}>
+              {t('scriptDetailPage.backToScripts')}
+            </Button>
+          }
+        />
       </PageShell>
     )
   }
 
-  const glassStyle = 'backdrop-blur-3xl bg-white/[0.02] border-2 border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.8)] transition-all duration-300'
+  const hasStructure = !!(script.structure?.mainPoints && script.structure.mainPoints.length > 0)
+  const meta = script.metadata || ({} as Script['metadata'])
 
   return (
-    // Canvas surface: full + flush — the inner max-w-[1400px] column below is
-    // this page's own and is untouched. text-white is dropped from the root so
-    // the shell's text-theme-primary applies; hardcoded white made every
-    // heading here invisible in light theme.
-    <PageShell width="full" flush className="min-h-screen bg-[var(--page-bg)] selection:bg-indigo-500 selection:text-white relative overflow-hidden pb-48">
+    <PageShell width="default">
       <ToastContainer />
-      <div className="fixed inset-0 pointer-events-none opacity-[0.03]">
-         <Layout size={800} className="text-white absolute -bottom-40 -left-40 rotate-12" />
-      </div>
 
-      <div className="max-w-[1400px] mx-auto px-10 py-24 space-y-20 relative z-10">
-        <div className="flex flex-col lg:flex-row justify-between items-center gap-12 border-b-2 border-white/5 pb-16">
-          <div className="flex items-center gap-12">
-            <button
-              onClick={() => router.push('/dashboard/scripts')}
-              title={t('scriptDetailPage.backToScripts')}
-              className="w-20 h-20 rounded-[2rem] bg-white/[0.02] border-2 border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all hover:scale-110 active:scale-95 shadow-3xl"
-            >
-              <ArrowLeft size={32} />
-            </button>
-            <div>
-               <div className="flex items-center gap-6 mb-4">
-                  <div className="flex items-center gap-3">
-                     <Layers size={16} className="text-indigo-400" />
-                     <span className="text-[12px] font-black uppercase tracking-[0.6em] text-indigo-400 italic leading-none">{t('scriptDetailPage.kicker')}</span>
-                  </div>
-                  <div className="px-4 py-1.5 rounded-full bg-black/40 border border-white/5 text-[9px] font-black text-slate-500 tracking-widest uppercase italic leading-none">{t('scriptDetailPage.typeBadge', { type: script.type.toUpperCase() })}</div>
-               </div>
-               <h1 className="text-7xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-4">{script.title.toUpperCase()}</h1>
-               <div className="flex items-center gap-10 text-[12px] font-black text-slate-500 uppercase tracking-[0.4em] italic leading-none opacity-60">
-                 <span className="flex items-center gap-3"><FileText size={16} className="text-indigo-400" /> {t('scriptDetailPage.wordCount', { count: script.wordCount })}</span>
-                 {script.duration && <span className="flex items-center gap-3"><Clock size={16} className="text-indigo-400" /> {t('scriptDetailPage.duration', { count: script.duration })}</span>}
-               </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-6">
-            {!editing ? (
-              <>
-                <button
-                  onClick={startEditing}
-                  title={t('scriptDetailPage.editTitle')}
-                  className="px-10 py-5 bg-white text-black hover:bg-indigo-500 hover:text-white rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.4em] transition-all flex items-center gap-5 italic active:scale-95 shadow-2xl"
-                >
-                  <Edit3 size={20} /> {t('scriptDetailPage.editButton')}
-                </button>
-                <div className="flex gap-4">
-                  <button
-                    onClick={() => handleExport('txt')}
-                    title={t('scriptDetailPage.exportTxt')}
-                    className="w-16 h-16 rounded-[1.8rem] bg-white/[0.03] border-2 border-white/10 flex items-center justify-center text-slate-500 hover:text-white transition-all hover:border-indigo-500/50"
-                  >
-                    <Download size={24} />
-                  </button>
-                  <button
-                    onClick={() => handleExport('json')}
-                    title={t('scriptDetailPage.exportJson')}
-                    className="w-16 h-16 rounded-[1.8rem] bg-indigo-500/10 border-2 border-indigo-500/20 flex items-center justify-center text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all"
-                  >
-                    <Code size={24} />
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="flex gap-6 items-center">
-                <ClickAutosaveBadge
-                  status={autosave.status}
-                  lastSavedAt={autosave.lastSavedAt}
-                />
-                {draftRecovered && (
-                  <span
-                    className="text-[10px] font-bold uppercase tracking-wider text-indigo-300"
-                    title={t('scriptDetailPage.draftRecoveredTitle')}
-                  >
-                    {t('scriptDetailPage.draftRecovered')}
-                  </span>
-                )}
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  title={t('scriptDetailPage.saveTitle')}
-                  className="px-10 py-5 bg-emerald-500 text-white rounded-[2.5rem] text-[12px] font-black uppercase tracking-[0.4em] transition-all flex items-center gap-5 italic active:scale-95 shadow-[0_20px_60px_rgba(16,185,129,0.3)] disabled:opacity-50"
-                >
-                  {saving ? <RefreshCw size={20} className="animate-spin" /> : <Save size={20} />} {t('scriptDetailPage.saveButton')}
-                </button>
-                <button
-                  onClick={() => {
-                    setEditing(false)
-                    setEditedScript(script.script)
-                  }}
-                  title={t('scriptDetailPage.cancelTitle')}
-                  className="w-16 h-16 rounded-[1.8rem] bg-rose-500/5 border-2 border-rose-500/20 flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className={`${glassStyle} rounded-[6rem] p-16 shadow-[0_100px_300px_rgba(0,0,0,0.8)] relative group overflow-hidden`}>
-           <div className="absolute top-0 right-0 p-20 opacity-[0.02] pointer-events-none group-hover:rotate-45 transition-transform duration-[4s]"><FileText size={500} /></div>
-          {editing ? (
-            <textarea
-              value={editedScript}
-              onChange={(e) => setEditedScript(e.target.value)}
-              className="w-full h-[600px] bg-black/60 border-2 border-white/5 rounded-[4rem] p-16 text-xl font-black text-slate-300 italic uppercase focus:border-indigo-500/50 transition-all shadow-inner leading-relaxed custom-scrollbar placeholder:text-slate-600"
-              placeholder={t('scriptDetailPage.editPlaceholder')}
-              aria-label={t('scriptDetailPage.editAria')}
-            />
+      <PageHeader
+        as="h2"
+        breadcrumbs={[
+          { label: t('scriptDetailPage.breadcrumbScripts'), href: '/dashboard/scripts' },
+          { label: script.title },
+        ]}
+        title={<span className="break-words">{script.title}</span>}
+        meta={
+          <span className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-0.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
+            {t('scriptDetailPage.typeBadge', { type: script.type.replace(/-/g, ' ') })}
+          </span>
+        }
+        description={
+          <span className="inline-flex flex-wrap items-center gap-4">
+            <span className="inline-flex items-center gap-1.5"><FileText size={14} aria-hidden /> {t('scriptDetailPage.wordCount', { count: script.wordCount })}</span>
+            {script.duration ? <span className="inline-flex items-center gap-1.5"><Clock size={14} aria-hidden /> {t('scriptDetailPage.duration', { count: script.duration })}</span> : null}
+          </span>
+        }
+        actions={
+          !editing ? (
+            <>
+              <Button variant="ghost" size="md" onClick={() => router.push('/dashboard/scripts')} leftIcon={<ArrowLeft size={16} aria-hidden />}>
+                {t('common.back')}
+              </Button>
+              <Button variant="secondary" size="md" onClick={() => handleExport('txt')} title={t('scriptDetailPage.exportTxt')} leftIcon={<Download size={16} aria-hidden />}>
+                TXT
+              </Button>
+              <Button variant="secondary" size="md" onClick={() => handleExport('json')} title={t('scriptDetailPage.exportJson')} leftIcon={<Code size={16} aria-hidden />}>
+                JSON
+              </Button>
+              <Button variant="primary" size="md" onClick={startEditing} title={t('scriptDetailPage.editTitle')} leftIcon={<Edit3 size={16} aria-hidden />}>
+                {t('scriptDetailPage.editButton')}
+              </Button>
+            </>
           ) : (
-            <div className="space-y-24">
-              <div className="relative">
-                 <div className="bg-black/60 border-2 border-white/5 rounded-[4rem] p-16 text-xl font-black text-indigo-200 italic uppercase leading-relaxed shadow-inner selection:bg-indigo-500 selection:text-white whitespace-pre-wrap font-mono">
-                   {script.script}
-                 </div>
-                 <div className="absolute top-8 right-8 flex items-center gap-3 px-6 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-widest italic animate-pulse">{t('scriptDetailPage.rawScriptBadge')}</div>
-              </div>
-
-              {script.structure.mainPoints && script.structure.mainPoints.length > 0 && (
-                <div className="space-y-12">
-                   <div className="flex items-center gap-6"><div className="h-px bg-white/5 flex-1" /><span className="text-[14px] font-black text-white uppercase tracking-[0.8em] italic leading-none">{t('scriptDetailPage.structureHeading')}</span><div className="h-px bg-white/5 flex-1" /></div>
-                   <div className="grid grid-cols-1 gap-10">
-                    {script.structure.introduction && (
-                      <div className="p-12 rounded-[3.5rem] bg-indigo-500/[0.03] border-2 border-indigo-500/20 shadow-2xl group/item">
-                        <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.5em] mb-6 italic leading-none">{t('scriptDetailPage.introduction')}</h4>
-                        <p className="text-[16px] font-black text-slate-300 uppercase tracking-widest leading-relaxed italic">{script.structure.introduction}</p>
-                      </div>
-                    )}
-                    {script.structure.mainPoints.map((point, index) => (
-                      <div key={index} className="p-12 rounded-[3.5rem] bg-white/[0.02] border-2 border-white/10 hover:border-indigo-500/30 transition-all duration-700 shadow-2xl">
-                        <div className="flex justify-between items-center mb-6">
-                           <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.5em] italic leading-none">{t('scriptDetailPage.mainPointLabel', { number: `0${index + 1}`, title: point.title.replace(/\s+/g, '_').toUpperCase() })}</h4>
-                           {point.duration && <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic opacity-40">{t('scriptDetailPage.minSegment', { count: point.duration })}</span>}
-                        </div>
-                        <p className="text-[18px] font-black text-white uppercase tracking-widest leading-relaxed italic">{point.content}</p>
-                      </div>
-                    ))}
-                    {script.structure.conclusion && (
-                      <div className="p-12 rounded-[3.5rem] bg-indigo-500/[0.03] border-2 border-indigo-500/20 shadow-2xl">
-                        <h4 className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.5em] mb-6 italic leading-none">{t('scriptDetailPage.conclusion')}</h4>
-                        <p className="text-[16px] font-black text-slate-300 uppercase tracking-widest leading-relaxed italic">{script.structure.conclusion}</p>
-                      </div>
-                    )}
-                    {script.structure.callToAction && (
-                      <div className="p-12 rounded-[3.5rem] bg-emerald-500/[0.03] border-2 border-emerald-500/20 shadow-2xl">
-                        <h4 className="text-[11px] font-black text-emerald-400 uppercase tracking-[0.5em] mb-6 italic leading-none">{t('scriptDetailPage.callToAction')}</h4>
-                        <p className="text-[16px] font-black text-emerald-100 uppercase tracking-widest leading-relaxed italic">{script.structure.callToAction}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
+            <>
+              <ClickAutosaveBadge status={autosave.status} lastSavedAt={autosave.lastSavedAt} />
+              {draftRecovered && (
+                <span className="ds-text-caption text-indigo-500" title={t('scriptDetailPage.draftRecoveredTitle')}>
+                  {t('scriptDetailPage.draftRecovered')}
+                </span>
               )}
+              <Button
+                variant="ghost"
+                size="md"
+                onClick={() => { setEditing(false); setEditedScript(script.script) }}
+                title={t('scriptDetailPage.cancelTitle')}
+                leftIcon={<X size={16} aria-hidden />}
+              >
+                {t('common.cancel')}
+              </Button>
+              <Button variant="primary" size="md" onClick={handleSave} disabled={saving} loading={saving} title={t('scriptDetailPage.saveTitle')} leftIcon={!saving ? <Save size={16} aria-hidden /> : undefined}>
+                {t('scriptDetailPage.saveButton')}
+              </Button>
+            </>
+          )
+        }
+      />
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                {script.metadata.timestamps && script.metadata.timestamps.length > 0 && (
-                  <div className="p-12 rounded-[4rem] bg-black/40 border-2 border-white/5 space-y-10 shadow-3xl">
-                    <h3 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-[0.6em] mb-8 italic flex items-center gap-4 border-b border-white/5 pb-6"><Clock size={16} className="text-indigo-400" /> {t('scriptDetailPage.timestamps')}</h3>
-                    <div className="space-y-6">
-                      {script.metadata.timestamps.map((ts, index) => (
-                        <div key={index} className="flex gap-6 items-center p-4 rounded-2xl bg-white/[0.02] border border-white/5 group/ts transition-all duration-700 hover:bg-white/[0.05]">
-                          <span className="font-mono font-black text-indigo-400 text-[14px] shadow-inner">{ts.time}</span>
-                          <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest italic group-ts:text-white transition-colors">{ts.section}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+      {editing ? (
+        <Panel>
+          <Textarea
+            value={editedScript}
+            onChange={(e) => setEditedScript(e.target.value)}
+            className="min-h-[480px] font-mono text-sm leading-relaxed"
+            placeholder={t('scriptDetailPage.editPlaceholder')}
+            aria-label={t('scriptDetailPage.editAria')}
+          />
+        </Panel>
+      ) : (
+        <>
+          <Panel>
+            <SectionHeader as="h3" title={t('scriptDetailPage.rawScriptBadge')} className="mb-3" />
+            <div className="rounded-xl border border-[var(--border-subtle)] bg-background/40 p-5 font-mono text-sm leading-relaxed text-theme-primary whitespace-pre-wrap">
+              {script.script}
+            </div>
+          </Panel>
 
-                {script.metadata.keywords && script.metadata.keywords.length > 0 && (
-                  <div className="p-12 rounded-[4rem] bg-black/40 border-2 border-white/5 space-y-10 shadow-3xl">
-                    <h3 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-[0.6em] mb-8 italic flex items-center gap-4 border-b border-white/5 pb-6"><Key size={16} className="text-indigo-400" /> {t('scriptDetailPage.keywords')}</h3>
-                    <div className="flex flex-wrap gap-4">
-                      {script.metadata.keywords.map((keyword, index) => (
-                        <span key={index} className="bg-indigo-500/10 border-2 border-indigo-500/20 text-indigo-400 px-6 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest italic shadow-3xl hover:bg-indigo-500 hover:text-white transition-all cursor-default">
-                          {keyword}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+          {hasStructure && (
+            <Panel>
+              <SectionHeader as="h3" title={t('scriptDetailPage.structureHeading')} className="mb-4" />
+              <ol className="space-y-3">
+                {script.structure.introduction && (
+                  <li className="ds-surface-subtle border-l-2 border-l-indigo-500 p-4">
+                    <h4 className="ds-text-label text-indigo-500 mb-1">{t('scriptDetailPage.introduction')}</h4>
+                    <p className="ds-text-body text-theme-primary">{script.structure.introduction}</p>
+                  </li>
                 )}
+                {script.structure.mainPoints.map((point, index) => (
+                  <li key={index} className="ds-surface-subtle p-4">
+                    <div className="mb-1 flex items-center justify-between gap-3">
+                      <h4 className="ds-text-label text-theme-primary">{t('scriptDetailPage.mainPointLabel', { number: index + 1, title: point.title })}</h4>
+                      {point.duration ? <span className="ds-text-caption text-theme-muted">{t('scriptDetailPage.minSegment', { count: point.duration })}</span> : null}
+                    </div>
+                    <p className="ds-text-body text-theme-secondary">{point.content}</p>
+                  </li>
+                ))}
+                {script.structure.conclusion && (
+                  <li className="ds-surface-subtle border-l-2 border-l-indigo-500 p-4">
+                    <h4 className="ds-text-label text-indigo-500 mb-1">{t('scriptDetailPage.conclusion')}</h4>
+                    <p className="ds-text-body text-theme-primary">{script.structure.conclusion}</p>
+                  </li>
+                )}
+                {script.structure.callToAction && (
+                  <li className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4">
+                    <h4 className="ds-text-label text-emerald-600 dark:text-emerald-400 mb-1">{t('scriptDetailPage.callToAction')}</h4>
+                    <p className="ds-text-body text-theme-primary">{script.structure.callToAction}</p>
+                  </li>
+                )}
+              </ol>
+            </Panel>
+          )}
 
-                {script.metadata.hashtags && script.metadata.hashtags.length > 0 && (
-                  <div className="p-12 rounded-[4rem] bg-black/40 border-2 border-white/5 space-y-10 shadow-3xl">
-                    <h3 className="text-[14px] font-black text-[var(--text-main)] uppercase tracking-[0.6em] mb-8 italic flex items-center gap-4 border-b border-white/5 pb-6"><Hash size={16} className="text-indigo-400" /> {t('scriptDetailPage.hashtags')}</h3>
-                    <div className="flex flex-wrap gap-4">
-                      {script.metadata.hashtags.map((hashtag, index) => (
-                        <span key={index} className="bg-rose-500/10 border-2 border-rose-500/20 text-rose-400 px-6 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest italic shadow-3xl hover:bg-rose-500 hover:text-white transition-all cursor-default">
-                          #{hashtag}
-                        </span>
-                      ))}
-                    </div>
+          {((meta.timestamps?.length ?? 0) > 0 || (meta.keywords?.length ?? 0) > 0 || (meta.hashtags?.length ?? 0) > 0) && (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {meta.timestamps && meta.timestamps.length > 0 && (
+                <Panel>
+                  <SectionHeader as="h3" title={<span className="inline-flex items-center gap-2"><Clock size={16} className="text-indigo-500" aria-hidden />{t('scriptDetailPage.timestamps')}</span>} className="mb-3" />
+                  <ul className="space-y-2">
+                    {meta.timestamps.map((ts, index) => (
+                      <li key={index} className="flex items-center gap-3 text-sm">
+                        <span className="font-mono font-semibold text-indigo-500">{ts.time}</span>
+                        <span className="text-theme-secondary">{ts.section}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </Panel>
+              )}
+              {meta.keywords && meta.keywords.length > 0 && (
+                <Panel>
+                  <SectionHeader as="h3" title={<span className="inline-flex items-center gap-2"><Key size={16} className="text-indigo-500" aria-hidden />{t('scriptDetailPage.keywords')}</span>} className="mb-3" />
+                  <div className="flex flex-wrap gap-2">
+                    {meta.keywords.map((keyword, index) => (
+                      <span key={index} className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-2.5 py-1 text-xs font-medium text-indigo-600 dark:text-indigo-300">{keyword}</span>
+                    ))}
                   </div>
-                )}
-              </div>
+                </Panel>
+              )}
+              {meta.hashtags && meta.hashtags.length > 0 && (
+                <Panel>
+                  <SectionHeader as="h3" title={<span className="inline-flex items-center gap-2"><Hash size={16} className="text-indigo-500" aria-hidden />{t('scriptDetailPage.hashtags')}</span>} className="mb-3" />
+                  <div className="flex flex-wrap gap-2">
+                    {meta.hashtags.map((hashtag, index) => (
+                      <span key={index} className="rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-xs font-medium text-rose-600 dark:text-rose-300">{hashtag.startsWith('#') ? hashtag : `#${hashtag}`}</span>
+                    ))}
+                  </div>
+                </Panel>
+              )}
             </div>
           )}
-        </div>
-      </div>
-
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;400;700;900&display=swap');
-        body { font-family: 'Outfit', sans-serif; background: #020205; color: white; overflow-x: hidden; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.4); }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.3); border-radius: 20px; border: 2px solid rgba(0,0,0,0.5); }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.6); }
-      `}</style>
+        </>
+      )}
     </PageShell>
   )
 }
-
-
-
-
-
-
-

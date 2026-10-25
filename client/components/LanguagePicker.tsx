@@ -390,7 +390,7 @@ export default function LanguagePicker({ compact = false, className = '' }: Prop
         aria-label={t('language.picker') || 'Select language'}
         aria-haspopup="listbox"
         {...{ 'aria-expanded': open }}
-        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/[0.03] border border-white/10 hover:border-fuchsia-500/40 hover:bg-fuchsia-500/[0.06] transition-all text-[10px] font-bold text-slate-300 hover:text-white ${className}`}
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-surface-card border border-default hover:border-fuchsia-500/40 hover:bg-fuchsia-500/[0.06] transition-all text-[10px] font-bold text-theme-secondary hover:text-theme-primary ${className}`}
       >
         <Globe size={11} className="text-fuchsia-400" />
         <span aria-hidden className="text-[12px] leading-none">{languageFlags[language]}</span>

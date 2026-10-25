@@ -116,6 +116,96 @@ function synthesizeWords(segments) {
   return out;
 }
 
+/**
+ * Speech intervals in a media file, from ffmpeg silencedetect: the real
+ * audio is the ground truth for WHEN someone is talking.
+ * Resolves [{ start, end }] (empty on failure — callers fall back).
+ */
+function detectSpeechIntervals(mediaPath, { noiseDb = -35, minSilence = 0.25 } = {}) {
+  const { spawn } = require('child_process');
+  return new Promise((resolve) => {
+    let err = '';
+    const p = spawn('ffmpeg', ['-hide_banner', '-nostats', '-i', mediaPath, '-af', `silencedetect=n=${noiseDb}dB:d=${minSilence}`, '-f', 'null', '-']);
+    p.stderr.on('data', (d) => { err += d.toString(); });
+    p.on('error', () => resolve([]));
+    p.on('close', () => {
+      const durM = err.match(/Duration: (\d+):(\d+):([\d.]+)/);
+      const total = durM ? (+durM[1]) * 3600 + (+durM[2]) * 60 + parseFloat(durM[3]) : null;
+      const starts = [...err.matchAll(/silence_start: ([\d.]+)/g)].map((m) => parseFloat(m[1]));
+      const ends = [...err.matchAll(/silence_end: ([\d.]+)/g)].map((m) => parseFloat(m[1]));
+      if (!total) return resolve([]);
+      const silences = starts.map((st, i) => ({ start: st, end: ends[i] != null ? ends[i] : total }));
+      const speech = [];
+      let t = 0;
+      for (const sl of silences) {
+        if (sl.start > t + 0.05) speech.push({ start: t, end: sl.start });
+        t = Math.max(t, sl.end);
+      }
+      if (total > t + 0.05) speech.push({ start: t, end: total });
+      resolve(speech);
+    });
+  });
+}
+
+/**
+ * Snap transcript segments (whose times come from the model and are only
+ * approximate) onto the measured speech intervals, then place each word
+ * inside the speaking time of its segment, weighted by word length.
+ * Without this, words were spread evenly across a segment's guessed span —
+ * captions drifted and silence removal could cut through real speech.
+ */
+function alignSegmentsToSpeech(segments, speech) {
+  if (!Array.isArray(speech) || !speech.length) return null;
+  const segs = (segments || []).filter((sg) => sg && String(sg.text || '').trim());
+  if (!segs.length) return null;
+  const aligned = [];
+  let cursor = 0;
+  segs.forEach((sg, idx) => {
+    const a = Number(sg.start) || 0;
+    const b = Math.max(a, Number(sg.end) || a);
+    // Speech intervals that overlap the model's span (with slack), and that we
+    // haven't already given to an earlier segment.
+    let hits = speech.filter((iv) => iv.end > cursor + 0.01 && iv.end > a - 0.6 && iv.start < b + 0.6);
+    if (!hits.length) hits = speech.filter((iv) => iv.end > cursor + 0.01).slice(0, 1);
+    if (!hits.length) { aligned.push({ ...sg, start: a, end: b, parts: [{ start: a, end: b }] }); return; }
+    // Don't swallow the next segment's speech: stop at the interval nearest the model's end.
+    const next = segs[idx + 1];
+    if (next && hits.length > 1) {
+      const nextStart = Number(next.start) || b;
+      hits = hits.filter((iv, i) => i === 0 || iv.start < (b + nextStart) / 2);
+    }
+    const parts = hits.map((iv) => ({ start: Math.max(iv.start, cursor), end: iv.end }));
+    cursor = parts[parts.length - 1].end;
+    aligned.push({ ...sg, start: parts[0].start, end: cursor, parts });
+  });
+  const words = [];
+  for (const sg of aligned) {
+    const ws = String(sg.text).trim().split(/\s+/).filter(Boolean);
+    const weights = ws.map((w) => Math.max(1, w.replace(/[^\p{L}\p{N}]/gu, '').length));
+    const total = weights.reduce((x, y) => x + y, 0);
+    const speakTime = sg.parts.reduce((x, pt) => x + (pt.end - pt.start), 0);
+    if (!speakTime) { ws.forEach((w) => words.push({ word: w, start: sg.start, end: sg.start })); continue; }
+    // Walk the speaking time (skipping the gaps between parts).
+    let acc = 0;
+    const at = (tSpeak) => {
+      let rest = tSpeak;
+      for (const pt of sg.parts) {
+        const len = pt.end - pt.start;
+        if (rest <= len) return pt.start + rest;
+        rest -= len;
+      }
+      return sg.parts[sg.parts.length - 1].end;
+    };
+    ws.forEach((w, i) => {
+      const st = at((acc / total) * speakTime);
+      acc += weights[i];
+      const en = at((acc / total) * speakTime);
+      words.push({ word: w, start: st, end: en });
+    });
+  }
+  return { segments: aligned.map(({ parts, ...rest }) => rest), words };
+}
+
 function enrichWord(wordObj) {
   const lowerWord = wordObj.word.toLowerCase();
   let sentiment = 'neutral';
@@ -559,8 +649,14 @@ async function transcribeVideo(userId, videoId, videoPath, opts = {}) {
       // captions are rendered word-by-word. `timingSource` is carried out so
       // callers can be honest about which one they got.
       const hasMeasuredWords = Array.isArray(providerWords) && providerWords.length > 0;
-      const words = (hasMeasuredWords ? providerWords : synthesizeWords(segments || [])).map(enrichWord);
-      const timingSource = hasMeasuredWords ? 'measured' : 'estimated';
+      // No measured word times: align the model's segments to the real speech
+      // in the audio rather than spreading words evenly over a guessed span.
+      let aligned = null;
+      if (!hasMeasuredWords) {
+        try { aligned = alignSegmentsToSpeech(segments || [], await detectSpeechIntervals(fullPath)); } catch (_) { aligned = null; }
+      }
+      const words = (hasMeasuredWords ? providerWords : (aligned ? aligned.words : synthesizeWords(segments || []))).map(enrichWord);
+      const timingSource = hasMeasuredWords ? 'measured' : (aligned ? 'aligned' : 'estimated');
 
       logger.info('Transcription succeeded', {
         videoId, provider: p.name, segments: segments?.length || 0,
@@ -570,6 +666,7 @@ async function transcribeVideo(userId, videoId, videoPath, opts = {}) {
         success: true,
         text: fullText,
         words,
+        segments: aligned ? aligned.segments : (segments || []),
         timingSource,
         language: detectedLanguage || (language === 'auto' ? 'en' : language),
         provider: p.name,
@@ -594,6 +691,8 @@ async function transcribeVideo(userId, videoId, videoPath, opts = {}) {
 }
 
 module.exports = {
+  alignSegmentsToSpeech,
+  detectSpeechIntervals,
   transcribeVideo,
   isTranscriptionConfigured,
   // Exported for unit testing only

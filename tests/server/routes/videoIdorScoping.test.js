@@ -8,18 +8,25 @@ const fs = require('fs');
 const path = require('path');
 const read = (p) => fs.readFileSync(path.join(__dirname, '../../../server/routes/video', p), 'utf8');
 
-// True iff a guardOwnership(req, res, ...) appears within `within` lines BEFORE
-// the first line containing `marker` (i.e. the resource op is ownership-gated).
-function guardedBefore(src, marker, within = 14) {
+// True iff EVERY line containing `marker` is ownership-gated: a
+// guardOwnership(req, res, ...) appears between it and the start of the route
+// handler it sits in. (Checking only the first occurrence within a fixed
+// window missed later calls and broke on long handlers.)
+function guardedBefore(src, marker) {
   const lines = src.split('\n');
-  const idx = lines.findIndex((l) => l.includes(marker));
-  if (idx < 0) return { found: false };
-  const start = Math.max(0, idx - within);
-  const guarded = lines.slice(start, idx).some((l) => /guardOwnership\(req, res,/.test(l));
+  const hits = lines.map((l, i) => (l.includes(marker) ? i : -1)).filter((i) => i >= 0);
+  if (!hits.length) return { found: false };
+  const guarded = hits.every((idx) => {
+    for (let i = idx - 1; i >= 0; i--) {
+      if (/guardOwnership\(req, res,/.test(lines[i])) return true;
+      if (/^router\.(get|post|put|patch|delete|all)\(/.test(lines[i])) return false;
+    }
+    return false;
+  });
   return { found: true, guarded };
 }
-const expectGuarded = (src, marker, within) => {
-  const r = guardedBefore(src, marker, within);
+const expectGuarded = (src, marker) => {
+  const r = guardedBefore(src, marker);
   expect(r.found).toBe(true); // marker still present (fix targets the right code)
   expect(r.guarded).toBe(true); // and it is ownership-gated
 };

@@ -6,6 +6,7 @@ import { Lightbulb, ThumbsUp, ThumbsDown, ArrowRight, Sparkles } from 'lucide-re
 import { apiGet, apiPost } from '../lib/api'
 import { cn } from '../lib/utils'
 import { Panel, SectionHeader, Button } from './ui'
+import { useTranslation } from '../hooks/useTranslation'
 
 interface NextBestIdea {
   title: string
@@ -32,6 +33,7 @@ type Vote = 'up' | 'down'
  * Honest empty state until Click has enough of the creator's own data.
  */
 export default function WhatToMakeNext() {
+  const { t } = useTranslation()
   const [data, setData] = useState<NextBestResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [votes, setVotes] = useState<Record<number, Vote>>({})
@@ -83,10 +85,10 @@ export default function WhatToMakeNext() {
     <Panel variant="bento" className="ds-bento-2x1 ds-anim-rise p-6">
       <SectionHeader
         as="h3"
-        title="What to make next"
+        title={t('whatToMakeNext.title')}
         actions={
           <button type="button" onClick={load} className="ds-text-label text-indigo-500 hover:underline">
-            Refresh
+            {t('common.refresh')}
           </button>
         }
         className="mb-4"
@@ -95,22 +97,21 @@ export default function WhatToMakeNext() {
       {loading ? (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-theme-muted/10" />
+            <div key={i} className="h-16 animate-pulse rounded-xl bg-accent" />
           ))}
         </div>
       ) : !hasData ? (
         <div className="ds-surface-subtle flex flex-col items-start gap-3 p-4">
           <div className="flex items-center gap-2">
             <Sparkles size={18} className="text-indigo-500" aria-hidden />
-            <span className="ds-text-label text-theme-primary">Still learning your style</span>
+            <span className="ds-text-label text-theme-primary">{t('whatToMakeNext.learningTitle')}</span>
           </div>
           <p className="ds-text-body text-sm text-theme-muted">
-            Publish and rate a few more clips — once Click has enough of your own data it will
-            recommend exactly what to make next, grounded in what already works for you.
+            {t('whatToMakeNext.learningBody')}
           </p>
           <Link href="/dashboard/forge">
             <Button variant="secondary" size="sm" rightIcon={<ArrowRight size={16} aria-hidden />}>
-              Forge a clip
+              {t('whatToMakeNext.makeClip')}
             </Button>
           </Link>
         </div>
@@ -130,13 +131,13 @@ export default function WhatToMakeNext() {
                       </span>
                     )}
                     {idea.hook && (
-                      <span className="rounded-md bg-theme-muted/10 px-2 py-0.5 text-[10px] text-theme-muted">
+                      <span className="rounded-md bg-accent px-2 py-0.5 text-[10px] text-theme-muted">
                         {idea.hook}
                       </span>
                     )}
                     {idea.expectedLift && (
                       <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-500">
-                        {idea.expectedLift} potential
+                        {t('whatToMakeNext.potential', { lift: idea.expectedLift })}
                       </span>
                     )}
                   </div>
@@ -144,7 +145,7 @@ export default function WhatToMakeNext() {
                 <div className="flex flex-shrink-0 items-center gap-1">
                   <button
                     type="button"
-                    aria-label="Good suggestion"
+                    aria-label={t('whatToMakeNext.voteUp')}
                     onClick={() => vote(index, idea, 'up')}
                     className={cn(
                       'rounded-md p-1.5 transition-colors',
@@ -157,7 +158,7 @@ export default function WhatToMakeNext() {
                   </button>
                   <button
                     type="button"
-                    aria-label="Not for me"
+                    aria-label={t('whatToMakeNext.voteDown')}
                     onClick={() => vote(index, idea, 'down')}
                     className={cn(
                       'rounded-md p-1.5 transition-colors',

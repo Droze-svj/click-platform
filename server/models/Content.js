@@ -134,6 +134,7 @@ const contentSchema = new mongoose.Schema({
     // so an unexpected shape can never fail the whole save with a CastError.
     shortVideos: [{
       url: String,
+      name: String,
       thumbnail: String,
       duration: Number,
       caption: String,
@@ -425,6 +426,9 @@ const contentSchema = new mongoose.Schema({
     words: { type: [mongoose.Schema.Types.Mixed], default: [] },
     formatted: String,
     generatedAt: Date,
+    // 'measured' (provider word timestamps), 'aligned' (snapped to the speech
+    // in the audio) or 'estimated' (spread evenly — not safe to cut on).
+    timingSource: String,
     translations: { type: mongoose.Schema.Types.Mixed, default: {} },
   },
 });

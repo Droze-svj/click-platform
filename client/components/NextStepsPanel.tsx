@@ -112,22 +112,21 @@ export default function NextStepsPanel() {
   }
 
   return (
-    <div className={`fixed right-4 bottom-4 z-40 transition-all duration-300 ${
-      collapsed ? 'w-16' : 'w-80'
-    }`}>
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h3 className="font-semibold text-sm">{t('nextStepsPanel.suggestedNextSteps')}</h3>
+    <div className="w-full">
+      <div className="ds-surface-card overflow-hidden">
+        <div className="p-4 border-b border-[var(--border-subtle)] flex items-center justify-between">
+          <h3 className="ds-text-h3 text-theme-primary">{t('nextStepsPanel.suggestedNextSteps')}</h3>
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
-            className="text-gray-400 hover:text-gray-600"
+            aria-expanded={!collapsed}
+            className="rounded-md px-2 py-1 text-theme-muted hover:text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            {collapsed ? '→' : '←'}
+            {collapsed ? '▾' : '▴'}
           </button>
         </div>
         {!collapsed && (
-          <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
             {suggestions.map((suggestion, index) => (
               <button
                 type="button"

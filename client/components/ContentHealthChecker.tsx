@@ -122,11 +122,11 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
   const healthScore = issues.length === 0 ? 100 : Math.max(0, 100 - (issues.length * 15))
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+    <div className="ds-surface-card p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-[var(--text-main)]">
+          <Sparkles className="w-5 h-5 text-indigo-500" />
+          <h3 className="ds-text-h3 text-theme-primary">
             {t('contentHealthChecker.title')}
           </h3>
         </div>
@@ -134,7 +134,7 @@ export default function ContentHealthChecker({ content, onFix }: ContentHealthCh
           type="button"
           onClick={checkHealth}
           disabled={isChecking}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+          className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap px-3 py-1.5 text-sm font-medium border border-input bg-background text-theme-primary rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
           <span>{isChecking ? t('contentHealthChecker.checking') : t('contentHealthChecker.check')}</span>

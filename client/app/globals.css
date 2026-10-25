@@ -223,8 +223,11 @@
   --secondary-foreground: 0 0% 100%;  /* white on fuchsia */
   --muted: 240 5% 96%;                /* zinc-100 */
   --muted-foreground: 240 4% 40%;     /* zinc-600-ish */
-  --accent: 280 67% 49%;              /* fuchsia accent */
-  --accent-foreground: 0 0% 100%;
+  /* Neutral, as every bg-accent / hover:bg-accent call site assumes (shadcn
+     convention). It was fuchsia, which turned hover states and icon tiles into
+     saturated pink blocks and hid text-primary icons. Brand fuchsia = --secondary. */
+  --accent: 240 5% 93%;               /* zinc-100/200 */
+  --accent-foreground: 240 6% 10%;
   --destructive: 0 72% 51%;           /* red-600 #dc2626 */
   --destructive-foreground: 0 0% 100%;
   --border: 240 6% 90%;               /* zinc-200 */
@@ -338,8 +341,8 @@
   --secondary-foreground: 0 0% 100%;
   --muted: 240 6% 14%;                /* zinc-800-ish */
   --muted-foreground: 240 5% 65%;     /* zinc-400-ish, readable on dark */
-  --accent: 280 67% 53%;              /* fuchsia accent */
-  --accent-foreground: 0 0% 100%;
+  --accent: 240 5% 17%;               /* zinc-800, neutral (see light theme) */
+  --accent-foreground: 0 0% 98%;
   --destructive: 0 72% 55%;           /* red, slightly brighter for dark */
   --destructive-foreground: 0 0% 100%;
   --border: 240 6% 16%;               /* subtle dark border */

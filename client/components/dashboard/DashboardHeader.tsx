@@ -36,6 +36,7 @@ import NotificationBell from '../NotificationBell'
 import { useTranslation } from '../../hooks/useTranslation'
 import { useContainerWidth } from '../../hooks/useContainerWidth'
 import { cn } from '../../lib/utils'
+import { crumbHasPage } from '../../lib/breadcrumbRoutes'
 
 // Route segment → i18n key map. Keys resolve through the same nav.* catalog the
 // sidebar uses; anything unmapped falls back to t()'s humanise() so we never
@@ -75,14 +76,43 @@ const SEGMENT_LABEL_KEY: Record<string, string> = {
   achievements: 'nav.achievements',
   jobs: 'nav.jobs',
   posts: 'nav.posts',
+  // The app-bar title for these read "Clicklearning", "Brandkit", "Hookab"…
+  labs: 'nav.labs',
+  recurring: 'nav.recurring',
+  membership: 'nav.membership',
+  infrastructure: 'nav.infrastructure',
+  autopilot: 'nav.autopilot',
+  'click-learning': 'nav.clickLearning',
+  'creator-dna': 'nav.creatorDna',
+  'hook-ab': 'nav.hookAb',
+  keywords: 'nav.keywords',
+  outliers: 'nav.outliers',
+  channel: 'nav.channelAudit',
+  seo: 'nav.seoScorecard',
+  repurpose: 'nav.trendRepurpose',
+  toolbox: 'nav.toolbox',
+  neural: 'nav.neural',
+  suggestions: 'nav.suggestions',
+  ops: 'nav.ops',
+  collaborate: 'nav.approvalThreads',
+  capacity: 'nav.capacity',
+  engagement: 'nav.engagement',
+  auto: 'nav.autoClips',
 }
 
 function segmentLabel(t: (k: string) => string, seg: string): string {
+  // Record ids (Mongo ObjectIds, UUIDs) aren't labels — the app bar showed
+  // "6addd0c00252a82c2ca67d6c" as the title of every detail page.
+  if (/^[0-9a-f]{24}$/i.test(seg) || /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(seg)) {
+    return t('nav.details')
+  }
   const key = SEGMENT_LABEL_KEY[seg]
   // When a key exists, t() returns the translated value; when it doesn't,
   // pass the raw segment so t()'s humanise() turns e.g. "marketing-ai" into
   // a readable label rather than leaking the slug.
-  return key ? t(key) : t(seg.replace(/-/g, ''))
+  // kebab → camel so humanise() splits the words ("dead-letter" → "Dead letter",
+  // not "Deadletter").
+  return key ? t(key) : t(seg.replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase()))
 }
 
 export default function DashboardHeader() {
@@ -131,7 +161,7 @@ export default function DashboardHeader() {
 
   // Build title + breadcrumb from the route segments after /dashboard.
   const { title, crumbs } = useMemo(() => {
-    if (!pathname) return { title: '', crumbs: [] as { label: string; href: string }[] }
+    if (!pathname) return { title: '', crumbs: [] as { label: string; href: string; linkable: boolean }[] }
     const segs = pathname.split('/').filter(Boolean) // e.g. ['dashboard','analytics','creator']
     if (segs.length <= 1) {
       return { title: t('nav.dashboard'), crumbs: [] }
@@ -139,12 +169,12 @@ export default function DashboardHeader() {
     const after = segs.slice(1) // drop the leading 'dashboard'
     const title = segmentLabel(t, after[after.length - 1])
     // Breadcrumb = the parent segments (everything before the last), each linkable.
-    const crumbs: { label: string; href: string }[] = []
+    const crumbs: { label: string; href: string; linkable: boolean }[] = []
     let acc = '/dashboard'
-    crumbs.push({ label: t('nav.dashboard'), href: acc })
+    crumbs.push({ label: t('nav.dashboard'), href: acc, linkable: true })
     for (let i = 0; i < after.length - 1; i++) {
       acc += '/' + after[i]
-      crumbs.push({ label: segmentLabel(t, after[i]), href: acc })
+      crumbs.push({ label: segmentLabel(t, after[i]), href: acc, linkable: crumbHasPage(acc) })
     }
     return { title, crumbs }
   }, [pathname, t])
@@ -174,12 +204,16 @@ export default function DashboardHeader() {
               {crumbs.map((c, i) => (
                 <span key={c.href} className="flex items-center gap-1 min-w-0">
                   {i > 0 && <ChevronRight size={11} className="opacity-40 flex-shrink-0" aria-hidden="true" />}
-                  <Link
-                    href={c.href}
-                    className="truncate hover:text-[var(--text-strong)] transition-colors focus-visible:outline-none focus-visible:underline"
-                  >
-                    {c.label}
-                  </Link>
+                  {c.linkable ? (
+                    <Link
+                      href={c.href}
+                      className="truncate hover:text-[var(--text-strong)] transition-colors focus-visible:outline-none focus-visible:underline"
+                    >
+                      {c.label}
+                    </Link>
+                  ) : (
+                    <span className="truncate">{c.label}</span>
+                  )}
                 </span>
               ))}
             </nav>

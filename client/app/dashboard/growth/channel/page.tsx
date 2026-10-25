@@ -1,8 +1,7 @@
 'use client'
 
 /**
- * Channel Audit — a vidIQ-style scorecard for the creator's connected YouTube
- * channel. On load (and via Refresh) it pulls GET /api/seo/channel-audit and
+ * Channel Audit — a scorecard for the creator's connected YouTube channel. On load (and via Refresh) it pulls GET /api/seo/channel-audit and
  * renders the live score, grade, sub-scores, issues and strengths.
  *
  * Renders ONLY what the backend returns. When the channel isn't connected the
@@ -20,6 +19,7 @@ import { useToast } from '../../../../contexts/ToastContext'
 import ToastContainer from '../../../../components/ToastContainer'
 import { apiGet } from '../../../../lib/api'
 import { cn } from '../../../../lib/utils'
+import { useTranslation } from '@/hooks/useTranslation'
 import {
   Panel,
   Button,
@@ -79,14 +79,54 @@ interface ApiEnvelope<T> {
 const DAY_OPTIONS = [7, 28, 90] as const
 type DayOption = (typeof DAY_OPTIONS)[number]
 
+type TFn = (key: string, params?: Record<string, string | number>) => string
+
 // The five sub-scores rendered as labeled progress bars, in display order.
-const SUBSCORE_FIELDS: ReadonlyArray<{ key: keyof AuditSubscores; label: string }> = [
-  { key: 'engagement', label: 'Engagement' },
-  { key: 'retention', label: 'Retention' },
-  { key: 'cadence', label: 'Cadence' },
-  { key: 'growth', label: 'Growth' },
-  { key: 'metadata', label: 'Metadata' },
+const SUBSCORE_FIELDS: ReadonlyArray<keyof AuditSubscores> = [
+  'engagement',
+  'retention',
+  'cadence',
+  'growth',
+  'metadata',
 ]
+
+/** Human label for a sub-score / issue area. Unknown areas fall back to "General". */
+function areaLabel(area: string | undefined, t: TFn): string {
+  switch (area) {
+    case 'engagement': return t('growthChannelPage.subscoreEngagement')
+    case 'retention': return t('growthChannelPage.subscoreRetention')
+    case 'cadence': return t('growthChannelPage.subscoreCadence')
+    case 'growth': return t('growthChannelPage.subscoreGrowth')
+    case 'metadata': return t('growthChannelPage.subscoreMetadata')
+    default: return t('growthChannelPage.areaGeneral')
+  }
+}
+
+/** Human label for an issue severity. */
+function severityLabel(severity: IssueSeverity, t: TFn): string {
+  if (severity === 'high') return t('growthChannelPage.severityHigh')
+  if (severity === 'medium') return t('growthChannelPage.severityMedium')
+  return t('growthChannelPage.severityLow')
+}
+
+/**
+ * Plain sentence for the backend's "not available" reason code. Raw codes
+ * (e.g. google_not_connected) are never shown to the user.
+ */
+function reasonMessage(reason: string | undefined, t: TFn): string {
+  switch (reason) {
+    case 'google_not_connected':
+    case 'not_connected':
+    case 'no_channel_connected':
+      return t('growthChannelPage.reasonNotConnected')
+    case 'no_channel':
+      return t('growthChannelPage.reasonNoChannel')
+    case 'channel_error':
+      return t('growthChannelPage.reasonChannelError')
+    default:
+      return t('growthChannelPage.reasonDefault')
+  }
+}
 
 /** Tailwind text colour for the headline grade: A/B green, C amber, D/F red. */
 function gradeColor(grade: string | undefined): string {
@@ -119,6 +159,7 @@ function clampScore(value: number | null | undefined): number {
 
 export default function ChannelAuditPage() {
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const [days, setDays] = useState<DayOption>(28)
   const [loading, setLoading] = useState(true)
@@ -149,13 +190,13 @@ export default function ChannelAuditPage() {
         const res = await apiGet<ApiEnvelope<ChannelAudit>>(`/seo/channel-audit?${qs}`)
         setAudit(res?.data ?? null)
       } catch {
-        showToast('Could not load your channel audit. Please try again.', 'error')
+        showToast(t('growthChannelPage.loadError'), 'error')
         setAudit(null)
       } finally {
         setLoading(false)
       }
     },
-    [showToast],
+    [showToast, t],
   )
 
   useEffect(() => {
@@ -175,8 +216,8 @@ export default function ChannelAuditPage() {
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <SectionHeader
           as="h1"
-          title="Channel Audit"
-          description="A vidIQ-style scorecard for your connected YouTube channel — see your overall grade, the sub-scores driving it, and exactly what to fix next."
+          title={t('growthChannelPage.title')}
+          description={t('growthChannelPage.description')}
         />
 
         <div className="flex flex-wrap items-center gap-2">
@@ -185,12 +226,14 @@ export default function ChannelAuditPage() {
             <select
               value={accountId}
               onChange={(e) => setAccountId(e.target.value)}
-              aria-label="Select YouTube channel"
+              aria-label={t('growthChannelPage.selectChannel')}
               className="rounded-lg ds-surface-subtle px-3 py-1.5 text-xs font-medium text-theme-primary"
             >
               {accounts.map((a) => (
                 <option key={a.accountId} value={a.accountId}>
-                  {a.platformUsername || a.accountId}{a.isActive ? ' (active)' : ''}
+                  {a.isActive
+                    ? t('growthChannelPage.channelActive', { name: a.platformUsername || a.accountId })
+                    : a.platformUsername || a.accountId}
                 </option>
               ))}
             </select>
@@ -205,8 +248,8 @@ export default function ChannelAuditPage() {
                   key={opt}
                   type="button"
                   onClick={() => setDays(opt)}
-                  title={`Audit the last ${opt} days`}
-                  aria-label={`Audit the last ${opt} days`}
+                  title={t('growthChannelPage.auditLastDays', { count: opt })}
+                  aria-label={t('growthChannelPage.auditLastDays', { count: opt })}
                   aria-pressed={active}
                   className={cn(
                     'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
@@ -215,7 +258,7 @@ export default function ChannelAuditPage() {
                       : 'text-theme-secondary hover:text-theme-primary',
                   )}
                 >
-                  {opt}d
+                  {t('growthChannelPage.daysShort', { count: opt })}
                 </button>
               )
             })}
@@ -228,7 +271,7 @@ export default function ChannelAuditPage() {
             onClick={() => loadAudit(days, accountId)}
             leftIcon={<RefreshCw className="h-4 w-4" aria-hidden />}
           >
-            Refresh
+            {t('growthChannelPage.refresh')}
           </Button>
         </div>
       </div>
@@ -248,16 +291,13 @@ export default function ChannelAuditPage() {
       {!loading && audit && !available && (
         <EmptyState
           icon={Youtube}
-          title="Connect your YouTube channel"
-          description={
-            audit?.reason ??
-            'We need a connected YouTube channel to audit. Link your account to generate your scorecard.'
-          }
+          title={t('growthChannelPage.connectTitle')}
+          description={reasonMessage(audit?.reason, t)}
           className="ds-surface-card"
           action={
             <Link href="/dashboard/social">
               <Button variant="primary" leftIcon={<Youtube className="h-4 w-4" aria-hidden />}>
-                Connect channel
+                {t('growthChannelPage.connectChannel')}
               </Button>
             </Link>
           }
@@ -275,11 +315,11 @@ export default function ChannelAuditPage() {
                   <span className="text-6xl font-bold leading-none text-theme-primary tabular-nums">
                     {typeof audit?.score === 'number' ? Math.round(audit.score) : '—'}
                   </span>
-                  <span className="text-2xl font-medium text-theme-muted">/ 100</span>
+                  <span className="text-2xl font-medium text-theme-muted">{t('growthChannelPage.outOf100')}</span>
                 </div>
 
                 <div className="flex flex-col">
-                  <span className="ds-text-caption text-theme-muted">Grade</span>
+                  <span className="ds-text-caption text-theme-muted">{t('growthChannelPage.grade')}</span>
                   <span
                     className={cn('text-5xl font-bold leading-none', gradeColor(audit?.grade))}
                   >
@@ -293,7 +333,7 @@ export default function ChannelAuditPage() {
                   <Users className="h-6 w-6" aria-hidden />
                 </span>
                 <div>
-                  <p className="ds-text-caption text-theme-muted">Subscribers</p>
+                  <p className="ds-text-caption text-theme-muted">{t('growthChannelPage.subscribers')}</p>
                   <p className="text-2xl font-semibold text-theme-primary tabular-nums">
                     {typeof audit?.subscriberCount === 'number'
                       ? audit.subscriberCount.toLocaleString()
@@ -305,7 +345,7 @@ export default function ChannelAuditPage() {
 
             {audit?.period && (
               <p className="mt-4 ds-text-caption text-theme-muted">
-                Audit window: {audit.period}
+                {t('growthChannelPage.auditWindow', { period: audit.period })}
               </p>
             )}
           </Panel>
@@ -314,11 +354,12 @@ export default function ChannelAuditPage() {
           <Panel variant="bento" className="space-y-5">
             <SectionHeader
               as="h2"
-              title="Sub-scores"
-              description="The five signals that roll up into your overall grade."
+              title={t('growthChannelPage.subscoresTitle')}
+              description={t('growthChannelPage.subscoresDescription')}
             />
             <div className="space-y-4">
-              {SUBSCORE_FIELDS.map(({ key, label }) => {
+              {SUBSCORE_FIELDS.map((key) => {
+                const label = areaLabel(key, t)
                 const value = clampScore(subscores?.[key])
                 return (
                   <div key={key}>
@@ -336,7 +377,7 @@ export default function ChannelAuditPage() {
                         aria-valuenow={value}
                         aria-valuemin={0}
                         aria-valuemax={100}
-                        aria-label={`${label} sub-score`}
+                        aria-label={t('growthChannelPage.subscoreAria', { label })}
                       />
                     </div>
                   </div>
@@ -350,8 +391,8 @@ export default function ChannelAuditPage() {
             <Panel variant="bento" className="space-y-4">
               <SectionHeader
                 as="h2"
-                title="Issues & Fixes"
-                description="Prioritised by impact — tackle the high-severity items first."
+                title={t('growthChannelPage.issuesTitle')}
+                description={t('growthChannelPage.issuesDescription')}
               />
               {issues.length > 0 ? (
                 <ul className="space-y-3">
@@ -367,11 +408,11 @@ export default function ChannelAuditPage() {
                       <div className="min-w-0 flex-1">
                         <div className="mb-1 flex flex-wrap items-center gap-2">
                           <span className="text-sm font-medium text-theme-primary">
-                            {issue?.area ?? 'General'}
+                            {areaLabel(issue?.area, t)}
                           </span>
                           {issue?.severity && (
                             <Badge variant={severityVariant(issue.severity)}>
-                              {issue.severity}
+                              {severityLabel(issue.severity, t)}
                             </Badge>
                           )}
                         </div>
@@ -382,7 +423,7 @@ export default function ChannelAuditPage() {
                 </ul>
               ) : (
                 <p className="text-sm text-theme-muted">
-                  No issues flagged for this window. Nice work.
+                  {t('growthChannelPage.noIssues')}
                 </p>
               )}
             </Panel>
@@ -391,8 +432,8 @@ export default function ChannelAuditPage() {
             <Panel variant="bento" className="space-y-4">
               <SectionHeader
                 as="h2"
-                title="Strengths"
-                description="What your channel is already doing well."
+                title={t('growthChannelPage.strengthsTitle')}
+                description={t('growthChannelPage.strengthsDescription')}
               />
               {strengths.length > 0 ? (
                 <ul className="space-y-3">
@@ -411,7 +452,7 @@ export default function ChannelAuditPage() {
                 </ul>
               ) : (
                 <p className="text-sm text-theme-muted">
-                  No standout strengths yet — keep publishing and check back.
+                  {t('growthChannelPage.noStrengths')}
                 </p>
               )}
             </Panel>
@@ -423,8 +464,8 @@ export default function ChannelAuditPage() {
       {!loading && !audit && (
         <EmptyState
           icon={Gauge}
-          title="No audit available"
-          description="We couldn't load your channel audit. Try refreshing in a moment."
+          title={t('growthChannelPage.noAuditTitle')}
+          description={t('growthChannelPage.noAuditDescription')}
           className="ds-surface-card"
           action={
             <Button
@@ -432,7 +473,7 @@ export default function ChannelAuditPage() {
               onClick={() => loadAudit(days, accountId)}
               leftIcon={<RefreshCw className="h-4 w-4" aria-hidden />}
             >
-              Try again
+              {t('growthChannelPage.tryAgain')}
             </Button>
           }
         />

@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../../hooks/useAuth'
 import { useRouter } from 'next/navigation'
@@ -55,7 +56,7 @@ export default function QuotesPage() {
 
   useEffect(() => {
     if (authLoading) return // user is null until /auth/me answers
-    if (!user) router.push('/login')
+    if (!user) router.push(loginPathForCurrentPage())
   }, [user, authLoading, router])
 
   const [quoteText, setQuoteText] = useState('')
@@ -233,7 +234,7 @@ export default function QuotesPage() {
             <EmptyState
               icon={Quote}
               title={t('quotesPage.fiscalVoid')}
-              description={`${t('quotesPage.fiscalVoidLine1')} ${t('quotesPage.fiscalVoidLine2')}`}
+              description={t('quotesPage.fiscalVoidLine1')}
               className="ds-surface-card"
             />
           </div>

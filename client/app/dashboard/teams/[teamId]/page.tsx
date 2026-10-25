@@ -236,7 +236,7 @@ export default function TeamDetailsPage() {
                     <p className="ds-text-caption">{t('teamDetailPage.neuralUnitRegistry')}</p>
                   </div>
                 </div>
-                <Badge variant="secondary" className="tabular-nums">{t('teamDetailPage.unitsSynced', { count: team.members.length })}</Badge>
+                <Badge variant="outline" className="tabular-nums">{t('teamDetailPage.unitsSynced', { count: team.members.length })}</Badge>
               </div>
 
               <div className="divide-y divide-[var(--border-subtle)]">
@@ -290,7 +290,7 @@ export default function TeamDetailsPage() {
             </Panel>
 
             {/* Advanced controls */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <Panel variant="bento" className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent text-primary"><Share2 size={22} aria-hidden /></div>
@@ -300,7 +300,7 @@ export default function TeamDetailsPage() {
                   </div>
                 </div>
                 <p className="ds-text-body text-theme-muted">{t('teamDetailPage.latticeIntegrationDesc')}</p>
-                <Button variant="secondary" size="md" onClick={() => router.push('/dashboard/content')} className="w-full">{t('teamDetailPage.synchronizeAssets')}</Button>
+                <Button variant="secondary" size="md" onClick={() => router.push('/dashboard/content')} className="w-full sm:w-auto">{t('teamDetailPage.synchronizeAssets')}</Button>
               </Panel>
 
             </div>

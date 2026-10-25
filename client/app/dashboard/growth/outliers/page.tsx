@@ -9,6 +9,7 @@ import { apiGet, apiPost } from '../../../../lib/api'
 import { cn } from '../../../../lib/utils'
 import { useToast } from '../../../../contexts/ToastContext'
 import ToastContainer from '../../../../components/ToastContainer'
+import { useTranslation } from '@/hooks/useTranslation'
 import {
   Panel,
   StatCard,
@@ -100,6 +101,51 @@ function formatViews(n: number | undefined): string {
   return String(v)
 }
 
+type TFn = (key: string, params?: Record<string, string | number>) => string
+
+// Plain sentence for a retention "unavailable" reason code — raw codes are never shown.
+function retentionReasonMessage(reason: string | undefined, t: TFn): string {
+  switch (reason) {
+    case 'no_retention':
+    case 'no_metrics':
+    case 'insufficient_data':
+      return t('growthOutliersPage.retentionReasonNoData')
+    case 'not_found':
+    case 'no_content':
+      return t('growthOutliersPage.retentionReasonNotFound')
+    case 'google_not_connected':
+    case 'not_connected':
+      return t('growthOutliersPage.retentionReasonNotConnected')
+    default:
+      return t('growthOutliersPage.retentionUnavailable')
+  }
+}
+
+// Plain sentence for a failed channel sync — raw codes are never shown.
+function syncReasonMessage(reason: string | undefined, t: TFn): string {
+  switch (reason) {
+    case 'no_channel':
+      return t('growthOutliersPage.syncReasonNoChannel')
+    default:
+      return t('growthOutliersPage.syncReasonNotConnected')
+  }
+}
+
+// Display name for a platform id (brand names are not translated).
+const PLATFORM_NAMES: Record<string, string> = {
+  youtube: 'YouTube',
+  tiktok: 'TikTok',
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  linkedin: 'LinkedIn',
+  twitter: 'X',
+  x: 'X',
+}
+function platformName(platform: string | undefined): string {
+  if (!platform) return '—'
+  return PLATFORM_NAMES[platform.toLowerCase()] ?? platform
+}
+
 // Small inline stat used inside the retention drill-down panel.
 function RetentionStat({ label, value }: { label: string; value: string }) {
   return (
@@ -118,6 +164,7 @@ function RetentionPanel({
   insight: RetentionInsight | undefined
   loading: boolean
 }) {
+  const { t } = useTranslation()
   if (loading) {
     return <div className="ds-surface-subtle h-24 animate-pulse rounded-xl" aria-hidden />
   }
@@ -126,7 +173,7 @@ function RetentionPanel({
   if (insight.available === false) {
     return (
       <p className="text-sm text-theme-muted">
-        No retention data yet for this video{insight.reason ? ` (${insight.reason})` : ''}.
+        {retentionReasonMessage(insight.reason, t)}
       </p>
     )
   }
@@ -139,18 +186,18 @@ function RetentionPanel({
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2 sm:max-w-xs">
         <RetentionStat
-          label="Hook score"
+          label={t('growthOutliersPage.hookScore')}
           value={typeof hookScore === 'number' ? hookScore.toFixed(0) : '—'}
         />
         <RetentionStat
-          label="Avg. view %"
+          label={t('growthOutliersPage.avgViewPercent')}
           value={typeof avgViewPercent === 'number' ? `${avgViewPercent.toFixed(0)}%` : '—'}
         />
       </div>
 
       {recommendations.length === 0 ? (
         <p className="text-sm text-theme-muted">
-          No specific recommendations for this video yet.
+          {t('growthOutliersPage.noRecommendations')}
         </p>
       ) : (
         <ul className="space-y-1.5">
@@ -188,6 +235,7 @@ function OutlierRow({
   retention,
   onToggleRetention,
 }: OutlierRowProps) {
+  const { t } = useTranslation()
   const isOver = kind === 'over'
   const multiplier = Number(video?.multiplier) || 0
   const Trend = isOver ? TrendingUp : TrendingDown
@@ -221,7 +269,7 @@ function OutlierRow({
               )}
             >
               {multiplier > 0 ? `${multiplier.toFixed(1)}×` : '—'}
-              <span className="text-xs font-normal text-theme-muted"> your median</span>
+              <span className="text-xs font-normal text-theme-muted"> {t('growthOutliersPage.yourMedian')}</span>
             </p>
             {video?.title ? (
               <p className="ds-text-caption truncate font-medium text-theme-primary">
@@ -231,9 +279,9 @@ function OutlierRow({
             <p className="ds-text-caption truncate">
               <span className="inline-flex items-center gap-1">
                 <Eye className="h-3 w-3" aria-hidden />
-                {formatViews(video?.views)} views
+                {t('growthOutliersPage.views', { views: formatViews(video?.views) })}
               </span>
-              <span className="text-theme-muted"> · {(Number(video?.vph) || 0).toFixed(1)} views/hr</span>
+              <span className="text-theme-muted"> · {t('growthOutliersPage.viewsPerHour', { vph: (Number(video?.vph) || 0).toFixed(1) })}</span>
             </p>
           </div>
         </div>
@@ -257,10 +305,10 @@ function OutlierRow({
               }
               aria-expanded={expanded}
             >
-              Why it worked
+              {t('growthOutliersPage.whyItWorked')}
             </Button>
           ) : null}
-          <Badge variant="secondary">{video?.platform ?? '—'}</Badge>
+          <Badge variant="secondary">{platformName(video?.platform)}</Badge>
         </div>
       </div>
 
@@ -275,6 +323,7 @@ function OutlierRow({
 
 export default function OutliersPage() {
   const toast = useToast()
+  const { t } = useTranslation()
 
   const [report, setReport] = useState<OutlierResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -293,11 +342,11 @@ export default function OutliersPage() {
       const res = await apiGet<OutlierEnvelope>('/seo/outliers')
       setReport(res?.data ?? null)
     } catch {
-      toast.error('Failed to load performance outliers.')
+      toast.error(t('growthOutliersPage.loadError'))
     } finally {
       setLoading(false); setRefreshing(false)
     }
-  }, [toast])
+  }, [toast, t])
 
   useEffect(() => {
     loadOutliers()
@@ -311,20 +360,24 @@ export default function OutliersPage() {
       const available = data?.available
       const synced = Number(data?.synced) || 0
       if (available && synced > 0) {
-        toast.success(`Synced ${synced} videos from your channel`)
+        toast.success(
+          synced === 1
+            ? t('growthOutliersPage.syncedOne', { count: synced })
+            : t('growthOutliersPage.syncedOther', { count: synced }),
+        )
         await loadOutliers(true)
       } else if (available === false) {
-        toast.error(data?.reason || 'Connect your YouTube channel first')
+        toast.error(syncReasonMessage(data?.reason, t))
       } else {
         // available but nothing new to sync
-        toast.info('Your channel is already up to date.')
+        toast.info(t('growthOutliersPage.upToDate'))
       }
     } catch {
-      toast.error('Failed to sync your channel. Please try again.')
+      toast.error(t('growthOutliersPage.syncError'))
     } finally {
       setSyncing(false)
     }
-  }, [toast, loadOutliers])
+  }, [toast, loadOutliers, t])
 
   const handleToggleRetention = useCallback(
     async (externalId: string) => {
@@ -346,14 +399,14 @@ export default function OutliersPage() {
         const insight = res?.data ?? { available: false }
         setRetentionById((prev) => ({ ...prev, [externalId]: insight }))
       } catch {
-        toast.error('Failed to load retention insight for this video.')
+        toast.error(t('growthOutliersPage.retentionLoadError'))
         // Leave it uncached so the user can retry by re-opening.
         setExpandedId((cur) => (cur === externalId ? null : cur))
       } finally {
         setRetentionLoadingId((cur) => (cur === externalId ? null : cur))
       }
     },
-    [expandedId, retentionById, toast]
+    [expandedId, retentionById, toast, t]
   )
 
   const outliers = report?.outliers ?? []
@@ -369,8 +422,8 @@ export default function OutliersPage() {
 
       <SectionHeader
         as="h1"
-        title="Performance Outliers"
-        description="See which of your videos overperform — and which fall flat — so you can do more of what works."
+        title={t('growthOutliersPage.title')}
+        description={t('growthOutliersPage.description')}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button
@@ -386,7 +439,7 @@ export default function OutliersPage() {
                 )
               }
             >
-              {syncing ? 'Syncing…' : 'Sync my channel'}
+              {syncing ? t('growthOutliersPage.syncing') : t('growthOutliersPage.syncChannel')}
             </Button>
             <Button
               variant="secondary"
@@ -395,14 +448,14 @@ export default function OutliersPage() {
               disabled={loading || refreshing || syncing}
               leftIcon={<RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} aria-hidden />}
             >
-              Refresh
+              {t('growthOutliersPage.refresh')}
             </Button>
           </div>
         }
       />
 
       <p className="-mt-4 text-sm text-theme-muted">
-        Sync pulls your whole channel — including videos published outside Click — so outliers cover everything.
+        {t('growthOutliersPage.syncNote')}
       </p>
 
       {/* Loading skeleton */}
@@ -421,8 +474,8 @@ export default function OutliersPage() {
       {!loading && unavailable && (
         <EmptyState
           icon={BarChart3}
-          title="Not enough data yet"
-          description="We need at least 3 published videos with view metrics before we can compare them. Publish a few more and check back — your outliers will appear here automatically."
+          title={t('growthOutliersPage.notEnoughTitle')}
+          description={t('growthOutliersPage.notEnoughDescription')}
           className="ds-surface-card"
         />
       )}
@@ -433,28 +486,26 @@ export default function OutliersPage() {
           {/* 1 ── Summary StatCards ── */}
           <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatCard
-              label="Your median views"
+              label={t('growthOutliersPage.statMedianViews')}
               value={baseline === null ? '—' : formatViews(baseline)}
               icon={Activity}
             />
-            <StatCard label="Overperformers" value={outliers.length} icon={Trophy} />
-            <StatCard label="Videos analyzed" value={totalAnalyzed} icon={BarChart3} />
+            <StatCard label={t('growthOutliersPage.statOverperformers')} value={outliers.length} icon={Trophy} />
+            <StatCard label={t('growthOutliersPage.statVideosAnalyzed')} value={totalAnalyzed} icon={BarChart3} />
           </section>
 
           <p className="text-sm text-theme-muted">
-            The baseline is your OWN median views across your published videos — this is a per-channel
-            comparison, not a global benchmark. A multiplier of 3.2× means that video earned 3.2 times
-            your typical post.
+            {t('growthOutliersPage.baselineNote')}
           </p>
 
           {/* 2 ── Overperformers ── */}
           <Panel variant="bento" className="space-y-4">
-            <SectionHeader as="h2" title="Overperformers — do more of this" />
+            <SectionHeader as="h2" title={t('growthOutliersPage.overperformersTitle')} />
             {outliers.length === 0 ? (
               <EmptyState
                 icon={TrendingUp}
-                title="No standout overperformers yet."
-                description="None of your videos are pulling meaningfully ahead of your median right now."
+                title={t('growthOutliersPage.noOverperformersTitle')}
+                description={t('growthOutliersPage.noOverperformersDescription')}
                 className="ds-surface-subtle"
               />
             ) : (
@@ -479,12 +530,12 @@ export default function OutliersPage() {
 
           {/* 3 ── Underperformers ── */}
           <Panel variant="bento" className="space-y-4">
-            <SectionHeader as="h2" title="Underperformers" />
+            <SectionHeader as="h2" title={t('growthOutliersPage.underperformersTitle')} />
             {underperformers.length === 0 ? (
               <EmptyState
                 icon={TrendingDown}
-                title="No clear underperformers."
-                description="Nothing is trailing far below your median — your output is fairly consistent."
+                title={t('growthOutliersPage.noUnderperformersTitle')}
+                description={t('growthOutliersPage.noUnderperformersDescription')}
                 className="ds-surface-subtle"
               />
             ) : (

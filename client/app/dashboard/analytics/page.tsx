@@ -69,6 +69,10 @@ function platformIcon(platform: string) {
   return VideoIcon
 }
 
+const ANALYTICS_PLATFORM_LABELS: Record<string, string> = {
+  tiktok: 'TikTok', instagram: 'Instagram', youtube: 'YouTube', twitter: 'X', linkedin: 'LinkedIn', facebook: 'Facebook',
+}
+
 export default function AnalyticsPage() {
   const router = useRouter()
   const { t } = useTranslation()
@@ -235,7 +239,7 @@ export default function AnalyticsPage() {
           />
           <StatCard
             className="ds-hover-lift ds-anim-rise"
-            label={t('analyticsPage.engagement')}
+            label={t('analyticsPage.cardEngagementRate')}
             value={`${data?.avg_engagement_rate || 0}%`}
             icon={BarChart3}
           />
@@ -350,7 +354,7 @@ export default function AnalyticsPage() {
                         <div className="min-w-0 flex-1">
                           <p className="ds-text-label text-theme-primary truncate">{node.title}</p>
                           <p className="ds-text-caption flex items-center gap-2 flex-wrap">
-                            <span className="capitalize">{node.platform}</span>
+                            <span>{ANALYTICS_PLATFORM_LABELS[String(node.platform).toLowerCase()] || node.platform}</span>
                             <span aria-hidden>·</span>
                             <Clock size={11} aria-hidden />
                             {new Date(node.publishedAt || Date.now()).toLocaleDateString()}
@@ -386,10 +390,7 @@ export default function AnalyticsPage() {
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-3 px-5 py-3 border-t border-[var(--border-subtle)]">
-            <span className="ds-text-caption inline-flex items-center gap-1.5">
-              <ArrowUpRight size={12} aria-hidden /> {t('analyticsPage.secureConnection')}
-            </span>
+          <div className="flex items-center justify-end gap-3 px-5 py-3 border-t border-[var(--border-subtle)]">
             <span className="ds-text-caption text-theme-secondary">
               {filteredNodes.length === nodes.length
                 ? t('analyticsPage.postsTracked', { count: nodes.length })

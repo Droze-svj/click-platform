@@ -3,91 +3,69 @@ import { LegalPage } from '../../components/ui/legal-page'
 export const metadata = {
   title: 'Security — Click',
   description:
-    "Click's security architecture, controls, and responsible-disclosure program.",
+    'How Click protects your account, your connected platforms, and your media — and how to report a problem.',
 };
 
+/*
+ * Every line here describes something the code actually does. The previous
+ * version promised argon2id hashing (Click uses bcrypt), multi-region failover,
+ * a status page, an annual third-party penetration test, quarterly restore
+ * drills and 18-month tamper-evident audit storage — none of which exist.
+ * Security claims are the last place to round up; add a line back only when
+ * the thing it describes ships.
+ */
 export default function SecurityPage() {
   return (
     <LegalPage kicker="Security" title="How we protect your work." backHref="/trust" backLabel="Trust Center">
         <div className="space-y-10">
           <Section title="Encryption">
-            TLS 1.2+ for all traffic to Click; HSTS preload requested. Stored data is encrypted at
-            rest with AES-256 (managed keys for primary stores, customer-managed keys available on
-            Enterprise). Backups are encrypted with separate keys.
+            All traffic to Click is served over HTTPS, and browsers are told to use HTTPS only
+            (HSTS). The access tokens for the social accounts you connect, and two-step sign-in
+            secrets, are encrypted at rest with AES-256-GCM before they are stored.
           </Section>
 
-          <Section title="Authentication & access">
-            Password hashing uses argon2id (or bcrypt cost 12+ on legacy accounts). Optional 2FA
-            (TOTP). SSO via SAML and OIDC for Enterprise. Session tokens are short-lived and
-            rotated on privilege change. Staff access is gated by SSO + 2FA + just-in-time
-            elevation; production access is logged with the reason and reviewed weekly.
+          <Section title="Your account">
+            Passwords are never stored — only salted bcrypt hashes. You can turn on two-step
+            sign-in with an authenticator app, with backup codes for a lost phone. Repeated wrong
+            passwords lock the account for 15 minutes. Changing your password signs out your other
+            sessions.
+          </Section>
+
+          <Section title="Your media">
+            Uploaded and rendered files are only reachable through short-lived signed links, so a
+            copied URL stops working after it expires. Your content is scoped to your account and
+            workspace on every request.
           </Section>
 
           <Section title="Application security">
-            Strict Content-Security-Policy with nonces, X-Frame-Options DENY, X-Content-Type-Options
-            nosniff, Referrer-Policy strict-origin-when-cross-origin, Permissions-Policy locked
-            down. CSRF tokens on cookie-authed routes; rate-limiting per route; input validation
-            with allowlists; output encoding for any rendered user content.
+            Click sends a Content-Security-Policy, refuses to be framed (X-Frame-Options DENY),
+            disables content sniffing, and uses a strict referrer policy. Requests are rate-limited,
+            server-side fetches of user-supplied URLs are checked against private networks, and
+            dependencies are scanned for known vulnerabilities in CI.
           </Section>
 
-          <Section title="Vulnerability management">
-            Static analysis on every PR (TypeScript, ESLint, Semgrep). Dependency scanning daily
-            via Dependabot/Renovate; high-severity CVEs patched within 7 days, criticals within
-            48 hours. Container images rebuilt weekly. Annual third-party penetration test;
-            executive summary available under NDA at{' '}
-            <a href="mailto:trust@clickapp.io" className="text-indigo-400 hover:text-indigo-300 underline">
-              trust@clickapp.io
-            </a>
-            .
+          <Section title="AI-generated media">
+            Exports made with Click can carry a C2PA provenance manifest that records that AI tools
+            were used, so platforms and viewers can check where a file came from.
           </Section>
 
-          <Section title="Logging & monitoring">
-            Audit logs for authentication, role changes, exports, deletions, and admin actions
-            are retained 18 months in tamper-evident storage. Anomaly detection on auth and
-            billing flows. Errors aggregated through Sentry with PII scrubbing.
+          <Section title="Certifications">
+            Click has not completed a SOC 2 or ISO 27001 audit. We will say so here when that
+            changes. Payments are handled by our payment processor; Click never receives your card
+            number. Click is not built for health data — please don&apos;t upload it.
           </Section>
 
-          <Section title="Data handling">
-            Least-privilege service accounts; per-tenant isolation at the application layer;
-            database-level tenant filters enforced via middleware. Backups daily, retained 30
-            days; quarterly restore drills. Hard-delete from primary store within 30 days of
-            deletion request; from backups within 90 days.
-          </Section>
-
-          <Section title="AI controls">
-            All generative outputs carry a visible AI-disclosure marker and a C2PA cryptographic
-            provenance manifest. Prompt and response logs are retained 30 days for abuse
-            detection, then aggregated/anonymized. Content moderation runs on prompts and outputs
-            for CSAM, non-consensual intimate imagery, and election disinformation.
-          </Section>
-
-          <Section title="Resilience">
-            Multi-region failover for the API; CDN edge for static assets. RPO 24h, RTO 4h
-            target. Status page at status.clickapp.io.
-          </Section>
-
-          <Section title="Compliance roadmap">
-            <ul className="list-disc pl-6 space-y-1 mt-2">
-              <li>SOC 2 Type II — in progress, target completion this fiscal year.</li>
-              <li>ISO 27001 — scoped, gap analysis underway.</li>
-              <li>HIPAA — not in scope; do not upload PHI.</li>
-              <li>PCI-DSS SAQ A — payment data is tokenized via Whop / Stripe; Click never
-                touches PAN.</li>
-            </ul>
-          </Section>
-
-          <Section title="Responsible disclosure">
-            Found something? Email{' '}
-            <a href="mailto:security@clickapp.io" className="text-indigo-400 hover:text-indigo-300 underline">
+          <Section title="Report a problem">
+            Found a vulnerability? Email{' '}
+            <a href="mailto:security@clickapp.io" className="text-primary-600 dark:text-indigo-400 hover:underline underline-offset-4">
               security@clickapp.io
             </a>{' '}
-            or use{' '}
-            <a href="/.well-known/security.txt" className="text-indigo-400 hover:text-indigo-300 underline">
+            or see{' '}
+            <a href="/.well-known/security.txt" className="text-primary-600 dark:text-indigo-400 hover:underline underline-offset-4">
               /.well-known/security.txt
             </a>
-            . We acknowledge within 1 business day, triage within 5, and credit reporters in our
-            hall-of-fame (with permission). Safe-harbor: we will not pursue legal action for
-            good-faith research that follows the disclosure policy.
+            . Please give us a reasonable chance to fix it before sharing details publicly; we will
+            not take legal action over good-faith research that follows this policy.
           </Section>
         </div>
           </LegalPage>

@@ -37,7 +37,7 @@ interface ConsensusResult {
   justification: string
 }
 
-const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
+const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-default shadow-2xl"
 
 type ToastFn = (message: string, type?: 'success' | 'error' | 'info' | 'warning') => unknown
 
@@ -76,7 +76,7 @@ export const SyndicateConsensusView: React.FC<{ showToast?: ToastFn }> = ({ show
                     </div>
                     <div>
                         <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Syndicate Council</h4>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-violet-500/70">Multi-Agent Strategic Synthesis</span>
+                        <span className="text-[9px] font-black text-theme-muted uppercase tracking-[0.4em] mt-1 block italic text-violet-500/70">Multi-Agent Strategic Synthesis</span>
                     </div>
                 </div>
 
@@ -86,7 +86,7 @@ export const SyndicateConsensusView: React.FC<{ showToast?: ToastFn }> = ({ show
                         onClick={triggerConsensus}
                         disabled={loading}
                         className={`px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] italic shadow-2xl transition-all ${
-                            loading ? 'bg-slate-800 text-slate-600' : 'bg-violet-600 hover:bg-violet-500 text-white'
+                            loading ? 'bg-slate-800 text-theme-muted' : 'bg-violet-600 hover:bg-violet-500 text-white'
                         }`}
                     >
                         {loading ? 'SYNTHESIZING DEBATE...' : 'INITIATE COUNCIL DEBATE'}
@@ -100,30 +100,30 @@ export const SyndicateConsensusView: React.FC<{ showToast?: ToastFn }> = ({ show
                 {/* Left: Proposal Data */}
                 <div className={`${glassStyle} rounded-[2.5rem] p-10 space-y-8 flex flex-col`}>
                     <div className="flex items-center justify-between">
-                        <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Draft Proposal</h5>
+                        <h5 className="text-xl font-black text-theme-primary italic tracking-tighter uppercase leading-none">Draft Proposal</h5>
                         <Gavel className="w-5 h-5 text-violet-400" />
                     </div>
 
                     <div className="space-y-6 flex-1">
-                        <div className="p-6 bg-black/40 border border-white/5 rounded-3xl space-y-4">
+                        <div className="p-6 bg-surface-card border border-subtle rounded-3xl space-y-4">
                             <span className="text-[10px] font-black text-violet-400 uppercase tracking-widest leading-none block">Objective</span>
-                            <h6 className="text-sm font-black text-white italic uppercase leading-tight tracking-tight">{proposal.title}</h6>
-                            <p className="text-[11px] text-slate-400 font-bold leading-relaxed italic">{proposal.description}</p>
+                            <h6 className="text-sm font-black text-theme-primary italic uppercase leading-tight tracking-tight">{proposal.title}</h6>
+                            <p className="text-[11px] text-theme-secondary font-bold leading-relaxed italic">{proposal.description}</p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="p-5 bg-white/5 border border-white/5 rounded-2xl">
-                                <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-2">Impact Class</span>
+                            <div className="p-5 bg-white/5 border border-subtle rounded-2xl">
+                                <span className="text-[8px] font-black text-theme-muted uppercase tracking-widest block mb-2">Impact Class</span>
                                 <div className="flex items-center gap-2">
-                                    <Scale className="w-3 h-3 text-white" />
-                                    <span className="text-[10px] font-black text-white uppercase italic">Strategic</span>
+                                    <Scale className="w-3 h-3 text-theme-primary" />
+                                    <span className="text-[10px] font-black text-theme-primary uppercase italic">Strategic</span>
                                 </div>
                             </div>
-                            <div className="p-5 bg-white/5 border border-white/5 rounded-2xl">
-                                <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-2">Budget Delta</span>
+                            <div className="p-5 bg-white/5 border border-subtle rounded-2xl">
+                                <span className="text-[8px] font-black text-theme-muted uppercase tracking-widest block mb-2">Budget Delta</span>
                                 <div className="flex items-center gap-2">
                                     <TrendingUp className="w-3 h-3 text-emerald-400" />
-                                    <span className="text-[10px] font-black text-white uppercase italic">${proposal.budgetDelta}</span>
+                                    <span className="text-[10px] font-black text-theme-primary uppercase italic">${proposal.budgetDelta}</span>
                                 </div>
                             </div>
                         </div>
@@ -131,7 +131,7 @@ export const SyndicateConsensusView: React.FC<{ showToast?: ToastFn }> = ({ show
 
                     <div className="p-6 bg-violet-600/10 border border-violet-500/20 rounded-3xl space-y-2">
                         <span className="text-[9px] font-black text-violet-400 uppercase tracking-widest">Syndicate Tip</span>
-                        <p className="text-[10px] text-white font-bold italic leading-tight">
+                        <p className="text-[10px] text-theme-primary font-bold italic leading-tight">
                             Consensus requires a 3/4 supermajority from the specialize personas.
                         </p>
                     </div>
@@ -156,12 +156,12 @@ export const SyndicateConsensusView: React.FC<{ showToast?: ToastFn }> = ({ show
                                 >
                                     <div className="flex items-center justify-between relative z-10">
                                         <div className="flex items-center gap-4">
-                                            <div className="p-2.5 rounded-xl bg-white/5 text-slate-400">
+                                            <div className="p-2.5 rounded-xl bg-white/5 text-theme-secondary">
                                                 {typeof vote === 'object' ? (
                                                     vote.vote === 'APPROVE' ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <XCircle className="w-4 h-4 text-rose-400" />
                                                 ) : <MessageSquare className="w-4 h-4 animate-pulse" />}
                                             </div>
-                                            <h6 className="text-[11px] font-black text-white uppercase tracking-widest italic leading-none">
+                                            <h6 className="text-[11px] font-black text-theme-primary uppercase tracking-widest italic leading-none">
                                                 {typeof vote === 'object' ? vote.agent : 'Synthesizing...'}
                                             </h6>
                                         </div>
@@ -174,7 +174,7 @@ export const SyndicateConsensusView: React.FC<{ showToast?: ToastFn }> = ({ show
 
                                     <div className="relative z-10">
                                         {typeof vote === 'object' ? (
-                                            <p className="text-[10px] font-bold text-slate-400 italic leading-snug">"{vote.justification}"</p>
+                                            <p className="text-[10px] font-bold text-theme-secondary italic leading-snug">"{vote.justification}"</p>
                                         ) : (
                                             <div className="space-y-2">
                                                 <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
@@ -219,10 +219,10 @@ export const SyndicateConsensusView: React.FC<{ showToast?: ToastFn }> = ({ show
                                             {result.consensus ? <CheckCircle2 className="w-6 h-6" /> : <XCircle className="w-6 h-6" />}
                                         </div>
                                         <div>
-                                            <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">
+                                            <h5 className="text-xl font-black text-theme-primary italic tracking-tighter uppercase leading-none">
                                                 {result.consensus ? 'Strong consensus' : 'Disagreement detected'}
                                             </h5>
-                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1 block italic">
+                                            <span className="text-[9px] font-black text-theme-muted uppercase tracking-widest mt-1 block italic">
                                                 {result.executionStatus.replace(/_/g, ' ')}
                                             </span>
                                         </div>
@@ -240,7 +240,7 @@ export const SyndicateConsensusView: React.FC<{ showToast?: ToastFn }> = ({ show
                                                 <span className="text-[10px] font-black uppercase tracking-widest italic">Autonomous Locking</span>
                                             </div>
                                         )}
-                                        <button className="p-4 rounded-xl bg-white/5 border border-white/5 text-white hover:bg-white/10">
+                                        <button className="p-4 rounded-xl bg-white/5 border border-subtle text-theme-primary hover:bg-white/10">
                                             <ChevronRight className="w-5 h-5" />
                                         </button>
                                     </div>

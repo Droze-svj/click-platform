@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
@@ -45,7 +46,7 @@ export default function SectorResonanceMatrixPage() {
   const loadLattice = useCallback(async () => {
     try {
       const token = localStorage.getItem('token')
-      if (!token) { router.push('/login'); return }
+      if (!token) { router.push(loginPathForCurrentPage()); return }
       const [userRes, packRes] = await Promise.all([
         axios.get(`${API_URL}/auth/me`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API_URL}/niche/packs`, { headers: { Authorization: `Bearer ${token}` } })
@@ -195,7 +196,7 @@ export default function SectorResonanceMatrixPage() {
                   <input type="color" value={identitySettings.primaryColor}
                     onChange={e => setIdentitySettings({ ...identitySettings, primaryColor: e.target.value })}
                     aria-label={t('nichePage.primaryColourPicker')} title={t('nichePage.primaryColour')}
-                    className="h-10 w-12 rounded-lg border border-input cursor-pointer bg-transparent" />
+                    className="h-10 w-12 shrink-0 rounded-lg border border-input cursor-pointer bg-transparent p-1 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-0" />
                   <Input value={identitySettings.primaryColor}
                     onChange={e => setIdentitySettings({ ...identitySettings, primaryColor: e.target.value })}
                     aria-label={t('nichePage.primaryColourHexValue')} title={t('nichePage.primaryColourHex')}
@@ -207,7 +208,7 @@ export default function SectorResonanceMatrixPage() {
                   <input type="color" value={identitySettings.secondaryColor}
                     onChange={e => setIdentitySettings({ ...identitySettings, secondaryColor: e.target.value })}
                     aria-label={t('nichePage.secondaryColourPicker')} title={t('nichePage.secondaryColour')}
-                    className="h-10 w-12 rounded-lg border border-input cursor-pointer bg-transparent" />
+                    className="h-10 w-12 shrink-0 rounded-lg border border-input cursor-pointer bg-transparent p-1 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border-0" />
                   <Input value={identitySettings.secondaryColor}
                     onChange={e => setIdentitySettings({ ...identitySettings, secondaryColor: e.target.value })}
                     aria-label={t('nichePage.secondaryColourHexValue')} title={t('nichePage.secondaryColourHex')}

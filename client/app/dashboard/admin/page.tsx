@@ -57,9 +57,19 @@ interface SystemHealth {
   memory: any
 }
 
+interface RefundRequest {
+  id: string
+  email: string
+  plan: string | null
+  requested_at: string
+  ticket_id: string | null
+}
+
 interface DashboardData {
   overview: AdminOverview
   recent_activity: { users: RecentUser[]; posts: RecentPost[] }
+  // Only from the MongoDB dashboard; absent on the legacy Supabase one.
+  refund_requests?: RefundRequest[]
   system_health: SystemHealth
 }
 
@@ -69,6 +79,9 @@ export default function AdminDashboardPage() {
   const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // 403 = signed in but not an admin. That is not an error to retry — it used
+  // to read "Oversight Error · Request failed with status code 403 · Try again".
+  const [forbidden, setForbidden] = useState(false)
   const [data, setData] = useState<DashboardData | null>(null)
 
   useEffect(() => {
@@ -79,11 +92,13 @@ export default function AdminDashboardPage() {
     try {
       setLoading(true)
       setError(null)
+      setForbidden(false)
       const response = await apiGet<DashboardData>('/admin/dashboard')
       setData(response)
     } catch (err: any) {
       console.error('Failed to load admin dashboard:', err)
-      setError(err.message || t('adminPage.failedToLoad'))
+      if (err?.response?.status === 403) setForbidden(true)
+      setError(t('adminPage.failedToLoad'))
     } finally {
       setLoading(false)
     }
@@ -109,12 +124,14 @@ export default function AdminDashboardPage() {
       <div className="ds-surface-card p-8 max-w-lg w-full">
         <EmptyState
           icon={ShieldAlert}
-          title={t('adminPage.errorTitle')}
-          description={error || t('adminPage.unauthorized')}
+          title={forbidden ? t('deadLetterPage.adminAccessRequired') : t('adminPage.errorTitle')}
+          description={forbidden ? t('adminPage.unauthorized') : (error || t('adminPage.unauthorized'))}
           action={
-            <Button variant="primary" leftIcon={<RefreshCw size={16} aria-hidden />} onClick={loadDashboard}>
-              {t('adminPage.retrySync')}
-            </Button>
+            forbidden ? undefined : (
+              <Button variant="primary" leftIcon={<RefreshCw size={16} aria-hidden />} onClick={loadDashboard}>
+                {t('adminPage.retrySync')}
+              </Button>
+            )
           }
         />
       </div>
@@ -184,6 +201,28 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent activity */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Refund requests reach no one unless email/Slack alerts are set
+                up; they are always listed here. Refunds are issued in Whop. */}
+            {Array.isArray(data.refund_requests) && (
+              <div className="ds-surface-card p-5 sm:p-6">
+                <SectionHeader as="h3" title={t('adminPage.refundRequestsTitle')} description={t('adminPage.refundRequestsBody')} className="mb-4" />
+                {data.refund_requests.length === 0 ? (
+                  <p className="ds-text-caption px-1 py-2">{t('adminPage.refundRequestsEmpty')}</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {data.refund_requests.map((r) => (
+                      <li key={r.id} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border-subtle)] p-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-theme-primary truncate">{r.email}</p>
+                          <p className="ds-text-caption truncate">{[r.plan, r.ticket_id].filter(Boolean).join(' · ')}</p>
+                        </div>
+                        <span className="ds-text-caption shrink-0">{r.requested_at ? new Date(r.requested_at).toLocaleDateString() : ''}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
             <div className="ds-surface-card p-5 sm:p-6">
               <SectionHeader as="h3" title={t('adminPage.resonanceFeed')} className="mb-5" />
 

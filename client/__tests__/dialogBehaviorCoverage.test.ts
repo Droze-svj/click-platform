@@ -36,10 +36,6 @@ const NOT_A_DIALOG = new Map<string, string>([
     'the drag-and-drop file target (border-dashed), shown while a file is over the window; it has no controls',
   ],
   [
-    'app/dashboard/content/[id]/page.tsx',
-    'a decorative fingerprint watermark (pointer-events-none, opacity-[0.03]) behind the page content',
-  ],
-  [
     'components/AIContentOperationsDashboard.tsx',
     'a decorative background layer (pointer-events-none, aria-hidden) behind the page content; it has no controls',
   ],

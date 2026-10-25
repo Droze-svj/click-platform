@@ -182,7 +182,7 @@ export default function LabsPage() {
 
                   <div className="min-w-0 flex-1">
                     <h3 className="ds-text-h3 text-theme-primary leading-tight">{f.label}</h3>
-                    <p className="ds-text-caption mt-1 capitalize">{f.category}</p>
+                    <p className="ds-text-caption mt-1 capitalize">{f.category === 'ai' ? 'AI' : f.category}</p>
                   </div>
 
                   {unlocked ? (

@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import HashtagStrategistPanel from '../HashtagStrategistPanel'
 import * as api from '@/lib/featuresApi'
 
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
 jest.mock('@/lib/featuresApi')
 const mTags = api.generateHashtags as jest.MockedFunction<typeof api.generateHashtags>
 

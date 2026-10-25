@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import ToastContainer from '../../../components/ToastContainer'
@@ -67,7 +68,7 @@ export default function JobsPage() {
   const loadLattice = useCallback(async () => {
     setRefreshing(true)
     try {
-      if (!getAuthToken()) return router.push('/login')
+      if (!getAuthToken()) return router.push(loginPathForCurrentPage())
       const [jobsRes, metricsRes]: any[] = await Promise.all([
         apiGet('/jobs/user', undefined, false),
         apiGet(`/jobs/metrics/user?timeRange=${encodeURIComponent(timeRange)}`, undefined, false).catch(() => ({ data: null }))
@@ -160,9 +161,9 @@ export default function JobsPage() {
         {userMetrics && (
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard icon={Layers} label={t('jobsPage.metricAccumulatedCycles')} value={userMetrics.total} delta={t('jobsPage.metricAccumulatedCyclesSub')} direction="neutral" />
-            <StatCard icon={ShieldCheck} label={t('jobsPage.metricSuccessResonance')} value={userMetrics.total > 0 ? `${((userMetrics.successful / userMetrics.total) * 100).toFixed(1)}%` : '—'} delta={t('jobsPage.metricSuccessResonanceSub')} direction="up" />
+            <StatCard icon={ShieldCheck} label={t('jobsPage.metricSuccessResonance')} value={userMetrics.total > 0 ? `${((userMetrics.successful / userMetrics.total) * 100).toFixed(1)}%` : '—'} delta={t('jobsPage.metricSuccessResonanceSub')} direction="neutral" />
             <StatCard icon={ShieldAlert} label={t('jobsPage.metricFluxDiffractions')} value={userMetrics.failed} delta={t('jobsPage.metricFluxDiffractionsSub')} direction={userMetrics.failed > 0 ? 'down' : 'neutral'} />
-            <StatCard icon={Zap} label={t('jobsPage.metricCumulativeCompute')} value={`$${userMetrics.totalCost.toFixed(4)}`} delta={t('jobsPage.metricCumulativeComputeSub')} direction="neutral" />
+            <StatCard icon={Zap} label={t('jobsPage.metricCumulativeCompute')} value={`$${userMetrics.totalCost.toFixed(userMetrics.totalCost > 0 && userMetrics.totalCost < 0.01 ? 4 : 2)}`} delta={t('jobsPage.metricCumulativeComputeSub')} direction="neutral" />
           </section>
         )}
 

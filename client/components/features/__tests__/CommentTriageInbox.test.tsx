@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import CommentTriageInbox from '../CommentTriageInbox'
 import * as api from '@/lib/featuresApi'
 
+jest.mock('@/hooks/useTranslation', () => require('@/mocks/useTranslationEn'))
 jest.mock('@/lib/featuresApi')
 const mockedTriage = api.triageComments as jest.MockedFunction<typeof api.triageComments>
 const mockedDraft = api.draftReply as jest.MockedFunction<typeof api.draftReply>
@@ -103,7 +104,7 @@ describe('CommentTriageInbox', () => {
       const opts = Array.from(screen.getByTestId('triage-platform').querySelectorAll('option')).map((o) => o.value)
       expect(opts).toEqual(['instagram', 'youtube'])
     })
-    expect(screen.queryByText('tiktok')).not.toBeInTheDocument()
+    expect(screen.queryByText('TikTok')).not.toBeInTheDocument()
   })
 
   it('drafts an AI reply for a triaged comment on the selected platform', async () => {

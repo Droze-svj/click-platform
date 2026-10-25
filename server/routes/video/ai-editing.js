@@ -471,9 +471,26 @@ router.post('/auto-edit', auth, asyncHandler(async (req, res) => {
         }
       }
 
+      // The page's "Export formats" (9:16 / 1:1 / 16:9) were only logged — no
+      // extra format was ever produced. The edit renders 9:16; export the
+      // other picked ratios from the edited clip so they carry the edit.
+      let aspectExports;
+      const extraRatios = (Array.isArray(resolvedOptions.aspectFormats) ? resolvedOptions.aspectFormats : [])
+        .filter((r) => r && r !== '9:16');
+      if (extraRatios.length && realClips[0] && realClips[0].id && isMongoBackedId) {
+        try {
+          const out = await exportAspectRatios(videoId, extraRatios, { clipId: realClips[0].id });
+          aspectExports = out && (out.exports || out);
+        } catch (aspErr) {
+          logger.warn('[auto-edit] extra aspect exports failed', { videoId, error: aspErr.message });
+          aspectExports = { error: 'The extra formats could not be exported. You can export them from the clip.' };
+        }
+      }
+
       sendSuccess(res, 'Video automatically edited and saved successfully', 200, {
         ...result,
         clips: realClips,
+        ...(aspectExports ? { aspectExports } : {}),
         message: `Video has been automatically edited with ${result.editsApplied?.length || 0} improvements applied. The edited video has replaced the original.`,
       });
 

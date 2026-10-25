@@ -13,7 +13,7 @@ import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
 import ResonanceCommandMatrix from './EngagementCommandCenter'
 
-const glass = 'backdrop-blur-2xl bg-white/[0.03] border border-white/10 rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.6)]'
+const glass = 'backdrop-blur-2xl bg-white/[0.03] border border-default rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.6)]'
 const pill = 'px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] border italic shadow-xl'
 
 const SectionHeader = ({ icon: Icon, title, subtitle, color = 'indigo', badge }: any) => {
@@ -36,7 +36,7 @@ const SectionHeader = ({ icon: Icon, title, subtitle, color = 'indigo', badge }:
         </div>
         <div>
           <h3 className="text-4xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none mb-3 drop-shadow-2xl">{title}</h3>
-          <p className="text-[12px] font-black text-slate-800 uppercase tracking-[0.5em] italic opacity-60 border-l-2 pl-6 ml-1 border-white/10">{subtitle}</p>
+          <p className="text-[12px] font-black text-slate-800 uppercase tracking-[0.5em] italic opacity-60 border-l-2 pl-6 ml-1 border-default">{subtitle}</p>
         </div>
       </div>
       {badge && (
@@ -92,9 +92,9 @@ const ArbitragePanel = () => {
                             <div className="flex gap-12 mb-12">
                                 <div className="space-y-2">
                                     <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest italic opacity-40">{t('click12Dashboard.conversionResistance')}</p>
-                                    <p className="text-4xl font-black text-white italic tracking-tighter tabular-nums leading-none">{(offer.conversionRate * 100).toFixed(1)}<span className="text-xl text-orange-400 opacity-40 ml-1">%</span></p>
+                                    <p className="text-4xl font-black text-theme-primary italic tracking-tighter tabular-nums leading-none">{(offer.conversionRate * 100).toFixed(1)}<span className="text-xl text-orange-400 opacity-40 ml-1">%</span></p>
                                 </div>
-                                <div className="space-y-2 border-l-2 border-white/10 pl-12">
+                                <div className="space-y-2 border-l-2 border-default pl-12">
                                     <p className="text-[10px] font-black text-slate-800 uppercase tracking-widest italic opacity-40">{t('click12Dashboard.payoutCapitalValue')}</p>
                                     <p className="text-4xl font-black text-emerald-400 italic tracking-tighter tabular-nums leading-none"><span className="text-xl opacity-40 mr-1">$</span>{offer.pcv}</p>
                                 </div>
@@ -111,7 +111,7 @@ const ArbitragePanel = () => {
                 ))}
                 
                 {offers.length === 0 && (
-                    <div className={`${glass} p-24 text-center col-span-2 flex flex-col items-center justify-center space-y-8 border-dashed border-white/10`}>
+                    <div className={`${glass} p-24 text-center col-span-2 flex flex-col items-center justify-center space-y-8 border-dashed border-default`}>
                         <ZapOff size={64} className="text-slate-800 opacity-20" />
                         <p className="text-2xl font-black text-slate-800 uppercase tracking-widest italic opacity-40">{t('click12Dashboard.noArbitrageVectors')}</p>
                     </div>
@@ -164,7 +164,7 @@ const EncirclementPanel = () => {
                 ))}
             </div>
 
-            <div className={`${glass} p-12 space-y-8 border-purple-500/20 relative overflow-hidden bg-black/40 shadow-inner group hover:border-purple-500/40 transition-all duration-1000`}>
+            <div className={`${glass} p-12 space-y-8 border-purple-500/20 relative overflow-hidden bg-surface-card shadow-inner group hover:border-purple-500/40 transition-all duration-1000`}>
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-4">
                         <Terminal size={20} className="text-purple-400 animate-pulse" />
@@ -176,7 +176,7 @@ const EncirclementPanel = () => {
                         <p className="opacity-40 uppercase tracking-widest border-b border-purple-500/10 pb-2 mb-4">{t('click12Dashboard.awaitingLedgerPulse')}</p>
                     ) : (
                         ledger.map((entry: any, i: number) => (
-                            <p key={i} className="flex gap-4"><span>{entry.timestamp ?? '--:--:--'}</span> <span className="text-white font-bold">{entry.channel ?? t('click12Dashboard.ledgerSystemChannel')}</span> <span>{entry.message ?? ''}</span></p>
+                            <p key={i} className="flex gap-4"><span>{entry.timestamp ?? '--:--:--'}</span> <span className="text-theme-primary font-bold">{entry.channel ?? t('click12Dashboard.ledgerSystemChannel')}</span> <span>{entry.message ?? ''}</span></p>
                         ))
                     )}
                 </div>
@@ -245,7 +245,7 @@ const StabilityPanel = () => {
                                     <p className="text-[11px] font-bold text-slate-800 uppercase tracking-widest italic opacity-60 leading-relaxed">{item.desc ?? ''}</p>
                                 </div>
                             </div>
-                            <div className="h-1 w-full bg-black/40 rounded-full overflow-hidden mt-8 border border-white/5">
+                            <div className="h-1 w-full bg-surface-card rounded-full overflow-hidden mt-8 border border-subtle">
                                 <m.div initial={{ width: 0 }} animate={{ width: statusWidth(item.status) }} transition={{ duration: 2, delay: i * 0.2 }}
                                   className={`h-full shadow-[0_0_20px_rgba(6,182,212,0.5)] ${isHealthy(item.status) ? 'bg-cyan-400' : 'bg-rose-400'}`} />
                             </div>
@@ -290,17 +290,17 @@ export default function Click12Dashboard() {
     <div className="min-h-screen bg-transparent pb-48 font-app-sans text-theme-primary">
       {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] z-0">
-          <Orbit size={800} className="text-white absolute -top-40 -left-40 animate-spin-slow" />
-          <Network size={1000} className="text-white absolute -bottom-80 -right-60 rotate-[32deg] opacity-[0.05]" />
+          <Orbit size={800} className="text-theme-primary absolute -top-40 -left-40 animate-spin-slow" />
+          <Network size={1000} className="text-theme-primary absolute -bottom-80 -right-60 rotate-[32deg] opacity-[0.05]" />
       </div>
 
       <div className="max-w-[1700px] mx-auto pt-24 px-10 relative z-10 space-y-20">
         {/* Unified Terminal Header */}
         <header className="flex flex-col xl:flex-row items-center justify-between gap-16 border-b border-white/[0.05] pb-24 relative z-50">
            <div className="flex flex-col md:flex-row items-center gap-10 text-center md:text-left">
-              <div className="w-24 h-24 bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-transparent border-2 border-white/10 rounded-[3rem] flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.3)] group relative overflow-hidden transition-all duration-1000 hover:rotate-12">
+              <div className="w-24 h-24 bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-transparent border-2 border-default rounded-[3rem] flex items-center justify-center shadow-[0_40px_100px_rgba(99,102,241,0.3)] group relative overflow-hidden transition-all duration-1000 hover:rotate-12">
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Terminal size={48} className="text-white relative z-10 group-hover:scale-110 transition-transform duration-700" />
+                <Terminal size={48} className="text-theme-primary relative z-10 group-hover:scale-110 transition-transform duration-700" />
               </div>
               <div>
                  <div className="flex flex-col md:flex-row items-center gap-6 mb-4">
@@ -308,7 +308,7 @@ export default function Click12Dashboard() {
                        <ActivityIcon size={12} className="text-purple-400 animate-pulse" />
                        <span className="text-[12px] font-black uppercase tracking-[0.5em] text-purple-400 italic leading-none">{t('click12Dashboard.versionLabel')}</span>
                     </div>
-                    <div className="flex items-center gap-3 px-5 py-2 rounded-full bg-black/60 border border-white/5 shadow-inner">
+                    <div className="flex items-center gap-3 px-5 py-2 rounded-full bg-surface-card border border-subtle shadow-inner">
                         <div className="w-3 h-3 rounded-full bg-purple-500 shadow-[0_0_20px_rgba(168,85,247,1)]" />
                         <span className="text-[10px] font-black text-slate-800 tracking-widest uppercase italic leading-none">{t('click12Dashboard.overlordTerminalSynced')}</span>
                     </div>
@@ -321,7 +321,7 @@ export default function Click12Dashboard() {
            </div>
 
            {/* High-End Tab Nav */}
-           <div className={`flex flex-wrap items-center gap-4 p-5 rounded-[4rem] border border-white/10 shadow-[0_50px_150px_rgba(0,0,0,0.8)] relative z-10 backdrop-blur-3xl bg-white/[0.01]`}>
+           <div className={`flex flex-wrap items-center gap-4 p-5 rounded-[4rem] border border-default shadow-[0_50px_150px_rgba(0,0,0,0.8)] relative z-10 backdrop-blur-3xl bg-white/[0.01]`}>
               {TABS.map(tab => (
                 <button type="button" key={tab.id} onClick={() => setActiveTab(tab.id as any)}
                   className={`flex items-center gap-5 px-10 py-5 rounded-[2.5rem] text-[13px] font-black uppercase tracking-[0.4em] transition-all duration-700 italic active:scale-95 border ${

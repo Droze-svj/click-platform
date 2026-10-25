@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
@@ -102,7 +103,7 @@ export default function LibraryPage() {
 
   useEffect(() => {
     if (authLoading) return // user is null until /auth/me answers
-    if (!user) { router.push('/login'); return }
+    if (!user) { router.push(loginPathForCurrentPage()); return }
     loadLibrary()
   }, [user, authLoading, router, loadLibrary])
 
@@ -317,7 +318,7 @@ export default function LibraryPage() {
 
           {/* Content Area */}
           <main className="lg:col-span-3 min-w-0">
-            <Panel variant="bento" className="min-h-[600px] flex flex-col">
+            <Panel variant="bento" className="flex flex-col">
 
               <SectionHeader
                 as="h2"
@@ -337,7 +338,7 @@ export default function LibraryPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 flex-1 content-start">
                   {content.map((item) => (
                     <article key={item._id}
-                      className={cn('ds-surface-subtle ds-hover-lift relative p-4 flex flex-col min-h-[220px] transition-colors',
+                      className={cn('ds-surface-subtle ds-hover-lift relative p-4 flex flex-col transition-colors',
                         selectMode && selectedItems.includes(item._id) && 'border-primary ring-2 ring-primary/20')}
                     >
                       {selectMode && (
@@ -389,7 +390,7 @@ export default function LibraryPage() {
 
                       <div className="pt-4 mt-4 border-t border-[var(--border-subtle)]">
                         <Button
-                          variant="primary" size="sm"
+                          variant="secondary" size="sm"
                           className="w-full"
                           rightIcon={<ChevronRight size={14} aria-hidden />}
                           onClick={() => router.push(`/dashboard/content/${item._id}`)}

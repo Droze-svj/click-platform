@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
@@ -103,7 +104,7 @@ export default function ContentCalendarPage() {
 
   useEffect(() => {
     if (authLoading) return
-    if (!user) { router.push('/login'); return }
+    if (!user) { router.push(loginPathForCurrentPage()); return }
     loadCalendar()
   }, [user, authLoading, currentDate, view, router, loadCalendar])
 
@@ -182,9 +183,9 @@ export default function ContentCalendarPage() {
         <Panel variant="bento" className="p-0 overflow-hidden">
           <div className="p-5 md:p-6 border-b border-[var(--border-subtle)] flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-1 p-1 rounded-lg ds-surface-subtle">
-              <IconButton variant="ghost" size="sm" onClick={() => navigateTime(-1)} title={t('calendarPage.refresh')} aria-label="Previous period"><ChevronLeft size={18} aria-hidden /></IconButton>
+              <IconButton variant="ghost" size="sm" onClick={() => navigateTime(-1)} title={t('calendarPage.previousPeriod')} aria-label={t('calendarPage.previousPeriod')}><ChevronLeft size={18} aria-hidden /></IconButton>
               <Button variant="ghost" size="sm" onClick={() => setCurrentDate(new Date())}>{t('calendarPage.today') || 'Today'}</Button>
-              <IconButton variant="ghost" size="sm" onClick={() => navigateTime(1)} title={t('calendarPage.refresh')} aria-label="Next period"><ChevronRight size={18} aria-hidden /></IconButton>
+              <IconButton variant="ghost" size="sm" onClick={() => navigateTime(1)} title={t('calendarPage.nextPeriod')} aria-label={t('calendarPage.nextPeriod')}><ChevronRight size={18} aria-hidden /></IconButton>
             </div>
 
             <h2 className="ds-text-h3 text-theme-primary">
@@ -208,13 +209,15 @@ export default function ContentCalendarPage() {
           <div className="p-4 md:p-6 min-h-[560px]">
             {view === 'month' && (
               <div className="overflow-x-auto">
-                <div className="min-w-[760px]">
-                  <div className="grid grid-cols-7 gap-3 mb-3">
+                {/* Phones get a compact 7-column month (count badges only) instead of
+                    a 760px grid that showed three days and hid the rest off-screen. */}
+                <div className="sm:min-w-[760px]">
+                  <div className="grid grid-cols-7 gap-1 sm:gap-3 mb-3">
                     {DAY_SHORT.map(d => (
                       <div key={d} className="text-center ds-text-caption py-1">{d}</div>
                     ))}
                   </div>
-                  <div className="grid grid-cols-7 gap-3">
+                  <div className="grid grid-cols-7 gap-1 sm:gap-3">
                     {(() => {
                       const y = currentDate.getFullYear(), m = currentDate.getMonth()
                       const first = new Date(y, m, 1), last = new Date(y, m + 1, 0)
@@ -224,7 +227,7 @@ export default function ContentCalendarPage() {
                       while (days.length % 7 !== 0) days.push(null)
 
                       return days.map((date, i) => {
-                        if (!date) return <div key={i} className="min-h-[130px] opacity-0 pointer-events-none" />
+                        if (!date) return <div key={i} className="min-h-[56px] sm:min-h-[130px] opacity-0 pointer-events-none" />
                         const ds = date.toISOString().split('T')[0]
                         const dp = posts.filter(p => new Date(p.scheduledTime).toISOString().split('T')[0] === ds)
                         const isToday = date.toDateString() === new Date().toDateString()
@@ -234,26 +237,27 @@ export default function ContentCalendarPage() {
                         return (
                           <div key={i} onDragOver={e => { e.preventDefault(); setDragOverDate(date) }} onDragLeave={() => setDragOverDate(null)} onDrop={e => handleDrop(e, date)}
                             className={cn(
-                              'min-h-[130px] rounded-xl p-3 border transition-colors',
+                              'min-w-0 overflow-hidden min-h-[56px] sm:min-h-[130px] rounded-lg sm:rounded-xl p-1.5 sm:p-3 border transition-colors',
                               isTarget ? 'border-primary bg-primary/5'
                                 : isToday ? 'border-primary/40 bg-primary/5'
                                 : 'border-[var(--border-subtle)] ds-surface-subtle hover:bg-accent',
                               isPast && !isToday && 'opacity-50 hover:opacity-100'
                             )}
                           >
-                            <div className="flex justify-between items-center mb-2">
+                            <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-1 sm:mb-2">
                               <span className={cn('text-sm font-semibold', isToday ? 'text-primary' : 'text-theme-secondary')}>{date.getDate()}</span>
-                              {dp.length > 0 && <Badge variant="secondary" className="tabular-nums">{dp.length}</Badge>}
+                              {dp.length > 0 && <Badge variant="secondary" className="hidden sm:inline-flex tabular-nums">{dp.length}</Badge>}
                             </div>
-                            <div className="space-y-1.5">
+                            <div className="space-y-1 sm:space-y-1.5">
                               {dp.slice(0, 3).map(p => {
                                 const cfg = PC[p.platform] || { label: p.platform, gradient: 'from-slate-600 to-slate-800', icon: '?' }
                                 return (
                                   <button type="button" key={p._id} draggable onDragStart={e => handleDragStart(e, p)} onClick={() => setSelectedPost(p)}
-                                    className={cn('w-full flex items-center gap-1.5 px-2 py-1 rounded-md bg-gradient-to-r text-white cursor-pointer text-[11px] font-medium text-left', cfg.gradient)}
+                                    className={cn('w-full flex items-center justify-center sm:justify-start gap-1.5 px-1 sm:px-2 py-1 rounded-md bg-gradient-to-r text-white cursor-pointer text-[11px] font-medium text-left', cfg.gradient)}
+                                    title={p.content.text || cfg.label}
                                   >
                                     <span aria-hidden>{cfg.icon}</span>
-                                    <span className="truncate">{p.content.text || cfg.label}</span>
+                                    <span className="hidden sm:inline truncate">{p.content.text || cfg.label}</span>
                                   </button>
                                 )
                               })}

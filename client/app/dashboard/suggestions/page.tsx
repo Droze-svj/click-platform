@@ -23,7 +23,7 @@ import { PageShell } from '../../../components/ui'
 
 export default function SuggestionsPage() {
   return (
-    <PageShell width="wide" flush>
+    <PageShell width="wide">
       <ErrorBoundary>
         <EnhancedContentSuggestions />
       </ErrorBoundary>

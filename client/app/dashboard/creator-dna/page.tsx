@@ -19,6 +19,7 @@ import { Brain, Sparkles, Target, TrendingUp, Type, Palette, RefreshCw } from 'l
 import { apiGet } from '@/lib/api'
 import ClickLoadingState from '@/components/click/ClickLoadingState'
 import ClickEmptyState from '@/components/click/ClickEmptyState'
+import { useTranslation } from '@/hooks/useTranslation'
 import {
   PageShell,
   PageHeader,
@@ -59,24 +60,13 @@ interface CreatorDna {
 
 /** How much Click actually knows, stated plainly rather than as a score. */
 const CONFIDENCE_COPY: Record<string, { label: string; tone: string; detail: string }> = {
-  high: {
-    label: 'Well established',
-    tone: 'text-emerald-500',
-    detail: 'Enough of your work is measured that these patterns are dependable.',
-  },
-  medium: {
-    label: 'Taking shape',
-    tone: 'text-amber-500',
-    detail: 'A pattern is emerging. It will sharpen as you publish more.',
-  },
-  low: {
-    label: 'Still learning',
-    tone: 'text-theme-muted',
-    detail: 'Click has only seen a little of your work, so treat these as first impressions.',
-  },
+  high: { label: 'creatorDnaPage.confHigh', tone: 'text-emerald-500', detail: 'creatorDnaPage.confHighDetail' },
+  medium: { label: 'creatorDnaPage.confMedium', tone: 'text-amber-500', detail: 'creatorDnaPage.confMediumDetail' },
+  low: { label: 'creatorDnaPage.confLow', tone: 'text-theme-muted', detail: 'creatorDnaPage.confLowDetail' },
 }
 
 export default function CreatorDnaPage() {
+  const { t } = useTranslation()
   const [dna, setDna] = useState<CreatorDna | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -114,17 +104,17 @@ export default function CreatorDnaPage() {
       <PageHeader
         as="h2"
         icon={<Brain size={22} aria-hidden />}
-        title="Your Creator DNA"
-        description="What Click has measured about how you make things — and what it does with that."
+        title={t('creatorDnaPage.title')}
+        description={t('creatorDnaPage.description')}
         meta={
-          <Badge variant="secondary" className={confidence.tone}>
-            {confidence.label}
+          <Badge variant="outline" className={confidence.tone}>
+            {t(confidence.label)}
           </Badge>
         }
         actions={
           <>
             <Link href="/dashboard/click-learning">
-              <Button variant="secondary" size="md">See the raw signals</Button>
+              <Button variant="secondary" size="md">{t('creatorDnaPage.rawSignals')}</Button>
             </Link>
             <Button
               variant="ghost"
@@ -133,7 +123,7 @@ export default function CreatorDnaPage() {
               onClick={() => { setRefreshing(true); load() }}
               leftIcon={!refreshing ? <RefreshCw size={16} aria-hidden /> : undefined}
             >
-              Refresh
+              {t('creatorDnaPage.refresh')}
             </Button>
           </>
         }
@@ -142,12 +132,12 @@ export default function CreatorDnaPage() {
       {!hasProfile ? (
         <ClickEmptyState
           intent="empty.analytics"
-          title="Click hasn't learned your style yet"
-          message="Publish a few clips and Click starts recording the fonts, hooks, pacing and grades you actually reach for. This page fills in from your real work — nothing is guessed."
+          title={t('creatorDnaPage.emptyTitle')}
+          message={t('creatorDnaPage.emptyBody')}
           action={
             <Link href="/dashboard/forge">
               <Button variant="primary" size="md" leftIcon={<Sparkles size={16} aria-hidden />}>
-                Make something
+                {t('creatorDnaPage.makeSomething')}
               </Button>
             </Link>
           }
@@ -156,28 +146,28 @@ export default function CreatorDnaPage() {
         <>
           {/* Honesty first: how much this is based on. */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <StatCard label="Choices recorded" value={String(sample)} />
-            <StatCard label="Confidence" value={confidence.label} />
+            <StatCard label={t('creatorDnaPage.statChoices')} value={String(sample)} />
+            <StatCard label={t('creatorDnaPage.statConfidence')} value={t(confidence.label)} />
             <StatCard
-              label="Primary platform"
+              label={t('creatorDnaPage.statPlatform')}
               value={dna?.engagementDiffusionAnalysis?.metrics?.primaryPlatform || '—'}
             />
           </div>
-          <p className="ds-text-caption text-theme-muted -mt-2">{confidence.detail}</p>
+          <p className="ds-text-caption text-theme-muted -mt-2">{t(confidence.detail)}</p>
 
           {/* Aesthetic */}
           <Panel variant="bento" className="p-6">
             <SectionHeader
               as="h3"
-              title="Your look"
-              description="The visual choices you return to, and how they perform against your own baseline."
+              title={t('creatorDnaPage.lookTitle')}
+              description={t('creatorDnaPage.lookDesc')}
               className="mb-4"
             />
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FacetList icon={<Type size={14} aria-hidden />} label="Fonts" values={list(dna?.topFonts)} />
-              <FacetList icon={<Sparkles size={14} aria-hidden />} label="Caption styles" values={list(dna?.topCaptionStyles)} />
-              <FacetList icon={<Palette size={14} aria-hidden />} label="Colour grades" values={list(dna?.topColorGrades)} />
-              <FacetList icon={<TrendingUp size={14} aria-hidden />} label="Transitions" values={list(dna?.topTransitions)} />
+              <FacetList icon={<Type size={14} aria-hidden />} label={t('creatorDnaPage.fonts')} values={list(dna?.topFonts)} />
+              <FacetList icon={<Sparkles size={14} aria-hidden />} label={t('creatorDnaPage.captionStyles')} values={list(dna?.topCaptionStyles)} />
+              <FacetList icon={<Palette size={14} aria-hidden />} label={t('creatorDnaPage.colourGrades')} values={list(dna?.topColorGrades)} />
+              <FacetList icon={<TrendingUp size={14} aria-hidden />} label={t('creatorDnaPage.transitions')} values={list(dna?.topTransitions)} />
             </div>
             {dna?.aestheticAffinityIndex?.verdict ? (
               <p className="mt-4 ds-text-body text-theme-secondary">{dna.aestheticAffinityIndex.verdict}</p>
@@ -188,15 +178,15 @@ export default function CreatorDnaPage() {
           <Panel variant="bento" className="p-6">
             <SectionHeader
               as="h3"
-              title="How you open"
-              description="Your hook habits, measured against your own retention where there's enough data."
+              title={t('creatorDnaPage.openTitle')}
+              description={t('creatorDnaPage.openDesc')}
               className="mb-4"
             />
             <div className="flex flex-wrap items-center gap-3">
-              <FacetList icon={<Target size={14} aria-hidden />} label="Hooks" values={list(dna?.topHooks)} />
+              <FacetList icon={<Target size={14} aria-hidden />} label={t('creatorDnaPage.hooks')} values={list(dna?.topHooks)} />
               {dna?.engagementDiffusionAnalysis?.metrics?.hookRetentionDelta ? (
                 <Badge variant="secondary">
-                  {dna.engagementDiffusionAnalysis.metrics.hookRetentionDelta} vs your baseline
+                  {t('creatorDnaPage.vsBaseline', { delta: dna.engagementDiffusionAnalysis.metrics.hookRetentionDelta })}
                 </Badge>
               ) : null}
             </div>
@@ -210,8 +200,8 @@ export default function CreatorDnaPage() {
             <Panel variant="bento" className="p-6">
               <SectionHeader
                 as="h3"
-                title="What to try next"
-                description="Built from your own most-used choices — not generic advice."
+                title={t('creatorDnaPage.nextTitle')}
+                description={t('creatorDnaPage.nextDesc')}
                 className="mb-4"
               />
               <ul className="flex flex-col gap-3">
@@ -232,6 +222,7 @@ export default function CreatorDnaPage() {
 
 /** A labelled row of facet chips, or an honest dash when nothing is recorded. */
 function FacetList({ icon, label, values }: { icon: React.ReactNode; label: string; values: string[] }) {
+  const { t } = useTranslation()
   return (
     <div className="min-w-0">
       <div className="flex items-center gap-1.5 ds-text-label text-theme-muted">
@@ -239,7 +230,7 @@ function FacetList({ icon, label, values }: { icon: React.ReactNode; label: stri
         <span>{label}</span>
       </div>
       {values.length === 0 ? (
-        <p className="mt-1.5 ds-text-body text-theme-muted">Not enough data yet</p>
+        <p className="mt-1.5 ds-text-body text-theme-muted">{t('creatorDnaPage.notEnough')}</p>
       ) : (
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {values.slice(0, 5).map((v) => (

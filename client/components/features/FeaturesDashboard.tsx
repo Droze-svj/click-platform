@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { useTranslation } from '@/hooks/useTranslation'
 import StreakWidget from './StreakWidget'
 import DigestWidget from './DigestWidget'
 import HeatmapWidget from './HeatmapWidget'
@@ -30,8 +31,8 @@ function Group({ id, title, subtitle, children }: {
   return (
     <section id={id} aria-label={title} data-testid={`group-${id}`} className="space-y-3 scroll-mt-4">
       <div>
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">{title}</h2>
-        <p className="text-xs text-zinc-600">{subtitle}</p>
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-theme-secondary">{title}</h2>
+        <p className="text-xs text-theme-muted">{subtitle}</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">{children}</div>
     </section>
@@ -44,9 +45,10 @@ function Group({ id, title, subtitle, children }: {
  * Create (draft on-brand content), and Engage (comments + the responder loop).
  */
 export default function FeaturesDashboard() {
+  const { t } = useTranslation()
   return (
     <div data-testid="features-dashboard" className="space-y-8">
-      <Group id="overview" title="Overview" subtitle="How your posting is trending">
+      <Group id="overview" title={t('creatorTools.dashboard.overviewTitle')} subtitle={t('creatorTools.dashboard.overviewSubtitle')}>
         <div className="md:col-span-2"><MorningBriefPanel /></div>
         <div><StreakWidget /></div>
         <div><DigestWidget /></div>
@@ -54,13 +56,13 @@ export default function FeaturesDashboard() {
         <div className="md:col-span-2"><HeatmapWidget /></div>
       </Group>
 
-      <Group id="plan" title="Plan" subtitle="Find ideas and structure your calendar">
+      <Group id="plan" title={t('creatorTools.dashboard.planTitle')} subtitle={t('creatorTools.dashboard.planSubtitle')}>
         <div className="md:col-span-2"><IdeaGeneratorPanel /></div>
         <div className="md:col-span-2"><CalendarAutofillPanel /></div>
         <div className="md:col-span-2"><SeriesPlannerPanel /></div>
       </Group>
 
-      <Group id="create" title="Create" subtitle="Draft on-brand content fast">
+      <Group id="create" title={t('creatorTools.dashboard.createTitle')} subtitle={t('creatorTools.dashboard.createSubtitle')}>
         <div className="md:col-span-2"><VoiceMemoScriptPanel /></div>
         <div className="md:col-span-2"><ComposerPanel /></div>
         <div><HookGeneratorPanel /></div>
@@ -72,7 +74,7 @@ export default function FeaturesDashboard() {
         <div><RepurposeStudioPanel /></div>
       </Group>
 
-      <Group id="engage" title="Engage" subtitle="Triage comments and manage replies">
+      <Group id="engage" title={t('creatorTools.dashboard.engageTitle')} subtitle={t('creatorTools.dashboard.engageSubtitle')}>
         <div><CommentTriageInbox /></div>
         <div className="md:col-span-2"><ResponderStats /></div>
         <div><ResponderInbox /></div>

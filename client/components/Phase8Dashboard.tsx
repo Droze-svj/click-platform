@@ -13,7 +13,7 @@ import { apiGet, apiPost } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
 
-const glass = 'backdrop-blur-2xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.5)]'
+const glass = 'backdrop-blur-2xl bg-white/[0.03] border border-default rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.5)]'
 const pill = 'px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] border'
 
 // ─── Section Components ────────────────────────────────────────────────────
@@ -35,7 +35,7 @@ const SectionHeader = ({ icon: Icon, title, subtitle, color = 'indigo', badge }:
         </div>
         <div>
           <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">{title}</h3>
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{subtitle}</p>
+          <p className="text-[10px] font-bold text-theme-muted uppercase tracking-widest mt-0.5">{subtitle}</p>
         </div>
       </div>
       {badge && (
@@ -82,7 +82,7 @@ const OmniModelPanel = () => {
     'kling-v2': 'text-purple-400 bg-purple-500/10 border-purple-500/20',
     'elevenlabs-v3': 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
     'sora-v2': 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-    'sovereign-native': 'text-slate-400 bg-slate-500/10 border-slate-500/20'
+    'sovereign-native': 'text-theme-secondary bg-slate-500/10 border-slate-500/20'
   }
 
   return (
@@ -91,19 +91,19 @@ const OmniModelPanel = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {models.map(model => (
-          <div key={model.id} className="p-6 rounded-[2rem] bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-all group">
-            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border mb-3 text-[9px] font-black uppercase tracking-widest ${modelColorMap[model.id] || 'text-slate-400 bg-slate-500/10 border-slate-500/20'}`}>
+          <div key={model.id} className="p-6 rounded-[2rem] bg-white/[0.02] border border-subtle hover:bg-white/[0.04] transition-all group">
+            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border mb-3 text-[9px] font-black uppercase tracking-widest ${modelColorMap[model.id] || 'text-theme-secondary bg-slate-500/10 border-slate-500/20'}`}>
               <Cpu className="w-3 h-3" />{model.label}
             </div>
-            <p className="text-[10px] text-slate-400 font-bold capitalize mb-3">{model.specialty?.replace(/_/g, ' ')}</p>
+            <p className="text-[10px] text-theme-secondary font-bold capitalize mb-3">{model.specialty?.replace(/_/g, ' ')}</p>
             <div className="flex flex-wrap gap-1.5">
               {model.strengths?.slice(0, 3).map((s: string) => (
-                <span key={s} className="px-2 py-1 rounded-lg bg-white/5 text-[8px] text-slate-500 font-bold uppercase">{s}</span>
+                <span key={s} className="px-2 py-1 rounded-lg bg-white/5 text-[8px] text-theme-muted font-bold uppercase">{s}</span>
               ))}
             </div>
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/[0.05]">
-              <span className="text-[9px] text-slate-600 font-mono">{t('phase8Dashboard.costPerSegment', { cost: model.costPerSegment })}</span>
-              <span className="text-[9px] text-slate-600 font-mono">{t('phase8Dashboard.latencySeconds', { seconds: (model.avgLatencyMs / 1000).toFixed(1) })}</span>
+              <span className="text-[9px] text-theme-muted font-mono">{t('phase8Dashboard.costPerSegment', { cost: model.costPerSegment })}</span>
+              <span className="text-[9px] text-theme-muted font-mono">{t('phase8Dashboard.latencySeconds', { seconds: (model.avgLatencyMs / 1000).toFixed(1) })}</span>
             </div>
           </div>
         ))}
@@ -121,22 +121,22 @@ const OmniModelPanel = () => {
             <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{t('phase8Dashboard.routingResult')}</p>
             <div className="grid gap-3">
               {routingDemo.scenes?.map((scene: any, i: number) => (
-                <div key={i} className="flex items-center gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/5">
+                <div key={i} className="flex items-center gap-4 p-5 rounded-2xl bg-white/[0.02] border border-subtle">
                   <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[10px] font-black text-indigo-400">{i + 1}</div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-white font-bold truncate">{scene.originalScene?.description?.substring(0, 60)}...</p>
-                    <p className="text-[9px] text-slate-500 font-mono mt-0.5">{t('phase8Dashboard.sceneType', { type: scene.sceneType })}</p>
+                    <p className="text-xs text-theme-primary font-bold truncate">{scene.originalScene?.description?.substring(0, 60)}...</p>
+                    <p className="text-[9px] text-theme-muted font-mono mt-0.5">{t('phase8Dashboard.sceneType', { type: scene.sceneType })}</p>
                   </div>
-                  <div className={`${pill} ${modelColorMap[scene.assignedModel] || 'text-slate-400 border-slate-500/20'}`}>
+                  <div className={`${pill} ${modelColorMap[scene.assignedModel] || 'text-theme-secondary border-slate-500/20'}`}>
                     {scene.modelLabel}
                   </div>
-                  <span className="text-[9px] text-slate-600 font-mono">{(scene.confidence * 100).toFixed(0)}%</span>
+                  <span className="text-[9px] text-theme-muted font-mono">{(scene.confidence * 100).toFixed(0)}%</span>
                 </div>
               ))}
             </div>
-            <div className="flex gap-6 pt-4 border-t border-white/5">
-              <div><p className="text-[8px] text-slate-600 uppercase font-bold">{t('phase8Dashboard.totalCost')}</p><p className="text-lg font-black text-white">${routingDemo.totalEstimatedCost?.toFixed(3)}</p></div>
-              <div><p className="text-[8px] text-slate-600 uppercase font-bold">{t('phase8Dashboard.estLatency')}</p><p className="text-lg font-black text-white">{(routingDemo.totalEstimatedLatencyMs / 1000).toFixed(0)}s</p></div>
+            <div className="flex gap-6 pt-4 border-t border-subtle">
+              <div><p className="text-[8px] text-theme-muted uppercase font-bold">{t('phase8Dashboard.totalCost')}</p><p className="text-lg font-black text-theme-primary">${routingDemo.totalEstimatedCost?.toFixed(3)}</p></div>
+              <div><p className="text-[8px] text-theme-muted uppercase font-bold">{t('phase8Dashboard.estLatency')}</p><p className="text-lg font-black text-theme-primary">{(routingDemo.totalEstimatedLatencyMs / 1000).toFixed(0)}s</p></div>
             </div>
           </m.div>
         )}
@@ -181,7 +181,7 @@ const SpatialMemoryPanel = () => {
       <SectionHeader icon={Layers} title={t('phase8Dashboard.spatialMemoryTitle')} subtitle={t('phase8Dashboard.spatialMemorySubtitle')} color="purple" badge={t('phase8Dashboard.firstBadge')} />
 
       <div className="p-6 rounded-2xl bg-purple-500/5 border border-purple-500/15">
-        <p className="text-xs text-slate-400 leading-relaxed italic">
+        <p className="text-xs text-theme-secondary leading-relaxed italic">
           <span className="text-purple-400 font-black not-italic">{t('phase8Dashboard.howItWorks')}</span> {t('phase8Dashboard.spatialMemoryDescription')}
         </p>
       </div>
@@ -196,27 +196,27 @@ const SpatialMemoryPanel = () => {
         {ledger && (
           <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             <div className="grid grid-cols-3 gap-4">
-              <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
-                <p className="text-2xl font-black text-white">{ledger.scenes?.length || 0}</p>
-                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">{t('phase8Dashboard.scenesTracked')}</p>
+              <div className="p-5 rounded-2xl bg-white/[0.02] border border-subtle text-center">
+                <p className="text-2xl font-black text-theme-primary">{ledger.scenes?.length || 0}</p>
+                <p className="text-[9px] font-bold text-theme-muted uppercase tracking-wider mt-1">{t('phase8Dashboard.scenesTracked')}</p>
               </div>
-              <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
-                <p className="text-2xl font-black text-white">{Object.keys(ledger.globalEntities || {}).length}</p>
-                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">{t('phase8Dashboard.globalEntities')}</p>
+              <div className="p-5 rounded-2xl bg-white/[0.02] border border-subtle text-center">
+                <p className="text-2xl font-black text-theme-primary">{Object.keys(ledger.globalEntities || {}).length}</p>
+                <p className="text-[9px] font-bold text-theme-muted uppercase tracking-wider mt-1">{t('phase8Dashboard.globalEntities')}</p>
               </div>
-              <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
+              <div className="p-5 rounded-2xl bg-white/[0.02] border border-subtle text-center">
                 <p className={`text-2xl font-black ${riskColor(ledger.riskScore || 0)}`}>{ledger.riskScore || 0}</p>
-                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mt-1">{t('phase8Dashboard.riskScore')}</p>
+                <p className="text-[9px] font-bold text-theme-muted uppercase tracking-wider mt-1">{t('phase8Dashboard.riskScore')}</p>
               </div>
             </div>
 
             {ledger.continuityLog?.length > 0 && (
               <div className="space-y-3">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{t('phase8Dashboard.continuityEnforcements')}</p>
+                <p className="text-[10px] font-black text-theme-muted uppercase tracking-widest">{t('phase8Dashboard.continuityEnforcements')}</p>
                 {ledger.continuityLog.map((log: any, i: number) => (
                   <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-amber-500/5 border border-amber-500/10">
                     <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-                    <p className="text-[10px] text-slate-300 font-bold">{log.message}</p>
+                    <p className="text-[10px] text-theme-secondary font-bold">{log.message}</p>
                     <span className={`ml-auto ${pill} text-amber-400 border-amber-500/20`}>{log.riskLevel}</span>
                   </div>
                 ))}
@@ -262,26 +262,26 @@ const AEOMetadataPanel = () => {
       <SectionHeader icon={FileJson} title={t('phase8Dashboard.aeoMetadataTitle')} subtitle={t('phase8Dashboard.aeoMetadataSubtitle')} color="emerald" badge={t('phase8Dashboard.zeroClickCommerceBadge')} />
 
       <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/15">
-        <p className="text-xs text-slate-400 leading-relaxed italic">
+        <p className="text-xs text-theme-secondary leading-relaxed italic">
           <span className="text-emerald-400 font-black not-italic">{t('phase8Dashboard.theAdvantage')}</span> {t('phase8Dashboard.aeoMetadataDescription')}
         </p>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">{t('phase8Dashboard.productName')}</label>
+          <label className="text-[9px] font-black text-theme-muted uppercase tracking-widest block mb-2">{t('phase8Dashboard.productName')}</label>
           <input id="aeo-product-name" title={t('phase8Dashboard.productName')} placeholder={t('phase8Dashboard.productNamePlaceholder')} value={productName} onChange={e => setProductName(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-emerald-500/40" />
+            className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-default text-theme-primary text-xs font-bold focus:outline-none focus:border-emerald-500/40" />
         </div>
         <div>
-          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">{t('phase8Dashboard.priceUsd')}</label>
+          <label className="text-[9px] font-black text-theme-muted uppercase tracking-widest block mb-2">{t('phase8Dashboard.priceUsd')}</label>
           <input id="aeo-product-price" title={t('phase8Dashboard.priceUsdTitle')} placeholder={t('phase8Dashboard.priceUsdPlaceholder')} value={productPrice} onChange={e => setProductPrice(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-emerald-500/40" />
+            className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-default text-theme-primary text-xs font-bold focus:outline-none focus:border-emerald-500/40" />
         </div>
         <div>
-          <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-2">{t('phase8Dashboard.ctaUrl')}</label>
+          <label className="text-[9px] font-black text-theme-muted uppercase tracking-widest block mb-2">{t('phase8Dashboard.ctaUrl')}</label>
           <input id="aeo-cta-url" title={t('phase8Dashboard.ctaUrl')} placeholder={t('phase8Dashboard.ctaUrlPlaceholder')} value={ctaUrl} onChange={e => setCtaUrl(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-emerald-500/40" />
+            className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-default text-theme-primary text-xs font-bold focus:outline-none focus:border-emerald-500/40" />
         </div>
       </div>
 
@@ -296,21 +296,21 @@ const AEOMetadataPanel = () => {
           <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
             <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/15">
               <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-2">{t('phase8Dashboard.aiAgentSummary')}</p>
-              <p className="text-sm text-white font-bold italic">&quot;{aeoData.summary}&quot;</p>
+              <p className="text-sm text-theme-primary font-bold italic">&quot;{aeoData.summary}&quot;</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">{t('phase8Dashboard.keyFacts')}</p>
+                <p className="text-[9px] font-black text-theme-muted uppercase tracking-widest mb-3">{t('phase8Dashboard.keyFacts')}</p>
                 <div className="space-y-2">
                   {aeoData.keyFacts?.map((fact: string, i: number) => (
-                    <div key={i} className="flex items-center gap-2 text-[10px] text-slate-300 font-bold">
+                    <div key={i} className="flex items-center gap-2 text-[10px] text-theme-secondary font-bold">
                       <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />{fact}
                     </div>
                   ))}
                 </div>
               </div>
               <div>
-                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">{t('phase8Dashboard.targetedQueryHooks')}</p>
+                <p className="text-[9px] font-black text-theme-muted uppercase tracking-widest mb-3">{t('phase8Dashboard.targetedQueryHooks')}</p>
                 <div className="space-y-2">
                   {aeoData.queryTargets?.map((q: string, i: number) => (
                     <p key={i} className="text-[10px] text-indigo-300 font-mono italic">&quot;{q}&quot;</p>
@@ -365,11 +365,11 @@ const UGCRawPanel = () => {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">{t('phase8Dashboard.ugcProfile')}</p>
+          <p className="text-[9px] font-black text-theme-muted uppercase tracking-widest mb-3">{t('phase8Dashboard.ugcProfile')}</p>
           <div className="space-y-2">
             {profiles.map(p => (
               <button type="button" key={p.id} onClick={() => setSelectedProfile(p.id)}
-                className={`w-full text-left p-4 rounded-xl transition-all ${selectedProfile === p.id ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400' : 'bg-white/[0.02] border border-white/5 text-slate-400'}`}>
+                className={`w-full text-left p-4 rounded-xl transition-all ${selectedProfile === p.id ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400' : 'bg-white/[0.02] border border-subtle text-theme-secondary'}`}>
                 <p className="text-[11px] font-black uppercase">{p.label}</p>
                 <p className="text-[9px] mt-0.5 opacity-70">{p.description}</p>
               </button>
@@ -377,11 +377,11 @@ const UGCRawPanel = () => {
           </div>
         </div>
         <div>
-          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">{t('phase8Dashboard.humanizationIntensity')}</p>
+          <p className="text-[9px] font-black text-theme-muted uppercase tracking-widest mb-3">{t('phase8Dashboard.humanizationIntensity')}</p>
           <div className="space-y-3">
             {(['subtle', 'medium', 'heavy'] as const).map(level => (
               <button type="button" key={level} onClick={() => setSelectedIntensity(level)}
-                className={`w-full p-4 rounded-xl text-left transition-all capitalize text-sm font-black ${selectedIntensity === level ? 'bg-amber-600 text-white' : 'bg-white/[0.02] border border-white/5 text-slate-500'}`}>
+                className={`w-full p-4 rounded-xl text-left transition-all capitalize text-sm font-black ${selectedIntensity === level ? 'bg-amber-600 text-white' : 'bg-white/[0.02] border border-subtle text-theme-muted'}`}>
                 {t(`phase8Dashboard.intensity_${level}`)}
                 <span className="text-[9px] block font-normal opacity-70 mt-0.5">
                   {level === 'subtle' ? t('phase8Dashboard.intensitySubtleDesc') : level === 'medium' ? t('phase8Dashboard.intensityMediumDesc') : t('phase8Dashboard.intensityHeavyDesc')}
@@ -408,22 +408,22 @@ const UGCRawPanel = () => {
                   {t('phase8Dashboard.authScore', { score: demoResult.manifest?.authenticityScore })}
                 </span>
               </div>
-              <p className="text-[10px] text-slate-300 font-mono leading-relaxed break-all">
+              <p className="text-[10px] text-theme-secondary font-mono leading-relaxed break-all">
                 {demoResult.humanized?.substring(0, 300)}...
               </p>
             </div>
             <div className="grid grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                <p className="text-[8px] text-slate-600 uppercase font-bold">{t('phase8Dashboard.cameraShake')}</p>
-                <p className="text-lg font-black text-white mt-1">{demoResult.manifest?.video?.shakeAmplitudePx}px</p>
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-subtle">
+                <p className="text-[8px] text-theme-muted uppercase font-bold">{t('phase8Dashboard.cameraShake')}</p>
+                <p className="text-lg font-black text-theme-primary mt-1">{demoResult.manifest?.video?.shakeAmplitudePx}px</p>
               </div>
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                <p className="text-[8px] text-slate-600 uppercase font-bold">{t('phase8Dashboard.jpegQuality')}</p>
-                <p className="text-lg font-black text-white mt-1">{demoResult.manifest?.video?.compressionQuality}%</p>
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-subtle">
+                <p className="text-[8px] text-theme-muted uppercase font-bold">{t('phase8Dashboard.jpegQuality')}</p>
+                <p className="text-lg font-black text-theme-primary mt-1">{demoResult.manifest?.video?.compressionQuality}%</p>
               </div>
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-                <p className="text-[8px] text-slate-600 uppercase font-bold">{t('phase8Dashboard.cutVariance')}</p>
-                <p className="text-lg font-black text-white mt-1">±{demoResult.manifest?.pacing?.variancePercent}%</p>
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-subtle">
+                <p className="text-[8px] text-theme-muted uppercase font-bold">{t('phase8Dashboard.cutVariance')}</p>
+                <p className="text-lg font-black text-theme-primary mt-1">±{demoResult.manifest?.pacing?.variancePercent}%</p>
               </div>
             </div>
           </m.div>
@@ -477,7 +477,7 @@ const ZeroPartyDataPanel = () => {
 
       <div className="flex flex-wrap gap-3">
         {overlayTypes.map(overlayType => (
-          <div key={overlayType.id} className={`p-4 rounded-2xl border ${typeColorMap[overlayType.id] || 'text-slate-400 border-white/5'}`}>
+          <div key={overlayType.id} className={`p-4 rounded-2xl border ${typeColorMap[overlayType.id] || 'text-theme-secondary border-subtle'}`}>
             <p className="text-[10px] font-black uppercase">{overlayType.label}</p>
             <p className="text-[9px] opacity-60 mt-0.5 max-w-[160px]">{overlayType.description}</p>
           </div>
@@ -485,11 +485,11 @@ const ZeroPartyDataPanel = () => {
       </div>
 
       <div>
-        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">{t('phase8Dashboard.targetPlatform')}</p>
+        <p className="text-[9px] font-black text-theme-muted uppercase tracking-widest mb-3">{t('phase8Dashboard.targetPlatform')}</p>
         <div className="flex gap-3 flex-wrap">
           {['tiktok', 'instagram_reels', 'youtube_shorts', 'linkedin'].map(p => (
             <button type="button" key={p} onClick={() => setPlatform(p)}
-              className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${platform === p ? 'bg-rose-600 text-white' : 'bg-white/[0.02] border border-white/5 text-slate-500'}`}>
+              className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${platform === p ? 'bg-rose-600 text-white' : 'bg-white/[0.02] border border-subtle text-theme-muted'}`}>
               {p.replace('_', ' ')}
             </button>
           ))}
@@ -510,18 +510,18 @@ const ZeroPartyDataPanel = () => {
               <span className={`${pill} text-emerald-400 border-emerald-500/20`}>{t('phase8Dashboard.projCapture', { rate: manifest.projectedCaptureRate })}</span>
             </div>
             {manifest.overlays?.map((overlay: any, i: number) => (
-              <div key={i} className={`p-6 rounded-2xl border ${typeColorMap[overlay.type] || 'border-white/5'}`}>
+              <div key={i} className={`p-6 rounded-2xl border ${typeColorMap[overlay.type] || 'border-subtle'}`}>
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-[10px] font-black uppercase">{overlay.type} · {overlay.label}</p>
-                  <span className="text-[9px] font-mono text-slate-500">{t('phase8Dashboard.overlayTiming', { start: overlay.startTimeSeconds?.toFixed(1), duration: overlay.durationSeconds })}</span>
+                  <span className="text-[9px] font-mono text-theme-muted">{t('phase8Dashboard.overlayTiming', { start: overlay.startTimeSeconds?.toFixed(1), duration: overlay.durationSeconds })}</span>
                 </div>
                 {overlay.content?.question && (
-                  <p className="text-sm text-white font-bold mb-3">&quot;{overlay.content.question}&quot;</p>
+                  <p className="text-sm text-theme-primary font-bold mb-3">&quot;{overlay.content.question}&quot;</p>
                 )}
                 {overlay.content?.options && (
                   <div className="flex flex-wrap gap-2">
                     {overlay.content.options.map((opt: any) => (
-                      <span key={opt.id} className="px-3 py-1 rounded-lg bg-white/5 text-[9px] text-slate-300 font-bold">{opt.text}</span>
+                      <span key={opt.id} className="px-3 py-1 rounded-lg bg-white/5 text-[9px] text-theme-secondary font-bold">{opt.text}</span>
                     ))}
                   </div>
                 )}
@@ -561,8 +561,8 @@ export default function Phase8Dashboard() {
       {/* Header */}
       <div className="border-b border-white/[0.05] pb-12">
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 rounded-[2rem] bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-emerald-500/10 border border-white/10 flex items-center justify-center">
-            <Sparkles className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 rounded-[2rem] bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-emerald-500/10 border border-default flex items-center justify-center">
+            <Sparkles className="w-8 h-8 text-theme-primary" />
           </div>
           <div>
             <div className="flex items-center gap-3 mb-2">
@@ -570,7 +570,7 @@ export default function Phase8Dashboard() {
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </div>
             <h1 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">{t('phase8Dashboard.headerTitle')}</h1>
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">{t('phase8Dashboard.headerSubtitle')}</p>
+            <p className="text-theme-muted text-xs font-bold uppercase tracking-widest mt-2">{t('phase8Dashboard.headerSubtitle')}</p>
           </div>
         </div>
 
@@ -578,7 +578,7 @@ export default function Phase8Dashboard() {
         <div className="flex flex-wrap gap-3 pt-6">
           {SECTIONS.map(s => (
             <button type="button" key={s.id} onClick={() => setActiveSection(s.id)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all ${activeSection === s.id ? 'bg-white text-black' : 'bg-white/[0.02] border border-white/10 text-slate-400 hover:text-white'}`}>
+              className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all ${activeSection === s.id ? 'bg-white text-black' : 'bg-white/[0.02] border border-default text-theme-secondary hover:text-white'}`}>
               <s.icon className="w-3.5 h-3.5" />{s.label}
             </button>
           ))}

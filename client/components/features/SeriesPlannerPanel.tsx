@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { handleApiError } from '@/lib/api'
 import { useTranslation } from '@/hooks/useTranslation'
 import { planSeries, type Platform, type SeriesResult } from '@/lib/featuresApi'
+import { platformLabel } from './platformLabel'
 
 const PLATFORMS: Platform[] = ['tiktok', 'instagram', 'youtube', 'twitter', 'linkedin']
 
@@ -18,60 +19,60 @@ export default function SeriesPlannerPanel() {
   const [error, setError] = useState<string | null>(null)
 
   async function run() {
-    if (!theme.trim()) { setError('Enter a theme for your series.'); return }
+    if (!theme.trim()) { setError(t('creatorTools.seriesPlanner.themeRequired')); return }
     setLoading(true); setError(null)
     try {
       setResult(await planSeries({ theme, parts, platform }))
     } catch (e) {
-      setError(handleApiError(e) || 'Failed to plan series')
+      setError(handleApiError(e) || t('creatorTools.seriesPlanner.failed'))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4 space-y-3">
-      <h2 className="text-sm font-semibold text-white">Series planner</h2>
+    <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
+      <h2 className="text-sm font-semibold text-theme-primary">{t('creatorTools.seriesPlanner.title')}</h2>
       <div className="flex flex-wrap gap-2 items-end">
         <input
           data-testid="series-theme"
           value={theme}
           onChange={(e) => setTheme(e.target.value)}
-          placeholder="Theme, e.g. 'starting a business with $0'"
-          className="flex-1 min-w-[10rem] rounded bg-zinc-950 border border-zinc-800 p-1 text-sm text-zinc-200"
+          placeholder={t('creatorTools.seriesPlanner.placeholder')}
+          className="flex-1 min-w-[10rem] rounded bg-background border border-default p-1 text-sm text-theme-primary"
         />
         <input
           data-testid="series-parts"
           type="number" min={2} max={10} value={parts}
           onChange={(e) => setParts(Number(e.target.value))}
-          className="w-16 rounded bg-zinc-950 border border-zinc-800 p-1 text-sm text-zinc-200"
+          className="w-16 rounded bg-background border border-default p-1 text-sm text-theme-primary"
         />
         <select data-testid="series-platform" value={platform} onChange={(e) => setPlatform(e.target.value as Platform)}
-          className="rounded bg-zinc-950 border border-zinc-800 p-1 text-sm text-zinc-200">
-          {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+          className="rounded bg-background border border-default p-1 text-sm text-theme-primary">
+          {PLATFORMS.map((p) => <option key={p} value={p}>{platformLabel(t, p)}</option>)}
         </select>
       </div>
       <button
         data-testid="series-run"
         onClick={run}
         disabled={loading}
-        className="rounded-lg bg-green-500/90 px-3 py-1.5 text-sm font-medium text-black disabled:opacity-50"
+        className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
       >
-        {loading ? 'Planning…' : 'Plan series'}
+        {loading ? t('creatorTools.seriesPlanner.planning') : t('creatorTools.seriesPlanner.run')}
       </button>
 
-      {error && <p data-testid="series-error" className="text-sm text-red-400">{error}</p>}
+      {error && <p data-testid="series-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {result && (result.parts ?? []).length === 0 && (
-        <p data-testid="series-empty" className="text-sm text-zinc-400">{t('creatorTools.noResults')}</p>
+        <p data-testid="series-empty" className="text-sm text-theme-secondary">{t('creatorTools.noResults')}</p>
       )}
       {result && (result.parts ?? []).length > 0 && (
         <ol className="space-y-1" data-testid="series-parts-list">
           {result.parts.map((p) => (
-            <li key={p.part} data-testid="series-part" className="rounded-lg bg-zinc-950 border border-zinc-800 p-2">
-              <div className="text-xs text-zinc-500">Part {p.part}</div>
-              <div className="text-sm font-medium text-zinc-100">{p.title}</div>
-              {p.hook && <div className="text-xs text-zinc-400">{p.hook}</div>}
+            <li key={p.part} data-testid="series-part" className="rounded-lg bg-background border border-default p-2">
+              <div className="text-xs text-theme-muted">{t('creatorTools.seriesPlanner.part', { number: p.part })}</div>
+              <div className="text-sm font-medium text-theme-primary">{p.title}</div>
+              {p.hook && <div className="text-xs text-theme-secondary">{p.hook}</div>}
             </li>
           ))}
         </ol>

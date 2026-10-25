@@ -141,13 +141,13 @@ export default function EnterpriseGovernance() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#0f172a] p-6 rounded-3xl border border-gray-100 dark:border-white/5 shadow-xl shadow-blue-500/5">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-500 flex items-center gap-3">
-            <Shield className="w-8 h-8 text-blue-600" aria-hidden="true" />
+          <h1 className="ds-text-h1 text-theme-primary flex items-center gap-3">
+            <Shield className="w-7 h-7 text-primary" aria-hidden="true" />
             {t('enterpriseGovernance.title')}
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="ds-text-body text-theme-muted mt-1 max-w-2xl">
             {t('enterpriseGovernance.subtitleReal')}
           </p>
         </div>
@@ -192,7 +192,7 @@ export default function EnterpriseGovernance() {
       )}
 
       {!loading && !loadError && workspaces.length === 0 ? (
-        <div className="bg-white dark:bg-[#0f172a] p-10 rounded-3xl border border-gray-100 dark:border-white/5 text-center text-sm text-gray-500 dark:text-gray-400">
+        <div className="ds-surface-card p-8 text-center text-sm text-theme-muted">
           {t('enterpriseGovernance.noWorkspaces')}
         </div>
       ) : (

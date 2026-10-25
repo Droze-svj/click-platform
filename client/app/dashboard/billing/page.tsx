@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -88,31 +89,14 @@ interface Invoice {
   [k: string]: any
 }
 
+// Question/answer translation keys; translated where rendered.
 const BILLING_LEGAL_FAQS = [
-  {
-    q: 'How does the 14-Day Money-Back Guarantee work?',
-    a: 'Every first-time subscription to a paid plan (Creator, Pro, or Agency) includes an unconditional 14-day money-back guarantee. If Click is not the right fit for your creative workflow, email billing@clickapp.io within 14 days of your initial charge for a 100% full refund with zero cancellation friction or retention hoops.',
-  },
-  {
-    q: 'Who owns the copyright and commercial rights to my videos and digital twin assets?',
-    a: 'You retain 100% exclusive intellectual property and commercial exploitation rights to all raw video footage, generated clips, scripts, voice notes, and digital twin avatar outputs. Click claims zero copyright or licensing royalties over your creative content.',
-  },
-  {
-    q: 'How do I cancel or modify my subscription?',
-    a: 'You can cancel or switch tiers self-serve at any time with 1 click via your Whop Customer Portal or in your Click account settings. Once canceled, your plan remains fully active with all entitlements until the end of your current prepaid billing period. We never charge early-termination fees.',
-  },
-  {
-    q: 'Are my private videos, audio notes, or biometric voice prints used to train public AI models?',
-    a: 'Never. Click adheres strictly to GDPR, CCPA/CPRA, and Illinois BIPA (740 ILCS 14/) standards. Your media, style profiles, and voice synthesis data are isolated in secure, dedicated inference containers and are never contributed to public or foundation training corpora.',
-  },
-  {
-    q: 'What payment methods and international currencies are supported?',
-    a: 'All transactions are processed securely via Whop with bank-grade 256-bit TLS encryption. Whop accepts Visa, Mastercard, American Express, Discover, Apple Pay, Google Pay, and localized bank rails across 135+ international currencies.',
-  },
-  {
-    q: 'Will I be billed surprise overage fees if I exceed my usage limits?',
-    a: 'Never. Click practices zero surprise billing. When consumption caps for video rendering, AI credits, or scheduling are reached, generation features gracefully pause until your next cycle or until you choose to upgrade. You will never receive an unexpected overage bill.',
-  },
+  { q: 'billingPage.faq1Q', a: 'billingPage.faq1A' },
+  { q: 'billingPage.faq2Q', a: 'billingPage.faq2A' },
+  { q: 'billingPage.faq3Q', a: 'billingPage.faq3A' },
+  { q: 'billingPage.faq4Q', a: 'billingPage.faq4A' },
+  { q: 'billingPage.faq5Q', a: 'billingPage.faq5A' },
+  { q: 'billingPage.faq6Q', a: 'billingPage.faq6A' },
 ]
 
 function fmtNumber(n?: number) { if (n == null) return '0'; return n.toLocaleString() }
@@ -139,7 +123,7 @@ export default function BillingPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null)
   const [showManageModal, setShowManageModal] = useState(false)
   const [manageTab, setManageTab] = useState<'cancel' | 'refund'>('cancel')
-  const [manageReason, setManageReason] = useState('Not using enough')
+  const [manageReason, setManageReason] = useState('Not satisfied with features') // the first option, so what's shown is what's sent
   const [manageDetails, setManageDetails] = useState('')
   const [manageLoading, setManageLoading] = useState(false)
 
@@ -147,12 +131,12 @@ export default function BillingPage() {
     try {
       setManageLoading(true)
       const res: any = await apiPost('/billing/cancel', {})
-      const msg = res?.data?.message || res?.message || 'Subscription cancelled successfully'
+      const msg = res?.data?.message || res?.message || t('billingPage.toastCancelled')
       showToast(msg, 'success')
       setShowManageModal(false)
       await loadAll()
     } catch (e: any) {
-      showToast(e?.response?.data?.error || e?.message || 'Failed to cancel subscription', 'error')
+      showToast(e?.response?.data?.error || e?.message || t('billingPage.toastCancelFailed'), 'error')
     } finally {
       setManageLoading(false)
     }
@@ -191,12 +175,12 @@ export default function BillingPage() {
         reason: manageReason,
         details: manageDetails,
       })
-      const msg = res?.data?.message || res?.message || 'Refund request submitted'
+      const msg = res?.data?.message || res?.message || t('billingPage.toastRefundSubmitted')
       showToast(msg, 'success')
       setShowManageModal(false)
       await loadAll()
     } catch (e: any) {
-      showToast(e?.response?.data?.error || e?.message || 'Failed to submit refund request', 'error')
+      showToast(e?.response?.data?.error || e?.message || t('billingPage.toastRefundFailed'), 'error')
     } finally {
       setManageLoading(false)
     }
@@ -230,7 +214,7 @@ export default function BillingPage() {
 
   useEffect(() => {
     if (authLoading) return
-    if (!user) { router.push('/login'); return }
+    if (!user) { router.push(loginPathForCurrentPage()); return }
     loadAll()
   }, [user, authLoading, router, loadAll])
 
@@ -319,10 +303,10 @@ export default function BillingPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl ds-surface-subtle hover:bg-accent text-theme-primary transition-colors border border-[var(--border-subtle)] shadow-sm"
-                    title="Manage cards, VAT details, and official receipts on Whop"
+                    title={t('billingPage.portalLinkTitle')}
                   >
                     <CreditCard size={14} className="text-primary" />
-                    <span>Whop Customer Portal</span>
+                    <span>{t('billingPage.portalLink')}</span>
                     <ExternalLink size={12} className="text-theme-muted" />
                   </a>
                   <button
@@ -332,16 +316,16 @@ export default function BillingPage() {
                       setManageTab('cancel')
                     }}
                     className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl ds-surface-subtle hover:bg-accent text-theme-secondary hover:text-theme-primary transition-colors border border-[var(--border-subtle)]"
-                    title="Cancel auto-renewal or claim 14-day statutory refund"
+                    title={t('billingPage.cancelRefundTitle')}
                   >
                     <RefreshCw size={13} className="text-amber-500" />
-                    <span>Cancel / Refund</span>
+                    <span>{t('billingPage.cancelRefund')}</span>
                   </button>
                 </>
               )}
               <Panel variant="subtle" className="flex items-center gap-3 px-4 py-2.5">
                 <span className={cn('h-2.5 w-2.5 rounded-full',
-                  subStatus === 'active' ? 'bg-emerald-500' : subStatus === 'trial' ? 'bg-amber-500' : 'bg-theme-muted')} />
+                  subStatus === 'active' ? 'bg-emerald-500' : subStatus === 'trial' ? 'bg-amber-500' : 'bg-slate-400')} />
                 <div>
                   <p className="ds-text-caption">{t('billingPage.currentTier')}</p>
                   <p className="ds-text-label text-theme-primary capitalize">
@@ -393,11 +377,11 @@ export default function BillingPage() {
                     <div className="flex items-end gap-2">
                       <p className="ds-text-h2 text-theme-primary tabular-nums leading-none">{fmtNumber(m.used)}</p>
                       {m.cap != null && (
-                        <p className="ds-text-caption mb-1">/ {m.cap === -1 ? 'Unlimited' : fmtNumber(m.cap)}</p>
+                        <p className="ds-text-caption mb-1">/ {m.cap === -1 ? t('billingPage.unlimited') : fmtNumber(m.cap)}</p>
                       )}
                     </div>
                     {m.cap && m.cap > 0 ? (
-                      <div className="h-1.5 rounded-full bg-theme-muted/15 overflow-hidden">
+                      <div className="h-1.5 rounded-full bg-accent overflow-hidden">
                         <div
                           className={cn('h-full rounded-full transition-[width] duration-500 motion-reduce:transition-none', overage ? 'bg-rose-500' : m.bar)}
                           style={{ width: `${pct}%` }}
@@ -428,7 +412,7 @@ export default function BillingPage() {
               </div>
 
               {/* Monthly / Yearly Cadence Switcher */}
-              <div className="inline-flex items-center rounded-xl bg-theme-muted/15 p-1 border border-[var(--border-subtle)] self-start sm:self-auto">
+              <div className="inline-flex items-center rounded-xl bg-accent p-1 border border-[var(--border-subtle)] self-start sm:self-auto">
                 <button
                   type="button"
                   onClick={() => setBillingPeriod('monthly')}
@@ -439,7 +423,7 @@ export default function BillingPage() {
                       : 'text-theme-secondary hover:text-theme-primary'
                   )}
                 >
-                  Monthly
+                  {t('billingPage.monthly')}
                 </button>
                 <button
                   type="button"
@@ -451,9 +435,9 @@ export default function BillingPage() {
                       : 'text-theme-secondary hover:text-theme-primary'
                   )}
                 >
-                  <span>Yearly</span>
+                  <span>{t('billingPage.yearly')}</span>
                   <span className="rounded-full bg-emerald-500/20 text-emerald-500 px-1.5 py-0.5 text-[10px] font-bold">
-                    Save ~17%
+                    {t('billingPage.saveAbout17')}
                   </span>
                 </button>
               </div>
@@ -498,7 +482,7 @@ export default function BillingPage() {
                       </div>
                       {billingPeriod === 'yearly' && plan.priceYearly > 0 && (
                         <p className="ds-text-caption text-emerald-500 font-medium">
-                          Billed ${plan.priceYearly}/yr {savings > 0 ? `· Save ${savings}%` : ''}
+                          {t('billingPage.billedYearly', { price: `$${plan.priceYearly}` })} {savings > 0 ? `· ${t('billingPage.savePct', { pct: savings })}` : ''}
                         </p>
                       )}
                     </div>
@@ -534,9 +518,9 @@ export default function BillingPage() {
                 <ShieldCheck size={20} aria-hidden />
               </span>
               <div className="min-w-0">
-                <h4 className="text-xs font-bold text-theme-primary uppercase tracking-wide">14-Day Money-Back</h4>
+                <h4 className="text-xs font-bold text-theme-primary uppercase tracking-wide">{t('billingPage.moneyBackGuarantee')}</h4>
                 <p className="text-xs text-theme-secondary mt-1 leading-relaxed">
-                  100% full refund on all first-time paid plans within 14 days. Zero friction, guaranteed.
+                  {t('billingPage.trustMoneyBackBody')}
                 </p>
               </div>
             </div>
@@ -546,9 +530,9 @@ export default function BillingPage() {
                 <RefreshCw size={20} aria-hidden />
               </span>
               <div className="min-w-0">
-                <h4 className="text-xs font-bold text-theme-primary uppercase tracking-wide">1-Click Cancellation</h4>
+                <h4 className="text-xs font-bold text-theme-primary uppercase tracking-wide">{t('billingPage.trustCancelTitle')}</h4>
                 <p className="text-xs text-theme-secondary mt-1 leading-relaxed">
-                  Cancel anytime via Whop or dashboard. Prepaid access continues through period end.
+                  {t('billingPage.trustCancelBody')}
                 </p>
               </div>
             </div>
@@ -558,9 +542,9 @@ export default function BillingPage() {
                 <Lock size={20} aria-hidden />
               </span>
               <div className="min-w-0">
-                <h4 className="text-xs font-bold text-theme-primary uppercase tracking-wide">256-Bit SSL Whop</h4>
+                <h4 className="text-xs font-bold text-theme-primary uppercase tracking-wide">{t('billingPage.trustSecureTitle')}</h4>
                 <p className="text-xs text-theme-secondary mt-1 leading-relaxed">
-                  Bank-grade encryption. Click never sees, touches, or stores your raw card numbers.
+                  {t('billingPage.trustSecureBody')}
                 </p>
               </div>
             </div>
@@ -570,9 +554,9 @@ export default function BillingPage() {
                 <Scale size={20} aria-hidden />
               </span>
               <div className="min-w-0">
-                <h4 className="text-xs font-bold text-theme-primary uppercase tracking-wide">100% Creator Ownership</h4>
+                <h4 className="text-xs font-bold text-theme-primary uppercase tracking-wide">{t('billingPage.trustOwnershipTitle')}</h4>
                 <p className="text-xs text-theme-secondary mt-1 leading-relaxed">
-                  You own all intellectual property for your raw footage, AI clips, voice notes, and twins.
+                  {t('billingPage.trustOwnershipBody')}
                 </p>
               </div>
             </div>
@@ -668,7 +652,7 @@ export default function BillingPage() {
                         inv.status === 'paid' ? 'bg-emerald-500/10 text-emerald-500'
                           : inv.status === 'failed' ? 'bg-rose-500/10 text-rose-500'
                           : 'bg-amber-500/10 text-amber-500')}>
-                        {inv.status || 'pending'}
+                        {inv.status || t('billingPage.statusPending')}
                       </span>
                       {invNum && (
                         <IconButton
@@ -695,8 +679,8 @@ export default function BillingPage() {
                 <HelpCircle size={20} aria-hidden />
               </span>
               <div>
-                <h2 className="ds-text-h3 text-theme-primary">Billing & Legal Safeguards FAQ</h2>
-                <p className="ds-text-caption">Everything you need to know about subscriptions, creator rights, privacy, and refunds</p>
+                <h2 className="ds-text-h3 text-theme-primary">{t('billingPage.faqTitle')}</h2>
+                <p className="ds-text-caption">{t('billingPage.faqSubtitle')}</p>
               </div>
             </div>
 
@@ -716,7 +700,7 @@ export default function BillingPage() {
                     >
                       <span className="flex items-center gap-2.5">
                         <span className="text-xs font-bold text-primary font-mono">0{idx + 1}.</span>
-                        <span>{faq.q}</span>
+                        <span>{t(faq.q)}</span>
                       </span>
                       {isOpen ? (
                         <ChevronUp size={16} className="text-theme-muted flex-shrink-0" />
@@ -726,7 +710,7 @@ export default function BillingPage() {
                     </button>
                     {isOpen && (
                       <div className="px-4 pb-4 pt-1 text-xs text-theme-secondary leading-relaxed border-t border-[var(--border-subtle)]/50">
-                        {faq.a}
+                        {t(faq.a, { email: 'billing@clickapp.io' })}
                       </div>
                     )}
                   </div>
@@ -740,17 +724,17 @@ export default function BillingPage() {
             <div className="flex items-center gap-2">
               <Shield size={16} className="text-emerald-500 flex-shrink-0" />
               <span>
-                Protected under our verified compliance policies and standard creator licensing agreements.
+                {t('billingPage.complianceNote')}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-medium">
-              <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>
+              <Link href="/terms" className="text-primary hover:underline">{t('billingPage.termsOfService')}</Link>
               <span className="text-theme-muted">·</span>
-              <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
+              <Link href="/privacy" className="text-primary hover:underline">{t('billingPage.privacyPolicy')}</Link>
               <span className="text-theme-muted">·</span>
-              <Link href="/refund" className="text-primary hover:underline">Refund Policy</Link>
+              <Link href="/refund" className="text-primary hover:underline">{t('billingPage.refundPolicy')}</Link>
               <span className="text-theme-muted">·</span>
-              <Link href="/ai-disclosure" className="text-primary hover:underline">AI Disclosure</Link>
+              <Link href="/ai-disclosure" className="text-primary hover:underline">{t('billingPage.aiDisclosure')}</Link>
               <span className="text-theme-muted">·</span>
               <a href="mailto:billing@clickapp.io" className="text-theme-primary hover:underline">billing@clickapp.io</a>
             </div>
@@ -764,8 +748,8 @@ export default function BillingPage() {
             onClose={() => {
               if (!upgradingId) setSelectedPlanForCheckout(null)
             }}
-            title="Review & Confirm Upgrade"
-            description="Verify your selected plan, billing cycle, and statutory protections before checkout."
+            title={t('billingPage.confirmTitle')}
+            description={t('billingPage.confirmDescription')}
             className="max-w-md"
           >
             <div className="space-y-4 pt-3">
@@ -777,8 +761,8 @@ export default function BillingPage() {
                       <Crown size={18} />
                     </span>
                     <div>
-                      <h4 className="text-sm font-bold text-theme-primary">{selectedPlanForCheckout.name} Tier</h4>
-                      <p className="text-xs text-theme-secondary capitalize">{billingPeriod} Billing</p>
+                      <h4 className="text-sm font-bold text-theme-primary">{t('billingPage.planTier', { plan: selectedPlanForCheckout.name })}</h4>
+                      <p className="text-xs text-theme-secondary capitalize">{billingPeriod === 'yearly' ? t('billingPage.yearlyBilling') : t('billingPage.monthlyBilling')}</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -793,26 +777,26 @@ export default function BillingPage() {
 
                 <div className="pt-2 border-t border-[var(--border-subtle)] space-y-1.5 text-xs text-theme-secondary">
                   <div className="flex justify-between">
-                    <span>14-Day Money-Back Guarantee</span>
-                    <span className="text-emerald-500 font-medium">Included (100% Refund)</span>
+                    <span>{t('billingPage.moneyBackGuarantee')}</span>
+                    <span className="text-emerald-500 font-medium">{t('billingPage.includedFullRefund')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Commercial & Creator Rights</span>
-                    <span className="text-emerald-500 font-medium">100% Owned by You</span>
+                    <span>{t('billingPage.creatorRights')}</span>
+                    <span className="text-emerald-500 font-medium">{t('billingPage.ownedByYou')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Auto-Renewal Notice</span>
-                    <span className="text-theme-primary">Renews {billingPeriod} until canceled</span>
+                    <span>{t('billingPage.autoRenewal')}</span>
+                    <span className="text-theme-primary">{billingPeriod === 'yearly' ? t('billingPage.renewsYearly') : t('billingPage.renewsMonthly')}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Taxes / VAT</span>
-                    <span className="text-theme-muted">Calculated at Whop Checkout</span>
+                    <span>{t('billingPage.taxes')}</span>
+                    <span className="text-theme-muted">{t('billingPage.taxesAtCheckout')}</span>
                   </div>
                 </div>
               </div>
 
               {/* Legal Terms Checkbox */}
-              <label className="flex items-start gap-2.5 p-3 rounded-xl bg-theme-muted/10 border border-[var(--border-subtle)] cursor-pointer select-none">
+              <label className="flex items-start gap-2.5 p-3 rounded-xl bg-accent border border-[var(--border-subtle)] cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={agreedToTerms}
@@ -820,19 +804,19 @@ export default function BillingPage() {
                   className="mt-0.5 h-4 w-4 rounded border-theme-muted text-primary focus:ring-primary focus:ring-offset-0"
                 />
                 <span className="text-xs text-theme-secondary leading-relaxed">
-                  I agree to Click's{' '}
+                  {t('billingPage.agreePrefix')}{' '}
                   <Link href="/terms" target="_blank" className="text-primary underline hover:text-primary/80 font-medium">
-                    Terms of Service
+                    {t('billingPage.termsOfService')}
                   </Link>
                   ,{' '}
                   <Link href="/privacy" target="_blank" className="text-primary underline hover:text-primary/80 font-medium">
-                    Privacy Policy
+                    {t('billingPage.privacyPolicy')}
                   </Link>
-                  , and{' '}
+                  , {t('billingPage.agreeAnd')}{' '}
                   <Link href="/refund" target="_blank" className="text-primary underline hover:text-primary/80 font-medium">
-                    14-Day Refund Policy
+                    {t('billingPage.refundPolicy14')}
                   </Link>
-                  . I understand my subscription will renew automatically at the rate above until canceled in 1 click via dashboard or Whop.
+                  {t('billingPage.agreeSuffix')}
                 </span>
               </label>
 
@@ -845,7 +829,7 @@ export default function BillingPage() {
                   disabled={!!upgradingId}
                   onClick={() => setSelectedPlanForCheckout(null)}
                 >
-                  Cancel
+                  {t('billingPage.cancel')}
                 </Button>
                 <Button
                   variant="primary"
@@ -856,13 +840,13 @@ export default function BillingPage() {
                   onClick={() => handleUpgrade(selectedPlanForCheckout)}
                   rightIcon={<ArrowRight size={14} />}
                 >
-                  Proceed to Whop
+                  {t('billingPage.proceedToWhop')}
                 </Button>
               </div>
 
               <p className="text-[11px] text-center text-theme-muted flex items-center justify-center gap-1.5">
                 <Lock size={12} className="text-emerald-500" />
-                <span>Secured by Whop with bank-grade 256-bit TLS encryption</span>
+                <span>{t('billingPage.securedByWhop')}</span>
               </p>
             </div>
           </Modal>
@@ -875,13 +859,13 @@ export default function BillingPage() {
             onClose={() => {
               if (!manageLoading) setShowManageModal(false)
             }}
-            title="Subscription & Refund Options"
-            description="Manage your subscription auto-renewal or claim your 14-day statutory money-back guarantee."
+            title={t('billingPage.manageTitle')}
+            description={t('billingPage.manageDescription')}
             className="max-w-md"
           >
             <div className="space-y-4 pt-3">
               {/* Tab Selector */}
-              <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-theme-muted/15 border border-[var(--border-subtle)]">
+              <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-accent border border-[var(--border-subtle)]">
                 <button
                   type="button"
                   onClick={() => setManageTab('cancel')}
@@ -892,7 +876,7 @@ export default function BillingPage() {
                       : 'text-theme-secondary hover:text-theme-primary'
                   )}
                 >
-                  Cancel Renewal
+                  {t('billingPage.cancelRenewal')}
                 </button>
                 <button
                   type="button"
@@ -904,7 +888,7 @@ export default function BillingPage() {
                       : 'text-theme-secondary hover:text-theme-primary'
                   )}
                 >
-                  14-Day Refund
+                  {t('billingPage.refundTab')}
                 </button>
               </div>
 
@@ -913,10 +897,10 @@ export default function BillingPage() {
                   <div className="p-4 rounded-xl ds-surface-subtle border border-[var(--border-subtle)] space-y-2">
                     <div className="flex items-center gap-2 text-emerald-500 font-semibold text-xs">
                       <CheckCircle size={15} />
-                      <span>Prepaid Quota Guaranteed</span>
+                      <span>{t('billingPage.prepaidKept')}</span>
                     </div>
                     <p className="text-xs text-theme-secondary leading-relaxed">
-                      Canceling your subscription stops all future automatic charges. You will retain full access to all <strong className="text-theme-primary capitalize">{currentPlan}</strong> features, rendering pipelines, and AI minutes through the end of your prepaid period.
+                      {t('billingPage.cancelBodyBefore')} <strong className="text-theme-primary capitalize">{currentPlan}</strong> {t('billingPage.cancelBodyAfter')}
                     </p>
                   </div>
 
@@ -928,7 +912,7 @@ export default function BillingPage() {
                       disabled={manageLoading}
                       onClick={() => setShowManageModal(false)}
                     >
-                      Keep Plan
+                      {t('billingPage.keepPlan')}
                     </Button>
                     <Button
                       variant="destructive"
@@ -938,7 +922,7 @@ export default function BillingPage() {
                       loading={manageLoading}
                       onClick={handleCancelSubscription}
                     >
-                      Cancel Renewal
+                      {t('billingPage.cancelRenewal')}
                     </Button>
                   </div>
                 </div>
@@ -947,35 +931,35 @@ export default function BillingPage() {
                   <div className="p-4 rounded-xl ds-surface-subtle border border-[var(--border-subtle)] space-y-2">
                     <div className="flex items-center gap-2 text-primary font-semibold text-xs">
                       <ShieldCheck size={15} />
-                      <span>14-Day Money-Back Guarantee</span>
+                      <span>{t('billingPage.moneyBackGuarantee')}</span>
                     </div>
                     <p className="text-xs text-theme-secondary leading-relaxed">
-                      Every first-time subscription to Click is covered by an unconditional 100% money-back guarantee within 14 days of your initial payment. Zero friction, no retention phone calls required.
+                      {t('billingPage.refundBody')}
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-theme-primary block">Reason for Refund</label>
+                    <label className="text-xs font-medium text-theme-primary block">{t('billingPage.refundReason')}</label>
                     <select
                       value={manageReason}
                       onChange={(e) => setManageReason(e.target.value)}
                       className="w-full text-xs px-3 py-2 rounded-xl ds-surface-subtle border border-[var(--border-subtle)] text-theme-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     >
-                      <option value="Not satisfied with features">Not satisfied with features</option>
-                      <option value="Found an alternative tool">Found an alternative tool</option>
-                      <option value="Missing specific export integration">Missing specific export integration</option>
-                      <option value="Accidental subscription or duplicate charge">Accidental subscription or duplicate charge</option>
-                      <option value="Other">Other</option>
+                      <option value="Not satisfied with features">{t('billingPage.reasonNotSatisfied')}</option>
+                      <option value="Found an alternative tool">{t('billingPage.reasonAlternative')}</option>
+                      <option value="Missing specific export integration">{t('billingPage.reasonMissingIntegration')}</option>
+                      <option value="Accidental subscription or duplicate charge">{t('billingPage.reasonAccidental')}</option>
+                      <option value="Other">{t('billingPage.reasonOther')}</option>
                     </select>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-theme-primary block">Additional Feedback (Optional)</label>
+                    <label className="text-xs font-medium text-theme-primary block">{t('billingPage.feedbackLabel')}</label>
                     <textarea
                       rows={2}
                       value={manageDetails}
                       onChange={(e) => setManageDetails(e.target.value)}
-                      placeholder="Help us improve Click..."
+                      placeholder={t('billingPage.feedbackPlaceholder')}
                       className="w-full text-xs px-3 py-2 rounded-xl ds-surface-subtle border border-[var(--border-subtle)] text-theme-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                     />
                   </div>
@@ -988,7 +972,7 @@ export default function BillingPage() {
                       disabled={manageLoading}
                       onClick={() => setShowManageModal(false)}
                     >
-                      Cancel
+                      {t('billingPage.cancel')}
                     </Button>
                     <Button
                       variant="primary"
@@ -998,7 +982,7 @@ export default function BillingPage() {
                       loading={manageLoading}
                       onClick={handleRequestRefund}
                     >
-                      Submit Request
+                      {t('billingPage.submitRequest')}
                     </Button>
                   </div>
                 </div>

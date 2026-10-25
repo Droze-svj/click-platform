@@ -1,5 +1,6 @@
 'use client'
 
+import { loginPathForCurrentPage } from '../../../lib/authRedirect'
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
@@ -70,7 +71,7 @@ export default function TemplatesPage() {
 
   useEffect(() => {
     if (authLoading) return // user is null until /auth/me answers
-    if (!user) { router.push('/login'); return }
+    if (!user) { router.push(loginPathForCurrentPage()); return }
     loadTemplates()
   }, [user, authLoading, router, loadTemplates])
 
@@ -153,7 +154,7 @@ export default function TemplatesPage() {
                             : 'text-theme-secondary hover:bg-accent hover:text-accent-foreground'
                         )}
                       >
-                        <span>{sector === 'all' ? t('templatesPage.systGlobal') : sector}</span>
+                        <span className="capitalize">{sector === 'all' ? t('templatesPage.systGlobal') : sector}</span>
                         {selectedSector === sector && <CheckCircle size={16} aria-hidden />}
                       </button>
                     ))}
@@ -176,7 +177,7 @@ export default function TemplatesPage() {
                             : 'text-theme-secondary hover:bg-accent hover:text-accent-foreground'
                         )}
                       >
-                        <span>{domain}</span>
+                        <span className="capitalize">{domain === 'all' ? t('templatesPage.systGlobal') : domain}</span>
                         {selectedDomain === domain && <CheckCircle size={16} aria-hidden />}
                       </button>
                     ))}
@@ -202,9 +203,9 @@ export default function TemplatesPage() {
                   className="ds-surface-card"
                 />
               ) : (
-                <div className="ds-bento-grid">
+                <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
                   {templates.map((template) => (
-                    <Panel key={template._id} variant="bento" className="ds-bento-2x1 flex flex-col">
+                    <Panel key={template._id} variant="bento" className="flex flex-col">
                       {template.preview?.thumbnail && (
                         <div className="relative mb-4 rounded-lg overflow-hidden aspect-video bg-accent">
                           <img

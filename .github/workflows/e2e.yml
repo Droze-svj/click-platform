@@ -12,13 +12,16 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     # Runs the CI gate SMOKE (tests/e2e/ci-smoke.spec.js): a tiny, deterministic
-    # check that the backend + frontend actually boot and serve. This is a REQUIRED
-    # status check, so it must reach `success` to merge — hence no continue-on-error.
-    # The full aspirational tests/e2e suite (~130 specs, most asserting routes/UI
-    # that aren't built yet) is NOT run here: it can't pass and, run serially with
-    # retries, blows the timeout. Run it on demand with
+    # check that the backend + frontend actually boot and serve — then the USER
+    # JOURNEYS (tests/e2e/journeys): sign-up, profile, auth, every page, upload →
+    # edit → export, AI auto edit, generators, settings, billing. This is a
+    # REQUIRED status check, so both must reach `success` to merge — hence no
+    # continue-on-error. The older aspirational tests/e2e specs (most asserting
+    # routes/UI that aren't built yet) are NOT run here: they can't pass and,
+    # run serially with retries, blow the timeout. Run them on demand with
     # `npx playwright test --config=playwright.config.no-webserver.js`.
-    timeout-minutes: 20
+    # Budget: ~10 min install/build + ~8-10 min journeys.
+    timeout-minutes: 30
     
     services:
       mongodb:
@@ -63,6 +66,16 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps chromium
 
+    - name: Ensure ffmpeg / ffprobe
+      # The server renders with ffmpeg, and the journeys ffprobe the rendered
+      # files. ubuntu-latest usually ships both; install them if not.
+      run: |
+        if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+        fi
+        which ffmpeg ffprobe
+        ffmpeg -hide_banner -version | head -1
+
     # NOTE: no separate "build the client" step here — the API process doesn't
     # need client/.next to boot (it just declines to serve the frontend, which
     # Next serves itself on :3000), and the client is built once below in
@@ -79,6 +92,10 @@ jobs:
         JWT_SECRET: test-secret-key
         REDIS_URL: redis://localhost:6379
         PORT: 5001
+        # No email provider in CI: new accounts are usable straight away (the
+        # journeys sign up through the real UI), and publishing never leaves CI.
+        AUTO_VERIFY_EMAIL: 'true'
+        DRY_RUN_PUBLISH: 'true'
 
     - name: Build frontend
       run: cd client && npm run build
@@ -102,6 +119,20 @@ jobs:
       # lifecycle via the Start steps above, so this uses a no-webserver config.
       run: |
         npx playwright test --config=playwright.config.ci-smoke.js
+      env:
+        E2E_BASE_URL: http://localhost:3000
+        E2E_API_URL: http://localhost:5001/api
+        MONGODB_URI: mongodb://localhost:27017/click-test
+        JWT_SECRET: test-secret-key
+        REDIS_URL: redis://localhost:6379
+
+    - name: Run E2E user journeys (gate)
+      # Real journeys through the UI against the same servers (AI mocked by
+      # NODE_ENV=test, so results are deterministic). One retry with a trace;
+      # the HTML report and traces land in the artifacts below.
+      timeout-minutes: 15
+      run: |
+        npx playwright test --config=playwright.config.journeys.js
       env:
         E2E_BASE_URL: http://localhost:3000
         E2E_API_URL: http://localhost:5001/api

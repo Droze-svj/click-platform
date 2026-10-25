@@ -6,9 +6,11 @@ import { apiGet, apiPost, handleApiError } from '@/lib/api'
 import { Button, Card, Icon, AuthShell } from '@/components/ui'
 import { CheckCircle2, MailCheck, AlertCircle, Loader2, ArrowRight, User } from 'lucide-react'
 import ClickLogo from '@/components/ClickLogo'
+import { useTranslation } from '@/hooks/useTranslation'
 
 function RegistrationSuccessContent() {
   const router = useRouter()
+  const { t } = useTranslation()
   const searchParams = useSearchParams()
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -48,7 +50,7 @@ function RegistrationSuccessContent() {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
       if (!token) {
-        setError('No authentication token found. Please register again.')
+        setError(t('registrationSuccessPage.errNoSession'))
         setLoading(false)
         return
       }
@@ -58,7 +60,7 @@ function RegistrationSuccessContent() {
       setError('')
     } catch (err: any) {
       const errorMessage = handleApiError(err)
-      setError(`Failed to verify authentication: ${errorMessage}`)
+      setError(t('registrationSuccessPage.errCheck', { error: errorMessage }))
 
       if (process.env.NODE_ENV === 'development') {
         console.error('Auth check failed:', err)
@@ -85,8 +87,8 @@ function RegistrationSuccessContent() {
           <div role="status" aria-live="polite" className="mx-auto w-16 h-16 rounded-2xl ds-surface-subtle flex items-center justify-center">
             <Loader2 className="w-7 h-7 animate-spin text-primary" />
           </div>
-          <h1 className="ds-text-h2 text-theme-primary">Verifying your account…</h1>
-          <p className="ds-text-body text-theme-secondary">Hold tight while we confirm everything.</p>
+          <h1 className="ds-text-h2 text-theme-primary">{t('registrationSuccessPage.verifyingTitle')}</h1>
+          <p className="ds-text-body text-theme-secondary">{t('registrationSuccessPage.verifyingBody')}</p>
         </div>
       </Shell>
     )
@@ -100,21 +102,21 @@ function RegistrationSuccessContent() {
           <div className="mx-auto w-16 h-16 rounded-2xl ds-surface-subtle flex items-center justify-center">
             <Icon icon={MailCheck} size="xl" className="text-primary" />
           </div>
-          <h1 className="ds-text-h1 text-theme-primary">Check your email</h1>
+          <h1 className="ds-text-h1 text-theme-primary">{t('registrationSuccessPage.checkEmail')}</h1>
           <p className="ds-text-body text-theme-secondary">
-            We&apos;ve sent a verification link to <strong>{email}</strong>
+            {t('registrationSuccessPage.sentTo', { email })}
           </p>
           <p className="text-sm text-theme-muted">
-            Click the link in the email to verify your account and complete registration.
+            {t('registrationSuccessPage.clickLink')}
           </p>
         </div>
 
         <div className="rounded-xl ds-surface-subtle p-4 space-y-2">
-          <p className="text-sm font-semibold text-theme-primary">Didn&apos;t receive the email?</p>
+          <p className="text-sm font-semibold text-theme-primary">{t('registrationSuccessPage.notReceived')}</p>
           <ul className="text-sm text-theme-secondary space-y-1 list-disc list-inside">
-            <li>Check your spam/junk folder</li>
-            <li>Wait a few minutes for delivery</li>
-            <li>Make sure you entered the correct email address</li>
+            <li>{t('registrationSuccessPage.tipSpam')}</li>
+            <li>{t('registrationSuccessPage.tipWait')}</li>
+            <li>{t('registrationSuccessPage.tipEmail')}</li>
           </ul>
         </div>
 
@@ -127,13 +129,13 @@ function RegistrationSuccessContent() {
             loading={resending}
             disabled={resending || resent || !email}
           >
-            {resent ? 'Sent ✓ — check your inbox' : 'Resend verification email'}
+            {resent ? t('verifyEmailPage.sent') : t('verifyEmailPage.resend')}
           </Button>
           <Button variant="secondary" size="lg" className="w-full" onClick={() => router.push('/login')}>
-            Go to login
+            {t('registrationSuccessPage.goToLogin')}
           </Button>
           <Button variant="secondary" size="lg" className="w-full" onClick={() => router.push('/register')}>
-            Back to registration
+            {t('registrationSuccessPage.backToRegister')}
           </Button>
         </div>
       </Shell>
@@ -147,15 +149,15 @@ function RegistrationSuccessContent() {
           <div className="mx-auto w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
             <Icon icon={AlertCircle} size="xl" className="text-rose-500" />
           </div>
-          <h1 className="ds-text-h1 text-theme-primary">Registration issue</h1>
+          <h1 className="ds-text-h1 text-theme-primary">{t('registrationSuccessPage.issueTitle')}</h1>
           <p className="ds-text-body text-theme-secondary">{error}</p>
         </div>
         <div className="space-y-3">
           <Button variant="primary" size="lg" className="w-full" onClick={() => router.push('/register')}>
-            Try registering again
+            {t('registrationSuccessPage.tryAgain')}
           </Button>
           <Button variant="secondary" size="lg" className="w-full" onClick={() => router.push('/login')}>
-            Go to login
+            {t('registrationSuccessPage.goToLogin')}
           </Button>
         </div>
       </Shell>
@@ -168,27 +170,23 @@ function RegistrationSuccessContent() {
         <div className="mx-auto w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
           <Icon icon={CheckCircle2} size="xl" className="text-emerald-500" />
         </div>
-        <h1 className="ds-text-h1 text-theme-primary">Registration successful</h1>
-        <p className="ds-text-body text-theme-secondary">Your account has been created.</p>
+        <h1 className="ds-text-h1 text-theme-primary">{t('registrationSuccessPage.successTitle')}</h1>
+        <p className="ds-text-body text-theme-secondary">{t('registrationSuccessPage.successBody')}</p>
       </div>
 
       {user && (
         <div className="rounded-xl ds-surface-subtle p-4 space-y-2">
           <div className="flex items-center gap-2 text-sm font-semibold text-theme-primary">
-            <Icon icon={User} size="sm" className="text-theme-muted" /> Account details
+            <Icon icon={User} size="sm" className="text-theme-muted" /> {t('registrationSuccessPage.accountDetails')}
           </div>
           <dl className="space-y-1 text-sm text-theme-secondary">
             <div className="flex justify-between gap-4">
-              <dt className="text-theme-muted">Name</dt>
+              <dt className="text-theme-muted">{t('registrationSuccessPage.name')}</dt>
               <dd className="text-theme-primary font-medium truncate">{user.name}</dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-theme-muted">Email</dt>
+              <dt className="text-theme-muted">{t('registrationSuccessPage.email')}</dt>
               <dd className="text-theme-primary font-medium truncate">{user.email}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-theme-muted">User ID</dt>
-              <dd className="text-theme-primary font-medium truncate">{user.id}</dd>
             </div>
           </dl>
         </div>
@@ -202,15 +200,15 @@ function RegistrationSuccessContent() {
           onClick={goToDashboard}
           rightIcon={<ArrowRight className="h-4 w-4" />}
         >
-          Go to dashboard
+          {t('registrationSuccessPage.goToDashboard')}
         </Button>
         <Button variant="secondary" size="lg" className="w-full" onClick={() => router.push('/login')}>
-          Go to login instead
+          {t('registrationSuccessPage.loginInstead')}
         </Button>
       </div>
 
       <p className="text-center text-sm text-theme-muted">
-        If the dashboard doesn&apos;t load, try signing in with your email and password.
+        {t('registrationSuccessPage.dashboardHint')}
       </p>
     </Shell>
   )

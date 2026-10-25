@@ -58,12 +58,12 @@ interface FleetStatus {
 
 type CheckResult = Record<string, { status?: string; error?: string }>
 
-const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
+const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-default shadow-2xl"
 
 const CHECK_LABELS: Record<string, { text: string; color: string }> = {
   VALIDATED: { text: 'Working', color: 'text-emerald-400' },
   DRIFT_DETECTED: { text: 'Needs attention', color: 'text-amber-400' },
-  DECOUPLED: { text: 'Not set up', color: 'text-slate-400' },
+  DECOUPLED: { text: 'Not set up', color: 'text-theme-secondary' },
   BREACHED: { text: 'Error', color: 'text-rose-400' },
 }
 
@@ -137,7 +137,7 @@ export const FleetControlHUD: React.FC = () => {
                     </div>
                     <div>
                         <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Workers</h4>
-                        <span className="text-[11px] font-bold text-slate-500 mt-1 block">Machines registered to run jobs for your account, and your platform connections.</span>
+                        <span className="text-[11px] font-bold text-theme-muted mt-1 block">Machines registered to run jobs for your account, and your platform connections.</span>
                     </div>
                 </div>
 
@@ -145,7 +145,7 @@ export const FleetControlHUD: React.FC = () => {
                     type="button"
                     onClick={checkConnections}
                     disabled={isSyncing}
-                    className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-white/5 border border-white/10 hover:border-indigo-500/50 text-white text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-60"
+                    className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-white/5 border border-default hover:border-indigo-500/50 text-theme-primary text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-60"
                 >
                     <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} aria-hidden="true" />
                     {isSyncing ? 'Checking…' : 'Check connections'}
@@ -160,16 +160,16 @@ export const FleetControlHUD: React.FC = () => {
 
             {checkResult && (
                 <div className={`${glassStyle} rounded-[2rem] p-6 space-y-3`}>
-                    <h5 className="text-[11px] font-black text-white uppercase tracking-widest">Connection check</h5>
+                    <h5 className="text-[11px] font-black text-theme-primary uppercase tracking-widest">Connection check</h5>
                     {Object.keys(checkResult).length === 0 ? (
-                        <p className="text-[12px] text-slate-400">No platforms were checked.</p>
+                        <p className="text-[12px] text-theme-secondary">No platforms were checked.</p>
                     ) : (
                         <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                             {Object.entries(checkResult).map(([platform, r]) => {
-                                const label = CHECK_LABELS[String(r?.status)] || { text: String(r?.status || '—'), color: 'text-slate-400' }
+                                const label = CHECK_LABELS[String(r?.status)] || { text: String(r?.status || '—'), color: 'text-theme-secondary' }
                                 return (
-                                    <li key={platform} className="p-4 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
-                                        <span className="text-[10px] font-black text-white uppercase">{platform}</span>
+                                    <li key={platform} className="p-4 rounded-xl bg-white/5 border border-subtle flex items-center justify-between">
+                                        <span className="text-[10px] font-black text-theme-primary uppercase">{platform}</span>
                                         <span className={`text-[10px] font-black uppercase ${label.color}`}>{label.text}</span>
                                     </li>
                                 )
@@ -190,10 +190,10 @@ export const FleetControlHUD: React.FC = () => {
                     <div key={stat.label} className={`${glassStyle} rounded-3xl p-6 space-y-4`}>
                         <div className="flex items-center justify-between">
                             <stat.icon className={`w-5 h-5 ${stat.color}`} aria-hidden="true" />
-                            {typeof stat.total === 'number' && stat.total > 0 && <span className="text-[10px] font-black text-slate-500">OF {stat.total}</span>}
+                            {typeof stat.total === 'number' && stat.total > 0 && <span className="text-[10px] font-black text-theme-muted">OF {stat.total}</span>}
                         </div>
                         <div>
-                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">{stat.label}</p>
+                            <p className="text-[9px] font-black text-theme-muted uppercase tracking-widest leading-none mb-1">{stat.label}</p>
                             <h3 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter uppercase">{stat.val}</h3>
                         </div>
                     </div>
@@ -215,15 +215,15 @@ export const FleetControlHUD: React.FC = () => {
                         <AlertTriangle className="w-5 h-5" aria-hidden="true" />
                     </div>
                     <div className="space-y-1">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Suggestion</span>
-                        <p className="text-xs font-bold text-white italic leading-relaxed">{status.recommendation.msg}</p>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-theme-muted">Suggestion</span>
+                        <p className="text-xs font-bold text-theme-primary italic leading-relaxed">{status.recommendation.msg}</p>
                     </div>
                 </m.div>
             )}
 
             {/* Nodes */}
             {!hasNodes ? (
-                <div className={`${glassStyle} rounded-[2rem] p-10 text-center text-sm text-slate-400`}>
+                <div className={`${glassStyle} rounded-[2rem] p-10 text-center text-sm text-theme-secondary`}>
                     No workers registered to your account.
                 </div>
             ) : (
@@ -248,11 +248,11 @@ export const FleetControlHUD: React.FC = () => {
                                         node.status === 'online' ? 'bg-emerald-500' :
                                         node.status === 'warning' ? 'bg-amber-500' : 'bg-slate-700'
                                     }`} aria-hidden="true" />
-                                    <h5 className="text-xs font-black text-white uppercase tracking-widest italic truncate">{node.name}</h5>
-                                    <span className="text-[9px] font-bold text-slate-500 uppercase">{node.status}</span>
+                                    <h5 className="text-xs font-black text-theme-primary uppercase tracking-widest italic truncate">{node.name}</h5>
+                                    <span className="text-[9px] font-bold text-theme-muted uppercase">{node.status}</span>
                                 </div>
                                 {connected.length > 0 && (
-                                    <div className="flex items-center gap-1.5 p-1 bg-white/5 rounded-lg border border-white/5" aria-label={`Connected: ${connected.map(c => c.id).join(', ')}`}>
+                                    <div className="flex items-center gap-1.5 p-1 bg-white/5 rounded-lg border border-subtle" aria-label={`Connected: ${connected.map(c => c.id).join(', ')}`}>
                                         {connected.map(plat => (
                                             <plat.icon key={plat.id} className="w-2.5 h-2.5 text-indigo-400" aria-hidden="true" />
                                         ))}
@@ -261,17 +261,17 @@ export const FleetControlHUD: React.FC = () => {
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 bg-black/40 rounded-2xl border border-white/5">
-                                    <span className="text-[8px] font-black text-slate-500 uppercase block mb-1">Health</span>
-                                    <span className="text-sm font-black text-white italic">{Number.isFinite(Number(health)) ? `${Number(health)}%` : '—'}</span>
+                                <div className="p-4 bg-surface-card rounded-2xl border border-subtle">
+                                    <span className="text-[8px] font-black text-theme-muted uppercase block mb-1">Health</span>
+                                    <span className="text-sm font-black text-theme-primary italic">{Number.isFinite(Number(health)) ? `${Number(health)}%` : '—'}</span>
                                 </div>
-                                <div className="p-4 bg-black/40 rounded-2xl border border-white/5">
-                                    <span className="text-[8px] font-black text-slate-500 uppercase block mb-1">Revenue today</span>
+                                <div className="p-4 bg-surface-card rounded-2xl border border-subtle">
+                                    <span className="text-[8px] font-black text-theme-muted uppercase block mb-1">Revenue today</span>
                                     <span className="text-sm font-black text-emerald-400 italic">${Number(node.metrics?.revenueDay ?? 0).toLocaleString()}</span>
                                 </div>
                             </div>
 
-                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest pt-4 border-t border-white/5">
+                            <p className="text-[9px] font-black text-theme-muted uppercase tracking-widest pt-4 border-t border-subtle">
                                 Last seen: {lastPulse ? new Date(lastPulse).toLocaleString() : '—'}
                             </p>
                         </m.div>
