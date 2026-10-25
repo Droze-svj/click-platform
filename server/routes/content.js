@@ -41,7 +41,7 @@ const router = express.Router();
  *                 type: array
  *                 items:
  *                   type: string
- *                   enum: [twitter, linkedin, instagram, facebook, tiktok]
+ *                   enum: [twitter, linkedin, instagram, facebook, tiktok, youtube]
  *     responses:
  *       200:
  *         description: Content generation started
