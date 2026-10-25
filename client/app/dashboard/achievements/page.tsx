@@ -128,8 +128,8 @@ export default function AscensionLedgerPage() {
 
         {/* Stats */}
         {stats && (
-          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard icon={Layers} label={t('achievementsPage.statTierLabel')} value={`Level ${stats.level}`} />
+          <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <StatCard icon={Layers} label={t('achievementsPage.statTierLabel')} value={t('achievementsPage.levelAsync', { level: stats.level })} />
             <StatCard icon={Award} label={t('achievementsPage.statMilestonesLabel')} value={stats.achievements.total} />
             <StatCard icon={Zap} label={t('achievementsPage.statStreakLabel')} value={stats.streak.currentStreak} />
             <StatCard icon={TrendingUp} label={t('achievementsPage.statVolumeLabel')} value={stats.stats.totalContent} />
@@ -145,7 +145,7 @@ export default function AscensionLedgerPage() {
               <p className="ds-text-caption mt-0.5">{t('achievementsPage.neuralProgressionDesc')}</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
             <DetailCard icon={Video} label={t('achievementsPage.detailRenditions')} value={stats?.stats.totalVideos || 0} />
             <DetailCard icon={Sparkles} label={t('achievementsPage.detailPayloads')} value={stats?.stats.totalContent || 0} />
             <DetailCard icon={Terminal} label={t('achievementsPage.detailScripts')} value={stats?.stats.totalScripts || 0} />
@@ -182,14 +182,14 @@ export default function AscensionLedgerPage() {
             <Boxes size={20} className="text-primary" />
             <h3 className="ds-text-h3 text-theme-primary">{t('achievementsPage.nodeMatrix')}</h3>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {allMilestones.map((m) => {
               const isDecrypted = decryptedTypes.has(m.type)
               const unlocked = stats?.achievements.all.find(a => a.achievementType === m.type)
 
               return (
                 <div key={m.type}
-                  className={cn('ds-surface-card p-5 relative flex flex-col items-center text-center gap-3',
+                  className={cn('ds-surface-card p-4 sm:p-5 relative flex flex-col items-center text-center gap-3',
                     !isDecrypted && 'opacity-60')}>
                   {isDecrypted && (
                     <span className="absolute top-3 right-3 text-emerald-500"><CheckCircle2 size={18} /></span>
