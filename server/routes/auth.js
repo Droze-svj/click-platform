@@ -1169,6 +1169,12 @@ router.put('/profile', require('../middleware/auth'), async (req, res) => {
         if (Object.keys(unset).length) update.$unset = unset;
         const saved = await User.findByIdAndUpdate(req.user._id, update, { new: true, runValidators: true }).select('-password');
         if (!saved) return res.status(404).json({ success: false, error: 'User not found' });
+        if (set.niche !== undefined) {
+          // The AI reads UserPreferences.marketingIntelligence.niche; changing
+          // the niche here used to leave it at whatever signup (or the
+          // 'General' default) had put there.
+          await require('../services/nicheSync').syncNiche(req.user._id, set.niche, { updateUser: false });
+        }
         return res.json({ success: true, message: 'Profile updated successfully', profile: publicProfile(saved) });
       } catch (err) {
         if (err.name === 'ValidationError') {

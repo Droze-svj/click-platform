@@ -19,7 +19,7 @@ const mPut = api.apiPut as jest.Mock
 const click = (text: string) => fireEvent.click(screen.getByText(text).closest('button')!)
 
 function finishQuiz() {
-  click('onboardingWizard.nicheCreatorLabel'); click('onboardingWizard.continue')
+  click('onboardingPage.niche_finance'); click('onboardingWizard.continue')
   click('onboardingWizard.platformTiktok'); click('onboardingWizard.continue')
   click('onboardingWizard.goalViralLabel'); click('onboardingWizard.configureMyAi')
   click('onboardingWizard.configureMyAi')
@@ -47,5 +47,15 @@ describe('OnboardingWizard account sync', () => {
     finishQuiz()
     await waitFor(() => expect(mPut).toHaveBeenCalledTimes(2))
     expect(screen.queryByText('onboardingWizard.syncFailed')).toBeNull()
+  })
+
+  it('sends a niche and goal the server knows (not creator types the AI maps to "other")', async () => {
+    mPut.mockResolvedValue({ success: true })
+    render(<OnboardingWizard onComplete={jest.fn()} />)
+    finishQuiz()
+    await waitFor(() => expect(mPut).toHaveBeenCalledWith('/me/ai-preferences', expect.anything()))
+    const body = mPut.mock.calls.find((c) => c[0] === '/me/ai-preferences')[1]
+    expect(body.defaults.niche).toBe('finance')
+    expect(body.defaults.goals).toEqual(['more_views'])
   })
 })

@@ -1,10 +1,10 @@
 const express = require('express');
 const User = require('../models/User');
-const UserPreferences = require('../models/UserPreferences');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const logger = require('../utils/logger');
 const { NICHE_PLAYBOOKS } = require('../services/marketingKnowledge');
+const { syncNiche, setPreferenceFields } = require('../services/nicheSync');
 const router = express.Router();
 
 // Canonical niche list — derived directly from the marketing playbooks so the
@@ -146,6 +146,10 @@ router.put('/select', auth, async (req, res) => {
         }
       }
     }
+
+    // The AI reads marketingIntelligence.niche, not User.niche — without this
+    // a niche picked here never changed a single generation.
+    await syncNiche(req.userId || req.user?._id || req.user?.id, niche, { updateUser: false });
 
     res.json({
       message: 'Niche updated',
@@ -303,11 +307,11 @@ router.put('/personalize', auth, async (req, res) => {
     if (cleanPlatforms.length) prefsUpdate['marketingIntelligence.platformFocus'] = cleanPlatforms;
 
     if (Object.keys(prefsUpdate).length && userId) {
-      await UserPreferences.findOneAndUpdate(
-        { userId },
-        { $set: prefsUpdate, $setOnInsert: { userId } },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
+      // Matches the document under either id form (ObjectId / hex string) —
+      // an upsert on `{ userId }` alone created a second document when the
+      // existing one was keyed the other way, and readers found the old one.
+      await setPreferenceFields(userId, prefsUpdate);
+      try { require('../services/personalizationService').invalidatePersona(userId); } catch { /* best-effort */ }
     }
 
     res.json({

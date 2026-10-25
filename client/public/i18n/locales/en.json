@@ -6511,6 +6511,8 @@
     "stepOfThree": "Step {{step}} of 3",
     "quizNicheHeading": "Who are you creating for?",
     "quizNicheSubtitle": "Click will tailor its AI to your exact context.",
+    "quizNicheTopicHeading": "What is your content about?",
+    "quizNicheTopicSubtitle": "Click's AI writes with the playbook for this niche. You can change it later in your profile.",
     "quizPlatformHeading": "Primary platform?",
     "quizPlatformSubtitle": "Optimizes export settings, aspect ratio & captions.",
     "quizGoalHeading": "What's your main goal?",

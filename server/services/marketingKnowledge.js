@@ -394,10 +394,43 @@ function normaliseLanguage(l) {
 }
 
 // ── Public API ───────────────────────────────────────────────────────────
+// Words a creator (or an older client) uses for a niche, mapped to the playbook
+// key. Without these every free-text niche ("fitness", "tech", "Finance &
+// Investing") and the onboarding wizard's old creator-type ids ("educator",
+// "brand", "agency") fell through to the generic 'other' playbook.
+const NICHE_ALIASES = {
+  health: ['fitness', 'gym', 'nutrition', 'diet', 'medical', 'medicine', 'workout', 'bodybuilding', 'sport', 'sports'],
+  finance: ['money', 'investing', 'investment', 'stocks', 'trading', 'personal finance', 'real estate', 'fintech'],
+  education: ['educator', 'teaching', 'teacher', 'learning', 'tutorial', 'tutorials', 'courses', 'course', 'study'],
+  technology: ['tech', 'software', 'ai', 'coding', 'programming', 'developer', 'gadgets', 'saas'],
+  lifestyle: ['fashion', 'travel', 'food', 'cooking', 'home', 'vlog', 'vlogging', 'aesthetics'],
+  business: ['brand', 'agency', 'marketing', 'entrepreneur', 'entrepreneurship', 'startup', 'startups', 'ecommerce', 'e-commerce', 'sales', 'b2b'],
+  entertainment: ['comedy', 'music', 'film', 'movies', 'memes', 'pop culture', 'celebrity'],
+  crypto: ['bitcoin', 'web3', 'defi', 'nft', 'blockchain'],
+  parenting: ['parent', 'parents', 'mom', 'dad', 'family', 'kids'],
+  beauty: ['makeup', 'skincare', 'hair', 'cosmetics'],
+  wellness: ['mental health', 'meditation', 'yoga', 'mindfulness', 'self-care', 'self care'],
+  science: ['physics', 'biology', 'chemistry', 'space', 'astronomy'],
+  gaming: ['games', 'game', 'esports', 'streaming', 'twitch'],
+  other: ['general', 'generalist', 'creator', 'general business'],
+};
+const NICHE_ALIAS_INDEX = Object.entries(NICHE_ALIASES).reduce((acc, [key, words]) => {
+  for (const w of words) acc[w] = key;
+  return acc;
+}, {});
+
 function normaliseNiche(n) {
   if (!n || typeof n !== 'string') return 'other';
   const k = n.toLowerCase().trim();
-  return NICHE_PLAYBOOKS[k] ? k : 'other';
+  if (NICHE_PLAYBOOKS[k]) return k;
+  if (NICHE_ALIAS_INDEX[k]) return NICHE_ALIAS_INDEX[k];
+  // Display labels like "Finance & Investing" or "Health & Wellness": the
+  // first word that is a playbook key or an alias decides.
+  for (const word of k.split(/[^a-z0-9-]+/).filter(Boolean)) {
+    if (NICHE_PLAYBOOKS[word] && word !== 'other') return word;
+    if (NICHE_ALIAS_INDEX[word] && NICHE_ALIAS_INDEX[word] !== 'other') return NICHE_ALIAS_INDEX[word];
+  }
+  return 'other';
 }
 
 function normalisePlatform(p) {

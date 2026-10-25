@@ -22,11 +22,20 @@ interface OnboardingWizardProps {
 
 // ── Niche Quiz Data ────────────────────────────────────────────────────────────
 // Display-text fields hold translation keys resolved via `t()` at render time.
+//
+// The ids ARE the server's niche ids (User.niche enum = NICHE_PLAYBOOKS keys in
+// server/services/marketingKnowledge.js). This step used to offer creator types
+// (creator / brand / educator / agency), none of which is a niche, so every
+// answer reached the AI as the generic 'other' playbook.
 const NICHE_TYPES = [
-  { id: 'creator', labelKey: 'onboardingWizard.nicheCreatorLabel', emoji: '🎬', descKey: 'onboardingWizard.nicheCreatorDesc' },
-  { id: 'brand', labelKey: 'onboardingWizard.nicheBrandLabel', emoji: '🏢', descKey: 'onboardingWizard.nicheBrandDesc' },
-  { id: 'educator', labelKey: 'onboardingWizard.nicheEducatorLabel', emoji: '🎓', descKey: 'onboardingWizard.nicheEducatorDesc' },
-  { id: 'agency', labelKey: 'onboardingWizard.nicheAgencyLabel', emoji: '🚀', descKey: 'onboardingWizard.nicheAgencyDesc' },
+  { id: 'health', labelKey: 'onboardingPage.niche_health', emoji: '💪' },
+  { id: 'finance', labelKey: 'onboardingPage.niche_finance', emoji: '💸' },
+  { id: 'education', labelKey: 'onboardingPage.niche_education', emoji: '🎓' },
+  { id: 'technology', labelKey: 'onboardingPage.niche_technology', emoji: '💻' },
+  { id: 'lifestyle', labelKey: 'onboardingPage.niche_lifestyle', emoji: '✨' },
+  { id: 'business', labelKey: 'onboardingPage.niche_business', emoji: '🏢' },
+  { id: 'entertainment', labelKey: 'onboardingPage.niche_entertainment', emoji: '🎭' },
+  { id: 'other', labelKey: 'onboardingPage.niche_other', emoji: '🌐' },
 ]
 
 const PLATFORM_TARGETS = [
@@ -42,6 +51,16 @@ const CREATOR_GOALS = [
   { id: 'monetize', labelKey: 'onboardingWizard.goalMonetizeLabel', emoji: '💰', tipKey: 'onboardingWizard.goalMonetizeTip' },
   { id: 'brand_awareness', labelKey: 'onboardingWizard.goalBrandAwarenessLabel', emoji: '📣', tipKey: 'onboardingWizard.goalBrandAwarenessTip' },
 ]
+
+// The same goals in the server's vocabulary (routes/niche.js VALID_GOALS, which
+// signup uses). The local ids stay as they are — the workspace hub keys its
+// advice on them — but what reaches the account is the shared id.
+export const SERVER_GOAL_IDS: Record<string, string> = {
+  viral: 'more_views',
+  engagement: 'grow_audience',
+  monetize: 'monetize',
+  brand_awareness: 'build_brand',
+}
 
 // ── Main Steps ─────────────────────────────────────────────────────────────────
 const STEPS = [
@@ -146,7 +165,7 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
         defaults: {
           niche: nicheType || undefined,
           platformFocus: platformTarget ? [platformTarget] : undefined,
-          goals: creatorGoal ? [creatorGoal] : undefined,
+          goals: creatorGoal ? [SERVER_GOAL_IDS[creatorGoal] || creatorGoal] : undefined,
         },
       }),
     ])
@@ -252,8 +271,8 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
 
                 {quizStep === 0 && (
                   <>
-                    <h3 className="text-xl font-black tracking-tight mb-1">{t('onboardingWizard.quizNicheHeading')}</h3>
-                    <p className="text-slate-500 text-xs mb-5">{t('onboardingWizard.quizNicheSubtitle')}</p>
+                    <h3 className="text-xl font-black tracking-tight mb-1">{t('onboardingWizard.quizNicheTopicHeading')}</h3>
+                    <p className="text-slate-500 text-xs mb-5">{t('onboardingWizard.quizNicheTopicSubtitle')}</p>
                     <div className="grid grid-cols-2 gap-2">
                       {NICHE_TYPES.map(n => (
                         <button type="button" key={n.id} onClick={() => setNicheType(n.id)}
@@ -261,7 +280,6 @@ export default function OnboardingWizard({ onComplete }: OnboardingWizardProps) 
                         >
                           <div className="text-2xl mb-1">{n.emoji}</div>
                           <div className="text-xs font-black text-white">{t(n.labelKey)}</div>
-                          <div className="text-[9px] text-slate-600 mt-0.5">{t(n.descKey)}</div>
                         </button>
                       ))}
                     </div>

@@ -126,10 +126,17 @@ async function resolveContext({ userId, niche, platform } = {}) {
       // UserPreferences.userId is a String in this codebase, so it works for
       // both ObjectId-backed and Supabase (UUID) users.
       const UserPreferences = require('../models/UserPreferences');
-      const prefs = await UserPreferences.findOne({ userId: idStr }).lean();
+      // Mixed id: writers using req.user._id store an ObjectId, so a
+      // string-only lookup missed every preference saved through /api/me and
+      // signup personalization.
+      const { userIdVariants } = require('./nicheSync');
+      const prefs = await UserPreferences.findOne({ userId: { $in: userIdVariants(idStr) } }).lean();
       const mi = prefs?.marketingIntelligence || {};
 
-      if (!resolvedNiche && mi.niche) resolvedNiche = mi.niche;
+      // marketingIntelligence.niche defaults to 'General', which is not a
+      // playbook — treat anything that resolves to 'other' as unset so the
+      // User.niche fallback below still gets a say.
+      if (!resolvedNiche && mi.niche && normaliseNiche(mi.niche) !== 'other') resolvedNiche = mi.niche;
       if (!resolvedPlatform) {
         const focus = Array.isArray(mi.platformFocus) ? mi.platformFocus : [];
         if (focus.length > 0) resolvedPlatform = focus[0];
@@ -340,7 +347,7 @@ async function getStrategy({ userId, niche, platform, goal, language = 'en', tie
     userId, niche: ctx.niche, platform: ctx.platform, language, persona: 'marketing-coach',
   });
 
-  const goalLine = goal || (ctx.goals.length ? ctx.goals.join(', ') : 'grow reach and engagement');
+  const goalLine = goal || (ctx.goals.length ? ctx.goals.map((g) => String(g).replace(/_/g, ' ')).join(', ') : 'grow reach and engagement');
 
   // Anti-repetition: don't re-serve the same strategic pillars each time.
   const priorPillars = await recentSuggestionLabels(userId, 'strategy-pillar');
