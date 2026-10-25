@@ -140,7 +140,7 @@ const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
             ) : null}
           </div>
         </div>
-        {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
+        {actions ? <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2 sm:shrink-0">{actions}</div> : null}
       </div>
 
       {tabs ? <div className="-mb-px">{tabs}</div> : null}
