@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "Moderasi konten",
     "cmdModeratePayloadsDesc": "Tinjau dan otorisasi aliran konten",
     "cmdGlobalAnalytics": "Analitik platform",
-    "cmdGlobalAnalyticsDesc": "Statistik seluruh platform"
+    "cmdGlobalAnalyticsDesc": "Statistik seluruh platform",
+    "refundRequestsTitle": "Permintaan refund",
+    "refundRequestsBody": "Pelanggan yang meminta refund 14 hari. Proses refund di Whop.",
+    "refundRequestsEmpty": "Tidak ada permintaan refund."
   },
   "infrastructurePage": {
     "loading": "Memuat status sistem...",

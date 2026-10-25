@@ -123,7 +123,7 @@ export default function BillingPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null)
   const [showManageModal, setShowManageModal] = useState(false)
   const [manageTab, setManageTab] = useState<'cancel' | 'refund'>('cancel')
-  const [manageReason, setManageReason] = useState('Not using enough')
+  const [manageReason, setManageReason] = useState('Not satisfied with features') // the first option, so what's shown is what's sent
   const [manageDetails, setManageDetails] = useState('')
   const [manageLoading, setManageLoading] = useState(false)
 

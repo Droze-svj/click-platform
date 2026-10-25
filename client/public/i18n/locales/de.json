@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "Inhalte moderieren",
     "cmdModeratePayloadsDesc": "Überprüfen und autorisieren Sie den Inhaltsfluss",
     "cmdGlobalAnalytics": "Plattform-Analysen",
-    "cmdGlobalAnalyticsDesc": "Plattformweite Statistiken"
+    "cmdGlobalAnalyticsDesc": "Plattformweite Statistiken",
+    "refundRequestsTitle": "Erstattungsanfragen",
+    "refundRequestsBody": "Kunden, die die 14-Tage-Erstattung angefordert haben. Erstatte den Betrag in Whop.",
+    "refundRequestsEmpty": "Keine Erstattungsanfragen."
   },
   "infrastructurePage": {
     "loading": "Systemstatus wird geladen...",

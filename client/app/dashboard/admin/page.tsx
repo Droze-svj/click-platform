@@ -57,9 +57,19 @@ interface SystemHealth {
   memory: any
 }
 
+interface RefundRequest {
+  id: string
+  email: string
+  plan: string | null
+  requested_at: string
+  ticket_id: string | null
+}
+
 interface DashboardData {
   overview: AdminOverview
   recent_activity: { users: RecentUser[]; posts: RecentPost[] }
+  // Only from the MongoDB dashboard; absent on the legacy Supabase one.
+  refund_requests?: RefundRequest[]
   system_health: SystemHealth
 }
 
@@ -191,6 +201,28 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent activity */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Refund requests reach no one unless email/Slack alerts are set
+                up; they are always listed here. Refunds are issued in Whop. */}
+            {Array.isArray(data.refund_requests) && (
+              <div className="ds-surface-card p-5 sm:p-6">
+                <SectionHeader as="h3" title={t('adminPage.refundRequestsTitle')} description={t('adminPage.refundRequestsBody')} className="mb-4" />
+                {data.refund_requests.length === 0 ? (
+                  <p className="ds-text-caption px-1 py-2">{t('adminPage.refundRequestsEmpty')}</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {data.refund_requests.map((r) => (
+                      <li key={r.id} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border-subtle)] p-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-theme-primary truncate">{r.email}</p>
+                          <p className="ds-text-caption truncate">{[r.plan, r.ticket_id].filter(Boolean).join(' · ')}</p>
+                        </div>
+                        <span className="ds-text-caption shrink-0">{r.requested_at ? new Date(r.requested_at).toLocaleDateString() : ''}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
             <div className="ds-surface-card p-5 sm:p-6">
               <SectionHeader as="h3" title={t('adminPage.resonanceFeed')} className="mb-5" />
 

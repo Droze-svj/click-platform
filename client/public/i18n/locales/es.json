@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "Moderar contenido",
     "cmdModeratePayloadsDesc": "Revisar y autorizar flujos de contenido.",
     "cmdGlobalAnalytics": "Analíticas de la plataforma",
-    "cmdGlobalAnalyticsDesc": "Estadísticas de toda la plataforma"
+    "cmdGlobalAnalyticsDesc": "Estadísticas de toda la plataforma",
+    "refundRequestsTitle": "Solicitudes de reembolso",
+    "refundRequestsBody": "Clientes que pidieron el reembolso de 14 días. Emite el reembolso en Whop.",
+    "refundRequestsEmpty": "No hay solicitudes de reembolso."
   },
   "infrastructurePage": {
     "loading": "Cargando estado del sistema...",

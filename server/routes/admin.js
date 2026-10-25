@@ -39,6 +39,11 @@ async function mongoAdminDashboard() {
       .select('status userId createdAt content.text').lean(),
     ...oauthPlatforms.map((p) => User.countDocuments({ [`oauth.${p}.connected`]: true })),
   ]);
+  // Refund requests (14-day guarantee). They alert by email/Slack/webhook only
+  // when one is configured; this is the place they are always visible.
+  const refundUsers = await User.find({ 'subscription.refundRequestedAt': { $ne: null } })
+    .sort({ 'subscription.refundRequestedAt': -1 }).limit(20)
+    .select('email subscription.plan subscription.refundRequestedAt subscription.refundTicketId').lean();
   // ScheduledPost.userId is a plain string (no ref), so look the authors up.
   const authorIds = [...new Set(recentPosts.map((p) => String(p.userId)))].filter((id) => mongoose.Types.ObjectId.isValid(id));
   const authors = new Map((await User.find({ _id: { $in: authorIds } }).select('email').lean()).map((u) => [String(u._id), u.email]));
@@ -65,6 +70,13 @@ async function mongoAdminDashboard() {
         users: { email: authors.get(String(p.userId)) || '' },
       })),
     },
+    refund_requests: refundUsers.map((u) => ({
+      id: String(u._id),
+      email: u.email,
+      plan: (u.subscription && u.subscription.plan) || null,
+      requested_at: u.subscription && u.subscription.refundRequestedAt,
+      ticket_id: (u.subscription && u.subscription.refundTicketId) || null,
+    })),
     system_health: {
       database: mongoose.connection && mongoose.connection.readyState === 1 ? 'healthy' : 'degraded',
       api: 'healthy',

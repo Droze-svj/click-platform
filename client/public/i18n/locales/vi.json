@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "Kiểm duyệt nội dung",
     "cmdModeratePayloadsDesc": "Xem xét và ủy quyền các luồng nội dung",
     "cmdGlobalAnalytics": "Phân tích nền tảng",
-    "cmdGlobalAnalyticsDesc": "Thống kê toàn nền tảng"
+    "cmdGlobalAnalyticsDesc": "Thống kê toàn nền tảng",
+    "refundRequestsTitle": "Yêu cầu hoàn tiền",
+    "refundRequestsBody": "Khách hàng đã yêu cầu hoàn tiền trong 14 ngày. Hãy hoàn tiền trên Whop.",
+    "refundRequestsEmpty": "Không có yêu cầu hoàn tiền."
   },
   "infrastructurePage": {
     "loading": "Đang tải trạng thái hệ thống...",

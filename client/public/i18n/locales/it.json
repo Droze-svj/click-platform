@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "Modera contenuti",
     "cmdModeratePayloadsDesc": "Esaminare e autorizzare i flussi di contenuto",
     "cmdGlobalAnalytics": "Analisi della piattaforma",
-    "cmdGlobalAnalyticsDesc": "Statistiche dell'intera piattaforma"
+    "cmdGlobalAnalyticsDesc": "Statistiche dell'intera piattaforma",
+    "refundRequestsTitle": "Richieste di rimborso",
+    "refundRequestsBody": "Clienti che hanno chiesto il rimborso entro 14 giorni. Emetti il rimborso su Whop.",
+    "refundRequestsEmpty": "Nessuna richiesta di rimborso."
   },
   "infrastructurePage": {
     "loading": "Caricamento dello stato del sistema...",

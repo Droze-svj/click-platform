@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "콘텐츠 검토",
     "cmdModeratePayloadsDesc": "콘텐츠 흐름 검토 및 승인",
     "cmdGlobalAnalytics": "플랫폼 분석",
-    "cmdGlobalAnalyticsDesc": "플랫폼 전체 통계"
+    "cmdGlobalAnalyticsDesc": "플랫폼 전체 통계",
+    "refundRequestsTitle": "환불 요청",
+    "refundRequestsBody": "14일 환불을 요청한 고객이에요. 환불은 Whop에서 처리하세요.",
+    "refundRequestsEmpty": "환불 요청이 없어요."
   },
   "infrastructurePage": {
     "loading": "시스템 상태를 불러오는 중...",

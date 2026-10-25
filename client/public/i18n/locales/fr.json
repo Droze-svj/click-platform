@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "Modérer le contenu",
     "cmdModeratePayloadsDesc": "Examiner et autoriser les flux de contenu",
     "cmdGlobalAnalytics": "Statistiques de la plateforme",
-    "cmdGlobalAnalyticsDesc": "Statistiques de toute la plateforme"
+    "cmdGlobalAnalyticsDesc": "Statistiques de toute la plateforme",
+    "refundRequestsTitle": "Demandes de remboursement",
+    "refundRequestsBody": "Clients ayant demandé le remboursement sous 14 jours. Effectuez le remboursement dans Whop.",
+    "refundRequestsEmpty": "Aucune demande de remboursement."
   },
   "infrastructurePage": {
     "loading": "Chargement de l'état du système...",

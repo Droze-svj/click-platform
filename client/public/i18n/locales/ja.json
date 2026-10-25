@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "コンテンツのモデレーション",
     "cmdModeratePayloadsDesc": "コンテンツフローを確認して承認する",
     "cmdGlobalAnalytics": "プラットフォーム分析",
-    "cmdGlobalAnalyticsDesc": "プラットフォーム全体の統計"
+    "cmdGlobalAnalyticsDesc": "プラットフォーム全体の統計",
+    "refundRequestsTitle": "返金リクエスト",
+    "refundRequestsBody": "14日間の返金を申請したお客様です。返金はWhopで行ってください。",
+    "refundRequestsEmpty": "返金リクエストはありません。"
   },
   "infrastructurePage": {
     "loading": "システムの状態を読み込み中...",

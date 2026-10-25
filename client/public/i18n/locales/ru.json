@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "Модерация контента",
     "cmdModeratePayloadsDesc": "Просмотр и авторизация потоков контента",
     "cmdGlobalAnalytics": "Аналитика платформы",
-    "cmdGlobalAnalyticsDesc": "Статистика по всей платформе"
+    "cmdGlobalAnalyticsDesc": "Статистика по всей платформе",
+    "refundRequestsTitle": "Запросы на возврат",
+    "refundRequestsBody": "Клиенты, запросившие возврат в течение 14 дней. Оформите возврат в Whop.",
+    "refundRequestsEmpty": "Запросов на возврат нет."
   },
   "infrastructurePage": {
     "loading": "Загрузка статуса системы...",

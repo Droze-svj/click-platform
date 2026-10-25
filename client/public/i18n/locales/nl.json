@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "Content modereren",
     "cmdModeratePayloadsDesc": "Beoordeel en autoriseer contentstromen",
     "cmdGlobalAnalytics": "Platformstatistieken",
-    "cmdGlobalAnalyticsDesc": "Statistieken voor het hele platform"
+    "cmdGlobalAnalyticsDesc": "Statistieken voor het hele platform",
+    "refundRequestsTitle": "Terugbetalingsverzoeken",
+    "refundRequestsBody": "Klanten die om de terugbetaling binnen 14 dagen hebben gevraagd. Betaal terug in Whop.",
+    "refundRequestsEmpty": "Geen terugbetalingsverzoeken."
   },
   "infrastructurePage": {
     "loading": "Systeemstatus laden...",

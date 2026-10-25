@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "مراجعة المحتوى",
     "cmdModeratePayloadsDesc": "مراجعة تدفقات المحتوى والترخيص بها",
     "cmdGlobalAnalytics": "تحليلات المنصة",
-    "cmdGlobalAnalyticsDesc": "إحصاءات على مستوى المنصة"
+    "cmdGlobalAnalyticsDesc": "إحصاءات على مستوى المنصة",
+    "refundRequestsTitle": "طلبات الاسترداد",
+    "refundRequestsBody": "العملاء الذين طلبوا استرداد الـ 14 يومًا. أصدر الاسترداد في Whop.",
+    "refundRequestsEmpty": "لا توجد طلبات استرداد."
   },
   "infrastructurePage": {
     "loading": "جارٍ تحميل حالة النظام...",

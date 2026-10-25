@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "ตรวจสอบคอนเทนต์",
     "cmdModeratePayloadsDesc": "ตรวจสอบและอนุญาตกระแสเนื้อหา",
     "cmdGlobalAnalytics": "การวิเคราะห์แพลตฟอร์ม",
-    "cmdGlobalAnalyticsDesc": "สถิติทั้งแพลตฟอร์ม"
+    "cmdGlobalAnalyticsDesc": "สถิติทั้งแพลตฟอร์ม",
+    "refundRequestsTitle": "คำขอคืนเงิน",
+    "refundRequestsBody": "ลูกค้าที่ขอคืนเงินภายใน 14 วัน ให้ดำเนินการคืนเงินใน Whop",
+    "refundRequestsEmpty": "ไม่มีคำขอคืนเงิน"
   },
   "infrastructurePage": {
     "loading": "กำลังโหลดสถานะระบบ...",

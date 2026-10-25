@@ -2555,7 +2555,10 @@
     "cmdModeratePayloads": "Moderate content",
     "cmdModeratePayloadsDesc": "Review and approve content",
     "cmdGlobalAnalytics": "Platform analytics",
-    "cmdGlobalAnalyticsDesc": "Platform-wide stats"
+    "cmdGlobalAnalyticsDesc": "Platform-wide stats",
+    "refundRequestsTitle": "Refund requests",
+    "refundRequestsBody": "Customers who asked for the 14-day refund. Issue the refund in Whop.",
+    "refundRequestsEmpty": "No refund requests."
   },
   "infrastructurePage": {
     "loading": "Loading system status...",

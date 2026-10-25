@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "कंटेंट मॉडरेट करें",
     "cmdModeratePayloadsDesc": "सामग्री प्रवाह की समीक्षा करें और उसे अधिकृत करें",
     "cmdGlobalAnalytics": "प्लेटफ़ॉर्म एनालिटिक्स",
-    "cmdGlobalAnalyticsDesc": "पूरे प्लेटफ़ॉर्म के आँकड़े"
+    "cmdGlobalAnalyticsDesc": "पूरे प्लेटफ़ॉर्म के आँकड़े",
+    "refundRequestsTitle": "रिफ़ंड अनुरोध",
+    "refundRequestsBody": "जिन ग्राहकों ने 14-दिन का रिफ़ंड माँगा है। रिफ़ंड Whop में जारी करें।",
+    "refundRequestsEmpty": "कोई रिफ़ंड अनुरोध नहीं।"
   },
   "infrastructurePage": {
     "loading": "सिस्टम स्टेटस लोड हो रहा है...",

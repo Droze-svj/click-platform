@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "İçeriği denetle",
     "cmdModeratePayloadsDesc": "İçerik akışlarını inceleyin ve yetkilendirin",
     "cmdGlobalAnalytics": "Platform analitiği",
-    "cmdGlobalAnalyticsDesc": "Platform genelindeki istatistikler"
+    "cmdGlobalAnalyticsDesc": "Platform genelindeki istatistikler",
+    "refundRequestsTitle": "İade talepleri",
+    "refundRequestsBody": "14 günlük iadeyi talep eden müşteriler. İadeyi Whop üzerinden yap.",
+    "refundRequestsEmpty": "İade talebi yok."
   },
   "infrastructurePage": {
     "loading": "Sistem durumu yükleniyor...",

@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "Moderuj treści",
     "cmdModeratePayloadsDesc": "Przeglądaj i autoryzuj przepływy treści",
     "cmdGlobalAnalytics": "Analityka platformy",
-    "cmdGlobalAnalyticsDesc": "Statystyki całej platformy"
+    "cmdGlobalAnalyticsDesc": "Statystyki całej platformy",
+    "refundRequestsTitle": "Prośby o zwrot",
+    "refundRequestsBody": "Klienci, którzy poprosili o zwrot w ciągu 14 dni. Zwróć środki w Whop.",
+    "refundRequestsEmpty": "Brak próśb o zwrot."
   },
   "infrastructurePage": {
     "loading": "Wczytywanie stanu systemu...",

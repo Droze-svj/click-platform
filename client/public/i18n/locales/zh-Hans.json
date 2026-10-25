@@ -2145,7 +2145,10 @@
     "cmdModeratePayloads": "审核内容",
     "cmdModeratePayloadsDesc": "审查和授权内容流",
     "cmdGlobalAnalytics": "平台数据分析",
-    "cmdGlobalAnalyticsDesc": "全平台统计"
+    "cmdGlobalAnalyticsDesc": "全平台统计",
+    "refundRequestsTitle": "退款请求",
+    "refundRequestsBody": "申请 14 天退款的客户。请在 Whop 中办理退款。",
+    "refundRequestsEmpty": "暂无退款请求。"
   },
   "infrastructurePage": {
     "loading": "正在加载系统状态...",
