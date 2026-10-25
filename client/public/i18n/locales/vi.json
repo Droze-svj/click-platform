@@ -10202,7 +10202,8 @@
   },
   "forgotPasswordPage": {
     "rateLimited": "Quá nhiều yêu cầu đặt lại. Hãy chờ vài phút rồi thử lại.",
-    "sendFailed": "Hiện chưa thể gửi liên kết đặt lại. Hãy kiểm tra kết nối và thử lại."
+    "sendFailed": "Hiện chưa thể gửi liên kết đặt lại. Hãy kiểm tra kết nối và thử lại.",
+    "emailUnavailable": "Hiện chúng tôi không thể gửi email đặt lại. Vui lòng liên hệ bộ phận hỗ trợ để đặt lại mật khẩu."
   },
   "governanceDashboard": {
     "loadFailed": "Không thể tải nhật ký kiểm tra."

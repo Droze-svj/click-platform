@@ -17,6 +17,7 @@ jest.mock('../../../server/services/emailService', () => {
   const actual = jest.requireActual('../../../server/services/emailService');
   return {
     ...actual,
+    isEmailServiceAvailable: jest.fn(() => true),
     sendWelcomeEmail: jest.fn().mockResolvedValue({ success: true }),
     sendPasswordResetEmail: jest.fn(async (to, token) => { mockSentResets.push({ to, token }); return { success: true }; }),
   };
@@ -221,6 +222,14 @@ describe('password reset, change, and session revocation', () => {
     const res = await request(app).post('/api/auth/forgot-password').send({ email: emailFor('ghost') });
     expect(res.body).toMatchObject({ success: true, message: 'If the email exists, a reset link has been sent.' });
     expect(mockSentResets.length).toBe(before);
+  });
+
+  test('with no email provider, forgot-password says so instead of claiming a link was sent', async () => {
+    const emailService = require('../../../server/services/emailService');
+    emailService.isEmailServiceAvailable.mockReturnValueOnce(false);
+    const res = await request(app).post('/api/auth/forgot-password').send({ email: emailFor('ghost') });
+    expect(res.status).toBe(503);
+    expect(res.body.code).toBe('EMAIL_UNAVAILABLE');
   });
 
   test('change-password works on Mongo, keeps this device signed in and signs out the others', async () => {

@@ -10202,7 +10202,8 @@
   },
   "forgotPasswordPage": {
     "rateLimited": "Troppe richieste di reimpostazione. Attendi qualche minuto e riprova.",
-    "sendFailed": "Non siamo riusciti a inviare il link di reimpostazione. Controlla la connessione e riprova."
+    "sendFailed": "Non siamo riusciti a inviare il link di reimpostazione. Controlla la connessione e riprova.",
+    "emailUnavailable": "Al momento non possiamo inviare email di reimpostazione. Contatta l'assistenza per reimpostare la password."
   },
   "governanceDashboard": {
     "loadFailed": "Impossibile caricare il registro di audit."

@@ -10202,7 +10202,8 @@
   },
   "forgotPasswordPage": {
     "rateLimited": "Too many reset requests. Wait a few minutes, then try again.",
-    "sendFailed": "We couldn't send the reset link right now. Check your connection and try again."
+    "sendFailed": "We couldn't send the reset link right now. Check your connection and try again.",
+    "emailUnavailable": "We can't send reset emails right now. Please contact support to reset your password."
   },
   "governanceDashboard": {
     "loadFailed": "Couldn't load the audit log."

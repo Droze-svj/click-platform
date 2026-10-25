@@ -10202,7 +10202,8 @@
   },
   "forgotPasswordPage": {
     "rateLimited": "Terlalu banyak permintaan reset. Tunggu beberapa menit, lalu coba lagi.",
-    "sendFailed": "Kami gagal mengirim link reset saat ini. Periksa koneksimu lalu coba lagi."
+    "sendFailed": "Kami gagal mengirim link reset saat ini. Periksa koneksimu lalu coba lagi.",
+    "emailUnavailable": "Saat ini kami tidak bisa mengirim email reset. Hubungi dukungan untuk mereset kata sandimu."
   },
   "governanceDashboard": {
     "loadFailed": "Gagal memuat log audit."

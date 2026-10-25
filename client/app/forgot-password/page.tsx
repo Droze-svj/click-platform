@@ -39,6 +39,8 @@ export default function ForgotPasswordPage() {
       const status = err?.response?.status
       if (status === 429) setError(t('forgotPasswordPage.rateLimited'))
       else if (status === 400) setError(handleApiError(err) || t('forgotPasswordPage.sendFailed'))
+      // The server has no email provider configured — retrying won't help.
+      else if (status === 503 && err?.response?.data?.code === 'EMAIL_UNAVAILABLE') setError(t('forgotPasswordPage.emailUnavailable'))
       else setError(t('forgotPasswordPage.sendFailed'))
     } finally {
       setLoading(false)

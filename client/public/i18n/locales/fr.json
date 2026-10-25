@@ -10202,7 +10202,8 @@
   },
   "forgotPasswordPage": {
     "rateLimited": "Trop de demandes de réinitialisation. Patientez quelques minutes, puis réessayez.",
-    "sendFailed": "Nous n'avons pas pu envoyer le lien de réinitialisation pour le moment. Vérifiez votre connexion et réessayez."
+    "sendFailed": "Nous n'avons pas pu envoyer le lien de réinitialisation pour le moment. Vérifiez votre connexion et réessayez.",
+    "emailUnavailable": "Nous ne pouvons pas envoyer d'e-mails de réinitialisation pour le moment. Contactez le support pour réinitialiser votre mot de passe."
   },
   "governanceDashboard": {
     "loadFailed": "Impossible de charger le journal d'audit."

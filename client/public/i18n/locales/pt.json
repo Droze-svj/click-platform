@@ -10202,7 +10202,8 @@
   },
   "forgotPasswordPage": {
     "rateLimited": "Muitos pedidos de redefinição. Aguarde alguns minutos e tente novamente.",
-    "sendFailed": "Não conseguimos enviar o link de redefinição agora. Verifique sua conexão e tente novamente."
+    "sendFailed": "Não conseguimos enviar o link de redefinição agora. Verifique sua conexão e tente novamente.",
+    "emailUnavailable": "No momento não conseguimos enviar e-mails de redefinição. Fale com o suporte para redefinir sua senha."
   },
   "governanceDashboard": {
     "loadFailed": "Não foi possível carregar o registro de auditoria."

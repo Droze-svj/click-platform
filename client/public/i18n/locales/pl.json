@@ -10202,7 +10202,8 @@
   },
   "forgotPasswordPage": {
     "rateLimited": "Zbyt wiele próśb o reset. Odczekaj kilka minut i spróbuj ponownie.",
-    "sendFailed": "Nie udało się teraz wysłać linku do resetu. Sprawdź połączenie i spróbuj ponownie."
+    "sendFailed": "Nie udało się teraz wysłać linku do resetu. Sprawdź połączenie i spróbuj ponownie.",
+    "emailUnavailable": "Nie możemy teraz wysłać e-maila resetującego. Skontaktuj się z pomocą techniczną, aby zresetować hasło."
   },
   "governanceDashboard": {
     "loadFailed": "Nie udało się wczytać dziennika audytu."

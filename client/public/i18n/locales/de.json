@@ -10202,7 +10202,8 @@
   },
   "forgotPasswordPage": {
     "rateLimited": "Zu viele Anfragen zum Zurücksetzen. Warte ein paar Minuten und versuch es dann erneut.",
-    "sendFailed": "Wir konnten den Link zum Zurücksetzen gerade nicht senden. Prüf deine Verbindung und versuch es erneut."
+    "sendFailed": "Wir konnten den Link zum Zurücksetzen gerade nicht senden. Prüf deine Verbindung und versuch es erneut.",
+    "emailUnavailable": "Wir können gerade keine E-Mails zum Zurücksetzen senden. Wende dich an den Support, um dein Passwort zurückzusetzen."
   },
   "governanceDashboard": {
     "loadFailed": "Das Audit-Log konnte nicht geladen werden."

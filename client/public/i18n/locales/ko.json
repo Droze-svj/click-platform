@@ -10202,7 +10202,8 @@
   },
   "forgotPasswordPage": {
     "rateLimited": "재설정 요청이 너무 많아요. 몇 분 후 다시 시도해 주세요.",
-    "sendFailed": "지금은 재설정 링크를 보내지 못했어요. 연결 상태를 확인하고 다시 시도해 주세요."
+    "sendFailed": "지금은 재설정 링크를 보내지 못했어요. 연결 상태를 확인하고 다시 시도해 주세요.",
+    "emailUnavailable": "지금은 재설정 이메일을 보낼 수 없어요. 비밀번호를 재설정하려면 지원팀에 문의해 주세요."
   },
   "governanceDashboard": {
     "loadFailed": "감사 로그를 불러오지 못했어요."
