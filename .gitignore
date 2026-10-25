@@ -96,3 +96,8 @@ tests/reports/
 coverage/
 
 .env.bak.*
+
+# Symlinked node_modules (git treats a symlink as a file, so node_modules/ misses it)
+node_modules
+# Journey e2e local in-memory DB
+.journey-db/

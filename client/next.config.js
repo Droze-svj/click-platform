@@ -41,14 +41,19 @@ const nextConfig = {
     { source: '/dashboard/clips', destination: '/dashboard/clips/hub', permanent: false },
   ],
   rewrites: async () => {
+    // Where the same-origin /api and /uploads proxy points. Defaults to the
+    // local API on :5001; BACKEND_ORIGIN (server-side only, read at build/dev
+    // start) lets a second local stack — e.g. the e2e journeys on another
+    // port — proxy media to its own backend instead of someone else's :5001.
+    const backend = (process.env.BACKEND_ORIGIN || 'http://localhost:5001').replace(/\/+$/, '')
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:5001/api/:path*',
+        destination: `${backend}/api/:path*`,
       },
       {
         source: '/uploads/:path*',
-        destination: 'http://localhost:5001/uploads/:path*',
+        destination: `${backend}/uploads/:path*`,
       },
     ]
   },
