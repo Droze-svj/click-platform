@@ -9,6 +9,7 @@ import { useToast } from '../../../../contexts/ToastContext'
 import ToastContainer from '../../../../components/ToastContainer'
 import { apiGet, handleApiError } from '../../../../lib/api'
 import { cn } from '../../../../lib/utils'
+import { useTranslation } from '@/hooks/useTranslation'
 import {
   Panel,
   Button,
@@ -53,20 +54,58 @@ const PLATFORMS: { value: Platform; label: string }[] = [
   { value: 'x', label: 'X' },
 ]
 
-const KIND_CFG: Record<SuggestionKind, { label: string; icon: typeof Hash; color: string; bg: string }> = {
-  hashtag: { label: 'Hashtag', icon: Hash,     color: 'text-indigo-500',  bg: 'bg-indigo-500/10 border-indigo-500/20' },
-  topic:   { label: 'Topic',   icon: FileText, color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-  sound:   { label: 'Sound',   icon: Music,    color: 'text-fuchsia-500', bg: 'bg-fuchsia-500/10 border-fuchsia-500/20' },
+type TFn = (key: string, params?: Record<string, string | number>) => string
+
+const KIND_CFG: Record<SuggestionKind, { icon: typeof Hash; color: string; bg: string }> = {
+  hashtag: { icon: Hash,     color: 'text-indigo-500',  bg: 'bg-indigo-500/10 border-indigo-500/20' },
+  topic:   { icon: FileText, color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+  sound:   { icon: Music,    color: 'text-fuchsia-500', bg: 'bg-fuchsia-500/10 border-fuchsia-500/20' },
 }
 
-function kindConfig(kind?: string) {
-  if (kind === 'hashtag' || kind === 'topic' || kind === 'sound') return KIND_CFG[kind]
+function kindLabel(t: TFn, kind: SuggestionKind): string {
+  switch (kind) {
+    case 'hashtag': return t('trendRepurposePage.kindHashtag')
+    case 'topic': return t('trendRepurposePage.kindTopic')
+    case 'sound': return t('trendRepurposePage.kindSound')
+  }
+}
+
+function kindConfig(t: TFn, kind?: string) {
+  if (kind === 'hashtag' || kind === 'topic' || kind === 'sound') {
+    return { label: kindLabel(t, kind), ...KIND_CFG[kind] }
+  }
   // Unknown kind from the API — surface it honestly rather than guessing.
-  return { label: kind ? String(kind) : 'Trend', icon: Sparkles, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/20' }
+  return { label: kind ? String(kind) : t('trendRepurposePage.kindTrend'), icon: Sparkles, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/20' }
+}
+
+/**
+ * The API reports why there are no suggestions as a machine code
+ * (no_trends / no_content / trends_unavailable). Map each to a plain
+ * title + sentence; anything unrecognised falls back to the generic copy.
+ */
+function unavailableCopy(t: TFn, reason?: string): { title: string; description: string } {
+  switch (reason?.trim()) {
+    case 'no_trends':
+      return {
+        title: t('trendRepurposePage.noTrendsTitle'),
+        description: t('trendRepurposePage.noTrendsDescription'),
+      }
+    case 'no_content':
+      return {
+        title: t('trendRepurposePage.noContentTitle'),
+        description: t('trendRepurposePage.noContentDescription'),
+      }
+    default:
+      return {
+        title: t('trendRepurposePage.unavailableTitle'),
+        description: t('trendRepurposePage.unavailableDescription'),
+      }
+  }
 }
 
 export default function TrendRepurposePage() {
   const { showToast } = useToast()
+  const { t } = useTranslation()
   const [platform, setPlatform] = useState<Platform>('tiktok')
   const [data, setData] = useState<RepurposeResponse | null>(null)
   const [loading, setLoading] = useState(false)
@@ -81,7 +120,7 @@ export default function TrendRepurposePage() {
       setData(res?.data ?? null)
     } catch (err) {
       setData(null)
-      showToast(handleApiError(err) || 'Could not load repurpose ideas', 'error')
+      showToast(handleApiError(err) || t('trendRepurposePage.errLoad'), 'error')
     } finally {
       setSearched(true)
       setLoading(false)
@@ -93,19 +132,20 @@ export default function TrendRepurposePage() {
     const tags = (s.suggestedHashtags ?? []).join(' ')
     const payload = [caption, tags].filter(Boolean).join('\n\n')
     if (!payload) {
-      showToast('Nothing to copy for this idea', 'info')
+      showToast(t('trendRepurposePage.nothingToCopy'), 'info')
       return
     }
     try {
       await navigator.clipboard.writeText(payload)
-      showToast('Copied', 'success')
+      showToast(t('trendRepurposePage.copiedToast'), 'success')
     } catch {
-      showToast('Could not copy to clipboard', 'error')
+      showToast(t('trendRepurposePage.errCopy'), 'error')
     }
   }
 
   const suggestions = data?.suggestions ?? []
   const unavailable = searched && !loading && (data?.available === false || suggestions.length === 0)
+  const unavailableText = unavailableCopy(t, data?.reason)
 
   return (
     <PageShell width="wide" className="ds-bg-mesh-soft min-h-screen overflow-x-hidden">
@@ -114,8 +154,8 @@ export default function TrendRepurposePage() {
       {/* ── Header ── */}
       <SectionHeader
         as="h1"
-        title="Trend Repurpose"
-        description="Trend-jack the moment: pair a live trend with one of your recent clips and get a ready-to-post draft. Suggestions are pulled straight from live data — never fabricated."
+        title={t('trendRepurposePage.title')}
+        description={t('trendRepurposePage.subtitle')}
         className="mb-6"
       />
 
@@ -124,12 +164,12 @@ export default function TrendRepurposePage() {
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 md:items-end">
           {/* Platform Select */}
           <div className="relative max-w-xs">
-            <label className="ds-text-caption mb-1.5 block text-theme-secondary">Platform</label>
+            <label className="ds-text-caption mb-1.5 block text-theme-secondary">{t('trendRepurposePage.platformLabel')}</label>
             <div className="relative">
               <select
                 value={platform}
-                title="Choose a platform"
-                aria-label="Choose a platform"
+                title={t('trendRepurposePage.choosePlatform')}
+                aria-label={t('trendRepurposePage.choosePlatform')}
                 onChange={(e) => setPlatform(e.target.value as Platform)}
                 className="w-full appearance-none rounded-lg border border-input bg-background px-3 h-10 pr-9 text-sm text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               >
@@ -148,7 +188,7 @@ export default function TrendRepurposePage() {
             leftIcon={<Recycle className="h-4 w-4" aria-hidden />}
             className="md:w-auto"
           >
-            Find Repurpose Ideas
+            {t('trendRepurposePage.findButton')}
           </Button>
         </div>
       </Panel>
@@ -166,7 +206,7 @@ export default function TrendRepurposePage() {
       {!loading && suggestions.length > 0 && (
         <div className="ds-bento-grid">
           {suggestions.map((s, idx) => {
-            const cfg = kindConfig(s.kind)
+            const cfg = kindConfig(t, s.kind)
             const KindIcon = cfg.icon
             const tags = s.suggestedHashtags ?? []
             const score = typeof s.relevanceScore === 'number' ? Math.round(s.relevanceScore) : null
@@ -182,7 +222,7 @@ export default function TrendRepurposePage() {
                     {score !== null && (
                       <Badge variant="outline" className="gap-1">
                         <Zap className="h-3 w-3" aria-hidden />
-                        {score}% match
+                        {t('trendRepurposePage.matchPercent', { score })}
                       </Badge>
                     )}
                   </div>
@@ -200,7 +240,7 @@ export default function TrendRepurposePage() {
                 <div className="mt-3 flex items-center gap-1.5 text-xs text-theme-secondary">
                   <Link2 className="h-3.5 w-3.5 shrink-0" aria-hidden />
                   <span className="truncate">
-                    Pairs with <span className="text-theme-primary font-medium">{s.sourceTitle?.trim() || 'a recent clip'}</span>
+                    {t('trendRepurposePage.pairsWith')} <span className="text-theme-primary font-medium">{s.sourceTitle?.trim() || t('trendRepurposePage.aRecentClip')}</span>
                   </span>
                 </div>
 
@@ -232,10 +272,10 @@ export default function TrendRepurposePage() {
                     size="sm"
                     onClick={() => copyCaption(s)}
                     leftIcon={<Copy className="h-3.5 w-3.5" aria-hidden />}
-                    title="Copy caption + hashtags"
-                    aria-label="Copy caption and hashtags"
+                    title={t('trendRepurposePage.copyCaptionTitle')}
+                    aria-label={t('trendRepurposePage.copyCaptionTitle')}
                   >
-                    Copy caption
+                    {t('trendRepurposePage.copyCaption')}
                   </Button>
                 </div>
               </Panel>
@@ -248,11 +288,8 @@ export default function TrendRepurposePage() {
       {unavailable && (
         <EmptyState
           icon={Search}
-          title="Live trend data is currently unavailable"
-          description={
-            data?.reason?.trim() ||
-            'We could not pull live trends for this platform right now. Rather than invent any, we are showing nothing — try again shortly or pick another platform.'
-          }
+          title={unavailableText.title}
+          description={unavailableText.description}
           className="ds-surface-card"
         />
       )}
@@ -261,8 +298,8 @@ export default function TrendRepurposePage() {
       {!loading && !searched && (
         <EmptyState
           icon={Recycle}
-          title="Find repurpose ideas"
-          description="Pick a platform and we will surface live trends worth jacking, each paired with one of your recent clips and a draft caption."
+          title={t('trendRepurposePage.idleTitle')}
+          description={t('trendRepurposePage.idleDescription')}
           className="ds-surface-card"
         />
       )}

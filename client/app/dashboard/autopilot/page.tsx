@@ -7,6 +7,7 @@ import {
   PlugZap, Clock, ChevronDown,
 } from 'lucide-react'
 import { useToast } from '../../../contexts/ToastContext'
+import { useTranslation } from '../../../hooks/useTranslation'
 import ToastContainer from '../../../components/ToastContainer'
 import { apiPost } from '../../../lib/api'
 import { extractApiError } from '../../../utils/apiResponse'
@@ -56,8 +57,8 @@ interface AutopilotResponse {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Format an ISO timestamp into a readable local string; tolerant of junk. */
-function formatScheduledTime(iso?: string): string {
-  if (!iso) return 'Time TBD'
+function formatScheduledTime(iso: string | undefined, tbd: string): string {
+  if (!iso) return tbd
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return iso
   return d.toLocaleString(undefined, {
@@ -75,14 +76,15 @@ function statusBadgeVariant(status?: PostStatus): 'default' | 'secondary' | 'out
   return 'outline'
 }
 
-function statusLabel(status?: PostStatus): string {
-  if (status === 'pending_approval') return 'Pending approval'
-  if (status === 'scheduled') return 'Scheduled'
-  return status ? String(status) : 'Draft'
+function statusLabel(status: PostStatus | undefined, t: (k: string) => string): string {
+  if (status === 'pending_approval') return t('autopilotPage.statusPending')
+  if (status === 'scheduled') return t('autopilotPage.statusScheduled')
+  return status ? String(status) : t('autopilotPage.statusDraft')
 }
 
 export default function AutopilotPage() {
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const [autonomyMode, setAutonomyMode] = useState<AutonomyMode>('human_approve')
   const [niche, setNiche] = useState('')
@@ -110,7 +112,7 @@ export default function AutopilotPage() {
       })
       const data = res?.data
       if (!data) {
-        showToast('No plan was returned. Please try again.', 'error')
+        showToast(t('autopilotPage.noPlan'), 'error')
         return
       }
 
@@ -123,7 +125,7 @@ export default function AutopilotPage() {
 
       setPlan(data)
       showToast(
-        `Plan built with ${data.count ?? data.posts?.length ?? 0} drafted post(s).`,
+        (() => { const count = data.count ?? data.posts?.length ?? 0; return t(count === 1 ? 'autopilotPage.planBuiltOne' : 'autopilotPage.planBuiltOther', { count }) })(),
         'success'
       )
     } catch (err) {
@@ -140,7 +142,7 @@ export default function AutopilotPage() {
     setApproving(true)
     try {
       await apiPost(`/autopilot/${plan.planId}/approve`)
-      showToast('Plan approved — posts are now scheduled.', 'success')
+      showToast(t('autopilotPage.approved'), 'success')
       // Reflect the new state locally without a refetch.
       setPlan(prev =>
         prev
@@ -164,7 +166,7 @@ export default function AutopilotPage() {
     setCancelling(true)
     try {
       await apiPost(`/autopilot/${plan.planId}/cancel`)
-      showToast('Plan cancelled.', 'info')
+      showToast(t('autopilotPage.cancelled'), 'info')
       setPlan(null)
       setEmptyMessage(null)
     } catch (err) {
@@ -181,8 +183,8 @@ export default function AutopilotPage() {
       {/* ── Header ── */}
       <SectionHeader
         as="h1"
-        title="Autopilot"
-        description="Let Autopilot draft a publishing plan across your connected accounts — with a human-approve gate so nothing goes live without your say-so."
+        title={t('autopilotPage.title')}
+        description={t('autopilotPage.description')}
         className="mb-6"
       />
 
@@ -195,19 +197,19 @@ export default function AutopilotPage() {
               htmlFor="autopilot-mode"
               className="mb-1.5 text-sm font-medium text-theme-secondary"
             >
-              Autonomy mode
+              {t('autopilotPage.modeLabel')}
             </label>
             <div className="relative">
               <select
                 id="autopilot-mode"
                 value={autonomyMode}
                 onChange={(e) => setAutonomyMode(e.target.value as AutonomyMode)}
-                title="Autonomy mode"
-                aria-label="Autonomy mode"
+                title={t('autopilotPage.modeLabel')}
+                aria-label={t('autopilotPage.modeLabel')}
                 className="w-full appearance-none rounded-lg border border-input bg-background px-3 h-10 pr-9 text-sm text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               >
-                <option value="human_approve">Human approve (recommended)</option>
-                <option value="full_auto">Full auto</option>
+                <option value="human_approve">{t('autopilotPage.modeHuman')}</option>
+                <option value="full_auto">{t('autopilotPage.modeFull')}</option>
               </select>
               <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted pointer-events-none" aria-hidden />
             </div>
@@ -219,16 +221,16 @@ export default function AutopilotPage() {
               htmlFor="autopilot-niche"
               className="mb-1.5 text-sm font-medium text-theme-secondary"
             >
-              Niche <span className="text-theme-muted font-normal">(optional)</span>
+              {t('autopilotPage.nicheLabel')} <span className="text-theme-muted font-normal">{t('autopilotPage.optional')}</span>
             </label>
             <Input
               id="autopilot-niche"
               type="text"
               value={niche}
               onChange={(e) => setNiche(e.target.value)}
-              title="Niche"
-              aria-label="Niche"
-              placeholder="e.g. fitness, finance, tech"
+              title={t('autopilotPage.nicheLabel')}
+              aria-label={t('autopilotPage.nicheLabel')}
+              placeholder={t('autopilotPage.nichePlaceholder')}
             />
           </FormField>
 
@@ -242,7 +244,7 @@ export default function AutopilotPage() {
               leftIcon={<Rocket className="h-4 w-4" aria-hidden />}
               className="w-full"
             >
-              {building ? 'Building plan…' : 'Build Plan'}
+              {building ? t('autopilotPage.building') : t('autopilotPage.build')}
             </Button>
           </div>
         </div>
@@ -253,16 +255,13 @@ export default function AutopilotPage() {
           <div className="text-sm leading-relaxed text-theme-secondary">
             {autonomyMode === 'human_approve' ? (
               <>
-                <span className="font-semibold text-theme-primary">Human approve:</span>{' '}
-                Autopilot only drafts a plan — <span className="font-medium">nothing publishes</span>{' '}
-                until you press <span className="font-medium">Approve &amp; Schedule</span>.
+                <span className="font-semibold text-theme-primary">{t('autopilotPage.humanBannerTitle')}</span>{' '}
+                {t('autopilotPage.humanBanner')}
               </>
             ) : (
               <>
-                <span className="font-semibold text-theme-primary">Full auto:</span>{' '}
-                drafted posts are <span className="font-medium">scheduled immediately</span>. You
-                still get a <span className="font-medium">10-minute cancel window</span> before
-                anything goes out.
+                <span className="font-semibold text-theme-primary">{t('autopilotPage.fullBannerTitle')}</span>{' '}
+                {t('autopilotPage.fullBanner')}
               </>
             )}
           </div>
@@ -273,13 +272,13 @@ export default function AutopilotPage() {
       {!hasPlan && emptyMessage !== null && (
         <EmptyState
           icon={PlugZap}
-          title="Connect a social account first"
-          description={emptyMessage || 'Autopilot needs at least one connected social account before it can draft a publishing plan.'}
+          title={t('autopilotPage.connectTitle')}
+          description={emptyMessage || t('autopilotPage.connectBody')}
           className="ds-surface-card"
           action={
             <Link href="/dashboard/social">
               <Button variant="primary" size="sm" leftIcon={<PlugZap className="h-4 w-4" aria-hidden />}>
-                Connect an account
+                {t('autopilotPage.connectCta')}
               </Button>
             </Link>
           }
@@ -297,11 +296,11 @@ export default function AutopilotPage() {
               </span>
               <div>
                 <h2 className="ds-text-h3 text-theme-primary leading-tight">
-                  {posts.length} drafted post{posts.length === 1 ? '' : 's'}
+                  {t(posts.length === 1 ? 'autopilotPage.draftedOne' : 'autopilotPage.draftedOther', { count: posts.length })}
                 </h2>
                 <p className="text-sm text-theme-muted">
-                  Mode: {plan?.autonomyMode === 'full_auto' ? 'Full auto' : 'Human approve'}
-                  {plan?.status ? ` · ${statusLabel(plan.status)}` : ''}
+                  {t('autopilotPage.modeValue', { mode: plan?.autonomyMode === 'full_auto' ? t('autopilotPage.modeFull') : t('autopilotPage.modeHumanShort') })}
+                  {plan?.status ? ` · ${statusLabel(plan.status, t)}` : ''}
                 </p>
               </div>
             </div>
@@ -315,7 +314,7 @@ export default function AutopilotPage() {
                   onClick={handleApprove}
                   leftIcon={<CheckCircle2 className="h-4 w-4" aria-hidden />}
                 >
-                  Approve &amp; Schedule
+                  {t('autopilotPage.approve')}
                 </Button>
               )}
               <Button
@@ -325,7 +324,7 @@ export default function AutopilotPage() {
                 onClick={handleCancel}
                 leftIcon={<XCircle className="h-4 w-4" aria-hidden />}
               >
-                Cancel Plan
+                {t('autopilotPage.cancelPlan')}
               </Button>
             </div>
           </div>
@@ -344,11 +343,11 @@ export default function AutopilotPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-theme-primary">
                           <Zap className="h-4 w-4 text-fuchsia-500" aria-hidden />
-                          {post?.platform || 'Unknown platform'}
+                          {post?.platform || t('autopilotPage.unknownPlatform')}
                         </span>
                         <span className="inline-flex items-center gap-1 text-xs text-theme-muted">
                           <Clock className="h-3.5 w-3.5" aria-hidden />
-                          {formatScheduledTime(post?.scheduledTime)}
+                          {formatScheduledTime(post?.scheduledTime, t('autopilotPage.timeTbd'))}
                         </span>
                       </div>
                       {text && (
@@ -358,7 +357,7 @@ export default function AutopilotPage() {
 
                     <div className="shrink-0">
                       <Badge variant={statusBadgeVariant(post?.status)}>
-                        {statusLabel(post?.status)}
+                        {statusLabel(post?.status, t)}
                       </Badge>
                     </div>
                   </div>
@@ -368,8 +367,8 @@ export default function AutopilotPage() {
           ) : (
             <EmptyState
               icon={Calendar}
-              title="No posts in this plan"
-              description="Autopilot didn't draft any posts for this plan."
+              title={t('autopilotPage.noPostsTitle')}
+              description={t('autopilotPage.noPostsBody')}
               className="ds-surface-card"
             />
           )}
@@ -380,8 +379,8 @@ export default function AutopilotPage() {
       {!hasPlan && emptyMessage === null && !building && (
         <EmptyState
           icon={Rocket}
-          title="Build your first Autopilot plan"
-          description="Choose an autonomy mode, optionally set a niche, then press Build Plan to draft a publishing schedule across your connected accounts."
+          title={t('autopilotPage.firstTitle')}
+          description={t('autopilotPage.firstBody')}
           className="ds-surface-card"
         />
       )}

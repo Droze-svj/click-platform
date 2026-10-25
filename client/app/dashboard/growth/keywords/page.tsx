@@ -9,6 +9,7 @@ import { useToast } from '../../../../contexts/ToastContext'
 import ToastContainer from '../../../../components/ToastContainer'
 import { apiGet, handleApiError } from '../../../../lib/api'
 import { cn } from '../../../../lib/utils'
+import { useTranslation } from '@/hooks/useTranslation'
 import {
   Panel,
   Button,
@@ -60,16 +61,37 @@ const PLATFORMS: { value: Platform; label: string }[] = [
 // 'target' green, 'secondary' amber, 'long-tail' neutral.
 type BadgeVariant = 'default' | 'outline' | 'secondary' | 'destructive'
 
-const RECO_CFG: Record<Recommendation, { label: string; variant: BadgeVariant; className: string }> = {
-  target:      { label: 'Target',    variant: 'secondary', className: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/20' },
-  secondary:   { label: 'Secondary', variant: 'secondary', className: 'bg-amber-500/15 text-amber-500 border-amber-500/20' },
-  'long-tail': { label: 'Long-tail', variant: 'secondary', className: '' },
+type TFn = (key: string, params?: Record<string, string | number>) => string
+
+const RECO_CFG: Record<Recommendation, { variant: BadgeVariant; className: string }> = {
+  target:      { variant: 'secondary', className: 'bg-emerald-500/15 text-emerald-500 border-emerald-500/20' },
+  secondary:   { variant: 'secondary', className: 'bg-amber-500/15 text-amber-500 border-amber-500/20' },
+  'long-tail': { variant: 'secondary', className: '' },
 }
 
-function recoConfig(reco?: string): { label: string; variant: BadgeVariant; className: string } {
-  if (reco === 'target' || reco === 'secondary' || reco === 'long-tail') return RECO_CFG[reco]
-  // Unknown recommendation from the API — surface it honestly rather than guessing.
-  return { label: reco ? String(reco) : 'Idea', variant: 'secondary', className: '' }
+function recoLabel(reco: Recommendation, t: TFn): string {
+  if (reco === 'target') return t('growthKeywordsPage.recoTarget')
+  if (reco === 'secondary') return t('growthKeywordsPage.recoSecondary')
+  return t('growthKeywordsPage.recoLongTail')
+}
+
+function recoConfig(reco: string | undefined, t: TFn): { label: string; variant: BadgeVariant; className: string } {
+  if (reco === 'target' || reco === 'secondary' || reco === 'long-tail') {
+    return { label: recoLabel(reco, t), ...RECO_CFG[reco] }
+  }
+  // Unknown recommendation from the API — show a neutral label, never the raw code.
+  return { label: t('growthKeywordsPage.recoIdea'), variant: 'secondary', className: '' }
+}
+
+// Plain label for where an idea came from. Unknown sources return null (badge hidden)
+// so a raw backend code is never shown.
+function sourceLabel(source: string | undefined, t: TFn): string | null {
+  switch (source) {
+    case 'youtube_autocomplete': return t('growthKeywordsPage.sourceYoutubeAutocomplete')
+    case 'seed': return t('growthKeywordsPage.sourceSeed')
+    case 'estimated': return t('growthKeywordsPage.sourceEstimated')
+    default: return null
+  }
 }
 
 // Color-tier the prominent 0–100 score: ≥70 green, 45–69 amber, <45 neutral.
@@ -116,6 +138,7 @@ function MetricBar({
 
 export default function KeywordExplorerPage() {
   const toast = useToast()
+  const { t } = useTranslation()
   const [seed, setSeed] = useState('')
   const [platform, setPlatform] = useState<Platform>('youtube')
   const [data, setData] = useState<KeywordResponse | null>(null)
@@ -125,7 +148,7 @@ export default function KeywordExplorerPage() {
   const findKeywords = async () => {
     const trimmed = seed.trim()
     if (!trimmed) {
-      toast.info('Enter a seed keyword to explore')
+      toast.info(t('growthKeywordsPage.enterSeed'))
       return
     }
     setLoading(true)
@@ -137,7 +160,7 @@ export default function KeywordExplorerPage() {
       setData(res?.data ?? null)
     } catch (err) {
       setData(null)
-      toast.error(handleApiError(err) || 'Could not load keyword ideas')
+      toast.error(handleApiError(err) || t('growthKeywordsPage.loadError'))
     } finally {
       setSearched(true)
       setLoading(false)
@@ -149,14 +172,14 @@ export default function KeywordExplorerPage() {
   const copyKeywordAsTarget = async (keyword?: string) => {
     const value = keyword?.trim() || ''
     if (!value) {
-      toast.info('Nothing to copy for this keyword')
+      toast.info(t('growthKeywordsPage.nothingToCopy'))
       return
     }
     try {
       await navigator.clipboard.writeText(value)
-      toast.success('Copied — paste into the SEO Scorecard.')
+      toast.success(t('growthKeywordsPage.copied'))
     } catch {
-      toast.error('Could not copy to clipboard')
+      toast.error(t('growthKeywordsPage.copyFailed'))
     }
   }
 
@@ -170,8 +193,8 @@ export default function KeywordExplorerPage() {
       {/* ── Header ── */}
       <SectionHeader
         as="h1"
-        title="Keyword Explorer"
-        description="Research keywords worth targeting. Enter a seed term and we surface ranked ideas pulled straight from live autocomplete data — never fabricated."
+        title={t('growthKeywordsPage.title')}
+        description={t('growthKeywordsPage.description')}
         className="mb-6"
       />
 
@@ -180,14 +203,14 @@ export default function KeywordExplorerPage() {
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-4 md:items-end">
           {/* Seed keyword */}
           <div className="relative">
-            <label className="ds-text-caption mb-1.5 block text-theme-secondary">Seed keyword</label>
+            <label className="ds-text-caption mb-1.5 block text-theme-secondary">{t('growthKeywordsPage.seedLabel')}</label>
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted pointer-events-none" aria-hidden />
               <Input
                 type="text"
-                title="Seed keyword"
-                aria-label="Seed keyword"
-                placeholder="e.g. ai video editing"
+                title={t('growthKeywordsPage.seedLabel')}
+                aria-label={t('growthKeywordsPage.seedLabel')}
+                placeholder={t('growthKeywordsPage.seedPlaceholder')}
                 value={seed}
                 onChange={(e) => setSeed(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') findKeywords() }}
@@ -198,12 +221,12 @@ export default function KeywordExplorerPage() {
 
           {/* Platform Select */}
           <div className="relative md:w-44">
-            <label className="ds-text-caption mb-1.5 block text-theme-secondary">Platform</label>
+            <label className="ds-text-caption mb-1.5 block text-theme-secondary">{t('growthKeywordsPage.platformLabel')}</label>
             <div className="relative">
               <select
                 value={platform}
-                title="Choose a platform"
-                aria-label="Choose a platform"
+                title={t('growthKeywordsPage.choosePlatform')}
+                aria-label={t('growthKeywordsPage.choosePlatform')}
                 onChange={(e) => setPlatform(e.target.value as Platform)}
                 className="w-full appearance-none rounded-lg border border-input bg-background px-3 h-10 pr-9 text-sm text-theme-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               >
@@ -222,7 +245,7 @@ export default function KeywordExplorerPage() {
             leftIcon={<KeyRound className="h-4 w-4" aria-hidden />}
             className="md:w-auto"
           >
-            Find Keywords
+            {t('growthKeywordsPage.findKeywords')}
           </Button>
         </div>
       </Panel>
@@ -241,9 +264,8 @@ export default function KeywordExplorerPage() {
         <div className="mb-4 flex items-start gap-2 rounded-lg border border-input ds-surface-subtle px-3.5 py-2.5 text-xs text-theme-secondary leading-relaxed">
           <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-theme-muted" aria-hidden />
           <span>
-            <span className="font-medium text-theme-primary">Demand</span> is a relative estimate
-            derived from autocomplete signals — not absolute monthly search volume. Use the scores
-            to compare ideas against each other, not as exact traffic figures.
+            <span className="font-medium text-theme-primary">{t('growthKeywordsPage.metricDemand')}</span>{' '}
+            {t('growthKeywordsPage.demandNote')}
           </span>
         </div>
       )}
@@ -254,14 +276,15 @@ export default function KeywordExplorerPage() {
           {ideas.map((idea, idx) => {
             const score = clampPct(typeof idea?.score === 'number' ? idea.score : 0)
             const tier = scoreTier(score)
-            const reco = recoConfig(idea?.recommendation)
+            const reco = recoConfig(idea?.recommendation, t)
+            const source = sourceLabel(idea?.source, t)
             return (
               <Panel key={`${idea?.keyword ?? 'idea'}-${idx}`} variant="bento" className="flex h-full flex-col">
                 {/* Top row: rank + recommendation */}
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <span className="inline-flex items-center gap-1.5 text-xs text-theme-muted">
                     <Sparkles className="h-3.5 w-3.5" aria-hidden />
-                    #{idx + 1}
+                    {t('growthKeywordsPage.rank', { rank: idx + 1 })}
                   </span>
                   <Badge variant={reco.variant} className={reco.className}>{reco.label}</Badge>
                 </div>
@@ -276,24 +299,24 @@ export default function KeywordExplorerPage() {
                       'flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg border',
                       tier.ring,
                     )}
-                    title="Opportunity score (0–100)"
+                    title={t('growthKeywordsPage.scoreTitle')}
                   >
                     <span className={cn('text-lg font-bold leading-none tabular-nums', tier.text)}>{score}</span>
-                    <span className="text-[9px] uppercase tracking-wide text-theme-muted">score</span>
+                    <span className="text-[9px] uppercase tracking-wide text-theme-muted">{t('growthKeywordsPage.scoreShort')}</span>
                   </span>
                 </div>
 
                 {/* Metric bars */}
                 <div className="mt-4 grid grid-cols-1 gap-3">
-                  <MetricBar icon={TrendingUp} label="Demand" value={idea?.demand} barClass="bg-emerald-500/70" />
-                  <MetricBar icon={Swords} label="Competition" value={idea?.competition} barClass="bg-rose-500/70" />
-                  <MetricBar icon={Target} label="Relevance" value={idea?.relevance} barClass="bg-indigo-500/70" />
+                  <MetricBar icon={TrendingUp} label={t('growthKeywordsPage.metricDemand')} value={idea?.demand} barClass="bg-emerald-500/70" />
+                  <MetricBar icon={Swords} label={t('growthKeywordsPage.metricCompetition')} value={idea?.competition} barClass="bg-rose-500/70" />
+                  <MetricBar icon={Target} label={t('growthKeywordsPage.metricRelevance')} value={idea?.relevance} barClass="bg-indigo-500/70" />
                 </div>
 
                 {/* Source tag */}
-                {idea?.source && (
+                {source && (
                   <div className="mt-3">
-                    <Badge variant="outline">{idea.source}</Badge>
+                    <Badge variant="outline">{source}</Badge>
                   </div>
                 )}
 
@@ -304,10 +327,10 @@ export default function KeywordExplorerPage() {
                     size="sm"
                     onClick={() => copyKeywordAsTarget(idea?.keyword)}
                     leftIcon={<Copy className="h-3.5 w-3.5" aria-hidden />}
-                    title="Copy keyword to clipboard"
-                    aria-label="Use as target keyword"
+                    title={t('growthKeywordsPage.copyTitle')}
+                    aria-label={t('growthKeywordsPage.useAsTargetAria')}
                   >
-                    Use as target
+                    {t('growthKeywordsPage.useAsTarget')}
                   </Button>
                 </div>
               </Panel>
@@ -320,8 +343,8 @@ export default function KeywordExplorerPage() {
       {unavailable && (
         <EmptyState
           icon={Search}
-          title="No live keyword data for this seed"
-          description="We could not pull live keyword ideas for this seed right now. Rather than invent any, we are showing nothing — try a broader seed term or another platform."
+          title={t('growthKeywordsPage.unavailableTitle')}
+          description={t('growthKeywordsPage.unavailableDescription')}
           className="ds-surface-card"
         />
       )}
@@ -330,8 +353,8 @@ export default function KeywordExplorerPage() {
       {!loading && !searched && (
         <EmptyState
           icon={KeyRound}
-          title="Explore keywords"
-          description="Enter a seed keyword and pick a platform. We will surface ranked, live keyword ideas — each with an opportunity score and a copy-ready target."
+          title={t('growthKeywordsPage.idleTitle')}
+          description={t('growthKeywordsPage.idleDescription')}
           className="ds-surface-card"
         />
       )}

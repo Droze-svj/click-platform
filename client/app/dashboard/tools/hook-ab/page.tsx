@@ -17,6 +17,7 @@ import {
 import { useToast } from '../../../../contexts/ToastContext'
 import ToastContainer from '../../../../components/ToastContainer'
 import { apiPost } from '../../../../lib/api'
+import { useTranslation } from '@/hooks/useTranslation'
 import {
   Panel,
   Button,
@@ -93,14 +94,24 @@ interface ApiEnvelope<T> {
   data?: T
 }
 
-const SOURCE_TOOLTIP = 'AI was unavailable, used a starter template'
+type TFn = (key: string, params?: Record<string, string | number>) => string
 
 /** Human-friendly slot label: "Post +3h" or the explicit scheduled window. */
-function slotLabel(v: HookVariant): string {
+function slotLabel(v: HookVariant, t: TFn): string {
   if (v?.scheduledWindow) return String(v.scheduledWindow)
   const offset = typeof v?.slotOffsetHours === 'number' ? v.slotOffsetHours : null
-  if (offset === null) return 'Post now'
-  return offset === 0 ? 'Post now' : `Post +${offset}h`
+  if (offset === null) return t('hookAbPage.postNow')
+  return offset === 0 ? t('hookAbPage.postNow') : t('hookAbPage.postInHours', { hours: offset })
+}
+
+/** Plain-language name for a hook angle; unknown values pass through. */
+function angleLabel(angle: string | null | undefined, t: TFn): string {
+  switch (angle) {
+    case 'curiosity': return t('hookAbPage.angleCuriosity')
+    case 'authority': return t('hookAbPage.angleAuthority')
+    case 'fomo': return t('hookAbPage.angleFomo')
+    default: return angle ? String(angle) : '—'
+  }
 }
 
 /** Format a 0–1 engagement-rate fraction as a percentage string. */
@@ -111,6 +122,7 @@ function ratePct(rate: number | null | undefined): string {
 
 export default function HookABPage() {
   const { showToast } = useToast()
+  const { t } = useTranslation()
 
   const [text, setText] = useState('')
   const [generating, setGenerating] = useState(false)
@@ -125,7 +137,7 @@ export default function HookABPage() {
   async function handleGenerate() {
     const trimmed = text.trim()
     if (!trimmed) {
-      showToast('Add a content description first.', 'warning')
+      showToast(t('hookAbPage.errDescriptionRequired'), 'warning')
       return
     }
     setGenerating(true)
@@ -141,12 +153,18 @@ export default function HookABPage() {
       // panel's inputs stay aligned with the cards.
       setMetrics((data?.variants ?? []).map(() => ({ impressions: '', engagement: '' })))
       if (!data?.variants?.length) {
-        showToast('No hook variants were returned. Try a richer description.', 'info')
+        showToast(t('hookAbPage.noVariantsToast'), 'info')
       } else {
-        showToast('Generated 3 hook angles.', 'success')
+        const count = data.variants.length
+        showToast(
+          count === 1
+            ? t('hookAbPage.generatedToastOne', { count })
+            : t('hookAbPage.generatedToastOther', { count }),
+          'success',
+        )
       }
     } catch {
-      showToast('Could not generate hooks. Please try again.', 'error')
+      showToast(t('hookAbPage.errGenerate'), 'error')
     } finally {
       setGenerating(false)
     }
@@ -155,9 +173,9 @@ export default function HookABPage() {
   async function handleCopy(hook: string) {
     try {
       await navigator.clipboard.writeText(hook)
-      showToast('Hook copied to clipboard.', 'success')
+      showToast(t('hookAbPage.copiedToast'), 'success')
     } catch {
-      showToast('Could not copy to clipboard.', 'error')
+      showToast(t('hookAbPage.errCopy'), 'error')
     }
   }
 
@@ -182,9 +200,9 @@ export default function HookABPage() {
       )
       const data = res?.data ?? null
       setEvaluation(data)
-      showToast('Experiment evaluated.', 'success')
+      showToast(t('hookAbPage.evaluatedToast'), 'success')
     } catch {
-      showToast('Could not evaluate the experiment. Please try again.', 'error')
+      showToast(t('hookAbPage.errEvaluate'), 'error')
     } finally {
       setEvaluating(false)
     }
@@ -197,21 +215,21 @@ export default function HookABPage() {
 
         <SectionHeader
           as="h1"
-          title="Hook A/B Lab"
-          description="Generate three competing hook angles — curiosity, authority, FOMO — then feed back real numbers to crown a winner."
+          title={t('hookAbPage.title')}
+          description={t('hookAbPage.subtitle')}
           className="mb-8"
         />
 
         {/* ── Generator ── */}
         <Panel variant="bento" className="mb-8 space-y-4">
           <label htmlFor="hook-ab-text" className="ds-text-label text-theme-secondary">
-            What's the content about?
+            {t('hookAbPage.contentLabel')}
           </label>
           <Textarea
             id="hook-ab-text"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Describe the video, post, or idea you want hooks for…"
+            placeholder={t('hookAbPage.contentPlaceholder')}
             className="min-h-[120px]"
           />
           <div className="flex justify-end">
@@ -221,7 +239,7 @@ export default function HookABPage() {
               onClick={handleGenerate}
               leftIcon={<Sparkles className="h-4 w-4" aria-hidden />}
             >
-              Generate Hooks
+              {t('hookAbPage.generateButton')}
             </Button>
           </div>
         </Panel>
@@ -242,15 +260,15 @@ export default function HookABPage() {
                       {v?.label ?? v?.angle}
                     </h3>
                     {isAi ? (
-                      <Badge variant="default">ai</Badge>
+                      <Badge variant="default">{t('hookAbPage.sourceAi')}</Badge>
                     ) : (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <span>
-                            <Badge variant="outline">template</Badge>
+                            <Badge variant="outline">{t('hookAbPage.sourceTemplate')}</Badge>
                           </span>
                         </TooltipTrigger>
-                        <TooltipContent>{SOURCE_TOOLTIP}</TooltipContent>
+                        <TooltipContent>{t('hookAbPage.sourceTemplateTooltip')}</TooltipContent>
                       </Tooltip>
                     )}
                   </div>
@@ -261,7 +279,7 @@ export default function HookABPage() {
 
                   <div className="mt-4 flex items-center gap-1.5 text-sm text-theme-muted">
                     <Clock className="h-4 w-4" aria-hidden />
-                    {slotLabel(v)}
+                    {slotLabel(v, t)}
                   </div>
 
                   <div className="mt-4 pt-4 flex items-center justify-end border-t border-border">
@@ -271,7 +289,7 @@ export default function HookABPage() {
                       onClick={() => handleCopy(v?.hook ?? '')}
                       leftIcon={<Copy className="h-4 w-4" aria-hidden />}
                     >
-                      Copy
+                      {t('hookAbPage.copyButton')}
                     </Button>
                   </div>
                 </Panel>
@@ -282,8 +300,8 @@ export default function HookABPage() {
           !generating && (
             <EmptyState
               icon={Sparkles}
-              title="No hooks yet"
-              description="Describe your content above and generate three angles to compare."
+              title={t('hookAbPage.emptyTitle')}
+              description={t('hookAbPage.emptyDescription')}
               className="ds-surface-card"
             />
           )
@@ -294,8 +312,8 @@ export default function HookABPage() {
           <Panel variant="bento" className="space-y-5">
             <SectionHeader
               as="h2"
-              title="Evaluate winner"
-              description="Optional — drop in impressions and engagement per angle to find a statistically-confident winner."
+              title={t('hookAbPage.evaluateTitle')}
+              description={t('hookAbPage.evaluateDescription')}
             />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -315,7 +333,7 @@ export default function HookABPage() {
                       htmlFor={`impressions-${i}`}
                       className="ds-text-label text-theme-secondary"
                     >
-                      Impressions
+                      {t('hookAbPage.impressionsLabel')}
                     </label>
                     <Input
                       id={`impressions-${i}`}
@@ -332,7 +350,7 @@ export default function HookABPage() {
                       htmlFor={`engagement-${i}`}
                       className="ds-text-label text-theme-secondary"
                     >
-                      Engagement
+                      {t('hookAbPage.engagementLabel')}
                     </label>
                     <Input
                       id={`engagement-${i}`}
@@ -355,7 +373,7 @@ export default function HookABPage() {
                 onClick={handleEvaluate}
                 leftIcon={<Trophy className="h-4 w-4" aria-hidden />}
               >
-                Evaluate
+                {t('hookAbPage.evaluateButton')}
               </Button>
             </div>
 
@@ -366,15 +384,15 @@ export default function HookABPage() {
                     <Trophy className="h-5 w-5" aria-hidden />
                   </span>
                   <div>
-                    <p className="ds-text-caption text-theme-muted">Winning angle</p>
+                    <p className="ds-text-caption text-theme-muted">{t('hookAbPage.winningAngle')}</p>
                     <p className="text-sm font-semibold text-theme-primary">
-                      {evaluation.winner?.angle ?? '—'}
+                      {angleLabel(evaluation.winner?.angle, t)}
                     </p>
                   </div>
                 </div>
 
                 <div>
-                  <p className="ds-text-caption text-theme-muted">Lift over runner-up</p>
+                  <p className="ds-text-caption text-theme-muted">{t('hookAbPage.liftOverRunnerUp')}</p>
                   <p className="text-sm font-semibold text-theme-primary">
                     {typeof evaluation.lift === 'number' ? `${evaluation.lift}%` : '—'}
                   </p>
@@ -382,7 +400,7 @@ export default function HookABPage() {
 
                 {evaluation.winner && (
                   <div>
-                    <p className="ds-text-caption text-theme-muted">Engagement rate</p>
+                    <p className="ds-text-caption text-theme-muted">{t('hookAbPage.engagementRate')}</p>
                     <p className="text-sm font-semibold text-theme-primary">
                       {ratePct(evaluation.winner.engagementRate)}
                     </p>
@@ -392,11 +410,11 @@ export default function HookABPage() {
                 <div className="ml-auto">
                   {evaluation.confident ? (
                     <Badge className="border-transparent bg-emerald-500 text-white">
-                      Significant
+                      {t('hookAbPage.significant')}
                     </Badge>
                   ) : (
                     <Badge className="border-transparent bg-amber-500 text-white">
-                      Inconclusive
+                      {t('hookAbPage.inconclusive')}
                     </Badge>
                   )}
                 </div>

@@ -20,6 +20,7 @@ import { useToast } from '../../../../contexts/ToastContext'
 import ToastContainer from '../../../../components/ToastContainer'
 import { apiPost } from '../../../../lib/api'
 import { extractApiError } from '../../../../utils/apiResponse'
+import { useTranslation } from '@/hooks/useTranslation'
 import {
   Panel,
   Button,
@@ -96,13 +97,28 @@ const PLATFORMS: { value: Platform; label: string }[] = [
   { value: 'x', label: 'X' },
 ]
 
-const SUBSCORE_FIELDS: { key: SubscoreField; label: string }[] = [
-  { key: 'title', label: 'Title' },
-  { key: 'description', label: 'Description' },
-  { key: 'tags', label: 'Tags' },
-  { key: 'thumbnail', label: 'Thumbnail' },
-  { key: 'keyword', label: 'Keyword' },
-]
+type TFn = (key: string, params?: Record<string, string | number>) => string
+
+function subscoreFields(t: TFn): { key: SubscoreField; label: string }[] {
+  return [
+    { key: 'title', label: t('growthSeoPage.subscoreTitle') },
+    { key: 'description', label: t('growthSeoPage.subscoreDescription') },
+    { key: 'tags', label: t('growthSeoPage.subscoreTags') },
+    { key: 'thumbnail', label: t('growthSeoPage.subscoreThumbnail') },
+    { key: 'keyword', label: t('growthSeoPage.subscoreKeyword') },
+  ]
+}
+
+/** Plain-language label for a severity level; unknown values pass through. */
+function severityLabel(severity: string, t: TFn): string {
+  switch (severity) {
+    case 'critical': return t('growthSeoPage.severityCritical')
+    case 'high': return t('growthSeoPage.severityHigh')
+    case 'medium': return t('growthSeoPage.severityMedium')
+    case 'low': return t('growthSeoPage.severityLow')
+    default: return severity
+  }
+}
 
 // Severity → Badge styling. Critical/high read as destructive; medium amber;
 // low muted.
@@ -151,6 +167,7 @@ function improvementLabel(before: number, after: number, improvement: number): s
 
 export default function SeoScorecardPage() {
   const toast = useToast()
+  const { t } = useTranslation()
 
   // ── Inputs ──
   const [contentId, setContentId] = useState('')
@@ -203,11 +220,11 @@ export default function SeoScorecardPage() {
 
   async function handleAnalyze() {
     if (!targetKeyword.trim()) {
-      toast.error('Add a target keyword to score against.')
+      toast.error(t('growthSeoPage.errKeywordRequired'))
       return
     }
     if (!contentId.trim() && !title.trim() && !description.trim()) {
-      toast.error('Provide a contentId or some title/description to analyze.')
+      toast.error(t('growthSeoPage.errInputRequired'))
       return
     }
     setAnalyzing(true)
@@ -217,9 +234,9 @@ export default function SeoScorecardPage() {
       const data = res?.data ?? null
       setScorecard(data)
       if (data) {
-        toast.success(`Scored ${clampScore(data.score)}/100 (${data.grade ?? '—'}).`)
+        toast.success(t('growthSeoPage.scoredToast', { score: clampScore(data.score), grade: data.grade ?? '—' }))
       } else {
-        toast.error('No scorecard was returned. Try richer inputs.')
+        toast.error(t('growthSeoPage.errNoScorecard'))
       }
     } catch (err) {
       toast.error(extractApiError(err).message)
@@ -230,7 +247,7 @@ export default function SeoScorecardPage() {
 
   async function handleRewrite() {
     if (!targetKeyword.trim()) {
-      toast.error('Add a target keyword first.')
+      toast.error(t('growthSeoPage.errKeywordFirst'))
       return
     }
     setRewriting(true)
@@ -242,9 +259,9 @@ export default function SeoScorecardPage() {
         setDraftTitle(data.suggestion.title ?? '')
         setDraftDescription(data.suggestion.description ?? '')
         setDraftTags((data.suggestion.tags ?? []).join(', '))
-        toast.success('AI rewrite ready — review and apply.')
+        toast.success(t('growthSeoPage.rewriteReadyToast'))
       } else {
-        toast.error('No rewrite was returned. Please try again.')
+        toast.error(t('growthSeoPage.errNoRewrite'))
       }
     } catch (err) {
       toast.error(extractApiError(err).message)
@@ -255,7 +272,7 @@ export default function SeoScorecardPage() {
 
   async function handleApply() {
     if (!resolvedContentId) {
-      toast.error('Apply needs a contentId — analyze a saved content item first.')
+      toast.error(t('growthSeoPage.errApplyNeedsId'))
       return
     }
     setApplying(true)
@@ -266,7 +283,7 @@ export default function SeoScorecardPage() {
         description: draftDescription.trim(),
         tags: parseTags(draftTags),
       })
-      toast.success('Applied the optimized metadata to your content.')
+      toast.success(t('growthSeoPage.appliedToast'))
     } catch (err) {
       toast.error(extractApiError(err).message)
     } finally {
@@ -285,8 +302,8 @@ export default function SeoScorecardPage() {
 
       <SectionHeader
         as="h1"
-        title="SEO Scorecard"
-        description="Score your title, description, tags, and thumbnail for a target keyword on any platform — then AI-rewrite the metadata and apply it back in one click."
+        title={t('growthSeoPage.title')}
+        description={t('growthSeoPage.subtitle')}
         className="mb-8"
       />
 
@@ -295,43 +312,43 @@ export default function SeoScorecardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="seo-content-id" className="ds-text-label text-theme-secondary">
-              Content ID <span className="text-theme-muted">(optional)</span>
+              {t('growthSeoPage.contentIdLabel')} <span className="text-theme-muted">{t('growthSeoPage.optional')}</span>
             </label>
             <Input
               id="seo-content-id"
               value={contentId}
               onChange={(e) => setContentId(e.target.value)}
-              placeholder="e.g. 665f2a… — required to apply changes"
+              placeholder={t('growthSeoPage.contentIdPlaceholder')}
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="seo-target-keyword" className="ds-text-label text-theme-secondary">
-              Target keyword
+              {t('growthSeoPage.targetKeywordLabel')}
             </label>
             <Input
               id="seo-target-keyword"
               value={targetKeyword}
               onChange={(e) => setTargetKeyword(e.target.value)}
-              placeholder="e.g. home espresso setup"
+              placeholder={t('growthSeoPage.targetKeywordPlaceholder')}
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="seo-title" className="ds-text-label text-theme-secondary">
-              Title
+              {t('growthSeoPage.titleLabel')}
             </label>
             <Input
               id="seo-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Your content title…"
+              placeholder={t('growthSeoPage.titlePlaceholder')}
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="seo-platform" className="ds-text-label text-theme-secondary">
-              Platform
+              {t('growthSeoPage.platformLabel')}
             </label>
             <select
               id="seo-platform"
@@ -350,26 +367,26 @@ export default function SeoScorecardPage() {
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor="seo-description" className="ds-text-label text-theme-secondary">
-            Description
+            {t('growthSeoPage.descriptionLabel')}
           </label>
           <Textarea
             id="seo-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Your content description…"
+            placeholder={t('growthSeoPage.descriptionPlaceholder')}
             className="min-h-[100px]"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor="seo-tags" className="ds-text-label text-theme-secondary">
-            Tags <span className="text-theme-muted">(comma-separated)</span>
+            {t('growthSeoPage.tagsLabel')} <span className="text-theme-muted">{t('growthSeoPage.commaSeparated')}</span>
           </label>
           <Input
             id="seo-tags"
             value={tags}
             onChange={(e) => setTags(e.target.value)}
-            placeholder="espresso, coffee, barista, home setup"
+            placeholder={t('growthSeoPage.tagsPlaceholder')}
           />
         </div>
 
@@ -381,7 +398,7 @@ export default function SeoScorecardPage() {
             onClick={handleRewrite}
             leftIcon={<Wand2 className="h-4 w-4" aria-hidden />}
           >
-            AI Rewrite
+            {t('growthSeoPage.aiRewriteButton')}
           </Button>
           <Button
             variant="primary"
@@ -390,7 +407,7 @@ export default function SeoScorecardPage() {
             onClick={handleAnalyze}
             leftIcon={<Search className="h-4 w-4" aria-hidden />}
           >
-            Analyze
+            {t('growthSeoPage.analyzeButton')}
           </Button>
         </div>
       </Panel>
@@ -405,10 +422,10 @@ export default function SeoScorecardPage() {
                 <span className="text-3xl font-bold text-theme-primary leading-none">
                   {clampScore(scorecard.score)}
                 </span>
-                <span className="ds-text-caption text-theme-muted mt-1">/ 100</span>
+                <span className="ds-text-caption text-theme-muted mt-1">{t('growthSeoPage.outOf100')}</span>
               </div>
               <div>
-                <p className="ds-text-caption text-theme-muted">Grade</p>
+                <p className="ds-text-caption text-theme-muted">{t('growthSeoPage.grade')}</p>
                 <p className={`text-5xl font-bold leading-none ${gradeColor(scorecard.grade)}`}>
                   {scorecard.grade ?? '—'}
                 </p>
@@ -423,7 +440,7 @@ export default function SeoScorecardPage() {
 
             {/* Sub-score bars */}
             <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:pl-6 lg:border-l lg:border-border">
-              {SUBSCORE_FIELDS.map(({ key, label }) => {
+              {subscoreFields(t).map(({ key, label }) => {
                 const raw = subscores?.[key]
                 const isNull = raw === null || raw === undefined
                 const value = clampScore(typeof raw === 'number' ? raw : 0)
@@ -454,8 +471,8 @@ export default function SeoScorecardPage() {
             <Panel variant="bento" className="space-y-4 border-amber-500/30">
               <SectionHeader
                 as="h2"
-                title="Quick wins"
-                description="High-leverage fixes you can ship right now."
+                title={t('growthSeoPage.quickWinsTitle')}
+                description={t('growthSeoPage.quickWinsDescription')}
               />
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {quickWins.map((win, i) => (
@@ -471,7 +488,7 @@ export default function SeoScorecardPage() {
                         </span>
                         {win?.severity ? (
                           <Badge className={SEVERITY_BADGE[win.severity] ?? SEVERITY_BADGE.low}>
-                            {win.severity}
+                            {severityLabel(win.severity, t)}
                           </Badge>
                         ) : null}
                       </div>
@@ -480,7 +497,7 @@ export default function SeoScorecardPage() {
                       ) : null}
                       {win?.fix ? (
                         <p className="text-sm text-theme-muted">
-                          <span className="font-medium text-theme-secondary">Fix: </span>
+                          <span className="font-medium text-theme-secondary">{t('growthSeoPage.fixPrefix')} </span>
                           {win.fix}
                         </p>
                       ) : null}
@@ -496,8 +513,8 @@ export default function SeoScorecardPage() {
             <Panel variant="bento" className="space-y-4">
               <SectionHeader
                 as="h2"
-                title="Issues & fixes"
-                description="What's holding the score back, and how to fix it."
+                title={t('growthSeoPage.issuesTitle')}
+                description={t('growthSeoPage.issuesDescription')}
               />
               {issues.length > 0 ? (
                 <ul className="space-y-3">
@@ -516,7 +533,7 @@ export default function SeoScorecardPage() {
                             <Badge
                               className={SEVERITY_BADGE[issue.severity] ?? SEVERITY_BADGE.low}
                             >
-                              {issue.severity}
+                              {severityLabel(issue.severity, t)}
                             </Badge>
                           ) : null}
                         </div>
@@ -525,7 +542,7 @@ export default function SeoScorecardPage() {
                         ) : null}
                         {issue?.fix ? (
                           <p className="text-sm text-theme-muted">
-                            <span className="font-medium text-theme-secondary">Fix: </span>
+                            <span className="font-medium text-theme-secondary">{t('growthSeoPage.fixPrefix')} </span>
                             {issue.fix}
                           </p>
                         ) : null}
@@ -534,15 +551,15 @@ export default function SeoScorecardPage() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-theme-muted">No issues found — nicely optimized.</p>
+                <p className="text-sm text-theme-muted">{t('growthSeoPage.noIssues')}</p>
               )}
             </Panel>
 
             <Panel variant="bento" className="space-y-4">
               <SectionHeader
                 as="h2"
-                title="Strengths"
-                description="What's already working in your favor."
+                title={t('growthSeoPage.strengthsTitle')}
+                description={t('growthSeoPage.strengthsDescription')}
               />
               {strengths.length > 0 ? (
                 <ul className="space-y-3">
@@ -554,7 +571,7 @@ export default function SeoScorecardPage() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-theme-muted">No standout strengths detected yet.</p>
+                <p className="text-sm text-theme-muted">{t('growthSeoPage.noStrengths')}</p>
               )}
             </Panel>
           </div>
@@ -565,21 +582,21 @@ export default function SeoScorecardPage() {
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <SectionHeader
                   as="h2"
-                  title="AI rewrite"
-                  description="Edit the suggestion if you like, then apply it to your content."
+                  title={t('growthSeoPage.rewriteTitle')}
+                  description={t('growthSeoPage.rewriteDescription')}
                 />
                 <div className="flex items-center gap-2">
                   <Badge variant={rewrite.suggestion.source === 'ai' ? 'default' : 'outline'}>
-                    {rewrite.suggestion.source === 'ai' ? 'ai' : 'template'}
+                    {rewrite.suggestion.source === 'ai' ? t('growthSeoPage.sourceAi') : t('growthSeoPage.sourceTemplate')}
                   </Badge>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <StatCard label="Before" value={clampScore(rewrite.scoreBefore)} />
-                <StatCard label="After" value={clampScore(rewrite.scoreAfter)} />
+                <StatCard label={t('growthSeoPage.before')} value={clampScore(rewrite.scoreBefore)} />
+                <StatCard label={t('growthSeoPage.after')} value={clampScore(rewrite.scoreAfter)} />
                 <StatCard
-                  label="Improvement"
+                  label={t('growthSeoPage.improvement')}
                   value={improvementLabel(
                     rewrite.scoreBefore,
                     rewrite.scoreAfter,
@@ -590,13 +607,13 @@ export default function SeoScorecardPage() {
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="seo-draft-title" className="ds-text-label text-theme-secondary">
-                  Suggested title
+                  {t('growthSeoPage.suggestedTitleLabel')}
                 </label>
                 <Input
                   id="seo-draft-title"
                   value={draftTitle}
                   onChange={(e) => setDraftTitle(e.target.value)}
-                  placeholder="Suggested title…"
+                  placeholder={t('growthSeoPage.suggestedTitlePlaceholder')}
                 />
               </div>
 
@@ -605,26 +622,26 @@ export default function SeoScorecardPage() {
                   htmlFor="seo-draft-description"
                   className="ds-text-label text-theme-secondary"
                 >
-                  Suggested description
+                  {t('growthSeoPage.suggestedDescriptionLabel')}
                 </label>
                 <Textarea
                   id="seo-draft-description"
                   value={draftDescription}
                   onChange={(e) => setDraftDescription(e.target.value)}
-                  placeholder="Suggested description…"
+                  placeholder={t('growthSeoPage.suggestedDescriptionPlaceholder')}
                   className="min-h-[100px]"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="seo-draft-tags" className="ds-text-label text-theme-secondary">
-                  Suggested tags <span className="text-theme-muted">(comma-separated)</span>
+                  {t('growthSeoPage.suggestedTagsLabel')} <span className="text-theme-muted">{t('growthSeoPage.commaSeparated')}</span>
                 </label>
                 <Input
                   id="seo-draft-tags"
                   value={draftTags}
                   onChange={(e) => setDraftTags(e.target.value)}
-                  placeholder="tag-one, tag-two, tag-three"
+                  placeholder={t('growthSeoPage.suggestedTagsPlaceholder')}
                 />
                 {parseTags(draftTags).length > 0 && (
                   <div className="mt-1 flex flex-wrap gap-1.5">
@@ -640,7 +657,7 @@ export default function SeoScorecardPage() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 {!resolvedContentId && (
                   <p className="text-sm text-theme-muted">
-                    Add a Content ID above to apply changes to a saved item.
+                    {t('growthSeoPage.applyNeedsIdHint')}
                   </p>
                 )}
                 <Button
@@ -651,7 +668,7 @@ export default function SeoScorecardPage() {
                   onClick={handleApply}
                   leftIcon={<Upload className="h-4 w-4" aria-hidden />}
                 >
-                  Apply to content
+                  {t('growthSeoPage.applyButton')}
                 </Button>
               </div>
             </Panel>
@@ -661,8 +678,8 @@ export default function SeoScorecardPage() {
         !analyzing && (
           <EmptyState
             icon={Sparkles}
-            title="No scorecard yet"
-            description="Fill in your content details and a target keyword, then run Analyze to see your SEO score, issues, and quick wins."
+            title={t('growthSeoPage.emptyTitle')}
+            description={t('growthSeoPage.emptyDescription')}
             className="ds-surface-card"
           />
         )
