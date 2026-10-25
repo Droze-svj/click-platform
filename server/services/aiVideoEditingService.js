@@ -3105,9 +3105,9 @@ Transcript: "${transcript.substring(0, 3500)}"`;
     }
 
     // Add CTA overlay from Gemini at the end of the video
-    if (keyMoments?.cta) {
+    if (typeof keyMoments?.cta === 'string' && keyMoments.cta.trim()) {
       captionsToRender.push({
-        text: keyMoments.cta.toUpperCase(),
+        text: keyMoments.cta.trim().toUpperCase(),
         startTime: Math.max(0, duration - 4),
         endTime: duration,
         style: 'CTA',
@@ -4203,7 +4203,22 @@ CREATIVE DIVERGENCE PROTOCOL:
     if (!Array.isArray(analysis.suggestedCaptions)) analysis.suggestedCaptions = [];
     if (!analysis.niche) analysis.niche = null;
     if (!analysis.topPlatform) analysis.topPlatform = null;
-    if (!analysis.cta) analysis.cta = null;
+    // The model sometimes returns these as objects ({ text: … }) or arrays.
+    // Downstream code treats them as strings (cta.toUpperCase() is burned in as
+    // the closing overlay) and an object crashed the whole auto-edit run.
+    const asText = (v) => {
+      if (typeof v === 'string') return v.trim() || null;
+      if (v && typeof v === 'object') {
+        const t = v.text || v.phrase || v.cta || v.value || v.title || (Array.isArray(v) ? v.find((x) => typeof x === 'string') : null);
+        return typeof t === 'string' && t.trim() ? t.trim() : null;
+      }
+      return null;
+    };
+    analysis.cta = asText(analysis.cta);
+    analysis.hookText = asText(analysis.hookText);
+    analysis.niche = asText(analysis.niche);
+    analysis.topPlatform = asText(analysis.topPlatform);
+    analysis.suggestedCaptions = analysis.suggestedCaptions.filter((c) => c && typeof c === 'object' && typeof c.text === 'string' && c.text.trim());
     if (!analysis.narrativeStructure) analysis.narrativeStructure = null;
     if (!analysis.suggestedEdits || !Array.isArray(analysis.suggestedEdits)) {
       analysis.suggestedEdits = ['Refine first 1–3s as a niche-specific hook.', 'Remove dead air; use intentional silence and pacing.', 'Add captions for reach.'];
