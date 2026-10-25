@@ -13,10 +13,10 @@ const FILTERS: { value: string; label: string }[] = [
 ]
 
 const STATUS_TONE: Record<string, string> = {
-  sent: 'text-blue-400',
-  approved: 'text-green-400',
-  rejected: 'text-zinc-500',
-  failed: 'text-red-400',
+  sent: 'text-blue-600 dark:text-blue-400',
+  approved: 'text-green-600 dark:text-green-400',
+  rejected: 'text-theme-muted',
+  failed: 'text-red-600 dark:text-red-400',
 }
 
 const finalText = (r: SocialReply) => (r.editedReply?.trim() ? r.editedReply : r.draftReply)
@@ -48,33 +48,33 @@ export default function ResponderHistory() {
   return (
     <div className="space-y-3" data-testid="responder-history">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-white">Reply history</h2>
+        <h2 className="text-sm font-semibold text-theme-primary">Reply history</h2>
         <select
           data-testid="history-filter"
           aria-label="Filter by status"
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="rounded bg-zinc-950 border border-zinc-800 p-1 text-xs text-zinc-300"
+          className="rounded bg-background border border-default p-1 text-xs text-theme-secondary"
         >
           {FILTERS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
         </select>
       </div>
 
-      {error && <p data-testid="history-error" className="text-sm text-red-400">{error}</p>}
-      {loading && <p data-testid="history-loading" className="text-sm text-zinc-400">Loading…</p>}
+      {error && <p data-testid="history-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {loading && <p data-testid="history-loading" className="text-sm text-theme-secondary">Loading…</p>}
 
       {!loading && replies.length === 0 && (
-        <p data-testid="history-empty" className="text-sm text-zinc-500">No replies yet.</p>
+        <p data-testid="history-empty" className="text-sm text-theme-muted">No replies yet.</p>
       )}
 
       {!loading && replies.map((r) => (
-        <div key={r._id} data-testid="history-item" className="rounded-lg bg-zinc-900/60 border border-zinc-800 p-3 space-y-1">
-          <div className="flex items-center justify-between text-xs text-zinc-500">
+        <div key={r._id} data-testid="history-item" className="rounded-lg bg-surface-card border border-default p-3 space-y-1">
+          <div className="flex items-center justify-between text-xs text-theme-muted">
             <span className="uppercase">{r.platform}{r.author ? ` · @${r.author}` : ''}</span>
-            <span data-testid="history-status" className={`uppercase ${STATUS_TONE[r.status] ?? 'text-zinc-400'}`}>{r.status}</span>
+            <span data-testid="history-status" className={`uppercase ${STATUS_TONE[r.status] ?? 'text-theme-secondary'}`}>{r.status}</span>
           </div>
-          <p className="text-sm text-zinc-400">“{r.inboundText}”</p>
-          <p className="text-sm text-zinc-200">↳ {finalText(r)}</p>
+          <p className="text-sm text-theme-secondary">“{r.inboundText}”</p>
+          <p className="text-sm text-theme-primary">↳ {finalText(r)}</p>
         </div>
       ))}
     </div>

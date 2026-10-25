@@ -30,8 +30,8 @@ function Group({ id, title, subtitle, children }: {
   return (
     <section id={id} aria-label={title} data-testid={`group-${id}`} className="space-y-3 scroll-mt-4">
       <div>
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">{title}</h2>
-        <p className="text-xs text-zinc-600">{subtitle}</p>
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-theme-secondary">{title}</h2>
+        <p className="text-xs text-theme-muted">{subtitle}</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">{children}</div>
     </section>

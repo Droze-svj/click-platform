@@ -16,8 +16,8 @@ const DAYS = [0, 1, 2, 3, 4, 5, 6]
 export default function HeatmapCard({ heatmap }: { heatmap: Heatmap | null }) {
   if (!heatmap || !heatmap.grid || heatmap.grid.length === 0) {
     return (
-      <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4" data-testid="heatmap-empty">
-        <p className="text-sm text-zinc-400">No engagement heatmap yet — post more to build one.</p>
+      <div className="rounded-xl bg-surface-card border border-default p-4" data-testid="heatmap-empty">
+        <p className="text-sm text-theme-secondary">No engagement heatmap yet — post more to build one.</p>
       </div>
     )
   }
@@ -30,11 +30,11 @@ export default function HeatmapCard({ heatmap }: { heatmap: Heatmap | null }) {
   const labels = heatmap.dayLabels || weekdayShortNames()
 
   return (
-    <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4 space-y-2" data-testid="heatmap-card">
+    <div className="rounded-xl bg-surface-card border border-default p-4 space-y-2" data-testid="heatmap-card">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-white">When your audience engages</h2>
+        <h2 className="text-sm font-semibold text-theme-primary">When your audience engages</h2>
         {peak && (
-          <span className="text-xs text-green-400" data-testid="heatmap-peak">
+          <span className="text-xs text-green-600 dark:text-green-400" data-testid="heatmap-peak">
             Peak: {cellLabel(peak.day, peak.hour, labels)}
           </span>
         )}
@@ -44,11 +44,11 @@ export default function HeatmapCard({ heatmap }: { heatmap: Heatmap | null }) {
         <div className="inline-grid" style={{ gridTemplateColumns: `2.5rem repeat(24, 0.6rem)` }}>
           <div />
           {HOURS.map((h) => (
-            <div key={`h${h}`} className="text-[8px] text-zinc-600 text-center">{h % 6 === 0 ? h : ''}</div>
+            <div key={`h${h}`} className="text-[8px] text-theme-muted text-center">{h % 6 === 0 ? h : ''}</div>
           ))}
           {DAYS.map((d) => (
             <Fragment key={`d${d}`}>
-              <div className="text-[10px] text-zinc-500 pr-1 leading-[0.6rem]">{labels[d]}</div>
+              <div className="text-[10px] text-theme-muted pr-1 leading-[0.6rem]">{labels[d]}</div>
               {HOURS.map((h) => {
                 const avg = byCell.get(d * 24 + h)
                 const intensity = avg == null ? 0 : cellIntensity(avg, max)
@@ -67,7 +67,7 @@ export default function HeatmapCard({ heatmap }: { heatmap: Heatmap | null }) {
           ))}
         </div>
       </div>
-      <p className="text-[10px] text-zinc-600">Based on {heatmap.totalPosts} posted item{heatmap.totalPosts === 1 ? '' : 's'}.</p>
+      <p className="text-[10px] text-theme-muted">Based on {heatmap.totalPosts} posted item{heatmap.totalPosts === 1 ? '' : 's'}.</p>
     </div>
   )
 }

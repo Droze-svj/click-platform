@@ -24,8 +24,8 @@ export interface Digest {
 export default function WeeklyDigestCard({ digest }: { digest: Digest | null }) {
   if (!digest || !digest.hasData) {
     return (
-      <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4" data-testid="digest-empty">
-        <p className="text-sm text-zinc-400">No digest yet — post this week to build one.</p>
+      <div className="rounded-xl bg-surface-card border border-default p-4" data-testid="digest-empty">
+        <p className="text-sm text-theme-secondary">No digest yet — post this week to build one.</p>
       </div>
     )
   }
@@ -35,9 +35,9 @@ export default function WeeklyDigestCard({ digest }: { digest: Digest | null }) 
   const action = digest.nextActions?.[0]
 
   return (
-    <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4 space-y-3" data-testid="digest-card">
+    <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3" data-testid="digest-card">
       <div className="flex items-center justify-between">
-        <span className="text-xs uppercase tracking-wide text-zinc-500">This week</span>
+        <span className="text-xs uppercase tracking-wide text-theme-muted">This week</span>
         <span className={`text-xs font-medium ${t.tone}`} data-testid="digest-trend">
           {t.arrow} {t.label}
         </span>
@@ -50,9 +50,9 @@ export default function WeeklyDigestCard({ digest }: { digest: Digest | null }) 
       </div>
 
       {action && (
-        <div className="rounded-lg bg-zinc-950 border border-zinc-800 p-2" data-testid="digest-action">
-          <p className="text-xs font-medium text-zinc-200">{action.title}</p>
-          <p className="text-xs text-zinc-500">{action.detail}</p>
+        <div className="rounded-lg bg-background border border-default p-2" data-testid="digest-action">
+          <p className="text-xs font-medium text-theme-primary">{action.title}</p>
+          <p className="text-xs text-theme-muted">{action.detail}</p>
         </div>
       )}
     </div>
@@ -62,8 +62,8 @@ export default function WeeklyDigestCard({ digest }: { digest: Digest | null }) 
 function Stat({ label, value, testid }: { label: string; value: string; testid?: string }) {
   return (
     <div>
-      <div className="text-lg font-bold text-white" data-testid={testid}>{value}</div>
-      <div className="text-xs text-zinc-500">{label}</div>
+      <div className="text-lg font-bold text-theme-primary" data-testid={testid}>{value}</div>
+      <div className="text-xs text-theme-muted">{label}</div>
     </div>
   )
 }

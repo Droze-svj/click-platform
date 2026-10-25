@@ -151,10 +151,10 @@ export default function VoiceMemoScriptPanel() {
   const busy = transcribing || writing
 
   return (
-    <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4 space-y-3">
+    <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
       <div>
-        <h2 className="text-sm font-semibold text-white">Voice memo → script</h2>
-        <p className="text-xs text-zinc-500">Brain-dump for up to 2 minutes. Get a hook, body and CTA you can record.</p>
+        <h2 className="text-sm font-semibold text-theme-primary">Voice memo → script</h2>
+        <p className="text-xs text-theme-muted">Brain-dump for up to 2 minutes. Get a hook, body and CTA you can record.</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -169,20 +169,20 @@ export default function VoiceMemoScriptPanel() {
           ) : (
             <button
               type="button" data-testid="memo-record" onClick={startRecording} disabled={busy}
-              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 disabled:opacity-50"
+              className="rounded-lg border border-strong px-3 py-1.5 text-sm text-theme-primary disabled:opacity-50"
             >
               ● Record memo
             </button>
           )
         )}
-        <label className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200">
+        <label className="cursor-pointer rounded-lg border border-strong px-3 py-1.5 text-sm text-theme-primary">
           Upload audio
           <input
             data-testid="memo-file" type="file" accept="audio/*" onChange={onFile}
             disabled={busy || recording} className="sr-only"
           />
         </label>
-        {transcribing && <span data-testid="memo-transcribing" className="text-xs text-zinc-400">Transcribing…</span>}
+        {transcribing && <span data-testid="memo-transcribing" className="text-xs text-theme-secondary">Transcribing…</span>}
       </div>
 
       <textarea
@@ -192,20 +192,20 @@ export default function VoiceMemoScriptPanel() {
         onChange={(e) => setMemo(e.target.value)}
         rows={4}
         placeholder="Your memo transcript appears here. Or just type your raw thoughts."
-        className="w-full rounded-lg bg-zinc-950 border border-zinc-800 p-2 text-sm text-zinc-200"
+        className="w-full rounded-lg bg-background border border-default p-2 text-sm text-theme-primary"
       />
       <div className="flex gap-2">
         <select
           data-testid="memo-platform" aria-label="Platform" value={platform}
           onChange={(e) => setPlatform(e.target.value as Platform)}
-          className="rounded bg-zinc-950 border border-zinc-800 p-1 text-sm text-zinc-200"
+          className="rounded bg-background border border-default p-1 text-sm text-theme-primary"
         >
           {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
         <select
           data-testid="memo-format" aria-label="Format" value={format}
           onChange={(e) => setFormat(e.target.value as ScriptFormat)}
-          className="rounded bg-zinc-950 border border-zinc-800 p-1 text-sm text-zinc-200"
+          className="rounded bg-background border border-default p-1 text-sm text-theme-primary"
         >
           {FORMATS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
         </select>
@@ -215,16 +215,16 @@ export default function VoiceMemoScriptPanel() {
         data-testid="memo-run"
         onClick={write}
         disabled={busy || recording}
-        className="rounded-lg bg-green-500/90 px-3 py-1.5 text-sm font-medium text-black disabled:opacity-50"
+        className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
       >
         {writing ? 'Writing…' : 'Write script'}
       </button>
 
-      {error && <p data-testid="memo-error" className="text-sm text-red-400">{error}</p>}
+      {error && <p data-testid="memo-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {result && (
         <div data-testid="memo-result" className="space-y-3">
-          <div className="rounded-lg bg-zinc-950 border border-zinc-800 p-3 space-y-2 text-sm text-zinc-200">
+          <div className="rounded-lg bg-background border border-default p-3 space-y-2 text-sm text-theme-primary">
             <p className="text-xs font-semibold uppercase tracking-wide text-orange-400">Hook</p>
             <p data-testid="memo-hook">{result.script.hook}</p>
             <p className="text-xs font-semibold uppercase tracking-wide text-purple-400">Body</p>
@@ -235,8 +235,8 @@ export default function VoiceMemoScriptPanel() {
             <p data-testid="memo-cta">{result.script.cta}</p>
             {result.script.brollCues.length > 0 && (
               <>
-                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">B-roll cues</p>
-                <ul className="list-disc space-y-1 pl-5 text-zinc-400">
+                <p className="text-xs font-semibold uppercase tracking-wide text-theme-muted">B-roll cues</p>
+                <ul className="list-disc space-y-1 pl-5 text-theme-secondary">
                   {result.script.brollCues.map((c, i) => <li key={i}>{c}</li>)}
                 </ul>
               </>
@@ -244,12 +244,12 @@ export default function VoiceMemoScriptPanel() {
           </div>
 
           <div data-testid="memo-qa" className="space-y-1">
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-theme-secondary">
               QA {result.qa.passed ? 'passed' : 'needs a look'} · ~{result.qa.estimatedSeconds}s spoken
             </p>
             <ul className="space-y-1">
               {result.qa.checks.map((c) => (
-                <li key={c.id} data-testid="memo-qa-item" className={`text-xs ${c.ok ? 'text-zinc-400' : 'text-amber-400'}`}>
+                <li key={c.id} data-testid="memo-qa-item" className={`text-xs ${c.ok ? 'text-theme-secondary' : 'text-amber-600 dark:text-amber-400'}`}>
                   {c.ok ? '✓' : '!'} {c.message}
                 </li>
               ))}
@@ -259,13 +259,13 @@ export default function VoiceMemoScriptPanel() {
           <div className="flex gap-2">
             <button
               type="button" data-testid="memo-copy" onClick={copyMarkdown}
-              className="text-xs text-zinc-400 hover:text-white"
+              className="text-xs text-theme-secondary hover:text-theme-primary"
             >
               {copied ? 'Copied ✓' : 'Copy script.md'}
             </button>
             <button
               type="button" data-testid="memo-download" onClick={downloadMarkdown}
-              className="text-xs text-zinc-400 hover:text-white"
+              className="text-xs text-theme-secondary hover:text-theme-primary"
             >
               Download script.md
             </button>
@@ -273,25 +273,25 @@ export default function VoiceMemoScriptPanel() {
 
           {saved ? (
             <div data-testid="memo-saved" className="space-y-1 text-xs">
-              <p className="text-zinc-300">
-                Saved. <a href={`/dashboard/scripts/${saved.scriptId}`} className="underline hover:text-white">Open in Scripts</a>
+              <p className="text-theme-secondary">
+                Saved. <a href={`/dashboard/scripts/${saved.scriptId}`} className="underline hover:text-theme-primary">Open in Scripts</a>
                 {saved.approvalId && (
-                  <> · <a href="/dashboard/approvals" className="underline hover:text-white">Waiting for your sign-off in Approvals</a></>
+                  <> · <a href="/dashboard/approvals" className="underline hover:text-theme-primary">Waiting for your sign-off in Approvals</a></>
                 )}
               </p>
-              {saved.approvalError && <p className="text-amber-400">{saved.approvalError}</p>}
+              {saved.approvalError && <p className="text-amber-600 dark:text-amber-400">{saved.approvalError}</p>}
             </div>
           ) : (
             <div className="flex gap-2">
               <button
                 type="button" data-testid="memo-approve" onClick={() => save(true)} disabled={saving}
-                className="rounded-lg bg-green-500/90 px-3 py-1.5 text-xs font-medium text-black disabled:opacity-50"
+                className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
               >
                 {saving ? 'Saving…' : 'Send for approval'}
               </button>
               <button
                 type="button" data-testid="memo-save" onClick={() => save(false)} disabled={saving}
-                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200 disabled:opacity-50"
+                className="rounded-lg border border-strong px-3 py-1.5 text-xs text-theme-primary disabled:opacity-50"
               >
                 Save to Scripts
               </button>

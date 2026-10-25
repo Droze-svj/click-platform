@@ -18,7 +18,7 @@ export default function DigestWidget() {
     return () => { alive = false }
   }, [])
 
-  if (error) return <div data-testid="digest-error" className="text-sm text-red-400">{error}</div>
-  if (!loaded) return <div data-testid="digest-loading" className="text-sm text-zinc-500">Loading digest…</div>
+  if (error) return <div data-testid="digest-error" className="text-sm text-red-600 dark:text-red-400">{error}</div>
+  if (!loaded) return <div data-testid="digest-loading" className="text-sm text-theme-muted">Loading digest…</div>
   return <WeeklyDigestCard digest={digest} />
 }

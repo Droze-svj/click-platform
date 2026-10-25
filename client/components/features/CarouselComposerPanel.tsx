@@ -36,21 +36,21 @@ export default function CarouselComposerPanel() {
   }
 
   return (
-    <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4 space-y-3">
-      <h2 className="text-sm font-semibold text-white">Carousel / thread</h2>
+    <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
+      <h2 className="text-sm font-semibold text-theme-primary">Carousel / thread</h2>
       <textarea
         data-testid="carousel-input"
         value={topic}
         onChange={(e) => setTopic(e.target.value)}
         rows={2}
         placeholder="One idea to expand into slides…"
-        className="w-full rounded-lg bg-zinc-950 border border-zinc-800 p-2 text-sm text-zinc-200"
+        className="w-full rounded-lg bg-background border border-default p-2 text-sm text-theme-primary"
       />
       <div className="flex gap-2">
         <select
           data-testid="carousel-format" aria-label="Format" value={format}
           onChange={(e) => setFormat(e.target.value as SlideFormat)}
-          className="rounded bg-zinc-950 border border-zinc-800 p-1 text-sm text-zinc-200"
+          className="rounded bg-background border border-default p-1 text-sm text-theme-primary"
         >
           {FORMATS.map((f) => <option key={f} value={f}>{f}</option>)}
         </select>
@@ -59,29 +59,29 @@ export default function CarouselComposerPanel() {
           data-testid="carousel-run"
           onClick={run}
           disabled={loading}
-          className="rounded-lg bg-green-500/90 px-3 py-1.5 text-sm font-medium text-black disabled:opacity-50"
+          className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
           {loading ? 'Composing…' : 'Compose'}
         </button>
       </div>
 
-      {error && <p data-testid="carousel-error" className="text-sm text-red-400">{error}</p>}
+      {error && <p data-testid="carousel-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {result && (result.slides ?? []).length === 0 && (
-        <p data-testid="carousel-empty" className="text-sm text-zinc-400">{t('creatorTools.noResults')}</p>
+        <p data-testid="carousel-empty" className="text-sm text-theme-secondary">{t('creatorTools.noResults')}</p>
       )}
       {result && (result.slides ?? []).length > 0 && (
         <div className="space-y-2" data-testid="carousel-results">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-500">{result.slides.length} slides</span>
-            <button type="button" data-testid="carousel-copy-all" onClick={copyAll} className="text-xs text-zinc-400 hover:text-white">
+            <span className="text-xs text-theme-muted">{result.slides.length} slides</span>
+            <button type="button" data-testid="carousel-copy-all" onClick={copyAll} className="text-xs text-theme-secondary hover:text-theme-primary">
               {copied ? 'Copied ✓' : 'Copy all'}
             </button>
           </div>
           <ol className="space-y-1">
             {result.slides.map((s) => (
-              <li key={s.n} data-testid="carousel-slide" className="flex gap-2 rounded-lg bg-zinc-950 border border-zinc-800 p-2 text-sm text-zinc-200">
-                <span className="text-zinc-600 tabular-nums">{s.n}</span>
+              <li key={s.n} data-testid="carousel-slide" className="flex gap-2 rounded-lg bg-background border border-default p-2 text-sm text-theme-primary">
+                <span className="text-theme-muted tabular-nums">{s.n}</span>
                 <span className="flex-1">{s.text}</span>
               </li>
             ))}

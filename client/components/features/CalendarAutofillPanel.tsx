@@ -56,41 +56,41 @@ export default function CalendarAutofillPanel() {
   }
 
   return (
-    <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4 space-y-3">
-      <h2 className="text-sm font-semibold text-white">Fill my calendar</h2>
+    <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
+      <h2 className="text-sm font-semibold text-theme-primary">Fill my calendar</h2>
 
       <div className="flex flex-wrap gap-2 items-end">
-        <label className="text-xs text-zinc-400">
+        <label className="text-xs text-theme-secondary">
           Platform
           <select
             data-testid="autofill-platform"
             value={platform}
             onChange={(e) => setPlatform(e.target.value as Platform)}
-            className="block mt-1 rounded bg-zinc-950 border border-zinc-800 p-1 text-sm text-zinc-200"
+            className="block mt-1 rounded bg-background border border-default p-1 text-sm text-theme-primary"
           >
             {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
         </label>
-        <label className="text-xs text-zinc-400">
+        <label className="text-xs text-theme-secondary">
           Posts
           <input
             data-testid="autofill-count"
             type="number" min={1} max={30} value={count}
             onChange={(e) => setCount(Number(e.target.value))}
-            className="block mt-1 w-16 rounded bg-zinc-950 border border-zinc-800 p-1 text-sm text-zinc-200"
+            className="block mt-1 w-16 rounded bg-background border border-default p-1 text-sm text-theme-primary"
           />
         </label>
-        <label className="text-xs text-zinc-400 flex-1 min-w-[8rem]">
+        <label className="text-xs text-theme-secondary flex-1 min-w-[8rem]">
           Topic (optional)
           <input
             data-testid="autofill-topic"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             placeholder="e.g. beginner mistakes"
-            className="block mt-1 w-full rounded bg-zinc-950 border border-zinc-800 p-1 text-sm text-zinc-200"
+            className="block mt-1 w-full rounded bg-background border border-default p-1 text-sm text-theme-primary"
           />
         </label>
-        <label className="text-xs text-zinc-400 flex items-center gap-1">
+        <label className="text-xs text-theme-secondary flex items-center gap-1">
           <input
             data-testid="autofill-optimal"
             type="checkbox" checked={optimalTimes}
@@ -104,33 +104,33 @@ export default function CalendarAutofillPanel() {
         data-testid="autofill-generate"
         onClick={generate}
         disabled={loading}
-        className="rounded-lg bg-green-500/90 px-3 py-1.5 text-sm font-medium text-black disabled:opacity-50"
+        className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
       >
         {loading ? 'Generating…' : 'Generate drafts'}
       </button>
 
-      {error && <p data-testid="autofill-error" className="text-sm text-red-400">{error}</p>}
+      {error && <p data-testid="autofill-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {result && (result.degraded || !result.planId || result.count === 0) && (
         // The server creates no plan when the AI produced no ideas — there is
         // nothing to list or approve, so say so instead of "0 drafts created".
-        <p data-testid="autofill-unavailable" className="text-sm text-amber-400">
+        <p data-testid="autofill-unavailable" className="text-sm text-amber-600 dark:text-amber-400">
           AI ideas are unavailable right now — no drafts were created. Try again in a little while.
         </p>
       )}
 
       {result && !result.degraded && result.planId && result.count > 0 && (
         <div className="space-y-2" data-testid="autofill-result">
-          <p className="text-xs text-zinc-500">{result.count} draft{result.count === 1 ? '' : 's'} created</p>
+          <p className="text-xs text-theme-muted">{result.count} draft{result.count === 1 ? '' : 's'} created</p>
           <ul className="space-y-1">
             {result.posts.map((d, i) => (
-              <li key={i} data-testid="autofill-draft" className="text-sm text-zinc-300 truncate">
-                <span className="text-zinc-500">{d.platform}</span> · {d.content?.text || '(empty)'}
+              <li key={i} data-testid="autofill-draft" className="text-sm text-theme-secondary truncate">
+                <span className="text-theme-muted">{d.platform}</span> · {d.content?.text || '(empty)'}
               </li>
             ))}
           </ul>
           {approved
-            ? <p data-testid="autofill-approved" className="text-sm text-green-400">Approved — scheduled at your best times. ✓</p>
+            ? <p data-testid="autofill-approved" className="text-sm text-green-600 dark:text-green-400">Approved — scheduled at your best times. ✓</p>
             : (
               <button
                 data-testid="autofill-approve"

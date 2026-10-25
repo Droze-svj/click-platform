@@ -39,21 +39,21 @@ export default function CaptionAnglesPanel() {
   }
 
   return (
-    <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4 space-y-3">
-      <h2 className="text-sm font-semibold text-white">Caption angles</h2>
+    <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
+      <h2 className="text-sm font-semibold text-theme-primary">Caption angles</h2>
       <textarea
         data-testid="captions-input"
         value={topic}
         onChange={(e) => setTopic(e.target.value)}
         rows={2}
         placeholder="What's the post about?"
-        className="w-full rounded-lg bg-zinc-950 border border-zinc-800 p-2 text-sm text-zinc-200"
+        className="w-full rounded-lg bg-background border border-default p-2 text-sm text-theme-primary"
       />
       <div className="flex gap-2">
         <select
           data-testid="captions-platform" aria-label="Platform" value={platform}
           onChange={(e) => setPlatform(e.target.value as Platform)}
-          className="rounded bg-zinc-950 border border-zinc-800 p-1 text-sm text-zinc-200"
+          className="rounded bg-background border border-default p-1 text-sm text-theme-primary"
         >
           {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
@@ -62,35 +62,35 @@ export default function CaptionAnglesPanel() {
           data-testid="captions-run"
           onClick={run}
           disabled={loading}
-          className="rounded-lg bg-green-500/90 px-3 py-1.5 text-sm font-medium text-black disabled:opacity-50"
+          className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
           {loading ? 'Drafting…' : 'Draft captions'}
         </button>
       </div>
 
-      {error && <p data-testid="captions-error" className="text-sm text-red-400">{error}</p>}
+      {error && <p data-testid="captions-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {result && (result.captions ?? []).length === 0 && (
-        <p data-testid="captions-empty" className="text-sm text-zinc-400">{t('creatorTools.noResults')}</p>
+        <p data-testid="captions-empty" className="text-sm text-theme-secondary">{t('creatorTools.noResults')}</p>
       )}
       {result && (result.captions ?? []).length > 0 && (
         <ul className="space-y-2" data-testid="captions-results">
           {result.captions.map((c, i) => (
-            <li key={i} data-testid="captions-item" className="rounded-lg bg-zinc-950 border border-zinc-800 p-2 space-y-1">
+            <li key={i} data-testid="captions-item" className="rounded-lg bg-background border border-default p-2 space-y-1">
               <div className="flex items-center justify-between">
-                <span data-testid="captions-angle" className="text-[10px] uppercase tracking-wide text-zinc-500">
+                <span data-testid="captions-angle" className="text-[10px] uppercase tracking-wide text-theme-muted">
                   {ANGLE_LABEL[c.angle] ?? c.angle}
                 </span>
                 <button
                   type="button"
                   data-testid="captions-copy"
                   onClick={() => copy(c.text)}
-                  className="text-xs text-zinc-400 hover:text-white"
+                  className="text-xs text-theme-secondary hover:text-theme-primary"
                 >
                   {copied === c.text ? 'Copied ✓' : 'Copy'}
                 </button>
               </div>
-              <p className="text-sm text-zinc-200">{c.text}</p>
+              <p className="text-sm text-theme-primary">{c.text}</p>
             </li>
           ))}
         </ul>

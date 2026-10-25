@@ -8,9 +8,9 @@ import { generateHashtags, type Platform, type HashtagResult } from '@/lib/featu
 const PLATFORMS: Platform[] = ['instagram', 'tiktok', 'youtube', 'twitter', 'linkedin']
 // Tier display order + labels.
 const TIERS: { key: string; label: string; tone: string }[] = [
-  { key: 'broad', label: 'Broad reach', tone: 'text-blue-400' },
-  { key: 'niche', label: 'Niche', tone: 'text-green-400' },
-  { key: 'community', label: 'Community', tone: 'text-amber-400' },
+  { key: 'broad', label: 'Broad reach', tone: 'text-blue-600 dark:text-blue-400' },
+  { key: 'niche', label: 'Niche', tone: 'text-green-600 dark:text-green-400' },
+  { key: 'community', label: 'Community', tone: 'text-amber-600 dark:text-amber-400' },
   { key: 'branded', label: 'Branded', tone: 'text-fuchsia-400' },
 ]
 
@@ -43,21 +43,21 @@ export default function HashtagStrategistPanel() {
   }
 
   return (
-    <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4 space-y-3">
-      <h2 className="text-sm font-semibold text-white">Hashtag strategist</h2>
+    <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
+      <h2 className="text-sm font-semibold text-theme-primary">Hashtag strategist</h2>
       <textarea
         data-testid="hashtags-input"
         value={topic}
         onChange={(e) => setTopic(e.target.value)}
         rows={2}
         placeholder="What's the post about?"
-        className="w-full rounded-lg bg-zinc-950 border border-zinc-800 p-2 text-sm text-zinc-200"
+        className="w-full rounded-lg bg-background border border-default p-2 text-sm text-theme-primary"
       />
       <div className="flex gap-2">
         <select
           data-testid="hashtags-platform" aria-label="Platform" value={platform}
           onChange={(e) => setPlatform(e.target.value as Platform)}
-          className="rounded bg-zinc-950 border border-zinc-800 p-1 text-sm text-zinc-200"
+          className="rounded bg-background border border-default p-1 text-sm text-theme-primary"
         >
           {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
@@ -66,22 +66,22 @@ export default function HashtagStrategistPanel() {
           data-testid="hashtags-run"
           onClick={run}
           disabled={loading}
-          className="rounded-lg bg-green-500/90 px-3 py-1.5 text-sm font-medium text-black disabled:opacity-50"
+          className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
           {loading ? 'Building…' : 'Build set'}
         </button>
       </div>
 
-      {error && <p data-testid="hashtags-error" className="text-sm text-red-400">{error}</p>}
+      {error && <p data-testid="hashtags-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {result && (result.tags ?? []).length === 0 && (
-        <p data-testid="hashtags-empty" className="text-sm text-zinc-400">{t('creatorTools.noResults')}</p>
+        <p data-testid="hashtags-empty" className="text-sm text-theme-secondary">{t('creatorTools.noResults')}</p>
       )}
       {result && (result.tags ?? []).length > 0 && (
         <div className="space-y-2" data-testid="hashtags-results">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-500">{result.count} tags</span>
-            <button type="button" data-testid="hashtags-copy-all" onClick={copyAll} className="text-xs text-zinc-400 hover:text-white">
+            <span className="text-xs text-theme-muted">{result.count} tags</span>
+            <button type="button" data-testid="hashtags-copy-all" onClick={copyAll} className="text-xs text-theme-secondary hover:text-theme-primary">
               {copied ? 'Copied ✓' : 'Copy all'}
             </button>
           </div>
@@ -90,7 +90,7 @@ export default function HashtagStrategistPanel() {
               <div className={`text-[10px] uppercase tracking-wide ${t.tone}`}>{t.label}</div>
               <div className="mt-1 flex flex-wrap gap-1">
                 {result.groups[t.key].map((tag) => (
-                  <span key={tag} data-testid="hashtags-tag" className="rounded bg-zinc-950 border border-zinc-800 px-1.5 py-0.5 text-xs text-zinc-200">
+                  <span key={tag} data-testid="hashtags-tag" className="rounded bg-background border border-default px-1.5 py-0.5 text-xs text-theme-primary">
                     {tag}
                   </span>
                 ))}

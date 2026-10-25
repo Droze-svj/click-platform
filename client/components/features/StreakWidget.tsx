@@ -17,7 +17,7 @@ export default function StreakWidget() {
     return () => { alive = false }
   }, [])
 
-  if (error) return <div data-testid="streak-error" className="text-sm text-red-400">{error}</div>
-  if (!streak) return <div data-testid="streak-loading" className="text-sm text-zinc-500">Loading streak…</div>
+  if (error) return <div data-testid="streak-error" className="text-sm text-red-600 dark:text-red-400">{error}</div>
+  if (!streak) return <div data-testid="streak-loading" className="text-sm text-theme-muted">Loading streak…</div>
   return <PostingStreakCard streak={streak} />
 }

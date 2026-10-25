@@ -18,7 +18,7 @@ export default function HeatmapWidget() {
     return () => { alive = false }
   }, [])
 
-  if (error) return <div data-testid="heatmap-error" className="text-sm text-red-400">{error}</div>
-  if (!loaded) return <div data-testid="heatmap-loading" className="text-sm text-zinc-500">Loading heatmap…</div>
+  if (error) return <div data-testid="heatmap-error" className="text-sm text-red-600 dark:text-red-400">{error}</div>
+  if (!loaded) return <div data-testid="heatmap-loading" className="text-sm text-theme-muted">Loading heatmap…</div>
   return <HeatmapCard heatmap={heatmap} />
 }

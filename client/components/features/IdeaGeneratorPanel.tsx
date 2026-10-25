@@ -30,21 +30,21 @@ export default function IdeaGeneratorPanel() {
   }
 
   return (
-    <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4 space-y-3">
-      <h2 className="text-sm font-semibold text-white">Idea generator</h2>
+    <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
+      <h2 className="text-sm font-semibold text-theme-primary">Idea generator</h2>
       <textarea
         data-testid="ideas-input"
         value={topic}
         onChange={(e) => setTopic(e.target.value)}
         rows={2}
         placeholder="Your niche or a theme (e.g. 'budget home cooking')…"
-        className="w-full rounded-lg bg-zinc-950 border border-zinc-800 p-2 text-sm text-zinc-200"
+        className="w-full rounded-lg bg-background border border-default p-2 text-sm text-theme-primary"
       />
       <div className="flex gap-2">
         <select
           data-testid="ideas-platform" aria-label="Platform" value={platform}
           onChange={(e) => setPlatform(e.target.value as Platform)}
-          className="rounded bg-zinc-950 border border-zinc-800 p-1 text-sm text-zinc-200"
+          className="rounded bg-background border border-default p-1 text-sm text-theme-primary"
         >
           {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
@@ -53,31 +53,31 @@ export default function IdeaGeneratorPanel() {
           data-testid="ideas-run"
           onClick={run}
           disabled={loading}
-          className="rounded-lg bg-green-500/90 px-3 py-1.5 text-sm font-medium text-black disabled:opacity-50"
+          className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
           {loading ? 'Thinking…' : 'Get ideas'}
         </button>
       </div>
 
-      {error && <p data-testid="ideas-error" className="text-sm text-red-400">{error}</p>}
+      {error && <p data-testid="ideas-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {ideas && ideas.length === 0 && (
-        <p data-testid="ideas-empty" className="text-sm text-zinc-500">No ideas came back — try a broader topic.</p>
+        <p data-testid="ideas-empty" className="text-sm text-theme-muted">No ideas came back — try a broader topic.</p>
       )}
 
       {ideas && ideas.length > 0 && (
         <ul className="space-y-2" data-testid="ideas-results">
           {ideas.map((idea, i) => (
-            <li key={i} data-testid="ideas-item" className="rounded-lg bg-zinc-950 border border-zinc-800 p-2 space-y-1">
+            <li key={i} data-testid="ideas-item" className="rounded-lg bg-background border border-default p-2 space-y-1">
               <div className="flex items-start justify-between gap-2">
-                <span className="text-sm font-medium text-zinc-100">{idea.title}</span>
+                <span className="text-sm font-medium text-theme-primary">{idea.title}</span>
                 {idea.format && (
-                  <span data-testid="ideas-format" className="shrink-0 rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-zinc-400">
+                  <span data-testid="ideas-format" className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-theme-secondary">
                     {idea.format}
                   </span>
                 )}
               </div>
-              {idea.description && <p className="text-xs text-zinc-400">{idea.description}</p>}
+              {idea.description && <p className="text-xs text-theme-secondary">{idea.description}</p>}
             </li>
           ))}
         </ul>

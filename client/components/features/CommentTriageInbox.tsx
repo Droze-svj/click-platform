@@ -94,15 +94,15 @@ export default function CommentTriageInbox() {
   }
 
   return (
-    <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4 space-y-3">
+    <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-white">Comment triage</h2>
+        <h2 className="text-sm font-semibold text-theme-primary">Comment triage</h2>
         <select
           data-testid="triage-platform"
           aria-label="Reply platform"
           value={platform}
           onChange={(e) => setPlatform(e.target.value as Platform)}
-          className="rounded bg-zinc-950 border border-zinc-800 p-1 text-xs text-zinc-300"
+          className="rounded bg-background border border-default p-1 text-xs text-theme-secondary"
         >
           {platforms.map((p) => <option key={p.name} value={p.name}>{p.name}</option>)}
         </select>
@@ -113,19 +113,19 @@ export default function CommentTriageInbox() {
         onChange={(e) => setText(e.target.value)}
         placeholder="Paste comments, one per line…"
         rows={4}
-        className="w-full rounded-lg bg-zinc-950 border border-zinc-800 p-2 text-sm text-zinc-200"
+        className="w-full rounded-lg bg-background border border-default p-2 text-sm text-theme-primary"
       />
       <button
         type="button"
         data-testid="triage-run"
         onClick={run}
         disabled={loading}
-        className="rounded-lg bg-green-500/90 px-3 py-1.5 text-sm font-medium text-black disabled:opacity-50"
+        className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
       >
         {loading ? 'Triaging…' : 'Triage inbox'}
       </button>
 
-      {error && <p data-testid="triage-error" className="text-sm text-red-400">{error}</p>}
+      {error && <p data-testid="triage-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {groups && groups.length > 0 && (
         <div className="space-y-3" data-testid="triage-results">
@@ -141,7 +141,7 @@ export default function CommentTriageInbox() {
                     data-testid={`triage-draft-all-${g.priority}`}
                     onClick={() => draftAll(g.comments)}
                     disabled={g.comments.some((cm) => drafting[cm.text])}
-                    className="rounded bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300 hover:text-white disabled:opacity-50"
+                    className="rounded bg-muted px-2 py-0.5 text-xs text-theme-secondary hover:text-theme-primary disabled:opacity-50"
                   >
                     Draft all
                   </button>
@@ -149,19 +149,19 @@ export default function CommentTriageInbox() {
               </div>
               <ul className="mt-1 space-y-1">
                 {g.comments.map((cm, i) => (
-                  <li key={cm.id ?? `${g.priority}-${i}`} data-testid="triage-item" className="flex items-center gap-2 text-sm text-zinc-300">
-                    <span className="flex-1"><span className="text-zinc-500">[{cm.intent}]</span> {cm.text}</span>
+                  <li key={cm.id ?? `${g.priority}-${i}`} data-testid="triage-item" className="flex items-center gap-2 text-sm text-theme-secondary">
+                    <span className="flex-1"><span className="text-theme-muted">[{cm.intent}]</span> {cm.text}</span>
                     {/* Reply-worthy items (not spam) get a one-click AI draft → responder queue. */}
                     {g.priority !== 'ignore' && (
                       drafted[cm.text]
-                        ? <span data-testid="triage-drafted" className="text-xs text-green-400 whitespace-nowrap">Queued ✓</span>
+                        ? <span data-testid="triage-drafted" className="text-xs text-green-600 dark:text-green-400 whitespace-nowrap">Queued ✓</span>
                         : (
                           <button
                             type="button"
                             data-testid="triage-draft"
                             onClick={() => draft(cm)}
                             disabled={drafting[cm.text]}
-                            className="rounded bg-zinc-800 px-2 py-0.5 text-xs text-zinc-200 disabled:opacity-50 whitespace-nowrap"
+                            className="rounded bg-muted px-2 py-0.5 text-xs text-theme-primary disabled:opacity-50 whitespace-nowrap"
                           >
                             {drafting[cm.text] ? 'Drafting…' : 'Draft reply'}
                           </button>
@@ -176,7 +176,7 @@ export default function CommentTriageInbox() {
       )}
 
       {groups && groups.length === 0 && (
-        <p className="text-sm text-zinc-500" data-testid="triage-empty">No comments to rank.</p>
+        <p className="text-sm text-theme-muted" data-testid="triage-empty">No comments to rank.</p>
       )}
     </div>
   )

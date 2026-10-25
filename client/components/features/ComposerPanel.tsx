@@ -76,10 +76,10 @@ export default function ComposerPanel() {
   }
 
   return (
-    <div className="rounded-xl bg-zinc-900/60 border border-zinc-800 p-4 space-y-3">
+    <div className="rounded-xl bg-surface-card border border-default p-4 space-y-3">
       <div>
-        <h2 className="text-sm font-semibold text-white">Composer</h2>
-        <p className="text-xs text-zinc-600">One topic → hook + caption + hashtags, assembled into a draft.</p>
+        <h2 className="text-sm font-semibold text-theme-primary">Composer</h2>
+        <p className="text-xs text-theme-muted">One topic → hook + caption + hashtags, assembled into a draft.</p>
       </div>
 
       <textarea
@@ -88,13 +88,13 @@ export default function ComposerPanel() {
         onChange={(e) => setTopic(e.target.value)}
         rows={2}
         placeholder="What's this post about?"
-        className="w-full rounded-lg bg-zinc-950 border border-zinc-800 p-2 text-sm text-zinc-200"
+        className="w-full rounded-lg bg-background border border-default p-2 text-sm text-theme-primary"
       />
       <div className="flex gap-2">
         <select
           data-testid="composer-platform" aria-label="Platform" value={platform}
           onChange={(e) => setPlatform(e.target.value as Platform)}
-          className="rounded bg-zinc-950 border border-zinc-800 p-1 text-sm text-zinc-200"
+          className="rounded bg-background border border-default p-1 text-sm text-theme-primary"
         >
           {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
@@ -103,19 +103,19 @@ export default function ComposerPanel() {
           data-testid="composer-run"
           onClick={run}
           disabled={loading}
-          className="rounded-lg bg-green-500/90 px-3 py-1.5 text-sm font-medium text-black disabled:opacity-50"
+          className="rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
           {loading ? 'Composing…' : 'Compose'}
         </button>
       </div>
 
-      {error && <p data-testid="composer-error" className="text-sm text-red-400">{error}</p>}
+      {error && <p data-testid="composer-error" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {done && (
         <div className="space-y-3" data-testid="composer-results">
           {hooks.length > 0 && (
             <div>
-              <div className="text-[10px] uppercase tracking-wide text-zinc-500">Hook</div>
+              <div className="text-[10px] uppercase tracking-wide text-theme-muted">Hook</div>
               <div className="mt-1 flex flex-wrap gap-1" data-testid="composer-hooks">
                 {hooks.map((h, i) => (
                   <button
@@ -124,7 +124,7 @@ export default function ComposerPanel() {
                     data-testid="composer-hook"
                     aria-pressed={i === hookIdx}
                     onClick={() => pickHook(i)}
-                    className={`rounded px-2 py-0.5 text-xs border ${i === hookIdx ? 'border-green-500 text-green-300' : 'border-zinc-800 text-zinc-300'}`}
+                    className={`rounded px-2 py-0.5 text-xs border ${i === hookIdx ? 'border-green-500 text-green-700 dark:text-green-300' : 'border-default text-theme-secondary'}`}
                   >
                     {h.text}
                   </button>
@@ -135,7 +135,7 @@ export default function ComposerPanel() {
 
           {captions.length > 0 && (
             <div>
-              <div className="text-[10px] uppercase tracking-wide text-zinc-500">Caption</div>
+              <div className="text-[10px] uppercase tracking-wide text-theme-muted">Caption</div>
               <div className="mt-1 space-y-1" data-testid="composer-captions">
                 {captions.map((c, i) => (
                   <button
@@ -144,7 +144,7 @@ export default function ComposerPanel() {
                     data-testid="composer-caption"
                     aria-pressed={i === captionIdx}
                     onClick={() => pickCaption(i)}
-                    className={`block w-full rounded p-1.5 text-left text-xs border ${i === captionIdx ? 'border-green-500 text-green-200' : 'border-zinc-800 text-zinc-300'}`}
+                    className={`block w-full rounded p-1.5 text-left text-xs border ${i === captionIdx ? 'border-green-500 text-green-700 dark:text-green-200' : 'border-default text-theme-secondary'}`}
                   >
                     {c.text}
                   </button>
@@ -155,29 +155,29 @@ export default function ComposerPanel() {
 
           <div>
             <div className="flex items-center justify-between">
-              <div className="text-[10px] uppercase tracking-wide text-zinc-500">Draft</div>
+              <div className="text-[10px] uppercase tracking-wide text-theme-muted">Draft</div>
               <div className="flex items-center gap-3">
-                <button type="button" data-testid="composer-score" onClick={scoreDraft} disabled={scoring} className="text-xs text-zinc-400 hover:text-white disabled:opacity-50">
+                <button type="button" data-testid="composer-score" onClick={scoreDraft} disabled={scoring} className="text-xs text-theme-secondary hover:text-theme-primary disabled:opacity-50">
                   {scoring ? 'Scoring…' : 'Critique draft'}
                 </button>
-                <button type="button" data-testid="composer-copy" onClick={copyAssembled} className="text-xs text-zinc-400 hover:text-white">
+                <button type="button" data-testid="composer-copy" onClick={copyAssembled} className="text-xs text-theme-secondary hover:text-theme-primary">
                   {copied ? 'Copied ✓' : 'Copy draft'}
                 </button>
               </div>
             </div>
-            <pre data-testid="composer-draft" className="mt-1 whitespace-pre-wrap rounded-lg bg-zinc-950 border border-zinc-800 p-2 text-sm text-zinc-200 font-sans">{assembled}</pre>
+            <pre data-testid="composer-draft" className="mt-1 whitespace-pre-wrap rounded-lg bg-background border border-default p-2 text-sm text-theme-primary font-sans">{assembled}</pre>
           </div>
 
           {critique && (
-            <div className="rounded-lg bg-zinc-950 border border-zinc-800 p-2 space-y-1" data-testid="composer-critique">
+            <div className="rounded-lg bg-background border border-default p-2 space-y-1" data-testid="composer-critique">
               <div className="flex items-center gap-2">
-                <span data-testid="composer-critique-score" className="text-lg font-bold text-white">{critique.overall}<span className="text-xs text-zinc-500">/10</span></span>
-                {critique.summary && <span className="text-xs text-zinc-400">{critique.summary}</span>}
+                <span data-testid="composer-critique-score" className="text-lg font-bold text-theme-primary">{critique.overall}<span className="text-xs text-theme-muted">/10</span></span>
+                {critique.summary && <span className="text-xs text-theme-secondary">{critique.summary}</span>}
               </div>
               {critique.suggestions.length > 0 && (
                 <ul className="space-y-0.5">
                   {critique.suggestions.slice(0, 3).map((s, i) => (
-                    <li key={i} data-testid="composer-critique-fix" className="text-xs text-zinc-300">• {s}</li>
+                    <li key={i} data-testid="composer-critique-fix" className="text-xs text-theme-secondary">• {s}</li>
                   ))}
                 </ul>
               )}

@@ -107,7 +107,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
           <div className="w-10 h-10 rounded-xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center text-primary-500 shadow-sm">
              <Palette size={20} />
           </div>
-          <span className="text-[11px] font-black uppercase tracking-[0.4em] italic text-surface-900 dark:text-white leading-none">{t('brandKit.protocolTitle')}</span>
+          <span className="ds-text-h3 text-theme-primary">{t('brandKit.protocolTitle')}</span>
         </div>
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => setPreviewMode(!previewMode)}
@@ -128,7 +128,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
          <div className="space-y-10">
             {/* Colors */}
             <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-[0.4em] italic pl-2 text-surface-400 dark:text-slate-500 leading-none">{t('brandKit.chromaLattice')}</label>
+              <label className="ds-text-label text-theme-secondary">{t('brandKit.chromaLattice')}</label>
               <div className="grid grid-cols-3 gap-4 p-6 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] shadow-inner">
                 {[
                   { key: 'primaryColor' as const, label: t('brandKit.colorPrimary') },
@@ -144,7 +144,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
                         className="absolute inset-0 w-[120%] h-[120%] -translate-x-[10%] -translate-y-[10%] cursor-pointer bg-transparent"
                       />
                     </div>
-                    <span className="text-[9px] font-black text-surface-400 dark:text-slate-600 uppercase tracking-widest italic">{c.label}</span>
+                    <span className="text-xs font-medium text-theme-muted">{c.label}</span>
                   </div>
                 ))}
               </div>
@@ -152,7 +152,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
 
             {/* Typography */}
             <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-[0.4em] italic pl-2 text-surface-400 dark:text-slate-500 leading-none">{t('brandKit.typographicCore')}</label>
+              <label className="ds-text-label text-theme-secondary">{t('brandKit.typographicCore')}</label>
               <div className="p-6 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] shadow-inner space-y-8">
                  <div className="relative group">
                     <select value={kit.fontFamily} onChange={e => updateKit('fontFamily', e.target.value)}
@@ -167,8 +167,8 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
                  
                  <div className="space-y-4">
                     <div className="flex items-center justify-between px-2">
-                       <span className="text-[9px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-widest italic">{t('brandKit.scaleFactor')}</span>
-                       <span className="text-[11px] font-black text-primary-500 italic">{t('brandKit.pixelValue', { value: kit.captionFontSize })}</span>
+                       <span className="text-xs font-medium text-theme-muted">{t('brandKit.scaleFactor')}</span>
+                       <span className="text-xs font-semibold text-primary tabular-nums">{t('brandKit.pixelValue', { value: kit.captionFontSize })}</span>
                     </div>
                     <input type="range" min={20} max={60} step={2} value={kit.captionFontSize}
                       onChange={e => updateKit('captionFontSize', parseInt(e.target.value))}
@@ -187,7 +187,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
             <AnimatePresence>
               {previewMode && (
                 <div className="space-y-4">
-                  <label className="text-[10px] font-black uppercase tracking-[0.4em] italic pl-2 text-surface-400 dark:text-slate-500 leading-none">{t('brandKit.neuralPreview')}</label>
+                  <label className="ds-text-label text-theme-secondary">{t('brandKit.neuralPreview')}</label>
                   <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                     className="relative rounded-[2.5rem] overflow-hidden aspect-video border-2 border-surface-100 dark:border-surface-800 shadow-[0_40px_100px_rgba(0,0,0,0.3)] transition-all duration-500"
                     style={{ background: kit.backgroundColor }}
@@ -239,7 +239,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
 
             {/* Asset Injection */}
             <div className="space-y-4">
-              <label className="text-[10px] font-black uppercase tracking-[0.4em] italic pl-2 text-surface-400 dark:text-slate-500 leading-none">{t('brandKit.assetInjection')}</label>
+              <label className="ds-text-label text-theme-secondary">{t('brandKit.assetInjection')}</label>
               <div className="p-6 bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800 rounded-[2rem] shadow-inner space-y-6">
                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} aria-label={t('brandKit.uploadLogoAria')} title={t('brandKit.uploadLogoAria')} />
                  
@@ -274,8 +274,8 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
                       </div>
                       <div className="space-y-3">
                          <div className="flex items-center justify-between px-2">
-                           <span className="text-[9px] font-black text-surface-400 dark:text-slate-500 uppercase tracking-widest italic">{t('brandKit.vectorOpacity')}</span>
-                           <span className="text-[11px] font-black text-primary-500 italic">{t('brandKit.percentValue', { value: kit.logoOpacity })}</span>
+                           <span className="text-xs font-medium text-theme-muted">{t('brandKit.vectorOpacity')}</span>
+                           <span className="text-xs font-semibold text-primary tabular-nums">{t('brandKit.percentValue', { value: kit.logoOpacity })}</span>
                          </div>
                          <input type="range" min={20} max={100} step={5} value={kit.logoOpacity}
                            onChange={e => updateKit('logoOpacity', parseInt(e.target.value))}
@@ -301,8 +301,8 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
       {/* Auto-apply toggle */}
       <div className="flex items-center justify-between px-6 py-5 rounded-[2rem] bg-surface-page dark:bg-surface-950 border-2 border-surface-100 dark:border-surface-800">
         <div>
-          <p className="text-[11px] font-black text-surface-900 dark:text-white uppercase italic tracking-tight leading-none mb-1">{t('brandKit.autoApplyTitle')}</p>
-          <p className="text-[10px] font-bold text-surface-400 dark:text-slate-600 uppercase tracking-widest italic">{t('brandKit.autoApplyDesc')}</p>
+          <p className="text-sm font-semibold text-theme-primary mb-0.5">{t('brandKit.autoApplyTitle')}</p>
+          <p className="text-xs text-theme-muted">{t('brandKit.autoApplyDesc')}</p>
         </div>
         <label className="relative w-14 h-7 flex-shrink-0 cursor-pointer">
           <input
@@ -336,7 +336,7 @@ const BrandKit: React.FC<BrandKitProps> = ({ onApply, onSave, showToast = () => 
       </footer>
 
       {/* Footer Info */}
-      <p className="text-[10px] font-black text-surface-300 dark:text-slate-800 text-center uppercase tracking-[0.8em] italic">
+      <p className="text-xs text-theme-muted text-center">
         {t('brandKit.footerInfo')}
       </p>
     </div>

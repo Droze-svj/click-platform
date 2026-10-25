@@ -49,16 +49,16 @@ export default function ClickEmptyState({
       className={`flex flex-col items-center justify-center text-center py-16 px-6 ${className}`}
     >
       {icon && (
-        <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center mb-5 text-slate-400">
+        <div className="w-14 h-14 rounded-2xl ds-surface-subtle border border-subtle flex items-center justify-center mb-5 text-theme-muted">
           {icon}
         </div>
       )}
       {title && (
-        <h3 className="text-lg font-black italic tracking-tight text-white mb-2">
+        <h3 className="ds-text-h3 text-theme-primary mb-2">
           {title}
         </h3>
       )}
-      <p className="text-slate-400 text-sm max-w-md leading-relaxed">{copy}</p>
+      <p className="text-theme-muted text-sm max-w-md leading-relaxed">{copy}</p>
       {action && <div className="mt-6">{action}</div>}
     </div>
   )
