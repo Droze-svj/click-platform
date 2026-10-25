@@ -314,8 +314,18 @@ export default function SchedulerPage() {
       setForm({ platform: 'instagram', text: '', hashtags: '', scheduledTime: '', mediaUrl: '', accountId: null })
       setQueuedClipIds([])
       loadPosts()
-    } catch {
-      showToast(t('schedulerPage.toastScheduleFailed'), 'error')
+    } catch (err: any) {
+      // Say what's actually wrong. A missing connection used to show "Could
+      // not schedule that post. Try again." — retrying can never fix that.
+      const data = err?.response?.data || {}
+      if (data.code === 'PLATFORM_NOT_CONNECTED' || data.code === 'ACCOUNT_NOT_CONNECTED') {
+        const id = data.platform || form.platform
+        showToast(t('schedulerPage.noAccountConnected', { platform: PLATFORMS.find((x) => x.id === id)?.label || id }), 'error')
+      } else if (err?.response?.status >= 400 && err?.response?.status < 500) {
+        showToast(handleApiError(err) || t('schedulerPage.toastScheduleFailed'), 'error')
+      } else {
+        showToast(t('schedulerPage.toastScheduleFailed'), 'error')
+      }
     } finally {
       setTimeout(() => setScheduling(false), 800)
     }

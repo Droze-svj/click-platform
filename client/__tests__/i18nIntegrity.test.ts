@@ -65,7 +65,7 @@ describe('i18n integrity', () => {
 
   it('English copy has no CODE_STYLE tokens or sci-fi jargon', () => {
     const code = /\b[A-Za-z]{2,}(?:_[A-Za-z0-9]{2,})+\b|::/
-    const jargon = /\b(neural|quantum|lattice|resonance|synaptic|ledger|uplink|telemetry|swarm|sovereign|spectral|ascension|singularity)\b/i
+    const jargon = /\b(neural|quantum|lattice|resonance|synaptic|ledger|uplink|telemetry|swarm|sovereign|spectral|ascension|singularity|strata|logic seed|logic injection|injection active|vocal signature|creator nodes)\b/i
     // Real terms / raw values that legitimately contain these patterns.
     const allowed = new Set<string>([
       'roadmapPage.item_brandConsolidation_description', // quotes the old labels it removes
