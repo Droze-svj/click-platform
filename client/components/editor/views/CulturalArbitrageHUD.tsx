@@ -39,7 +39,7 @@ interface ResurrectionCandidate {
     signalStrength: number
 }
 
-const glassStyle = "backdrop-blur-3xl bg-white/[0.02] border border-white/5 shadow-2xl"
+const glassStyle = "backdrop-blur-3xl bg-white/[0.02] border border-subtle shadow-2xl"
 
 type ToastFn = (message: string, type?: 'success' | 'error' | 'info' | 'warning') => unknown
 
@@ -105,19 +105,19 @@ export const CulturalArbitrageHUD: React.FC<{ showToast?: ToastFn }> = ({ showTo
                     </div>
                     <div>
                         <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Cultural Arbitrage HUD</h4>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-violet-500/70">Trend Spotting & Content Resurrection</span>
+                        <span className="text-[9px] font-black text-theme-muted uppercase tracking-[0.4em] mt-1 block italic text-violet-500/70">Trend Spotting & Content Resurrection</span>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="px-5 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center gap-3">
+                    <div className="px-5 py-3 rounded-xl bg-white/5 border border-subtle flex items-center gap-3">
                         <Activity className="w-3 h-3 text-emerald-400" />
-                        <span className="text-[10px] font-black text-white uppercase italic tracking-widest leading-none">Live-Wire Engine Ingesting...</span>
+                        <span className="text-[10px] font-black text-theme-primary uppercase italic tracking-widest leading-none">Live-Wire Engine Ingesting...</span>
                     </div>
                     <button
                         type="button"
                         onClick={scanMarket}
-                        className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
+                        className="p-3 rounded-xl bg-white/5 border border-default text-theme-primary hover:bg-white/10 transition-all"
                     >
                         <Search className="w-4 h-4" />
                     </button>
@@ -132,8 +132,8 @@ export const CulturalArbitrageHUD: React.FC<{ showToast?: ToastFn }> = ({ showTo
                     <div className={`${glassStyle} rounded-[2.5rem] p-10 relative overflow-hidden h-full`}>
                         <div className="flex items-center justify-between mb-10">
                             <div>
-                                <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Market Signals</h5>
-                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2">Emergent Trends Detected</p>
+                                <h5 className="text-xl font-black text-theme-primary italic tracking-tighter uppercase leading-none">Market Signals</h5>
+                                <p className="text-[9px] font-black text-theme-muted uppercase tracking-widest mt-2">Emergent Trends Detected</p>
                             </div>
                             <TrendingUp className="w-5 h-5 text-violet-400" />
                         </div>
@@ -152,14 +152,14 @@ export const CulturalArbitrageHUD: React.FC<{ showToast?: ToastFn }> = ({ showTo
                                         initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: i * 0.1 }}
-                                        className="p-6 rounded-3xl bg-white/5 border border-white/5 group hover:border-violet-500/30 transition-all relative overflow-hidden"
+                                        className="p-6 rounded-3xl bg-white/5 border border-subtle group hover:border-violet-500/30 transition-all relative overflow-hidden"
                                     >
                                         <div className="flex items-center justify-between mb-4 relative z-10">
                                             <div className="flex items-center gap-4">
                                                 <div className="px-3 py-1 rounded-lg bg-violet-500/10 text-violet-400">
                                                     <span className="text-[9px] font-black uppercase italic">{signal.niche}</span>
                                                 </div>
-                                                <h6 className="text-lg font-black text-white italic tracking-tight uppercase">{signal.keyword}</h6>
+                                                <h6 className="text-lg font-black text-theme-primary italic tracking-tight uppercase">{signal.keyword}</h6>
                                             </div>
                                             <div className="flex items-center gap-2 text-emerald-400">
                                                 <ArrowUpRight className="w-4 h-4" />
@@ -168,7 +168,7 @@ export const CulturalArbitrageHUD: React.FC<{ showToast?: ToastFn }> = ({ showTo
                                         </div>
 
                                         <div className="space-y-2 relative z-10">
-                                            <div className="flex justify-between text-[8px] font-black text-slate-500 uppercase tracking-widest">
+                                            <div className="flex justify-between text-[8px] font-black text-theme-muted uppercase tracking-widest">
                                                 <span>Velocity Index</span>
                                                 <span>Breakout Threshold: {(signal.threshold * 100).toFixed(0)}%</span>
                                             </div>
@@ -197,8 +197,8 @@ export const CulturalArbitrageHUD: React.FC<{ showToast?: ToastFn }> = ({ showTo
                     <div className={`${glassStyle} rounded-[2.5rem] p-10 relative overflow-hidden h-full`}>
                         <div className="flex items-center justify-between mb-10">
                             <div>
-                                <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Resurrection Queue</h5>
-                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2">Legacy Assets Ready for Deployment</p>
+                                <h5 className="text-xl font-black text-theme-primary italic tracking-tighter uppercase leading-none">Resurrection Queue</h5>
+                                <p className="text-[9px] font-black text-theme-muted uppercase tracking-widest mt-2">Legacy Assets Ready for Deployment</p>
                             </div>
                             <div className="flex items-center gap-4">
                                 <span className="px-4 py-2 rounded-xl bg-amber-500/10 text-amber-500 text-[10px] font-black italic tracking-widest uppercase">CAP: 2 DAILY</span>
@@ -212,14 +212,14 @@ export const CulturalArbitrageHUD: React.FC<{ showToast?: ToastFn }> = ({ showTo
                                     <div key={i} className="h-64 bg-white/5 animate-pulse rounded-3xl" />
                                 ))
                             ) : candidates.length === 0 ? (
-                                <p className="md:col-span-2 text-xs font-bold text-slate-500">{t('editorPanels.culturalArbitrage.noCandidates')}</p>
+                                <p className="md:col-span-2 text-xs font-bold text-theme-muted">{t('editorPanels.culturalArbitrage.noCandidates')}</p>
                             ) : candidates.map((asset, i) => (
                                 <m.div 
                                     key={i}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: i * 0.1 }}
-                                    className="p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/10 flex flex-col justify-between hover:bg-white/[0.05] transition-all relative group"
+                                    className="p-8 rounded-[2.5rem] bg-white/[0.03] border border-default flex flex-col justify-between hover:bg-white/[0.05] transition-all relative group"
                                 >
                                     <div className="space-y-6">
                                         <div className="flex items-center justify-between">
@@ -227,26 +227,26 @@ export const CulturalArbitrageHUD: React.FC<{ showToast?: ToastFn }> = ({ showTo
                                                 <History className="w-4 h-4" />
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Momentum</span>
+                                                <span className="text-[9px] font-black text-theme-muted uppercase tracking-widest">Momentum</span>
                                                 <p className="text-xs font-black text-emerald-400 italic">{(asset.historicalViews / 1000).toFixed(1)}K VIEWS</p>
                                             </div>
                                         </div>
 
                                         <div>
-                                            <h6 className="text-lg font-black text-white italic tracking-tight uppercase leading-none">{asset.title}</h6>
-                                            <span className="text-[9px] font-bold text-slate-500 uppercase italic mt-2 block tracking-widest leading-none opacity-60">Posted {asset.ageInDays} days ago</span>
+                                            <h6 className="text-lg font-black text-theme-primary italic tracking-tight uppercase leading-none">{asset.title}</h6>
+                                            <span className="text-[9px] font-bold text-theme-muted uppercase italic mt-2 block tracking-widest leading-none opacity-60">Posted {asset.ageInDays} days ago</span>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                                                <span className="text-[8px] font-black text-slate-500 uppercase block mb-1">Signal</span>
+                                            <div className="p-4 rounded-2xl bg-white/5 border border-subtle">
+                                                <span className="text-[8px] font-black text-theme-muted uppercase block mb-1">Signal</span>
                                                 <div className="flex items-center gap-2 text-amber-400">
                                                     <Flame className="w-3 h-3" />
                                                     <span className="text-[10px] font-black italic italic">{asset.signalStrength}/100</span>
                                                 </div>
                                             </div>
-                                            <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                                                <span className="text-[8px] font-black text-slate-500 uppercase block mb-1">Status</span>
+                                            <div className="p-4 rounded-2xl bg-white/5 border border-subtle">
+                                                <span className="text-[8px] font-black text-theme-muted uppercase block mb-1">Status</span>
                                                 <div className="flex items-center gap-2 text-emerald-400">
                                                     <CheckCircle className="w-3 h-3" />
                                                     <span className="text-[10px] font-black italic tracking-widest">READY</span>
@@ -261,7 +261,7 @@ export const CulturalArbitrageHUD: React.FC<{ showToast?: ToastFn }> = ({ showTo
                                         disabled={resurrecting === asset.originalPostId}
                                         className={`w-full py-4 mt-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] italic shadow-xl transition-all flex items-center justify-center gap-4 ${
                                             resurrecting === asset.originalPostId 
-                                                ? 'bg-slate-800 text-slate-500' 
+                                                ? 'bg-slate-800 text-theme-muted' 
                                                 : 'bg-white text-black hover:bg-violet-500 hover:text-white'
                                         }`}
                                     >
@@ -288,29 +288,29 @@ export const CulturalArbitrageHUD: React.FC<{ showToast?: ToastFn }> = ({ showTo
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className={`${glassStyle} p-8 rounded-3xl flex items-center gap-6`}>
                     <div className="p-3 rounded-2xl bg-violet-600 shadow-lg shadow-violet-600/30">
-                        <Database className="w-5 h-5 text-white" />
+                        <Database className="w-5 h-5 text-theme-primary" />
                     </div>
                     <div>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Data Synthesis</span>
-                        <h6 className="text-[10px] font-black text-white italic uppercase tracking-widest leading-none mt-1">Cross-Network Ingestion Active</h6>
+                        <span className="text-[9px] font-black text-theme-muted uppercase tracking-widest block">Data Synthesis</span>
+                        <h6 className="text-[10px] font-black text-theme-primary italic uppercase tracking-widest leading-none mt-1">Cross-Network Ingestion Active</h6>
                     </div>
                 </div>
                 <div className={`${glassStyle} p-8 rounded-3xl flex items-center gap-6`}>
                     <div className="p-3 rounded-2xl bg-amber-500 shadow-lg shadow-amber-500/30">
-                        <Timer className="w-5 h-5 text-white" />
+                        <Timer className="w-5 h-5 text-theme-primary" />
                     </div>
                     <div>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Cycle Status</span>
-                        <h6 className="text-[10px] font-black text-white italic uppercase tracking-widest leading-none mt-1">Daily Cap: {2 - candidates.length > 0 ? 0 : 0}/2 Remaining</h6>
+                        <span className="text-[9px] font-black text-theme-muted uppercase tracking-widest block">Cycle Status</span>
+                        <h6 className="text-[10px] font-black text-theme-primary italic uppercase tracking-widest leading-none mt-1">Daily Cap: {2 - candidates.length > 0 ? 0 : 0}/2 Remaining</h6>
                     </div>
                 </div>
                 <div className={`${glassStyle} p-8 rounded-3xl flex items-center gap-6`}>
                     <div className="p-3 rounded-2xl bg-blue-500 shadow-lg shadow-blue-500/30">
-                        <Target className="w-5 h-5 text-white" />
+                        <Target className="w-5 h-5 text-theme-primary" />
                     </div>
                     <div>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Niche Positioning</span>
-                        <h6 className="text-[10px] font-black text-white italic uppercase tracking-widest leading-none mt-1">Top Alignment: Agentic SaaS</h6>
+                        <span className="text-[9px] font-black text-theme-muted uppercase tracking-widest block">Niche Positioning</span>
+                        <h6 className="text-[10px] font-black text-theme-primary italic uppercase tracking-widest leading-none mt-1">Top Alignment: Agentic SaaS</h6>
                     </div>
                 </div>
             </div>

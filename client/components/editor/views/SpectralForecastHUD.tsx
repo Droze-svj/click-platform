@@ -36,7 +36,7 @@ interface SpectralAnalysis {
   }
 }
 
-const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
+const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-default shadow-2xl"
 
 // The server sends CRITICAL_MARKDOWN / GROWTH_RESONANCE / STABLE_NOISE.
 const stateKey = (state: string) => String(state || '').split('_')[0]
@@ -98,7 +98,7 @@ export const SpectralForecastHUD: React.FC = () => {
                     </div>
                     <div>
                         <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Revenue Forecast</h4>
-                        <span className="text-[10px] font-bold text-slate-500 mt-1 block">Projected revenue for the next 7 days, based on your past revenue.</span>
+                        <span className="text-[10px] font-bold text-theme-muted mt-1 block">Projected revenue for the next 7 days, based on your past revenue.</span>
                     </div>
                 </div>
 
@@ -114,7 +114,7 @@ export const SpectralForecastHUD: React.FC = () => {
                         onClick={fetchForecast}
                         disabled={loading}
                         aria-label="Refresh forecast"
-                        className="p-4 rounded-xl bg-white/5 border border-white/5 text-white hover:bg-white/10 transition-all"
+                        className="p-4 rounded-xl bg-white/5 border border-subtle text-theme-primary hover:bg-white/10 transition-all"
                     >
                         <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
                     </button>
@@ -131,7 +131,7 @@ export const SpectralForecastHUD: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-4`}>
                     <div className="flex items-center justify-between">
-                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Projected revenue (7 days)</span>
+                         <span className="text-[9px] font-black text-theme-muted uppercase tracking-widest leading-none">Projected revenue (7 days)</span>
                          <DollarSign className="w-4 h-4 text-emerald-400" aria-hidden="true" />
                     </div>
                     <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter leading-none">
@@ -141,7 +141,7 @@ export const SpectralForecastHUD: React.FC = () => {
 
                 <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-4`}>
                     <div className="flex items-center justify-between">
-                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Projected sales</span>
+                         <span className="text-[9px] font-black text-theme-muted uppercase tracking-widest leading-none">Projected sales</span>
                          <Target className="w-4 h-4 text-blue-400" aria-hidden="true" />
                     </div>
                     <h3 className="text-4xl font-black text-[var(--text-main)] italic tracking-tighter leading-none">
@@ -151,11 +151,11 @@ export const SpectralForecastHUD: React.FC = () => {
 
                 <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-4`}>
                     <div className="flex items-center justify-between">
-                         <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Audience mood change</span>
+                         <span className="text-[9px] font-black text-theme-muted uppercase tracking-widest leading-none">Audience mood change</span>
                          <Activity className="w-4 h-4 text-amber-400" aria-hidden="true" />
                     </div>
                     <h3 className={`text-4xl font-black italic tracking-tighter leading-none ${
-                        drift === null ? 'text-slate-500' : drift < 0 ? 'text-rose-400' : 'text-emerald-400'
+                        drift === null ? 'text-theme-muted' : drift < 0 ? 'text-rose-400' : 'text-emerald-400'
                     }`}>
                         {drift === null ? '—' : `${drift > 0 ? '+' : ''}${(drift * 100).toFixed(1)}%`}
                     </h3>
@@ -166,12 +166,12 @@ export const SpectralForecastHUD: React.FC = () => {
             {/* Daily projection */}
             <div className={`${glassStyle} rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden`}>
                 <div>
-                    <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Day by day</h5>
-                    <span className="text-[10px] font-bold text-slate-500 mt-1 block">Hover a bar to see the projected revenue for that day.</span>
+                    <h5 className="text-xl font-black text-theme-primary italic tracking-tighter uppercase leading-none">Day by day</h5>
+                    <span className="text-[10px] font-bold text-theme-muted mt-1 block">Hover a bar to see the projected revenue for that day.</span>
                 </div>
 
                 {!hasRevenue ? (
-                    <p className="py-12 text-center text-sm text-slate-500">
+                    <p className="py-12 text-center text-sm text-theme-muted">
                         {loading ? 'Loading…' : 'Not enough revenue history yet to project the next 7 days.'}
                     </p>
                 ) : (
@@ -187,12 +187,12 @@ export const SpectralForecastHUD: React.FC = () => {
                                         className="w-full rounded-t-2xl relative bg-blue-600 group-hover/bar:brightness-110"
                                     >
                                         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full pb-2 opacity-0 group-hover/bar:opacity-100 transition-opacity">
-                                            <span className="text-[9px] font-black text-white bg-black/80 px-2 py-1 rounded-md border border-white/10 whitespace-nowrap">
+                                            <span className="text-[9px] font-black text-theme-primary bg-black/80 px-2 py-1 rounded-md border border-default whitespace-nowrap">
                                                 ${Number(day.revenue || 0).toLocaleString()}
                                             </span>
                                         </div>
                                     </m.div>
-                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">
+                                    <span className="text-[9px] font-black text-theme-muted uppercase tracking-tighter">
                                         {day.date ? new Date(day.date).toLocaleDateString(undefined, { weekday: 'short' }) : `Day ${i + 1}`}
                                     </span>
                                 </div>

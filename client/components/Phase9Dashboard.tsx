@@ -10,7 +10,7 @@ import { apiGet, apiPost } from '../lib/api'
 import { useToast } from '../contexts/ToastContext'
 import { useTranslation } from '@/hooks/useTranslation'
 
-const glass = 'backdrop-blur-2xl bg-white/[0.03] border border-white/10 rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.5)]'
+const glass = 'backdrop-blur-2xl bg-white/[0.03] border border-default rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.5)]'
 const pill = 'px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] border'
 
 // ─── Section Header ────────────────────────────────────────────────────────
@@ -32,7 +32,7 @@ const SectionHeader = ({ icon: Icon, title, subtitle, color = 'indigo', badge }:
         </div>
         <div>
           <h3 className="text-2xl font-black text-[var(--text-main)] italic uppercase tracking-tight">{title}</h3>
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{subtitle}</p>
+          <p className="text-[10px] font-bold text-theme-muted uppercase tracking-widest mt-0.5">{subtitle}</p>
         </div>
       </div>
       {badge && (
@@ -85,7 +85,7 @@ const NeuralBroadcasterPanel = () => {
       <SectionHeader icon={Radio} title={t('phase9Dashboard.neuralBroadcasterTitle')} subtitle={t('phase9Dashboard.neuralBroadcasterSubtitle')} color="cyan" badge={t('phase9Dashboard.zeroClickBadge')} />
 
       <div className="p-6 rounded-2xl bg-cyan-500/5 border border-cyan-500/15">
-        <p className="text-xs text-slate-400 leading-relaxed italic">
+        <p className="text-xs text-theme-secondary leading-relaxed italic">
           <span className="text-cyan-400 font-black not-italic">{t('phase9Dashboard.howItWorks')}</span> {t('phase9Dashboard.neuralBroadcasterDescription')}
         </p>
       </div>
@@ -99,13 +99,13 @@ const NeuralBroadcasterPanel = () => {
       <AnimatePresence>
         {pipeline && (
           <m.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 mt-6">
-            <div className="flex justify-between items-center p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+            <div className="flex justify-between items-center p-4 rounded-xl border border-subtle bg-white/[0.02]">
               <div>
-                <p className="text-sm font-black text-white">{t('phase9Dashboard.algorithmicLaunchWindow')}</p>
+                <p className="text-sm font-black text-theme-primary">{t('phase9Dashboard.algorithmicLaunchWindow')}</p>
                 <p className="text-[10px] font-mono text-cyan-400">{new Date(pipeline.timingLogic.scheduledTime).toLocaleString()}</p>
               </div>
               <div className="text-right">
-                <p className="text-xs font-bold text-slate-400">{t('phase9Dashboard.velocityPropensity')}</p>
+                <p className="text-xs font-bold text-theme-secondary">{t('phase9Dashboard.velocityPropensity')}</p>
                 <p className="text-xl font-black text-emerald-400">{(pipeline.timingLogic.predictedVelocity * 100).toFixed(1)}%</p>
               </div>
             </div>
@@ -166,7 +166,7 @@ const FederatedSwarmPanel = () => {
       <SectionHeader icon={Share2} title={t('phase9Dashboard.federatedSwarmTitle')} subtitle={t('phase9Dashboard.federatedSwarmSubtitle')} color="purple" badge={t('phase9Dashboard.decentralizedBadge')} />
 
       <div className="p-6 rounded-2xl bg-purple-500/5 border border-purple-500/15">
-        <p className="text-xs text-slate-400 leading-relaxed italic">
+        <p className="text-xs text-theme-secondary leading-relaxed italic">
           <span className="text-purple-400 font-black not-italic">{t('phase9Dashboard.theCollective')}</span> {t('phase9Dashboard.federatedSwarmDescription', { nodes: swarmState ? swarmState.activeNodes : '---' })}
         </p>
       </div>
@@ -185,19 +185,19 @@ const FederatedSwarmPanel = () => {
       <AnimatePresence>
         {swarmState && (
           <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-6">{t('phase9Dashboard.trendingSignals')}</p>
+            <p className="text-[10px] font-black text-theme-muted uppercase tracking-widest mt-6">{t('phase9Dashboard.trendingSignals')}</p>
             <div className="grid gap-3">
               {swarmState.trendingSignals?.map((sig: any, i: number) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-subtle bg-white/[0.02]">
                   <div>
-                    <p className="text-sm font-black text-white">{sig.tactic.replace('_', ' ')}</p>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase mt-1">{sig.platform.replace('_', ' ')}</p>
+                    <p className="text-sm font-black text-theme-primary">{sig.tactic.replace('_', ' ')}</p>
+                    <p className="text-[9px] font-bold text-theme-muted uppercase mt-1">{sig.platform.replace('_', ' ')}</p>
                   </div>
                   <div className="text-right">
-                    <p className={`text-xs font-black ${sig.status === 'DOMINANT' ? 'text-indigo-400' : sig.status === 'RISING' ? 'text-emerald-400' : 'text-slate-400'}`}>
+                    <p className={`text-xs font-black ${sig.status === 'DOMINANT' ? 'text-indigo-400' : sig.status === 'RISING' ? 'text-emerald-400' : 'text-theme-secondary'}`}>
                       {sig.status}
                     </p>
-                    <p className="text-[10px] font-mono text-slate-400 mt-1">v.{sig.viralScore}</p>
+                    <p className="text-[10px] font-mono text-theme-secondary mt-1">v.{sig.viralScore}</p>
                   </div>
                 </div>
               ))}
@@ -260,7 +260,7 @@ const AutonomicCMPaPanel = () => {
       <SectionHeader icon={MessageSquare} title={t('phase9Dashboard.autonomicCommunityTitle')} subtitle={t('phase9Dashboard.autonomicCommunitySubtitle')} color="emerald" badge={t('phase9Dashboard.algorithmBoostBadge')} />
 
       <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/15">
-        <p className="text-xs text-slate-400 leading-relaxed italic">
+        <p className="text-xs text-theme-secondary leading-relaxed italic">
           <span className="text-emerald-400 font-black not-italic">{t('phase9Dashboard.omnipresenceLogic')}</span> {t('phase9Dashboard.autonomicCommunityDescription')}
         </p>
       </div>
@@ -282,20 +282,20 @@ const AutonomicCMPaPanel = () => {
       <AnimatePresence>
         {running && telemetry && (
           <m.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-3 gap-6 pt-4">
-            <div className="p-6 rounded-3xl border border-white/5 bg-white/[0.02] text-center">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{t('phase9Dashboard.sentiment')}</p>
-              <p className="text-2xl font-black text-white italic">{(telemetry.avgSentiment * 100).toFixed(0)}%</p>
+            <div className="p-6 rounded-3xl border border-subtle bg-white/[0.02] text-center">
+              <p className="text-[10px] font-black text-theme-muted uppercase tracking-widest mb-1">{t('phase9Dashboard.sentiment')}</p>
+              <p className="text-2xl font-black text-theme-primary italic">{(telemetry.avgSentiment * 100).toFixed(0)}%</p>
               <p className="text-[8px] font-bold text-emerald-500 uppercase mt-1">{t('phase9Dashboard.positiveShift')}</p>
             </div>
-            <div className="p-6 rounded-3xl border border-white/5 bg-white/[0.02] text-center">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{t('phase9Dashboard.engagedTracker')}</p>
-              <p className="text-2xl font-black text-white italic">{telemetry.engagementCount}</p>
-              <p className="text-[8px] font-bold text-slate-500 uppercase mt-1">{t('phase9Dashboard.totalActions')}</p>
+            <div className="p-6 rounded-3xl border border-subtle bg-white/[0.02] text-center">
+              <p className="text-[10px] font-black text-theme-muted uppercase tracking-widest mb-1">{t('phase9Dashboard.engagedTracker')}</p>
+              <p className="text-2xl font-black text-theme-primary italic">{telemetry.engagementCount}</p>
+              <p className="text-[8px] font-bold text-theme-muted uppercase mt-1">{t('phase9Dashboard.totalActions')}</p>
             </div>
-            <div className="p-6 rounded-3xl border border-white/5 bg-white/[0.02] text-center">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{t('phase9Dashboard.swarms')}</p>
-              <p className="text-2xl font-black text-white italic">{telemetry.activeSwarms}</p>
-              <p className="text-[8px] font-bold text-slate-500 uppercase mt-1">{t('phase9Dashboard.activeNodes')}</p>
+            <div className="p-6 rounded-3xl border border-subtle bg-white/[0.02] text-center">
+              <p className="text-[10px] font-black text-theme-muted uppercase tracking-widest mb-1">{t('phase9Dashboard.swarms')}</p>
+              <p className="text-2xl font-black text-theme-primary italic">{telemetry.activeSwarms}</p>
+              <p className="text-[8px] font-bold text-theme-muted uppercase mt-1">{t('phase9Dashboard.activeNodes')}</p>
             </div>
           </m.div>
         )}
@@ -325,7 +325,7 @@ const OracleSandboxPanel = () => {
       <SectionHeader icon={Orbit} title={t('phase9Dashboard.oracleSandboxTitle')} subtitle={t('phase9Dashboard.oracleSandboxSubtitle')} color="amber" badge={t('phase9Dashboard.winnerTakesAllBadge')} />
 
       <div className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/15">
-        <p className="text-xs text-slate-400 leading-relaxed italic">
+        <p className="text-xs text-theme-secondary leading-relaxed italic">
           <span className="text-amber-400 font-black not-italic">{t('phase9Dashboard.theStrategy')}</span> {t('phase9Dashboard.oracleSandboxDescription')}
         </p>
       </div>
@@ -356,8 +356,8 @@ export default function Phase9Dashboard() {
       {/* Header */}
       <div className="border-b border-white/[0.05] pb-12">
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 rounded-[2rem] bg-gradient-to-br from-cyan-500/20 via-purple-500/10 to-indigo-500/10 border border-white/10 flex items-center justify-center">
-            <Globe className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 rounded-[2rem] bg-gradient-to-br from-cyan-500/20 via-purple-500/10 to-indigo-500/10 border border-default flex items-center justify-center">
+            <Globe className="w-8 h-8 text-theme-primary" />
           </div>
           <div>
             <div className="flex items-center gap-3 mb-2">
@@ -365,7 +365,7 @@ export default function Phase9Dashboard() {
               <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
             </div>
             <h1 className="text-5xl font-black text-[var(--text-main)] italic uppercase tracking-tighter leading-none">{t('phase9Dashboard.headerTitle')}</h1>
-            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-2">{t('phase9Dashboard.headerSubtitle')}</p>
+            <p className="text-theme-muted text-xs font-bold uppercase tracking-widest mt-2">{t('phase9Dashboard.headerSubtitle')}</p>
           </div>
         </div>
 
@@ -373,7 +373,7 @@ export default function Phase9Dashboard() {
         <div className="flex flex-wrap gap-3 pt-6">
           {SECTIONS.map(s => (
             <button type="button" key={s.id} onClick={() => setActiveSection(s.id)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all ${activeSection === s.id ? 'bg-white text-black' : 'bg-white/[0.02] border border-white/10 text-slate-400 hover:text-white'}`}>
+              className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all ${activeSection === s.id ? 'bg-white text-black' : 'bg-white/[0.02] border border-default text-theme-secondary hover:text-white'}`}>
               <s.icon className="w-3.5 h-3.5" />{s.label}
             </button>
           ))}

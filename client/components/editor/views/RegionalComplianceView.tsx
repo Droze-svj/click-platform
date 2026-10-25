@@ -25,7 +25,7 @@ interface ComparisonResult {
     requiresHumanOverride?: boolean
 }
 
-const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-white/10 shadow-2xl"
+const glassStyle = "backdrop-blur-3xl bg-white/[0.03] border border-default shadow-2xl"
 
 const STATUS_LABELS: Record<string, string> = {
     PASS: 'Looks fine',
@@ -81,7 +81,7 @@ export const RegionalComplianceView: React.FC = () => {
             case 'PASS': return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
             case 'CAUTION': return 'text-amber-400 bg-amber-500/10 border-amber-500/20'
             case 'ALERT': return 'text-rose-400 bg-rose-500/10 border-rose-500/20'
-            default: return 'text-slate-400 bg-slate-500/10 border-slate-500/20'
+            default: return 'text-theme-secondary bg-slate-500/10 border-slate-500/20'
         }
     }
 
@@ -97,7 +97,7 @@ export const RegionalComplianceView: React.FC = () => {
                 </div>
                 <div>
                     <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Regional check</h4>
-                    <span className="text-[11px] font-bold text-slate-500 mt-1 block">An AI review of your script for local rules, cultural issues and words platforms tend to limit.</span>
+                    <span className="text-[11px] font-bold text-theme-muted mt-1 block">An AI review of your script for local rules, cultural issues and words platforms tend to limit.</span>
                 </div>
             </div>
 
@@ -107,18 +107,18 @@ export const RegionalComplianceView: React.FC = () => {
                 {/* Left: Input */}
                 <div className={`${glassStyle} rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden`}>
                     <div className="flex items-center justify-between relative z-10">
-                        <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">What to check</h5>
+                        <h5 className="text-xl font-black text-theme-primary italic tracking-tighter uppercase leading-none">What to check</h5>
                         <Map className="w-5 h-5 text-amber-400" aria-hidden="true" />
                     </div>
 
                     <div className="space-y-6 relative z-10">
                         <div className="space-y-3">
-                            <label htmlFor="compliance-region" className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-2">Region</label>
+                            <label htmlFor="compliance-region" className="text-[10px] font-black text-theme-muted uppercase tracking-widest block ml-2">Region</label>
                             <select
                                 id="compliance-region"
                                 value={auditInput.region}
                                 onChange={(e) => setAuditInput({...auditInput, region: e.target.value})}
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white font-black italic uppercase tracking-tighter focus:ring-2 focus:ring-amber-500 outline-none transition-all"
+                                className="w-full bg-white/5 border border-default rounded-2xl p-4 text-theme-primary font-black italic uppercase tracking-tighter focus:ring-2 focus:ring-amber-500 outline-none transition-all"
                             >
                                 <option value="Middle East">Middle East</option>
                                 <option value="East Asia">East Asia</option>
@@ -129,12 +129,12 @@ export const RegionalComplianceView: React.FC = () => {
                         </div>
 
                         <div className="space-y-3">
-                            <label htmlFor="compliance-transcript" className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-2">Script or transcript</label>
+                            <label htmlFor="compliance-transcript" className="text-[10px] font-black text-theme-muted uppercase tracking-widest block ml-2">Script or transcript</label>
                             <textarea
                                 id="compliance-transcript"
                                 value={auditInput.transcript}
                                 onChange={(e) => setAuditInput({...auditInput, transcript: e.target.value})}
-                                className="w-full h-40 bg-white/5 border border-white/10 rounded-2xl p-6 text-slate-300 font-bold italic text-xs leading-relaxed focus:ring-2 focus:ring-amber-500 outline-none transition-all resize-none"
+                                className="w-full h-40 bg-white/5 border border-default rounded-2xl p-6 text-theme-secondary font-bold italic text-xs leading-relaxed focus:ring-2 focus:ring-amber-500 outline-none transition-all resize-none"
                                 placeholder="Paste what you say in the video…"
                             />
                         </div>
@@ -145,7 +145,7 @@ export const RegionalComplianceView: React.FC = () => {
                             disabled={loading}
                             aria-busy={loading}
                             className={`w-full py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] italic shadow-2xl transition-all ${
-                                loading ? 'bg-slate-800 text-slate-400' : 'bg-amber-500 hover:bg-amber-400 text-white'
+                                loading ? 'bg-slate-800 text-theme-secondary' : 'bg-amber-500 hover:bg-amber-400 text-white'
                             }`}
                         >
                             {loading ? 'Checking…' : 'Run check'}
@@ -197,14 +197,14 @@ export const RegionalComplianceView: React.FC = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-6`}>
                                         <div className="flex items-center justify-between">
-                                            <h6 className="text-[10px] font-black text-white uppercase tracking-widest italic">Issues found</h6>
+                                            <h6 className="text-[10px] font-black text-theme-primary uppercase tracking-widest italic">Issues found</h6>
                                             <AlertTriangle className="w-4 h-4 text-amber-500" aria-hidden="true" />
                                         </div>
                                         <div className="space-y-4">
                                             {issues.length > 0 ? issues.map((issue, i) => (
-                                                <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/5">
+                                                <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-subtle">
                                                     <Flag className="w-3 h-3 text-rose-400 mt-1 shrink-0" aria-hidden="true" />
-                                                    <span className="text-[11px] font-bold text-slate-300 italic leading-snug">{issue}</span>
+                                                    <span className="text-[11px] font-bold text-theme-secondary italic leading-snug">{issue}</span>
                                                 </div>
                                             )) : (
                                                 <div className="flex items-center gap-4 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
@@ -217,19 +217,19 @@ export const RegionalComplianceView: React.FC = () => {
 
                                     <div className={`${glassStyle} rounded-[2.5rem] p-8 space-y-6`}>
                                         <div className="flex items-center justify-between">
-                                            <h6 className="text-[10px] font-black text-white uppercase tracking-widest italic">Reach-limit risk</h6>
+                                            <h6 className="text-[10px] font-black text-theme-primary uppercase tracking-widest italic">Reach-limit risk</h6>
                                             <Zap className="w-4 h-4 text-violet-500" aria-hidden="true" />
                                         </div>
                                         <div className="space-y-4">
                                             {risks.length > 0 ? risks.map(([platform, risk]) => (
-                                                <div key={platform} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
-                                                    <span className="text-[10px] font-black text-white uppercase italic">{platform}</span>
+                                                <div key={platform} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-subtle">
+                                                    <span className="text-[10px] font-black text-theme-primary uppercase italic">{platform}</span>
                                                     <span className={`text-[10px] font-black uppercase italic ${
                                                         String(risk).toUpperCase() === 'HIGH' ? 'text-rose-400' : String(risk).toUpperCase() === 'MEDIUM' ? 'text-amber-400' : 'text-emerald-400'
                                                     }`}>{String(risk)}</span>
                                                 </div>
                                             )) : (
-                                                <span className="text-[11px] font-bold text-slate-500 italic px-4 block">No per-platform risk returned.</span>
+                                                <span className="text-[11px] font-bold text-theme-muted italic px-4 block">No per-platform risk returned.</span>
                                             )}
                                         </div>
                                     </div>
@@ -240,13 +240,13 @@ export const RegionalComplianceView: React.FC = () => {
                                     <div className={`${glassStyle} rounded-[2.5rem] p-10 space-y-6`}>
                                         <div className="flex items-center gap-4">
                                             <Info className="w-5 h-5 text-blue-400" aria-hidden="true" />
-                                            <h6 className="text-sm font-black text-white uppercase italic tracking-tighter">Why</h6>
+                                            <h6 className="text-sm font-black text-theme-primary uppercase italic tracking-tighter">Why</h6>
                                         </div>
-                                        <p className="text-[12px] font-bold text-slate-300 leading-relaxed italic border-l-2 border-amber-500/30 pl-6">
+                                        <p className="text-[12px] font-bold text-theme-secondary leading-relaxed italic border-l-2 border-amber-500/30 pl-6">
                                             {result.justification}
                                         </p>
                                         {result.requiresHumanOverride && (
-                                            <p className="pt-4 flex items-center gap-3 text-amber-400 border-t border-white/5 text-[11px] font-black uppercase italic">
+                                            <p className="pt-4 flex items-center gap-3 text-amber-400 border-t border-subtle text-[11px] font-black uppercase italic">
                                                 <ShieldAlert className="w-4 h-4 shrink-0" aria-hidden="true" />
                                                 Review this before you post. This is advice only and nothing has been blocked.
                                             </p>

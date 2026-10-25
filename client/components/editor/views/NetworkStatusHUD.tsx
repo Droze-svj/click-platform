@@ -36,7 +36,7 @@ interface NetworkHealth {
     quotas: Quota[]
 }
 
-const glassStyle = "backdrop-blur-3xl bg-white/[0.02] border border-white/5 shadow-2xl"
+const glassStyle = "backdrop-blur-3xl bg-white/[0.02] border border-subtle shadow-2xl"
 
 export const NetworkStatusHUD: React.FC = () => {
     const [health, setHealth] = useState<NetworkHealth | null>(null)
@@ -65,7 +65,7 @@ export const NetworkStatusHUD: React.FC = () => {
             case 'warning': return 'text-amber-400'
             case 'expired': return 'text-rose-400'
             case 'error': return 'text-rose-500'
-            default: return 'text-slate-500'
+            default: return 'text-theme-muted'
         }
     }
 
@@ -75,7 +75,7 @@ export const NetworkStatusHUD: React.FC = () => {
             case 'warning': return <AlertTriangle className="w-4 h-4 text-amber-400" />
             case 'expired': return <Key className="w-4 h-4 text-rose-400" />
             case 'error': return <Activity className="w-4 h-4 text-rose-500" />
-            default: return <RefreshCcw className="w-4 h-4 text-slate-500" />
+            default: return <RefreshCcw className="w-4 h-4 text-theme-muted" />
         }
     }
 
@@ -89,14 +89,14 @@ export const NetworkStatusHUD: React.FC = () => {
                     </div>
                     <div>
                         <h4 className="text-2xl font-black text-[var(--text-main)] italic tracking-tighter leading-none uppercase">Connection health</h4>
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mt-1 block italic text-emerald-500/70">Your connected platforms and API limits</span>
+                        <span className="text-[9px] font-black text-theme-muted uppercase tracking-[0.4em] mt-1 block italic text-emerald-500/70">Your connected platforms and API limits</span>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="px-5 py-3 rounded-xl bg-white/5 border border-white/5 flex items-center gap-3">
+                    <div className="px-5 py-3 rounded-xl bg-white/5 border border-subtle flex items-center gap-3">
                         <Activity className={`w-3 h-3 ${health?.status === 'operational' ? 'text-emerald-400' : 'text-rose-400'}`} />
-                        <span className="text-[10px] font-black text-white uppercase italic tracking-widest leading-none">
+                        <span className="text-[10px] font-black text-theme-primary uppercase italic tracking-widest leading-none">
                             {health?.status === 'operational' ? 'All connections working' : 'Some connections need attention'}
                         </span>
                     </div>
@@ -105,7 +105,7 @@ export const NetworkStatusHUD: React.FC = () => {
                         aria-label="Check connections"
                         onClick={auditNetwork}
                         disabled={auditing}
-                        className={`p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all ${auditing ? 'animate-spin' : ''}`}
+                        className={`p-3 rounded-xl bg-white/5 border border-default text-theme-primary hover:bg-white/10 transition-all ${auditing ? 'animate-spin' : ''}`}
                     >
                         <RefreshCcw className="w-4 h-4" />
                     </button>
@@ -120,8 +120,8 @@ export const NetworkStatusHUD: React.FC = () => {
                     <div className={`${glassStyle} rounded-[2.5rem] p-10 relative overflow-hidden h-full`}>
                         <div className="flex items-center justify-between mb-10">
                             <div>
-                                <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Connected platforms</h5>
-                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2">Account connection status</p>
+                                <h5 className="text-xl font-black text-theme-primary italic tracking-tighter uppercase leading-none">Connected platforms</h5>
+                                <p className="text-[9px] font-black text-theme-muted uppercase tracking-widest mt-2">Account connection status</p>
                             </div>
                             <ShieldCheck className="w-5 h-5 text-emerald-400" />
                         </div>
@@ -138,11 +138,11 @@ export const NetworkStatusHUD: React.FC = () => {
                                         initial={{ opacity: 0, scale: 0.95 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ delay: i * 0.05 }}
-                                        className="p-6 rounded-3xl bg-white/5 border border-white/5 group hover:border-emerald-500/30 transition-all"
+                                        className="p-6 rounded-3xl bg-white/5 border border-subtle group hover:border-emerald-500/30 transition-all"
                                     >
                                         <div className="flex items-center justify-between mb-3">
                                             <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-lg bg-white/5 text-white/70 uppercase text-[9px] font-black tracking-widest`}>
+                                                <div className={`p-2 rounded-lg bg-white/5 text-theme-primary/70 uppercase text-[9px] font-black tracking-widest`}>
                                                     {platform}
                                                 </div>
                                             </div>
@@ -152,7 +152,7 @@ export const NetworkStatusHUD: React.FC = () => {
                                             <p className={`text-xs font-black uppercase italic ${getStatusColor(data.status)}`}>
                                                 {data.status}
                                             </p>
-                                            <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest opacity-60">
+                                            <p className="text-[8px] font-bold text-theme-muted uppercase tracking-widest opacity-60">
                                                 {data.message}
                                             </p>
                                         </div>
@@ -172,8 +172,8 @@ export const NetworkStatusHUD: React.FC = () => {
                     <div className={`${glassStyle} rounded-[2.5rem] p-10 relative overflow-hidden h-full`}>
                         <div className="flex items-center justify-between mb-10">
                             <div>
-                                <h5 className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">API limits</h5>
-                                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-2">Usage against each platform&apos;s limit</p>
+                                <h5 className="text-xl font-black text-theme-primary italic tracking-tighter uppercase leading-none">API limits</h5>
+                                <p className="text-[9px] font-black text-theme-muted uppercase tracking-widest mt-2">Usage against each platform&apos;s limit</p>
                             </div>
                             <Database className="w-5 h-5 text-emerald-400" />
                         </div>
@@ -183,8 +183,8 @@ export const NetworkStatusHUD: React.FC = () => {
                                 <div key={i} className="space-y-3">
                                     <div className="flex justify-between items-end">
                                         <div>
-                                            <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em]">{quota.platform}</span>
-                                            <h6 className="text-[10px] font-black text-white italic uppercase">{quota.label}</h6>
+                                            <span className="text-[8px] font-black text-theme-muted uppercase tracking-[0.2em]">{quota.platform}</span>
+                                            <h6 className="text-[10px] font-black text-theme-primary italic uppercase">{quota.label}</h6>
                                         </div>
                                         <div className="text-right">
                                             <span className="text-[10px] font-black text-emerald-400 italic">{quota.used} / {quota.limit}</span>
@@ -205,7 +205,7 @@ export const NetworkStatusHUD: React.FC = () => {
                                     <AlertTriangle className="w-4 h-4 text-amber-500 mt-1" />
                                     <div>
                                         <p className="text-[10px] font-black text-amber-500 uppercase italic tracking-widest">Tip</p>
-                                        <p className="text-[9px] font-bold text-slate-400 mt-1 leading-relaxed">
+                                        <p className="text-[9px] font-bold text-theme-secondary mt-1 leading-relaxed">
                                             Reconnect any expired account to keep publishing to it.
                                         </p>
                                     </div>
