@@ -91,8 +91,8 @@ const DEFAULT_BRAND_KIT: BrandKit = {
   logoOpacity: null, captionStyle: '', captionPosition: '',
 }
 
-const FONT_OPTIONS = [
-  { value: '', label: 'Default' },
+const FONT_OPTIONS: { value: string; label: string; labelKey?: string }[] = [
+  { value: '', label: 'Default', labelKey: 'settingsPage.fontDefault' },
   { value: 'Inter', label: 'Inter' }, { value: 'Roboto', label: 'Roboto' },
   { value: 'Open Sans', label: 'Open Sans' }, { value: 'Lato', label: 'Lato' },
   { value: 'Montserrat', label: 'Montserrat' }, { value: 'Poppins', label: 'Poppins' },
@@ -128,24 +128,25 @@ type SectionId =
 
 interface SectionDef {
   id: SectionId
-  label: string
+  /** i18n key for the section's name */
+  labelKey: string
   icon: React.ReactNode
   /** keywords used by the settings search */
   keywords: string[]
 }
 
 const SECTIONS: SectionDef[] = [
-  { id: 'profile', label: 'Profile', icon: <User size={18} />, keywords: ['profile', 'name', 'avatar', 'account info'] },
-  { id: 'security', label: 'Account & Security', icon: <Lock size={18} />, keywords: ['password', 'security', 'change password', 'two-factor', '2fa', 'two-step', 'authenticator', 'sessions', 'devices', 'sign out', 'delete account', 'danger'] },
-  { id: 'notifications', label: 'Notifications', icon: <Bell size={18} />, keywords: ['notifications', 'email', 'push', 'digest', 'alerts', 'mentions'] },
-  { id: 'privacy', label: 'Privacy', icon: <EyeOff size={18} />, keywords: ['privacy', 'analytics', 'consent', 'data', 'marketing'] },
-  { id: 'appearance', label: 'Appearance', icon: <Palette size={18} />, keywords: ['theme', 'dark', 'light', 'density', 'compact', 'motion', 'accent', 'appearance', 'display', 'language', 'timezone', 'workspace', 'pinned', 'sidebar', 'landing', 'start page'] },
-  { id: 'editing', label: 'Editing Defaults', icon: <Sliders size={18} />, keywords: ['video', 'editing', 'captions', 'pacing', 'hook', 'voice', 'music', 'broll', 'platform'] },
-  { id: 'automation', label: 'Automation', icon: <Bot size={18} />, keywords: ['automation', 'agentic', 'agent', 'autonomous', 'swarm', 'sla', 'auto-fulfill', 'predictive', 'threshold', 'digital twin', 'heygen', 'sora', 'avatar'] },
-  { id: 'ai', label: 'AI', icon: <Sparkles size={18} />, keywords: ['ai', 'provider', 'claude', 'gemini', 'creativity', 'auto apply', 'model'] },
-  { id: 'brand', label: 'Brand Kit', icon: <LayoutGrid size={18} />, keywords: ['brand', 'colors', 'fonts', 'logo', 'lower third'] },
-  { id: 'integrations', label: 'Integrations & API Keys', icon: <Plug size={18} />, keywords: ['integrations', 'api key', 'keys', 'openai', 'anthropic', 'connect'] },
-  { id: 'billing', label: 'Billing', icon: <CreditCard size={18} />, keywords: ['billing', 'subscription', 'plan', 'payment', 'invoice'] },
+  { id: 'profile', labelKey: 'settingsPage.nav.profile', icon: <User size={18} />, keywords: ['profile', 'name', 'avatar', 'account info'] },
+  { id: 'security', labelKey: 'settingsPage.nav.security', icon: <Lock size={18} />, keywords: ['password', 'security', 'change password', 'two-factor', '2fa', 'two-step', 'authenticator', 'sessions', 'devices', 'sign out', 'delete account', 'danger'] },
+  { id: 'notifications', labelKey: 'settingsPage.tabNotifications', icon: <Bell size={18} />, keywords: ['notifications', 'email', 'push', 'digest', 'alerts', 'mentions'] },
+  { id: 'privacy', labelKey: 'settingsPage.tabPrivacy', icon: <EyeOff size={18} />, keywords: ['privacy', 'analytics', 'consent', 'data', 'marketing'] },
+  { id: 'appearance', labelKey: 'settingsPage.nav.appearance', icon: <Palette size={18} />, keywords: ['theme', 'dark', 'light', 'density', 'compact', 'motion', 'accent', 'appearance', 'display', 'language', 'timezone', 'workspace', 'pinned', 'sidebar', 'landing', 'start page'] },
+  { id: 'editing', labelKey: 'settingsPage.nav.editing', icon: <Sliders size={18} />, keywords: ['video', 'editing', 'captions', 'pacing', 'hook', 'voice', 'music', 'broll', 'platform'] },
+  { id: 'automation', labelKey: 'settingsPage.nav.automation', icon: <Bot size={18} />, keywords: ['automation', 'agentic', 'agent', 'autonomous', 'swarm', 'sla', 'auto-fulfill', 'predictive', 'threshold', 'digital twin', 'heygen', 'sora', 'avatar'] },
+  { id: 'ai', labelKey: 'settingsPage.nav.ai', icon: <Sparkles size={18} />, keywords: ['ai', 'provider', 'claude', 'gemini', 'creativity', 'auto apply', 'model'] },
+  { id: 'brand', labelKey: 'settingsPage.nav.brand', icon: <LayoutGrid size={18} />, keywords: ['brand', 'colors', 'fonts', 'logo', 'lower third'] },
+  { id: 'integrations', labelKey: 'settingsPage.nav.integrations', icon: <Plug size={18} />, keywords: ['integrations', 'api key', 'keys', 'openai', 'anthropic', 'connect'] },
+  { id: 'billing', labelKey: 'settingsPage.nav.billing', icon: <CreditCard size={18} />, keywords: ['billing', 'subscription', 'plan', 'payment', 'invoice'] },
 ]
 
 /* ── Page ──────────────────────────────────────────────────────────────── */
@@ -273,9 +274,9 @@ export default function SettingsPage() {
       // drop the typed key from memory.
       const saved = extractApiData<UserSettings>(response)
       if (saved?.agentic) setSettings(prev => ({ ...prev, agentic: { ...prev.agentic, ...saved.agentic, heygenApiKey: '', soraApiKey: '' } }))
-      toast('Settings saved', 'success')
+      toast(t('settingsPage.toast.settingsSaved'), 'success')
     } catch (err) {
-      toast(handleApiError(err) || 'Could not save settings', 'error')
+      toast(handleApiError(err) || t('settingsPage.toast.settingsSaveFailed'), 'error')
       throw err
     } finally { setSavingSection(null) }
   }, [loadError, t])
@@ -287,24 +288,24 @@ export default function SettingsPage() {
     setBrandKitSaving(true)
     try {
       await axios.put(`${API_URL}/pro-mode/brand-kit`, brandKit, { headers: { Authorization: `Bearer ${token}` } })
-      toast('Brand kit updated', 'success')
+      toast(t('settingsPage.toast.brandKitUpdated'), 'success')
     } catch (e) {
-      toast(handleApiError(e) || 'Could not update brand kit', 'error')
+      toast(handleApiError(e) || t('settingsPage.toast.brandKitUpdateFailed'), 'error')
     } finally { setBrandKitSaving(false) }
   }
 
   /* ── Account deactivation ── */
   const deactivateAccount = async () => {
-    if (!window.confirm('Permanently deactivate your account? This cannot be undone.')) return
-    const password = window.prompt('Enter your password to confirm')
-    if (!password) { toast('Cancelled', 'info'); return }
+    if (!window.confirm(t('settingsPage.security.deactivateConfirm'))) return
+    const password = window.prompt(t('settingsPage.security.deactivatePasswordPrompt'))
+    if (!password) { toast(t('settingsPage.toast.cancelled'), 'info'); return }
     try {
       await apiPost('/auth/deactivate', { password, reason: 'user_request' })
-      toast('Account deactivated', 'success')
+      toast(t('settingsPage.toast.accountDeactivated'), 'success')
       try { localStorage.removeItem('token') } catch (_) { /* best effort */ }
       setTimeout(() => router.push('/login'), 800)
     } catch (err: any) {
-      toast(handleApiError(err) || 'Could not deactivate account', 'error')
+      toast(handleApiError(err) || t('settingsPage.toast.deactivateFailed'), 'error')
     }
   }
 
@@ -315,7 +316,7 @@ export default function SettingsPage() {
     )
     const list = (res as any)?.data?.integrations || (res as any)?.integrations
     if (Array.isArray(list)) setField('integrations', list)
-    toast('API key added', 'success')
+    toast(t('settingsPage.toast.apiKeyAdded'), 'success')
   }
   const removeIntegration = async (provider: string) => {
     const res = await apiDelete<{ data?: { integrations: IntegrationEntry[] } }>(
@@ -324,21 +325,24 @@ export default function SettingsPage() {
     const list = (res as any)?.data?.integrations || (res as any)?.integrations
     if (Array.isArray(list)) setField('integrations', list)
     else setField('integrations', settings.integrations.filter(i => i.provider !== provider))
-    toast('API key removed', 'success')
+    toast(t('settingsPage.toast.apiKeyRemoved'), 'success')
   }
 
   /* ── Search → matching sections ── */
+  // Section names in the active language (search matches the translated name).
+  const sections = useMemo(() => SECTIONS.map(s => ({ ...s, label: t(s.labelKey) })), [t])
+
   const matchingSections = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return null
-    return SECTIONS.filter(s =>
+    return sections.filter(s =>
       s.label.toLowerCase().includes(q) || s.keywords.some(k => k.includes(q))
     ).map(s => s.id)
-  }, [query])
+  }, [query, sections])
 
   const visibleSections = useMemo(
-    () => (matchingSections ? SECTIONS.filter(s => matchingSections.includes(s.id)) : SECTIONS),
-    [matchingSections]
+    () => (matchingSections ? sections.filter(s => matchingSections.includes(s.id)) : sections),
+    [matchingSections, sections]
   )
 
   // If the active section is filtered out by search, jump to first match.
@@ -356,7 +360,7 @@ export default function SettingsPage() {
     </PageShell>
   )
 
-  const activeDef = SECTIONS.find(s => s.id === activeSection)!
+  const activeDef = sections.find(s => s.id === activeSection)!
 
   return (
     <ErrorBoundary>
@@ -367,7 +371,7 @@ export default function SettingsPage() {
         <header className="flex items-center gap-4 mb-8">
           <button
             type="button" onClick={() => router.push('/dashboard')}
-            aria-label="Back to dashboard"
+            aria-label={t('settingsPage.header.backAria')}
             className="ds-surface-card h-11 w-11 inline-flex items-center justify-center rounded-xl text-theme-muted hover:text-theme-primary transition-colors"
           >
             <ArrowLeft size={20} />
@@ -376,8 +380,8 @@ export default function SettingsPage() {
             <Settings size={22} />
           </div>
           <div className="min-w-0">
-            <h1 className="ds-text-h1 text-theme-primary leading-none">Settings</h1>
-            <p className="ds-text-caption mt-1">Manage your account, workspace and AI preferences</p>
+            <h1 className="ds-text-h1 text-theme-primary leading-none">{t('settingsPage.title')}</h1>
+            <p className="ds-text-caption mt-1">{t('settingsPage.header.subtitle')}</p>
           </div>
         </header>
 
@@ -387,8 +391,8 @@ export default function SettingsPage() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search settings…"
-            aria-label="Search settings"
+            placeholder={t('settingsPage.header.searchPlaceholder')}
+            aria-label={t('settingsPage.header.searchAria')}
             className="pl-9 ds-surface-card"
           />
         </div>
@@ -396,7 +400,7 @@ export default function SettingsPage() {
         <div className={cn('flex gap-8', isNarrow && 'flex-col gap-4')}>
           {/* Section nav */}
           {isNarrow ? (
-            <nav className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" aria-label="Settings sections">
+            <nav className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" aria-label={t('settingsPage.nav.aria')}>
               {visibleSections.map(s => (
                 <button
                   key={s.id} type="button" onClick={() => setActiveSection(s.id)}
@@ -411,7 +415,7 @@ export default function SettingsPage() {
             </nav>
           ) : (
             <aside className="w-64 shrink-0">
-              <nav className="ds-surface-card p-2 rounded-2xl sticky top-6 space-y-1" aria-label="Settings sections">
+              <nav className="ds-surface-card p-2 rounded-2xl sticky top-6 space-y-1" aria-label={t('settingsPage.nav.aria')}>
                 {visibleSections.map(s => (
                   <button
                     key={s.id} type="button" onClick={() => setActiveSection(s.id)}
@@ -426,7 +430,7 @@ export default function SettingsPage() {
                   </button>
                 ))}
                 {visibleSections.length === 0 && (
-                  <p className="px-3 py-4 ds-text-caption">No settings match “{query}”.</p>
+                  <p className="px-3 py-4 ds-text-caption">{t('settingsPage.nav.noMatch', { query })}</p>
                 )}
               </nav>
             </aside>
@@ -570,12 +574,13 @@ function SelectRow({ label, description, value, options, onChange }: {
 // disabled so stale defaults can't overwrite the real settings.
 const SaveBlockedContext = createContext(false)
 
-function SaveBar({ saving, onSave, label = 'Save changes', independent = false }: { saving: boolean; onSave: () => void; label?: string; independent?: boolean }) {
+function SaveBar({ saving, onSave, label, independent = false }: { saving: boolean; onSave: () => void; label?: string; independent?: boolean }) {
+  const { t } = useTranslation()
   const blocked = useContext(SaveBlockedContext) && !independent
   return (
     <div className="flex justify-end pt-4 mt-2 border-t border-[var(--border-subtle)]">
       <Button variant="primary" onClick={onSave} loading={saving} disabled={blocked} leftIcon={!saving ? <Check size={16} /> : undefined}>
-        {saving ? 'Saving…' : label}
+        {saving ? t('settingsPage.saving') : (label ?? t('settingsPage.saveBar.saveChanges'))}
       </Button>
     </div>
   )
@@ -588,6 +593,7 @@ function SubHeader({ children }: { children: React.ReactNode }) {
 /* ── Sections ──────────────────────────────────────────────────────────── */
 
 function ProfileSection({ user }: { user: any }) {
+  const { t } = useTranslation()
   return (
     <Card>
       <div className="flex items-center gap-4">
@@ -595,16 +601,16 @@ function ProfileSection({ user }: { user: any }) {
           {user?.name?.[0] || user?.email?.[0]?.toUpperCase() || 'U'}
         </div>
         <div className="min-w-0">
-          <p className="text-lg font-semibold text-theme-primary truncate">{user?.name || 'Your profile'}</p>
+          <p className="text-lg font-semibold text-theme-primary truncate">{user?.name || t('settingsPage.profile.fallbackName')}</p>
           <p className="ds-text-caption truncate">{user?.email || ''}</p>
         </div>
       </div>
       <p className="ds-text-caption mt-5">
-        Update your name, avatar and public profile details on the dedicated profile page.
+        {t('settingsPage.profile.blurb')}
       </p>
       <div className="mt-4">
         <Link href="/dashboard/settings/profile">
-          <Button variant="secondary" rightIcon={<ChevronRight size={16} />}>Edit profile</Button>
+          <Button variant="secondary" rightIcon={<ChevronRight size={16} />}>{t('settingsPage.editProfile')}</Button>
         </Link>
       </div>
     </Card>
@@ -612,16 +618,17 @@ function ProfileSection({ user }: { user: any }) {
 }
 
 function SecuritySection({ onDeactivate }: { onDeactivate: () => void }) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6">
       <Card>
-        <SubHeader>Change password</SubHeader>
+        <SubHeader>{t('settingsPage.security.changePassword')}</SubHeader>
         <div className="mt-3">
           <ChangePasswordForm />
         </div>
       </Card>
       <Card>
-        <SubHeader>Sign-in protection</SubHeader>
+        <SubHeader>{t('settingsPage.security.signInProtection')}</SubHeader>
         <div className="mt-3">
           <AccountSecurityPanel />
         </div>
@@ -629,14 +636,14 @@ function SecuritySection({ onDeactivate }: { onDeactivate: () => void }) {
       <Card className="border-rose-500/30">
         <div className="flex items-center gap-2 text-rose-500">
           <ShieldAlert size={18} />
-          <h3 className="text-sm font-semibold">Danger zone</h3>
+          <h3 className="text-sm font-semibold">{t('settingsPage.dangerZone')}</h3>
         </div>
         <p className="ds-text-caption mt-2">
-          Deactivating your account is irreversible and removes access to all your content.
+          {t('settingsPage.security.deactivateWarning')}
         </p>
         <div className="mt-4">
           <Button variant="destructive" onClick={onDeactivate} leftIcon={<Trash2 size={16} />}>
-            Deactivate account
+            {t('settingsPage.security.deactivateAccount')}
           </Button>
         </div>
       </Card>
@@ -647,35 +654,36 @@ function SecuritySection({ onDeactivate }: { onDeactivate: () => void }) {
 function NotificationsSection({ settings, setField, saving, onSave }: {
   settings: UserSettings; setField: (p: string, v: any) => void; saving: boolean; onSave: () => void
 }) {
+  const { t } = useTranslation()
   const n = settings.notifications
   return (
     <>
     <Card>
-      <SubHeader>Channels</SubHeader>
+      <SubHeader>{t('settingsPage.notifications.channels')}</SubHeader>
       <div className="divide-y divide-[var(--border-subtle)]">
-        <ToggleRow label="Email notifications" description="Receive updates by email" checked={!!n.email} onChange={v => setField('notifications.email', v)} />
-        <ToggleRow label="Push notifications" description="Browser & device push" checked={!!n.push} onChange={v => setField('notifications.push', v)} />
-        <ToggleRow label="Content ready" description="Alert when a render finishes" checked={!!n.contentReady} onChange={v => setField('notifications.contentReady', v)} />
-        <ToggleRow label="Mentions" description="When someone @mentions you" checked={n.mentions ?? true} onChange={v => setField('notifications.mentions', v)} />
+        <ToggleRow label={t('settingsPage.notifications.emailLabel')} description={t('settingsPage.notifications.emailDesc')} checked={!!n.email} onChange={v => setField('notifications.email', v)} />
+        <ToggleRow label={t('settingsPage.notifications.pushLabel')} description={t('settingsPage.notifications.pushDesc')} checked={!!n.push} onChange={v => setField('notifications.push', v)} />
+        <ToggleRow label={t('settingsPage.notifContentReady')} description={t('settingsPage.notifications.contentReadyDesc')} checked={!!n.contentReady} onChange={v => setField('notifications.contentReady', v)} />
+        <ToggleRow label={t('settingsPage.notifMentions')} description={t('settingsPage.notifications.mentionsDesc')} checked={n.mentions ?? true} onChange={v => setField('notifications.mentions', v)} />
       </div>
 
-      <SubHeader>Activity</SubHeader>
+      <SubHeader>{t('settingsPage.notifications.activity')}</SubHeader>
       <div className="divide-y divide-[var(--border-subtle)]">
-        <ToggleRow label="Weekly digest" description="A weekly summary email" checked={!!n.weeklyDigest} onChange={v => setField('notifications.weeklyDigest', v)} />
-        <ToggleRow label="Achievements" checked={n.achievements ?? true} onChange={v => setField('notifications.achievements', v)} />
-        <ToggleRow label="Comments" checked={n.comments ?? false} onChange={v => setField('notifications.comments', v)} />
+        <ToggleRow label={t('settingsPage.notifications.weeklyDigestLabel')} description={t('settingsPage.notifications.weeklyDigestDesc')} checked={!!n.weeklyDigest} onChange={v => setField('notifications.weeklyDigest', v)} />
+        <ToggleRow label={t('settingsPage.achievements')} checked={n.achievements ?? true} onChange={v => setField('notifications.achievements', v)} />
+        <ToggleRow label={t('settingsPage.comments')} checked={n.comments ?? false} onChange={v => setField('notifications.comments', v)} />
       </div>
 
-      <SubHeader>Delivery</SubHeader>
+      <SubHeader>{t('settingsPage.notifications.delivery')}</SubHeader>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
-        <SelectRow label="Alert priority" value={n.priorityTiers || 'all'}
-          options={[{ id: 'all', label: 'All' }, { id: 'high_medium', label: 'High & medium' }, { id: 'high_only', label: 'High only' }]}
+        <SelectRow label={t('settingsPage.notifications.alertPriority')} value={n.priorityTiers || 'all'}
+          options={[{ id: 'all', label: t('settingsPage.notifications.priorityAll') }, { id: 'high_medium', label: t('settingsPage.notifications.priorityHighMedium') }, { id: 'high_only', label: t('settingsPage.notifications.priorityHighOnly') }]}
           onChange={v => setField('notifications.priorityTiers', v)} />
-        <SelectRow label="Digest mode" value={n.digestMode || 'immediate'}
-          options={[{ id: 'immediate', label: 'Immediate' }, { id: 'daily', label: 'Daily' }, { id: 'weekly', label: 'Weekly' }]}
+        <SelectRow label={t('settingsPage.notifications.digestMode')} value={n.digestMode || 'immediate'}
+          options={[{ id: 'immediate', label: t('settingsPage.notifications.digestImmediate') }, { id: 'daily', label: t('settingsPage.notifications.digestDaily') }, { id: 'weekly', label: t('settingsPage.notifications.digestWeekly') }]}
           onChange={v => setField('notifications.digestMode', v)} />
-        <FormField label="Digest time" hint="When daily/weekly digests send">
-          <Input type="time" value={n.digestTime || '09:00'} onChange={e => setField('notifications.digestTime', e.target.value)} aria-label="Digest time" />
+        <FormField label={t('settingsPage.notifications.digestTime')} hint={t('settingsPage.notifications.digestTimeHint')}>
+          <Input type="time" value={n.digestTime || '09:00'} onChange={e => setField('notifications.digestTime', e.target.value)} aria-label={t('settingsPage.notifications.digestTime')} />
         </FormField>
       </div>
 
@@ -684,7 +692,7 @@ function NotificationsSection({ settings, setField, saving, onSave }: {
 
     {/* Saves on its own (to the brief subscription), so it is a separate card. */}
     <Card className="mt-4">
-      <SubHeader>Morning brief</SubHeader>
+      <SubHeader>{t('settingsPage.notifications.morningBrief')}</SubHeader>
       <MorningBriefSettings />
     </Card>
     </>
@@ -694,13 +702,14 @@ function NotificationsSection({ settings, setField, saving, onSave }: {
 function PrivacySection({ settings, setField, saving, onSave }: {
   settings: UserSettings; setField: (p: string, v: any) => void; saving: boolean; onSave: () => void
 }) {
+  const { t } = useTranslation()
   const p = settings.privacy
   return (
     <Card>
       <div className="divide-y divide-[var(--border-subtle)]">
-        <ToggleRow label="Anonymous analytics" description="Help improve the product with anonymous usage data" checked={!!p.analyticsConsent} onChange={v => setField('privacy.analyticsConsent', v)} />
-        <ToggleRow label="Use my content to improve AI" description="Allow your content to train and improve AI features" checked={!!p.dataConsent} onChange={v => setField('privacy.dataConsent', v)} />
-        <ToggleRow label="Marketing communications" description="Occasional product news and offers" checked={!!p.marketingConsent} onChange={v => setField('privacy.marketingConsent', v)} />
+        <ToggleRow label={t('settingsPage.privacy.analyticsLabel')} description={t('settingsPage.privacy.analyticsDesc')} checked={!!p.analyticsConsent} onChange={v => setField('privacy.analyticsConsent', v)} />
+        <ToggleRow label={t('settingsPage.privacy.dataLabel')} description={t('settingsPage.privacy.dataDesc')} checked={!!p.dataConsent} onChange={v => setField('privacy.dataConsent', v)} />
+        <ToggleRow label={t('settingsPage.privacy.marketingLabel')} description={t('settingsPage.privacy.marketingDesc')} checked={!!p.marketingConsent} onChange={v => setField('privacy.marketingConsent', v)} />
       </div>
       <SaveBar saving={saving} onSave={onSave} />
     </Card>
@@ -711,15 +720,16 @@ function AppearanceSection({ settings, setField, saving, onSave, applyAppearance
   settings: UserSettings; setField: (p: string, v: any) => void; saving: boolean; onSave: () => void
   applyAppearance: (a?: Partial<AppearanceSettings>) => void
 }) {
+  const { t } = useTranslation()
   const a = settings.appearance
   const themeOpts: { id: AppearanceSettings['theme']; label: string; icon: React.ReactNode }[] = [
-    { id: 'light', label: 'Light', icon: <Sun size={18} /> },
-    { id: 'dark', label: 'Dark', icon: <Moon size={18} /> },
-    { id: 'auto', label: 'System', icon: <Monitor size={18} /> },
+    { id: 'light', label: t('settingsPage.themeLight'), icon: <Sun size={18} /> },
+    { id: 'dark', label: t('settingsPage.themeDark'), icon: <Moon size={18} /> },
+    { id: 'auto', label: t('settingsPage.appearance.themeSystem'), icon: <Monitor size={18} /> },
   ]
   return (
     <Card>
-      <SubHeader>Theme</SubHeader>
+      <SubHeader>{t('settingsPage.theme')}</SubHeader>
       <div className="grid grid-cols-3 gap-3 mt-2">
         {themeOpts.map(o => (
           <button
@@ -736,27 +746,27 @@ function AppearanceSection({ settings, setField, saving, onSave, applyAppearance
         ))}
       </div>
 
-      <SubHeader>Display</SubHeader>
+      <SubHeader>{t('settingsPage.appearance.display')}</SubHeader>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-        <SelectRow label="Density" description="Compact reduces spacing" value={a.density}
-          options={[{ id: 'comfortable', label: 'Comfortable' }, { id: 'compact', label: 'Compact' }]}
+        <SelectRow label={t('settingsPage.appearance.density')} description={t('settingsPage.appearance.densityDesc')} value={a.density}
+          options={[{ id: 'comfortable', label: t('settingsPage.appearance.densityComfortable') }, { id: 'compact', label: t('settingsPage.appearance.densityCompact') }]}
           onChange={v => { setField('appearance.density', v); applyAppearance({ ...a, density: v as any }) }} />
-        <FormField label="Accent color" hint="Optional custom accent (hex)">
+        <FormField label={t('settingsPage.accentColor')} hint={t('settingsPage.appearance.accentHint')}>
           <div className="flex items-center gap-3">
-            <input type="color" aria-label="Accent color"
+            <input type="color" aria-label={t('settingsPage.accentColor')}
               value={a.accent || '#6366f1'}
               onChange={e => { setField('appearance.accent', e.target.value); applyAppearance({ ...a, accent: e.target.value }) }}
               className="h-10 w-12 rounded-lg border border-input cursor-pointer bg-transparent" />
             <Input value={a.accent || ''} placeholder="#6366f1"
-              onChange={e => setField('appearance.accent', e.target.value)} aria-label="Accent hex" />
+              onChange={e => setField('appearance.accent', e.target.value)} aria-label={t('settingsPage.appearance.accentHexAria')} />
           </div>
         </FormField>
       </div>
 
       <div className="mt-2">
         <ToggleRow
-          label="Reduced motion"
-          description="Minimize animations and transitions"
+          label={t('settingsPage.appearance.reducedMotion')}
+          description={t('settingsPage.appearance.reducedMotionDesc')}
           checked={!!a.reducedMotion}
           onChange={v => { setField('appearance.reducedMotion', v); applyAppearance({ ...a, reducedMotion: v }) }}
         />
@@ -766,20 +776,20 @@ function AppearanceSection({ settings, setField, saving, onSave, applyAppearance
           to another browser or device rather than living in localStorage. */}
       <WorkspaceSection />
 
-      <SubHeader>Regional</SubHeader>
+      <SubHeader>{t('settingsPage.appearance.regional')}</SubHeader>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-        <SelectRow label="Language" value={settings.preferences.language}
+        <SelectRow label={t('settingsPage.language')} value={settings.preferences.language}
           options={supportedLanguages.map(l => ({ id: l, label: languageNames[l] }))}
           onChange={v => setField('preferences.language', v)} />
-        <SelectRow label="Timezone" value={settings.preferences.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone}
+        <SelectRow label={t('settingsPage.timezone')} value={settings.preferences.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone}
           options={[
-            { id: 'America/New_York', label: 'Eastern (US)' }, { id: 'America/Chicago', label: 'Central (US)' },
-            { id: 'America/Denver', label: 'Mountain (US)' }, { id: 'America/Los_Angeles', label: 'Pacific (US)' },
-            { id: 'America/Sao_Paulo', label: 'Brazil (BRT)' }, { id: 'Europe/London', label: 'London (GMT/BST)' },
-            { id: 'Europe/Paris', label: 'Paris (CET)' }, { id: 'Europe/Berlin', label: 'Berlin (CET)' },
-            { id: 'Asia/Dubai', label: 'Dubai (GST)' }, { id: 'Asia/Kolkata', label: 'India (IST)' },
-            { id: 'Asia/Singapore', label: 'Singapore (SGT)' }, { id: 'Asia/Tokyo', label: 'Tokyo (JST)' },
-            { id: 'Australia/Sydney', label: 'Sydney (AEST)' },
+            { id: 'America/New_York', label: t('settingsPage.appearance.tzEasternUs') }, { id: 'America/Chicago', label: t('settingsPage.appearance.tzCentralUs') },
+            { id: 'America/Denver', label: t('settingsPage.appearance.tzMountainUs') }, { id: 'America/Los_Angeles', label: t('settingsPage.appearance.tzPacificUs') },
+            { id: 'America/Sao_Paulo', label: t('settingsPage.appearance.tzBrazil') }, { id: 'Europe/London', label: t('settingsPage.appearance.tzLondon') },
+            { id: 'Europe/Paris', label: t('settingsPage.appearance.tzParis') }, { id: 'Europe/Berlin', label: t('settingsPage.appearance.tzBerlin') },
+            { id: 'Asia/Dubai', label: t('settingsPage.appearance.tzDubai') }, { id: 'Asia/Kolkata', label: t('settingsPage.appearance.tzIndia') },
+            { id: 'Asia/Singapore', label: t('settingsPage.appearance.tzSingapore') }, { id: 'Asia/Tokyo', label: t('settingsPage.appearance.tzTokyo') },
+            { id: 'Australia/Sydney', label: t('settingsPage.appearance.tzSydney') },
           ]}
           onChange={v => setField('preferences.timezone', v)} />
       </div>
@@ -796,35 +806,36 @@ function AppearanceSection({ settings, setField, saving, onSave, applyAppearance
  * true of any of Click's other UI customization.
  */
 function WorkspaceSection() {
+  const { t } = useTranslation()
   const { prefs, isPinned, togglePin, setDefaultLanding } = useWorkspacePrefs()
 
   // Somewhere to land other than Home. Kept to the primary destinations so this
   // can't strand a user on a page they rarely use.
   const LANDING_OPTIONS = [
-    { id: '', label: 'Home (default)' },
-    { id: '/dashboard/forge', label: 'AI Video Creator' },
-    { id: '/dashboard/video', label: 'Video Editor' },
-    { id: '/dashboard/clips/hub', label: 'Clips' },
-    { id: '/dashboard/scheduler', label: 'Scheduler' },
-    { id: '/dashboard/calendar', label: 'Calendar' },
-    { id: '/dashboard/analytics', label: 'Analytics' },
+    { id: '', label: t('settingsPage.workspace.landingHome') },
+    { id: '/dashboard/forge', label: t('settingsPage.workspace.landingForge') },
+    { id: '/dashboard/video', label: t('settingsPage.workspace.landingVideo') },
+    { id: '/dashboard/clips/hub', label: t('settingsPage.workspace.landingClips') },
+    { id: '/dashboard/scheduler', label: t('settingsPage.workspace.landingScheduler') },
+    { id: '/dashboard/calendar', label: t('settingsPage.workspace.landingCalendar') },
+    { id: '/dashboard/analytics', label: t('settingsPage.workspace.landingAnalytics') },
   ]
 
   return (
     <>
-      <SubHeader>Workspace</SubHeader>
+      <SubHeader>{t('settingsPage.workspace.title')}</SubHeader>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
         <SelectRow
-          label="Start me on"
-          description="Where Click opens when you sign in"
+          label={t('settingsPage.workspace.startOn')}
+          description={t('settingsPage.workspace.startOnDesc')}
           value={prefs.defaultLanding}
           options={LANDING_OPTIONS}
           onChange={(v) => setDefaultLanding(v)}
         />
-        <FormField label="Pinned in the sidebar" hint="Pin any item from the sidebar's More menu">
+        <FormField label={t('settingsPage.workspace.pinned')} hint={t('settingsPage.workspace.pinnedHint')}>
           {prefs.pinnedNav.length === 0 ? (
             <p className="text-sm text-theme-muted">
-              Nothing pinned yet. Hover a sidebar item and click the pin to keep it always visible.
+              {t('settingsPage.workspace.pinnedEmpty')}
             </p>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -833,7 +844,7 @@ function WorkspaceSection() {
                   key={path}
                   type="button"
                   onClick={() => togglePin(path)}
-                  aria-label={`Unpin ${path}`}
+                  aria-label={t('settingsPage.workspace.unpinAria', { path })}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-input px-2 py-1 text-xs text-theme-secondary transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   {path.replace('/dashboard/', '').replace('/dashboard', 'home') || 'home'}
@@ -851,80 +862,81 @@ function WorkspaceSection() {
 function EditingSection({ settings, setField, saving, onSave }: {
   settings: UserSettings; setField: (p: string, v: any) => void; saving: boolean; onSave: () => void
 }) {
+  const { t } = useTranslation()
   const v = settings.videoEditing || {}
   return (
     <Card>
-      <SubHeader>AI edit style</SubHeader>
+      <SubHeader>{t('settingsPage.editing.aiEditStyle')}</SubHeader>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
-        <SelectRow label="Voice tone" value={v.preferredVoiceTone || 'Hype'}
-          options={['Hype', 'Storyteller', 'Educational', 'Professional', 'Casual', 'Aggressive', 'Calm', 'Motivational', 'Conversational', 'Authoritative'].map(x => ({ id: x, label: x }))}
+        <SelectRow label={t('settingsPage.editing.voiceTone')} value={v.preferredVoiceTone || 'Hype'}
+          options={[{ id: 'Hype', label: t('settingsPage.editing.voiceHype') }, { id: 'Storyteller', label: t('settingsPage.editing.voiceStoryteller') }, { id: 'Educational', label: t('settingsPage.editing.voiceEducational') }, { id: 'Professional', label: t('settingsPage.editing.voiceProfessional') }, { id: 'Casual', label: t('settingsPage.editing.voiceCasual') }, { id: 'Aggressive', label: t('settingsPage.editing.voiceAggressive') }, { id: 'Calm', label: t('settingsPage.editing.voiceCalm') }, { id: 'Motivational', label: t('settingsPage.editing.voiceMotivational') }, { id: 'Conversational', label: t('settingsPage.editing.voiceConversational') }, { id: 'Authoritative', label: t('settingsPage.editing.voiceAuthoritative') }]}
           onChange={x => setField('videoEditing.preferredVoiceTone', x)} />
-        <SelectRow label="Hook style" value={v.preferredHookStyle || 'curiosity-gap'}
+        <SelectRow label={t('settingsPage.editing.hookStyle')} value={v.preferredHookStyle || 'curiosity-gap'}
           options={[
-            { id: 'curiosity-gap', label: 'Curiosity gap' }, { id: 'list-tease', label: 'List tease' },
-            { id: 'visual-first', label: 'Visual first' }, { id: 'question-based', label: 'Question based' },
-            { id: 'bold-statement', label: 'Bold statement' }, { id: 'before-after', label: 'Before / after' },
-            { id: 'enemy-frame', label: 'Enemy frame' }, { id: 'authority-proof', label: 'Authority proof' },
-            { id: 'shock-reveal', label: 'Shock reveal' },
+            { id: 'curiosity-gap', label: t('settingsPage.editing.hookCuriosityGap') }, { id: 'list-tease', label: t('settingsPage.editing.hookListTease') },
+            { id: 'visual-first', label: t('settingsPage.editing.hookVisualFirst') }, { id: 'question-based', label: t('settingsPage.editing.hookQuestionBased') },
+            { id: 'bold-statement', label: t('settingsPage.editing.hookBoldStatement') }, { id: 'before-after', label: t('settingsPage.editing.hookBeforeAfter') },
+            { id: 'enemy-frame', label: t('settingsPage.editing.hookEnemyFrame') }, { id: 'authority-proof', label: t('settingsPage.editing.hookAuthorityProof') },
+            { id: 'shock-reveal', label: t('settingsPage.editing.hookShockReveal') },
           ]}
           onChange={x => setField('videoEditing.preferredHookStyle', x)} />
-        <SelectRow label="Pacing" value={v.pacingIntensity || 'medium'}
-          options={[{ id: 'gentle', label: 'Gentle' }, { id: 'medium', label: 'Medium' }, { id: 'aggressive', label: 'Aggressive' }]}
+        <SelectRow label={t('settingsPage.editing.pacing')} value={v.pacingIntensity || 'medium'}
+          options={[{ id: 'gentle', label: t('settingsPage.editing.pacingGentle') }, { id: 'medium', label: t('settingsPage.editing.pacingMedium') }, { id: 'aggressive', label: t('settingsPage.editing.pacingAggressive') }]}
           onChange={x => setField('videoEditing.pacingIntensity', x)} />
       </div>
 
-      <SubHeader>Platform & tone</SubHeader>
+      <SubHeader>{t('settingsPage.editing.platformTone')}</SubHeader>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
-        <SelectRow label="Default platform" value={v.defaultPlatform || 'auto'}
-          options={[{ id: 'auto', label: 'Auto-detect' }, { id: 'tiktok', label: 'TikTok' }, { id: 'instagram', label: 'Instagram' }, { id: 'youtube', label: 'YouTube' }, { id: 'linkedin', label: 'LinkedIn' }]}
+        <SelectRow label={t('settingsPage.editing.defaultPlatform')} value={v.defaultPlatform || 'auto'}
+          options={[{ id: 'auto', label: t('settingsPage.platformAutoDetect') }, { id: 'tiktok', label: 'TikTok' }, { id: 'instagram', label: 'Instagram' }, { id: 'youtube', label: 'YouTube' }, { id: 'linkedin', label: 'LinkedIn' }]}
           onChange={x => setField('videoEditing.defaultPlatform', x)} />
-        <SelectRow label="Content tone" value={v.contentTone || 'auto'}
-          options={[{ id: 'auto', label: 'Auto' }, { id: 'educational', label: 'Educational' }, { id: 'entertaining', label: 'Entertaining' }, { id: 'motivational', label: 'Motivational' }, { id: 'promotional', label: 'Promotional' }]}
+        <SelectRow label={t('settingsPage.editing.contentTone')} value={v.contentTone || 'auto'}
+          options={[{ id: 'auto', label: t('settingsPage.editing.auto') }, { id: 'educational', label: t('settingsPage.editing.toneEducational') }, { id: 'entertaining', label: t('settingsPage.editing.toneEntertaining') }, { id: 'motivational', label: t('settingsPage.editing.toneMotivational') }, { id: 'promotional', label: t('settingsPage.editing.tonePromotional') }]}
           onChange={x => setField('videoEditing.contentTone', x)} />
-        <SelectRow label="Music genre" value={v.musicGenre || 'auto'}
-          options={['auto', 'phonk', 'lofi', 'dark_ambient', 'synthwave', 'upbeat_pop', 'cinematic', 'breakcore'].map(x => ({ id: x, label: x.replace('_', ' ') }))}
+        <SelectRow label={t('settingsPage.editing.musicGenre')} value={v.musicGenre || 'auto'}
+          options={[{ id: 'auto', label: t('settingsPage.editing.musicAuto') }, { id: 'phonk', label: t('settingsPage.editing.musicPhonk') }, { id: 'lofi', label: t('settingsPage.editing.musicLofi') }, { id: 'dark_ambient', label: t('settingsPage.editing.musicDarkAmbient') }, { id: 'synthwave', label: t('settingsPage.editing.musicSynthwave') }, { id: 'upbeat_pop', label: t('settingsPage.editing.musicUpbeatPop') }, { id: 'cinematic', label: t('settingsPage.editing.musicCinematic') }, { id: 'breakcore', label: t('settingsPage.editing.musicBreakcore') }]}
           onChange={x => setField('videoEditing.musicGenre', x)} />
       </div>
 
-      <SubHeader>Captions</SubHeader>
+      <SubHeader>{t('settingsPage.editing.captions')}</SubHeader>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-        <SelectRow label="Caption style" value={v.captionStyle || 'modern'}
-          options={['modern', 'pop', 'karaoke', 'classic', 'bold', 'outline'].map(x => ({ id: x, label: x }))}
+        <SelectRow label={t('settingsPage.editing.captionStyle')} value={v.captionStyle || 'modern'}
+          options={[{ id: 'modern', label: t('settingsPage.editing.captionModern') }, { id: 'pop', label: t('settingsPage.editing.captionPop') }, { id: 'karaoke', label: t('settingsPage.editing.captionKaraoke') }, { id: 'classic', label: t('settingsPage.editing.captionClassic') }, { id: 'bold', label: t('settingsPage.editing.captionBold') }, { id: 'outline', label: t('settingsPage.editing.captionOutline') }]}
           onChange={x => setField('videoEditing.captionStyle', x)} />
-        <SelectRow label="Subtitle position" value={v.subtitlePosition || 'auto'}
-          options={[{ id: 'auto', label: 'Auto' }, { id: 'top', label: 'Top' }, { id: 'middle', label: 'Middle' }, { id: 'bottom', label: 'Bottom' }, { id: 'lower-third', label: 'Lower third' }]}
+        <SelectRow label={t('settingsPage.editing.subtitlePosition')} value={v.subtitlePosition || 'auto'}
+          options={[{ id: 'auto', label: t('settingsPage.editing.auto') }, { id: 'top', label: t('settingsPage.editing.subtitleTop') }, { id: 'middle', label: t('settingsPage.editing.subtitleMiddle') }, { id: 'bottom', label: t('settingsPage.editing.subtitleBottom') }, { id: 'lower-third', label: t('settingsPage.editing.subtitleLowerThird') }]}
           onChange={x => setField('videoEditing.subtitlePosition', x)} />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
-        <FormField label={`Caption font scale — ${(v.captionFontScale ?? 1.0).toFixed(1)}x`}>
+        <FormField label={t('settingsPage.editing.captionFontScaleLabel', { value: (v.captionFontScale ?? 1.0).toFixed(1) })}>
           <Slider min={0.5} max={2.0} step={0.1} value={v.captionFontScale ?? 1.0}
-            onValueChange={x => setField('videoEditing.captionFontScale', x)} aria-label="Caption font scale" />
+            onValueChange={x => setField('videoEditing.captionFontScale', x)} aria-label={t('settingsPage.editing.captionFontScaleAria')} />
         </FormField>
-        <FormField label={`Caption vertical offset — ${v.captionVerticalOffset ?? 0}px`}>
+        <FormField label={t('settingsPage.editing.captionVerticalOffsetLabel', { value: v.captionVerticalOffset ?? 0 })}>
           <Slider min={-200} max={200} step={10} value={v.captionVerticalOffset ?? 0}
-            onValueChange={x => setField('videoEditing.captionVerticalOffset', x)} aria-label="Caption vertical offset" />
+            onValueChange={x => setField('videoEditing.captionVerticalOffset', x)} aria-label={t('settingsPage.editing.captionVerticalOffsetAria')} />
         </FormField>
       </div>
 
-      <SubHeader>Aesthetics</SubHeader>
+      <SubHeader>{t('settingsPage.editing.aesthetics')}</SubHeader>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-        <SelectRow label="Color grade" value={v.aestheticColorGrade || 'vibrant'}
-          options={['vibrant', 'cyberpunk_neon', 'vintage_film', 'hyper_pop', 'cinematic', 'monochrome', 'dreamy_pastel', 'none'].map(x => ({ id: x, label: x.replace('_', ' ') }))}
+        <SelectRow label={t('settingsPage.editing.colorGrade')} value={v.aestheticColorGrade || 'vibrant'}
+          options={[{ id: 'vibrant', label: t('settingsPage.editing.gradeVibrant') }, { id: 'cyberpunk_neon', label: t('settingsPage.editing.gradeCyberpunkNeon') }, { id: 'vintage_film', label: t('settingsPage.editing.gradeVintageFilm') }, { id: 'hyper_pop', label: t('settingsPage.editing.gradeHyperPop') }, { id: 'cinematic', label: t('settingsPage.editing.gradeCinematic') }, { id: 'monochrome', label: t('settingsPage.editing.gradeMonochrome') }, { id: 'dreamy_pastel', label: t('settingsPage.editing.gradeDreamyPastel') }, { id: 'none', label: t('settingsPage.editing.gradeNone') }]}
           onChange={x => setField('videoEditing.aestheticColorGrade', x)} />
-        <SelectRow label="Transition" value={v.aestheticTransition || 'fade'}
-          options={['fade', 'slide', 'zoom', 'glitch', 'whip', 'dissolve', 'none'].map(x => ({ id: x, label: x }))}
+        <SelectRow label={t('settingsPage.editing.transition')} value={v.aestheticTransition || 'fade'}
+          options={[{ id: 'fade', label: t('settingsPage.editing.transitionFade') }, { id: 'slide', label: t('settingsPage.editing.transitionSlide') }, { id: 'zoom', label: t('settingsPage.editing.transitionZoom') }, { id: 'glitch', label: t('settingsPage.editing.transitionGlitch') }, { id: 'whip', label: t('settingsPage.editing.transitionWhip') }, { id: 'dissolve', label: t('settingsPage.editing.transitionDissolve') }, { id: 'none', label: t('settingsPage.editing.transitionNone') }]}
           onChange={x => setField('videoEditing.aestheticTransition', x)} />
       </div>
 
-      <SubHeader>Feature flags</SubHeader>
+      <SubHeader>{t('settingsPage.editing.featureFlags')}</SubHeader>
       <div className="divide-y divide-[var(--border-subtle)]">
-        <ToggleRow label="Speed ramping" description="AI-driven dynamic speed changes" checked={v.enableSpeedRamping ?? true} onChange={x => setField('videoEditing.enableSpeedRamping', x)} />
-        <ToggleRow label="B-roll overlay" description="Auto-insert relevant b-roll" checked={v.enableBRoll ?? true} onChange={x => setField('videoEditing.enableBRoll', x)} />
+        <ToggleRow label={t('settingsPage.editing.speedRamping')} description={t('settingsPage.editing.speedRampingDesc')} checked={v.enableSpeedRamping ?? true} onChange={x => setField('videoEditing.enableSpeedRamping', x)} />
+        <ToggleRow label={t('settingsPage.editing.brollOverlay')} description={t('settingsPage.editing.brollOverlayDesc')} checked={v.enableBRoll ?? true} onChange={x => setField('videoEditing.enableBRoll', x)} />
       </div>
       {(v.enableBRoll ?? true) && (
         <div className="mt-3">
-          <SelectRow label="B-roll frequency" value={v.brollFrequency || 'balanced'}
-            options={[{ id: 'minimal', label: 'Minimal' }, { id: 'balanced', label: 'Balanced' }, { id: 'heavy', label: 'Heavy' }]}
+          <SelectRow label={t('settingsPage.editing.brollFrequency')} value={v.brollFrequency || 'balanced'}
+            options={[{ id: 'minimal', label: t('settingsPage.editing.brollMinimal') }, { id: 'balanced', label: t('settingsPage.editing.brollBalanced') }, { id: 'heavy', label: t('settingsPage.editing.brollHeavy') }]}
             onChange={x => setField('videoEditing.brollFrequency', x)} />
         </div>
       )}
@@ -941,44 +953,44 @@ function AutomationSection({ settings, setField, saving, onSave }: {
   const g = settings.agentic
   return (
     <Card>
-      <SubHeader>Autonomous agents</SubHeader>
+      <SubHeader>{t('settingsPage.automation.autonomousAgents')}</SubHeader>
       <div className="mt-2 divide-y divide-[var(--border-subtle)]">
-        <ToggleRow label="Run automated workflows"
-          description="Let your workflows run on their own. Turn this off to stop them from running."
+        <ToggleRow label={t('settingsPage.automation.runWorkflows')}
+          description={t('settingsPage.automation.runWorkflowsDesc')}
           checked={!!g.autonomousSwarm} onChange={v => setField('agentic.autonomousSwarm', v)} />
-        <ToggleRow label="SLA auto-fulfill"
-          description="Automatically pick up and complete queued jobs to meet delivery SLAs"
+        <ToggleRow label={t('settingsPage.automation.slaAutoFulfill')}
+          description={t('settingsPage.automation.slaAutoFulfillDesc')}
           checked={!!g.slaAutoFulfill} onChange={v => setField('agentic.slaAutoFulfill', v)} />
       </div>
 
       <div className="mt-5">
-        <FormField label={`Predictive threshold — ${Math.round(g.predictiveThreshold ?? 85)}%`}
-          hint="Minimum predicted performance score before the agent acts autonomously">
+        <FormField label={t('settingsPage.automation.predictiveThresholdLabel', { value: Math.round(g.predictiveThreshold ?? 85) })}
+          hint={t('settingsPage.automation.predictiveThresholdHint')}>
           <Slider min={0} max={100} step={1} value={g.predictiveThreshold ?? 85}
-            onValueChange={v => setField('agentic.predictiveThreshold', Math.round(v))} aria-label="Predictive threshold" />
+            onValueChange={v => setField('agentic.predictiveThreshold', Math.round(v))} aria-label={t('settingsPage.automation.predictiveThresholdAria')} />
         </FormField>
       </div>
 
       <div className="mt-5">
-        <SubHeader>Digital twin</SubHeader>
-        <SelectRow label="Avatar provider" description="Service used to generate your digital twin / talking-head avatar"
+        <SubHeader>{t('settingsPage.automation.digitalTwin')}</SubHeader>
+        <SelectRow label={t('settingsPage.automation.avatarProvider')} description={t('settingsPage.automation.avatarProviderDesc')}
           value={g.digitalTwinProvider}
-          options={[{ id: 'heygen', label: 'HeyGen' }, { id: 'sora', label: 'Sora' }, { id: 'both', label: 'Both (best available)' }]}
+          options={[{ id: 'heygen', label: 'HeyGen' }, { id: 'sora', label: 'Sora' }, { id: 'both', label: t('settingsPage.automation.providerBoth') }]}
           onChange={v => setField('agentic.digitalTwinProvider', v)} />
 
         {(g.digitalTwinProvider === 'heygen' || g.digitalTwinProvider === 'both') && (
           <div className="mt-4">
-            <FormField label="HeyGen API key" hint="Stored securely and used for HeyGen avatar generation">
+            <FormField label={t('settingsPage.automation.heygenKey')} hint={t('settingsPage.automation.heygenKeyHint')}>
               <Input type="password" autoComplete="off" placeholder={g.heygenApiKeySet ? t('settingsPage.apiKeySavedPlaceholder', { last4: g.heygenApiKeyLast4 || '' }) : 'hg_…'} value={g.heygenApiKey || ''}
-                onChange={e => setField('agentic.heygenApiKey', e.target.value)} aria-label="HeyGen API key" />
+                onChange={e => setField('agentic.heygenApiKey', e.target.value)} aria-label={t('settingsPage.automation.heygenKey')} />
             </FormField>
           </div>
         )}
         {(g.digitalTwinProvider === 'sora' || g.digitalTwinProvider === 'both') && (
           <div className="mt-4">
-            <FormField label="Sora API key" hint="Stored securely and used for Sora avatar generation">
+            <FormField label={t('settingsPage.automation.soraKey')} hint={t('settingsPage.automation.soraKeyHint')}>
               <Input type="password" autoComplete="off" placeholder={g.soraApiKeySet ? t('settingsPage.apiKeySavedPlaceholder', { last4: g.soraApiKeyLast4 || '' }) : 'sk-…'} value={g.soraApiKey || ''}
-                onChange={e => setField('agentic.soraApiKey', e.target.value)} aria-label="Sora API key" />
+                onChange={e => setField('agentic.soraApiKey', e.target.value)} aria-label={t('settingsPage.automation.soraKey')} />
             </FormField>
           </div>
         )}
@@ -992,23 +1004,24 @@ function AutomationSection({ settings, setField, saving, onSave }: {
 function AiSection({ settings, setField, saving, onSave }: {
   settings: UserSettings; setField: (p: string, v: any) => void; saving: boolean; onSave: () => void
 }) {
+  const { t } = useTranslation()
   const a = settings.ai
   return (
     <Card>
-      <SelectRow label="Preferred AI provider" description="Auto lets Click pick the best model for each task" value={a.provider}
-        options={[{ id: 'auto', label: 'Auto (recommended)' }, { id: 'claude', label: 'Claude (Anthropic)' }, { id: 'gemini', label: 'Gemini (Google)' }]}
+      <SelectRow label={t('settingsPage.ai.provider')} description={t('settingsPage.ai.providerDesc')} value={a.provider}
+        options={[{ id: 'auto', label: t('settingsPage.ai.providerAuto') }, { id: 'claude', label: 'Claude (Anthropic)' }, { id: 'gemini', label: 'Gemini (Google)' }]}
         onChange={v => setField('ai.provider', v)} />
 
       <div className="mt-5">
-        <FormField label={`Creativity — ${Math.round((a.creativity ?? 0.5) * 100)}%`} hint="Lower is more precise, higher is more inventive">
+        <FormField label={t('settingsPage.ai.creativityLabel', { value: Math.round((a.creativity ?? 0.5) * 100) })} hint={t('settingsPage.ai.creativityHint')}>
           <Slider min={0} max={1} step={0.05} value={a.creativity ?? 0.5}
-            onValueChange={v => setField('ai.creativity', v)} aria-label="AI creativity" />
+            onValueChange={v => setField('ai.creativity', v)} aria-label={t('settingsPage.ai.creativityAria')} />
         </FormField>
       </div>
 
       <div className="mt-4 divide-y divide-[var(--border-subtle)]">
-        <ToggleRow label="Auto-apply AI suggestions"
-          description="Apply AI edit suggestions automatically without manual review"
+        <ToggleRow label={t('settingsPage.ai.autoApply')}
+          description={t('settingsPage.ai.autoApplyDesc')}
           checked={!!a.autoApply} onChange={v => setField('ai.autoApply', v)} />
       </div>
 
@@ -1020,43 +1033,44 @@ function AiSection({ settings, setField, saving, onSave }: {
 function BrandSection({ brandKit, setBrandKit, loading, saving, onSave }: {
   brandKit: BrandKit; setBrandKit: (b: BrandKit) => void; loading: boolean; saving: boolean; onSave: () => void
 }) {
+  const { t } = useTranslation()
   const upd = (field: keyof BrandKit, value: any) => setBrandKit({ ...brandKit, [field]: value })
-  if (loading) return <Card><div className="flex items-center gap-3 py-10 justify-center text-theme-muted"><RefreshCw className="animate-spin" size={20} /> Loading brand kit…</div></Card>
+  if (loading) return <Card><div className="flex items-center gap-3 py-10 justify-center text-theme-muted"><RefreshCw className="animate-spin" size={20} /> {t('settingsPage.loadingBrandKit')}</div></Card>
   return (
     <Card>
-      <SubHeader>Colors</SubHeader>
+      <SubHeader>{t('settingsPage.brand.colors')}</SubHeader>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-        <FormField label="Primary color">
+        <FormField label={t('settingsPage.primaryColor')}>
           <div className="flex items-center gap-3">
-            <input type="color" aria-label="Primary color" value={brandKit.primaryColor || '#6366f1'} onChange={e => upd('primaryColor', e.target.value)} className="h-10 w-12 rounded-lg border border-input cursor-pointer bg-transparent" />
-            <Input value={brandKit.primaryColor || ''} placeholder="#6366f1" onChange={e => upd('primaryColor', e.target.value)} aria-label="Primary color hex" />
+            <input type="color" aria-label={t('settingsPage.primaryColor')} value={brandKit.primaryColor || '#6366f1'} onChange={e => upd('primaryColor', e.target.value)} className="h-10 w-12 rounded-lg border border-input cursor-pointer bg-transparent" />
+            <Input value={brandKit.primaryColor || ''} placeholder="#6366f1" onChange={e => upd('primaryColor', e.target.value)} aria-label={t('settingsPage.brand.primaryHexAria')} />
           </div>
         </FormField>
-        <FormField label="Accent color">
+        <FormField label={t('settingsPage.accentColor')}>
           <div className="flex items-center gap-3">
-            <input type="color" aria-label="Accent color" value={brandKit.accentColor || '#8b5cf6'} onChange={e => upd('accentColor', e.target.value)} className="h-10 w-12 rounded-lg border border-input cursor-pointer bg-transparent" />
-            <Input value={brandKit.accentColor || ''} placeholder="#8b5cf6" onChange={e => upd('accentColor', e.target.value)} aria-label="Accent color hex" />
+            <input type="color" aria-label={t('settingsPage.accentColor')} value={brandKit.accentColor || '#8b5cf6'} onChange={e => upd('accentColor', e.target.value)} className="h-10 w-12 rounded-lg border border-input cursor-pointer bg-transparent" />
+            <Input value={brandKit.accentColor || ''} placeholder="#8b5cf6" onChange={e => upd('accentColor', e.target.value)} aria-label={t('settingsPage.brand.accentHexAria')} />
           </div>
         </FormField>
       </div>
 
-      <SubHeader>Typography</SubHeader>
+      <SubHeader>{t('settingsPage.brand.typography')}</SubHeader>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-        <SelectRow label="Headline font" value={brandKit.titleFont || ''} options={FONT_OPTIONS.map(o => ({ id: o.value, label: o.label }))} onChange={v => upd('titleFont', v)} />
-        <SelectRow label="Body font" value={brandKit.bodyFont || ''} options={FONT_OPTIONS.map(o => ({ id: o.value, label: o.label }))} onChange={v => upd('bodyFont', v)} />
+        <SelectRow label={t('settingsPage.headlineFont')} value={brandKit.titleFont || ''} options={FONT_OPTIONS.map(o => ({ id: o.value, label: o.labelKey ? t(o.labelKey) : o.label }))} onChange={v => upd('titleFont', v)} />
+        <SelectRow label={t('settingsPage.bodyFont')} value={brandKit.bodyFont || ''} options={FONT_OPTIONS.map(o => ({ id: o.value, label: o.labelKey ? t(o.labelKey) : o.label }))} onChange={v => upd('bodyFont', v)} />
       </div>
 
-      <SubHeader>Layout</SubHeader>
+      <SubHeader>{t('settingsPage.brand.layout')}</SubHeader>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-        <SelectRow label="Lower-third style" value={brandKit.lowerThirdStyle || ''}
-          options={[{ id: '', label: 'None' }, { id: 'bar', label: 'Bar' }, { id: 'pill', label: 'Pill' }, { id: 'minimal', label: 'Minimal' }]}
+        <SelectRow label={t('settingsPage.lowerThirdStyle')} value={brandKit.lowerThirdStyle || ''}
+          options={[{ id: '', label: t('settingsPage.none') }, { id: 'bar', label: t('settingsPage.brand.lowerThirdBar') }, { id: 'pill', label: t('settingsPage.brand.lowerThirdPill') }, { id: 'minimal', label: t('settingsPage.lowerThirdMinimal') }]}
           onChange={v => upd('lowerThirdStyle', v)} />
-        <SelectRow label="Logo placement" value={brandKit.logoPlacement || ''}
-          options={[{ id: '', label: 'Hidden' }, { id: 'top-left', label: 'Top left' }, { id: 'top-right', label: 'Top right' }, { id: 'bottom-right', label: 'Bottom right' }]}
+        <SelectRow label={t('settingsPage.logoPlacement')} value={brandKit.logoPlacement || ''}
+          options={[{ id: '', label: t('settingsPage.logoHidden') }, { id: 'top-left', label: t('settingsPage.logoTopLeft') }, { id: 'top-right', label: t('settingsPage.logoTopRight') }, { id: 'bottom-right', label: t('settingsPage.logoBottomRight') }]}
           onChange={v => upd('logoPlacement', v)} />
       </div>
 
-      <SaveBar saving={saving} onSave={onSave} label="Save brand kit" independent />
+      <SaveBar saving={saving} onSave={onSave} label={t('settingsPage.saveBrandKit')} independent />
     </Card>
   )
 }
@@ -1066,6 +1080,7 @@ function IntegrationsSection({ integrations, onAdd, onRemove }: {
   onAdd: (provider: string, label: string, key: string) => Promise<void>
   onRemove: (provider: string) => Promise<void>
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [provider, setProvider] = useState(INTEGRATION_PROVIDERS[0].id)
   const [label, setLabel] = useState('')
@@ -1076,13 +1091,13 @@ function IntegrationsSection({ integrations, onAdd, onRemove }: {
 
   const submit = async () => {
     setError('')
-    if (keyValue.trim().length < 8) { setError('Enter a valid API key (min 8 characters).'); return }
+    if (keyValue.trim().length < 8) { setError(t('settingsPage.integrations.invalidKey')); return }
     setBusy(true)
     try {
       await onAdd(provider, label.trim(), keyValue.trim())
       setOpen(false); setKeyValue(''); setLabel(''); setProvider(INTEGRATION_PROVIDERS[0].id)
     } catch (e) {
-      setError(handleApiError(e) || 'Could not add API key.')
+      setError(handleApiError(e) || t('settingsPage.integrations.addFailed'))
     } finally { setBusy(false) }
   }
 
@@ -1090,17 +1105,17 @@ function IntegrationsSection({ integrations, onAdd, onRemove }: {
     <Card>
       <div className="flex items-center justify-between gap-4">
         <p className="ds-text-caption">
-          Connect third-party providers. Keys are encrypted at rest and never shown again — only the last 4 digits.
+          {t('settingsPage.integrations.blurb')}
         </p>
-        <Button variant="primary" size="sm" leftIcon={<Plus size={16} />} onClick={() => setOpen(true)}>Add key</Button>
+        <Button variant="primary" size="sm" leftIcon={<Plus size={16} />} onClick={() => setOpen(true)}>{t('settingsPage.integrations.addKey')}</Button>
       </div>
 
       <div className="mt-5">
         {integrations.length === 0 ? (
           <EmptyState
             icon={Plug}
-            title="No API keys yet"
-            description="Add a provider key to enable extra integrations."
+            title={t('settingsPage.integrations.emptyTitle')}
+            description={t('settingsPage.integrations.emptyDesc')}
           />
         ) : (
           <ul className="space-y-2">
@@ -1119,7 +1134,7 @@ function IntegrationsSection({ integrations, onAdd, onRemove }: {
                 <Button
                   variant="ghost" size="sm" loading={removing === it.provider}
                   onClick={async () => { setRemoving(it.provider); try { await onRemove(it.provider) } finally { setRemoving(null) } }}
-                  aria-label={`Remove ${it.provider} key`}
+                  aria-label={t('settingsPage.integrations.removeAria', { provider: it.provider })}
                   className="text-rose-500 hover:text-rose-600"
                 >
                   <Trash2 size={16} />
@@ -1130,20 +1145,20 @@ function IntegrationsSection({ integrations, onAdd, onRemove }: {
         )}
       </div>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Add API key"
-        description="Your key is encrypted on our servers and never displayed again.">
+      <Modal open={open} onClose={() => setOpen(false)} title={t('settingsPage.integrations.modalTitle')}
+        description={t('settingsPage.integrations.modalDesc')}>
         <div className="space-y-4">
-          <SelectRow label="Provider" value={provider} options={INTEGRATION_PROVIDERS}
+          <SelectRow label={t('settingsPage.integrations.provider')} value={provider} options={INTEGRATION_PROVIDERS}
             onChange={setProvider} />
-          <FormField label="Label (optional)" hint="A name to recognize this key">
-            <Input value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. Production key" aria-label="Key label" />
+          <FormField label={t('settingsPage.integrations.labelOptional')} hint={t('settingsPage.integrations.labelHint')}>
+            <Input value={label} onChange={e => setLabel(e.target.value)} placeholder={t('settingsPage.integrations.labelPlaceholder')} aria-label={t('settingsPage.integrations.labelAria')} />
           </FormField>
-          <FormField label="API key" error={error || undefined}>
-            <Input type="password" value={keyValue} onChange={e => setKeyValue(e.target.value)} placeholder="sk-…" aria-label="API key" autoComplete="off" />
+          <FormField label={t('settingsPage.integrations.apiKey')} error={error || undefined}>
+            <Input type="password" value={keyValue} onChange={e => setKeyValue(e.target.value)} placeholder="sk-…" aria-label={t('settingsPage.integrations.apiKey')} autoComplete="off" />
           </FormField>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button variant="primary" loading={busy} onClick={submit} leftIcon={!busy ? <Check size={16} /> : undefined}>Save key</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
+            <Button variant="primary" loading={busy} onClick={submit} leftIcon={!busy ? <Check size={16} /> : undefined}>{t('settingsPage.integrations.saveKey')}</Button>
           </div>
         </div>
       </Modal>
@@ -1152,18 +1167,19 @@ function IntegrationsSection({ integrations, onAdd, onRemove }: {
 }
 
 function BillingSection() {
+  const { t } = useTranslation()
   return (
     <Card>
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary inline-flex items-center justify-center"><Gauge size={18} /></div>
         <div>
-          <p className="text-sm font-medium text-theme-primary">Manage your plan</p>
-          <p className="ds-text-caption">View invoices, update payment method and change your subscription.</p>
+          <p className="text-sm font-medium text-theme-primary">{t('settingsPage.billing.managePlan')}</p>
+          <p className="ds-text-caption">{t('settingsPage.billing.managePlanDesc')}</p>
         </div>
       </div>
       <div className="mt-4">
         <Link href="/dashboard/billing">
-          <Button variant="primary" rightIcon={<ChevronRight size={16} />}>Open billing</Button>
+          <Button variant="primary" rightIcon={<ChevronRight size={16} />}>{t('settingsPage.billing.open')}</Button>
         </Link>
       </div>
     </Card>
