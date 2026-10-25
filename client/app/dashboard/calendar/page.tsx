@@ -183,9 +183,9 @@ export default function ContentCalendarPage() {
         <Panel variant="bento" className="p-0 overflow-hidden">
           <div className="p-5 md:p-6 border-b border-[var(--border-subtle)] flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-1 p-1 rounded-lg ds-surface-subtle">
-              <IconButton variant="ghost" size="sm" onClick={() => navigateTime(-1)} title={t('calendarPage.refresh')} aria-label="Previous period"><ChevronLeft size={18} aria-hidden /></IconButton>
+              <IconButton variant="ghost" size="sm" onClick={() => navigateTime(-1)} title={t('calendarPage.previousPeriod')} aria-label={t('calendarPage.previousPeriod')}><ChevronLeft size={18} aria-hidden /></IconButton>
               <Button variant="ghost" size="sm" onClick={() => setCurrentDate(new Date())}>{t('calendarPage.today') || 'Today'}</Button>
-              <IconButton variant="ghost" size="sm" onClick={() => navigateTime(1)} title={t('calendarPage.refresh')} aria-label="Next period"><ChevronRight size={18} aria-hidden /></IconButton>
+              <IconButton variant="ghost" size="sm" onClick={() => navigateTime(1)} title={t('calendarPage.nextPeriod')} aria-label={t('calendarPage.nextPeriod')}><ChevronRight size={18} aria-hidden /></IconButton>
             </div>
 
             <h2 className="ds-text-h3 text-theme-primary">
