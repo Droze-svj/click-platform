@@ -69,6 +69,10 @@ function platformIcon(platform: string) {
   return VideoIcon
 }
 
+const ANALYTICS_PLATFORM_LABELS: Record<string, string> = {
+  tiktok: 'TikTok', instagram: 'Instagram', youtube: 'YouTube', twitter: 'X', linkedin: 'LinkedIn', facebook: 'Facebook',
+}
+
 export default function AnalyticsPage() {
   const router = useRouter()
   const { t } = useTranslation()
@@ -350,7 +354,7 @@ export default function AnalyticsPage() {
                         <div className="min-w-0 flex-1">
                           <p className="ds-text-label text-theme-primary truncate">{node.title}</p>
                           <p className="ds-text-caption flex items-center gap-2 flex-wrap">
-                            <span className="capitalize">{node.platform}</span>
+                            <span>{ANALYTICS_PLATFORM_LABELS[String(node.platform).toLowerCase()] || node.platform}</span>
                             <span aria-hidden>·</span>
                             <Clock size={11} aria-hidden />
                             {new Date(node.publishedAt || Date.now()).toLocaleDateString()}

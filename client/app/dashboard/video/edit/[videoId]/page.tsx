@@ -834,9 +834,9 @@ export default function VideoEditPage({ params }: PageProps) {
                           { label: t('aiAutoEdit.plan.clips'), val: editingOptions.generateClips ? `${clipCount} × ${clipTargetLength === 'short' ? t('aiAutoEdit.plan.under30s') : clipTargetLength === 'mid-3-5' ? '30–60s' : clipTargetLength === 'mid-5-10' ? '1–3 min' : t('aiAutoEdit.plan.fullLength')}` : t('aiAutoEdit.plan.oneVideo') },
                           { label: t('aiAutoEdit.plan.format'), val: exportFormats.join(' · ') || '9:16' },
                         ].map((s, i) => (
-                          <div key={i} className="flex justify-between items-center p-5 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800">
-                            <span className="text-xs font-bold text-surface-500">{s.label}</span>
-                            <span className="text-sm font-black text-surface-900 dark:text-white">{s.val}</span>
+                          <div key={i} className="flex justify-between items-center gap-4 p-5 rounded-2xl bg-surface-50 dark:bg-surface-950 border border-surface-200 dark:border-surface-800">
+                            <span className="shrink-0 whitespace-nowrap text-xs font-bold text-surface-500">{s.label}</span>
+                            <span className="text-right text-sm font-black text-surface-900 dark:text-white">{s.val}</span>
                           </div>
                         ))}
                      </div>

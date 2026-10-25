@@ -2793,7 +2793,7 @@
     "refreshTeamData": "Refresh team data",
     "membersMatrix": "Members",
     "neuralUnitRegistry": "Everyone on this team",
-    "unitsSynced": "{{count}} members",
+    "unitsSynced": "Members: {{count}}",
     "initializedLabel": "Joined {{date}}",
     "syncedReady": "Active",
     "coreOwner": "Owner",
