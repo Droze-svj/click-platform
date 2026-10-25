@@ -10,7 +10,7 @@ import { ErrorBoundary } from '../../../components/ErrorBoundary'
 import { extractApiError } from '../../../utils/apiResponse'
 import { useSocket } from '../../../hooks/useSocket'
 import { useAuth } from '../../../hooks/useAuth'
-import { apiGet } from '../../../lib/api'
+import { apiGet, API_URL } from '../../../lib/api'
 import {
   Upload, UploadCloud, Play, Loader2, CheckCircle, AlertCircle,
   RefreshCw, Layers, Clock,
@@ -138,7 +138,10 @@ export default function VideoStudioPage() {
     fd.append('title', file.name.replace(/\.[^.]+$/, ''))
     const xhr = new XMLHttpRequest()
     return new Promise<any>((resolve, reject) => {
-      xhr.open('POST', '/api/video/upload')
+      // The configured API base, not a hardcoded same-origin /api: with the
+      // API on another origin/port the relative path hit the Next proxy (or
+      // nothing at all) instead of the backend.
+      xhr.open('POST', `${API_URL}/video/upload`)
       if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) setPageDropProgress(Math.round((e.loaded / e.total) * 100))
@@ -336,7 +339,7 @@ export default function VideoStudioPage() {
           </div>
           <div className="p-8 sm:p-10 xl:w-2/3 flex items-center justify-center">
             <div className="w-full max-w-2xl">
-              <FileUpload onUpload={(file, res) => { setSwarmHUDTask('Analyzing your video'); setShowSwarmHUD(true); handleUploadResponse(file, res) }} uploadUrl="/api/video/upload" />
+              <FileUpload onUpload={(file, res) => { setSwarmHUDTask('Analyzing your video'); setShowSwarmHUD(true); handleUploadResponse(file, res) }} uploadUrl={`${API_URL}/video/upload`} />
             </div>
           </div>
         </Panel>
