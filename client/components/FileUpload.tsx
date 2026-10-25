@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
+import { UploadCloud } from 'lucide-react'
+import type React from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { sendDebugLog } from '../utils/debugLog'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -13,6 +15,8 @@ interface FileUploadProps {
   disabled?: boolean
   uploadUrl?: string
   onProgress?: (progress: number) => void
+  /** Replaces the default "type · max size" line under the prompt. */
+  hint?: React.ReactNode
 }
 
 export default function FileUpload({
@@ -21,7 +25,8 @@ export default function FileUpload({
   maxSize = 1073741824,
   disabled,
   uploadUrl,
-  onProgress
+  onProgress,
+  hint
 }: FileUploadProps) {
   const { t } = useTranslation()
   const { user } = useAuth()
@@ -198,9 +203,9 @@ export default function FileUpload({
     <div className="w-full">
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${isDragActive
-          ? 'border-purple-500 bg-purple-50'
-          : 'border-gray-300 hover:border-purple-400'
+        className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${isDragActive
+          ? 'border-indigo-500 bg-indigo-500/10'
+          : 'border-[var(--glass-border-strong,rgba(148,163,184,0.4))] hover:border-indigo-500/60 hover:bg-indigo-500/5'
           } ${disabled || uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
         role="button"
         aria-label={disabled || uploading ? t('fileUpload.uploadAreaDisabled') : t('fileUpload.uploadAreaActive')}
@@ -213,26 +218,28 @@ export default function FileUpload({
         }}
       >
         <input {...getInputProps()} aria-hidden="true" tabIndex={-1} />
-        <div className="space-y-4">
-          <div className="text-4xl">📁</div>
+        <div className="flex flex-col items-center gap-3">
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
+            <UploadCloud size={24} aria-hidden />
+          </span>
           {uploading ? (
             <>
-              <p className="text-lg font-semibold">{t('fileUpload.uploading')}</p>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <p className="text-base font-semibold text-theme-primary">{t('fileUpload.uploading')}</p>
+              <div className="w-full bg-accent rounded-full h-2.5">
                 <div
-                  className="bg-purple-600 h-2.5 rounded-full transition-all duration-300"
+                  className="bg-indigo-500 h-2.5 rounded-full transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <p className="text-sm text-gray-600">{progress}%</p>
+              <p className="text-sm text-theme-muted">{progress}%</p>
             </>
           ) : (
             <>
-              <p className="text-lg font-semibold">
+              <p className="text-base font-semibold text-theme-primary">
                 {isDragActive ? t('fileUpload.dropHere') : t('fileUpload.dragDropPrompt')}
               </p>
-              <p className="text-sm text-gray-500">
-                {accept ? Object.values(accept).flat().join(', ') : t('fileUpload.anyFile')} {t('fileUpload.maxSize', { size: Math.round(maxSize / 1024 / 1024) })}
+              <p className="text-sm text-theme-muted">
+                {hint ?? <>{accept ? Object.values(accept).flat().join(', ') : t('fileUpload.anyFile')} {t('fileUpload.maxSize', { size: Math.round(maxSize / 1024 / 1024) })}</>}
               </p>
             </>
           )}

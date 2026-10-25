@@ -15,7 +15,7 @@ import {
   Upload, UploadCloud, Play, Loader2, CheckCircle, AlertCircle,
   RefreshCw, Layers, Clock,
   Search, ActivitySquare, Sparkles, MoreVertical,
-  Database, ShieldCheck, Zap
+  Database, ShieldCheck, Zap, Film
 } from 'lucide-react'
 import { SwarmConsensusHUD } from '../../../components/editor/SwarmConsensusHUD'
 import { m, AnimatePresence } from 'framer-motion'
@@ -323,7 +323,7 @@ export default function VideoStudioPage() {
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard className="ds-hover-lift ds-anim-rise" label={tr('studio.payloadInventory', 'Total videos')} value={videos.length} icon={Layers} />
           <StatCard className="ds-hover-lift ds-anim-rise" label={tr('studio.neuralProcessed', 'Processed')} value={completedCount} icon={ActivitySquare} />
-          <StatCard className="ds-hover-lift ds-anim-rise" label={tr('studio.syntheticYields', 'Synthetic Yields')} value={totalClips} icon={Sparkles} />
+          <StatCard className="ds-hover-lift ds-anim-rise" label={tr('studio.clipsMade', 'Clips made')} value={totalClips} icon={Sparkles} />
         </section>
 
         {/* Intake module */}
@@ -332,14 +332,14 @@ export default function VideoStudioPage() {
             <span className="flex h-14 w-14 mb-5 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-500">
               <UploadCloud size={28} aria-hidden />
             </span>
-            <h2 className="ds-text-h2 text-theme-primary mb-2">{tr('studio.initializeIntake', 'Initialize Intake')}</h2>
+            <h2 className="ds-text-h2 text-theme-primary mb-2">{tr('studio.uploadTitle', 'Upload a video')}</h2>
             <p className="ds-text-body text-theme-muted">
               {tr('studio.intakeHint', 'Upload raw footage and Click will analyze it and suggest clips you can edit and post.')}
             </p>
           </div>
           <div className="p-8 sm:p-10 xl:w-2/3 flex items-center justify-center">
             <div className="w-full max-w-2xl">
-              <FileUpload onUpload={(file, res) => { setSwarmHUDTask('Analyzing your video'); setShowSwarmHUD(true); handleUploadResponse(file, res) }} uploadUrl={`${API_URL}/video/upload`} />
+              <FileUpload hint={tr('studio.uploadHint', 'MP4, MOV, WebM and other video files · up to 1 GB')} onUpload={(file, res) => { setSwarmHUDTask(tr('studio.analyzingVideo', 'Analyzing your video')); setShowSwarmHUD(true); handleUploadResponse(file, res) }} uploadUrl={`${API_URL}/video/upload`} />
             </div>
           </div>
         </Panel>
@@ -362,7 +362,7 @@ export default function VideoStudioPage() {
                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                     {['all', 'completed', 'processing', 'failed'].map(opt => (
                       <Button type="button" key={opt} variant={statusFilter === opt ? 'primary' : 'secondary'} size="sm" onClick={() => setStatusFilter(opt as any)}>
-                        {tr(`studio.${opt}`, opt)}
+                        {tr(`studio.filter.${opt}`, opt)}
                       </Button>
                     ))}
                  </div>
@@ -375,9 +375,11 @@ export default function VideoStudioPage() {
                 return (
                   <Panel key={video._id} variant="bento" className="ds-anim-rise overflow-hidden p-0 group flex flex-col">
                     <div className="aspect-video relative bg-accent overflow-hidden border-b border-[var(--border-subtle)]">
-                      <video src={getMediaUrl(video.originalFile?.url || '')} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" preload="metadata" muted onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0 }} />
+                      {/* Neutral placeholder under the first frame — shows while it loads or when the browser can't decode it. */}
+                      <Film size={32} className="absolute inset-0 m-auto text-theme-muted opacity-40" aria-hidden />
+                      <video src={getMediaUrl(video.originalFile?.url || '')} className="relative w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" preload="metadata" muted onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0 }} />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <button type="button" onClick={() => router.push(editLink(video._id))} aria-label={`Open ${video.title || 'video'} in editor`} title={`Open ${video.title || 'video'} in editor`} className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-black shadow-lg transition-transform active:scale-95">
+                        <button type="button" onClick={() => router.push(editLink(video._id))} aria-label={tr('studio.openInEditor', 'Open {title} in editor', { title: video.title || 'video' })} title={tr('studio.openInEditor', 'Open {title} in editor', { title: video.title || 'video' })} className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-black shadow-lg transition-transform active:scale-95">
                           <Play size={28} className="ml-0.5 fill-current" aria-hidden />
                         </button>
                       </div>
@@ -390,13 +392,13 @@ export default function VideoStudioPage() {
                       <div>
                         <div className="flex items-start justify-between gap-3 mb-3">
                           <h3 className="ds-text-h3 text-theme-primary truncate" title={video.title}>{video.title}</h3>
-                          <IconButton variant="ghost" size="sm" aria-label="More Options" className="flex-shrink-0">
+                          <IconButton variant="ghost" size="sm" aria-label={tr('studio.moreOptions', 'More options')} className="flex-shrink-0">
                             <MoreVertical size={18} aria-hidden />
                           </IconButton>
                         </div>
                         <div className="flex flex-wrap items-center gap-4 ds-text-caption">
                           <span className="inline-flex items-center gap-1.5"><Clock size={13} aria-hidden /> {new Date(video.createdAt).toLocaleDateString()}</span>
-                          <span className="inline-flex items-center gap-1.5"><Sparkles size={13} aria-hidden /> {video.generatedContent?.shortVideos?.length || 0} {tr('studio.yields', 'YIELDS')}</span>
+                          <span className="inline-flex items-center gap-1.5"><Sparkles size={13} aria-hidden /> {tr('studio.clipsCount', '{count} clips', { count: video.generatedContent?.shortVideos?.length || 0 })}</span>
                         </div>
                       </div>
                       <Button variant="primary" size="md" className="w-full" onClick={() => router.push(editLink(video._id))}>
