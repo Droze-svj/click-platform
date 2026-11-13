@@ -92,7 +92,7 @@
     "checkoutUnavailable": "Checkout for this plan is not available right now. Nothing was changed. Please try again later or contact support.",
     "invoiceDownloadFailed": "Couldn't download the invoice. Please try again.",
     "faq1Q": "How does the 14-day money-back guarantee work?",
-    "faq1A": "Every first-time subscription to a paid plan (Creator, Pro or Agency) includes an unconditional 14-day money-back guarantee. If Click isn't the right fit for you, email {{email}} within 14 days of your first charge for a 100% refund. No cancellation hoops, no retention calls.",
+    "faq1A": "Every first-time subscription to a paid plan (Creator, Pro or Agency) includes a 14-day money-back guarantee. If Click isn't the right fit for you, ask for a refund from Billing → Manage within 14 days of your first payment and you get 100% back.",
     "faq2Q": "Who owns the copyright and commercial rights to my videos and digital twin assets?",
     "faq2A": "You keep 100% exclusive intellectual property and commercial rights to all your raw footage, generated clips, scripts, voice notes and digital twin avatar outputs. Click claims no copyright or licensing royalties over your content.",
     "faq3Q": "How do I cancel or change my subscription?",
@@ -170,7 +170,8 @@
     "feedbackLabel": "Additional feedback (optional)",
     "feedbackPlaceholder": "Help us improve Click...",
     "submitRequest": "Submit request",
-    "statusPending": "pending"
+    "statusPending": "pending",
+    "contactLink": "Contact us"
   },
   "labsPage": {
     "title": "Labs",
@@ -2055,7 +2056,7 @@
     "subtitle": "What has shipped, what we're working on, and what's next. Updated as features ship and priorities shift.",
     "backToDashboard": "Back to dashboard",
     "open": "Open",
-    "feedbackPrompt": "Spotted a gap? Drop feedback in",
+    "feedbackPrompt": "Spotted a gap? Tell us through",
     "status_shipped": "Shipped",
     "status_in-progress": "In progress",
     "status_next-up": "Next up",
@@ -2092,7 +2093,8 @@
     "item_teamWorkspaces_title": "Multi-creator team workspaces",
     "item_teamWorkspaces_description": "Shared brand kit, shared style profile and role-based publishing for teams.",
     "item_mobileCapture_title": "Native mobile capture app",
-    "item_mobileCapture_description": "Record, auto-cut and queue from your phone, then finish on the desktop editor."
+    "item_mobileCapture_description": "Record, auto-cut and queue from your phone, then finish on the desktop editor.",
+    "feedbackLink": "the contact form"
   },
   "schedulerPage": {
     "loading": "Loading",
@@ -2558,7 +2560,10 @@
     "cmdGlobalAnalyticsDesc": "Platform-wide stats",
     "refundRequestsTitle": "Refund requests",
     "refundRequestsBody": "Customers who asked for the 14-day refund. Issue the refund in Whop.",
-    "refundRequestsEmpty": "No refund requests."
+    "refundRequestsEmpty": "No refund requests.",
+    "messagesTitle": "Messages",
+    "messagesBody": "Sent from the contact form. Reply by email.",
+    "messagesEmpty": "No messages yet."
   },
   "infrastructurePage": {
     "loading": "Loading system status...",
@@ -11752,5 +11757,30 @@
     "wrongPassword": "That password isn't right.",
     "cancelFirst": "We couldn't cancel your subscription automatically. Cancel it from your Whop account first, then delete your account.",
     "deleteFailed": "Couldn't delete your account. Try again."
+  },
+  "contactPage": {
+    "topicLabel": "What is it about?",
+    "topic": {
+      "support": "Support",
+      "billing": "Billing",
+      "privacy": "Privacy & my data",
+      "sales": "Agencies & sales",
+      "other": "Something else"
+    },
+    "hint": {
+      "support": "What were you doing, and what happened instead?",
+      "billing": "Include the email you pay with on Whop if it's different.",
+      "privacy": "For a copy or deletion of your data, write from the email on your Click account.",
+      "sales": "Team size, number of brands, and what you'd like to do.",
+      "other": "Anything you'd like us to know."
+    },
+    "nameLabel": "Name",
+    "emailLabel": "Email (for our reply)",
+    "messageLabel": "Message",
+    "send": "Send message",
+    "sending": "Sending…",
+    "sendFailed": "Couldn't send your message. Try again.",
+    "sentTitle": "Message sent",
+    "sentBody": "Thanks. We'll reply to {{email}}."
   }
 }

@@ -44,6 +44,9 @@ async function mongoAdminDashboard() {
   const refundUsers = await User.find({ 'subscription.refundRequestedAt': { $ne: null } })
     .sort({ 'subscription.refundRequestedAt': -1 }).limit(20)
     .select('email subscription.plan subscription.refundRequestedAt subscription.refundTicketId').lean();
+  // Contact-form messages: the only inbox Click has.
+  const ContactMessage = require('../models/ContactMessage');
+  const messages = await ContactMessage.find({}).sort({ createdAt: -1 }).limit(20).lean();
   // ScheduledPost.userId is a plain string (no ref), so look the authors up.
   const authorIds = [...new Set(recentPosts.map((p) => String(p.userId)))].filter((id) => mongoose.Types.ObjectId.isValid(id));
   const authors = new Map((await User.find({ _id: { $in: authorIds } }).select('email').lean()).map((u) => [String(u._id), u.email]));
@@ -70,6 +73,14 @@ async function mongoAdminDashboard() {
         users: { email: authors.get(String(p.userId)) || '' },
       })),
     },
+    contact_messages: messages.map((m) => ({
+      id: String(m._id),
+      name: m.name || '',
+      email: m.email,
+      topic: m.topic,
+      message: m.message,
+      created_at: m.createdAt,
+    })),
     refund_requests: refundUsers.map((u) => ({
       id: String(u._id),
       email: u.email,

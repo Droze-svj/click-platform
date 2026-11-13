@@ -61,7 +61,7 @@ export function Footer() {
             <div className="flex flex-col gap-3">
               <h4 className="text-[10px] font-black uppercase tracking-[0.4em] italic text-surface-900 dark:text-white mb-1">Company</h4>
               <Link href="/contact" className="text-xs text-surface-400 dark:text-slate-500 hover:text-primary-500 transition-colors">Contact</Link>
-              <a href="mailto:support@clickapp.io" className="text-xs text-surface-400 dark:text-slate-500 hover:text-primary-500 transition-colors">Support</a>
+              <a href="/contact?topic=support" className="text-xs text-surface-400 dark:text-slate-500 hover:text-primary-500 transition-colors">Support</a>
               <Link href="/trust" className="text-xs text-surface-400 dark:text-slate-500 hover:text-primary-500 transition-colors">Trust</Link>
               <Link href="/security" className="text-xs text-surface-400 dark:text-slate-500 hover:text-primary-500 transition-colors">Security</Link>
             </div>

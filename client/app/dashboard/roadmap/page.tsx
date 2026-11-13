@@ -131,7 +131,7 @@ export default function RoadmapPage() {
       <footer className="mt-12 pt-8 border-t border-[var(--border-subtle)]">
         <p className="text-sm text-theme-muted flex items-center gap-2">
           <Sparkles size={14} className="text-primary" aria-hidden />
-          {t('roadmapPage.feedbackPrompt')} <a href="mailto:hello@clickapp.io" className="text-primary hover:underline">hello@clickapp.io</a>.
+          {t('roadmapPage.feedbackPrompt')} <Link href="/contact?topic=other" className="text-primary hover:underline">{t('roadmapPage.feedbackLink')}</Link>.
         </p>
       </footer>
     </PageShell>

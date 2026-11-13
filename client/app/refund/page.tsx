@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function RefundPage() {
   return (
-    <LegalPage kicker="Billing & Legal" title="Refund & Cancellation Policy" updated={new Date()}>
+    <LegalPage kicker="Billing & Legal" title="Refund & Cancellation Policy" updated={new Date('2026-11-13')}>
       <div className="prose prose-invert prose-slate max-w-none space-y-8 text-surface-700 dark:text-surface-300 leading-relaxed">
         
         {/* Highlight Callout */}
@@ -85,7 +85,7 @@ export default function RefundPage() {
         <section className="space-y-4">
           <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">6. Chargebacks and Friendly Dispute Resolution</h2>
           <p>
-            We strive to resolve any billing confusion quickly and fairly. If you notice an unexpected charge or billing discrepancy, we ask that you contact our support team at <a href="mailto:billing@clickapp.io" className="text-primary-500 hover:underline">billing@clickapp.io</a> before initiating a bank chargeback or dispute.
+            We strive to resolve any billing confusion quickly and fairly. If you notice an unexpected charge or billing discrepancy, we ask that you contact us through <a href="/contact?topic=billing" className="text-primary-500 hover:underline">our contact form</a> before initiating a bank chargeback or dispute.
           </p>
           <p className="text-sm">
             Bank chargebacks can freeze account access and incur third-party administrative processing fees. In almost all instances, our support team can issue direct refunds and resolve billing inquiries faster than bank arbitration.
@@ -98,8 +98,8 @@ export default function RefundPage() {
             To claim your 14-day refund or request billing assistance, submit a request through any of the following channels:
           </p>
           <div className="p-4 rounded-xl bg-surface-100 dark:bg-white/5 not-prose space-y-2 text-sm">
-            <p><strong>Email:</strong> <a href="mailto:billing@clickapp.io" className="text-primary-500 hover:underline">billing@clickapp.io</a></p>
-            <p><strong>Subject Line:</strong> Refund Request — [Your Account Email]</p>
+            <p><strong>In the app:</strong> Billing → Manage → Refund. <strong>Or</strong> <a href="/contact?topic=billing" className="text-primary-500 hover:underline">our contact form</a></p>
+            <p><strong>Topic:</strong> Billing, and write from the email on your Click account.</p>
             <p><strong>Information to Include:</strong> Your account email, transaction ID or invoice number (available on your Billing page).</p>
             <p className="text-xs text-surface-500 dark:text-slate-400 mt-2">
               Our billing desk processes verified refund requests within 24–48 business hours.

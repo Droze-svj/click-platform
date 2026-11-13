@@ -47,7 +47,7 @@ export default function TrustPage() {
           <ul className="text-surface-700 dark:text-surface-300 leading-relaxed space-y-3 list-disc pl-6">
             <li><strong>No training on your private content</strong> — see Privacy §4.</li>
             <li><strong>AI use can be disclosed</strong> — exports can carry a C2PA provenance manifest that records AI involvement. The signing status above shows whether signing is switched on right now.</li>
-            <li><strong>30-day data export &amp; deletion SLA</strong> — self-serve from Settings, or via privacy@clickapp.io.</li>
+            <li><strong>Self-serve data export &amp; deletion</strong> — in Settings → Account &amp; Security → Your data; deletion is immediate.</li>
             <li><strong>Sensible defaults</strong> — HTTPS everywhere, connected-account tokens encrypted at rest (AES-256-GCM), bcrypt password hashing, optional two-step sign-in. Details on the <Link href="/security" className="text-primary-600 dark:text-indigo-400 underline underline-offset-4">Security</Link> page.</li>
             <li><strong>Sub-processors disclosed and DPA-bound</strong> (table below). 30-day notice before adding new ones.</li>
           </ul>
@@ -82,23 +82,19 @@ export default function TrustPage() {
             </table>
           </div>
           <p className="text-surface-500 text-xs mt-3">
-            We notify customers 30 days before adding a new sub-processor. Subscribe to updates at{' '}
-            <a href="mailto:trust@clickapp.io" className="text-primary-600 dark:text-indigo-400 hover:underline underline-offset-4">
-              trust@clickapp.io
-            </a>
+            Questions about the providers we use? Ask through{' '}
+            <a href="/contact?topic=other" className="text-primary-600 dark:text-indigo-400 hover:underline underline-offset-4">our contact form</a>
             .
           </p>
         </section>
 
         <section className="mb-16">
-          <h2 className="text-2xl font-black mb-6 tracking-tight">Documents on request</h2>
+          <h2 className="text-2xl font-black mb-6 tracking-tight">For companies</h2>
           <p className="text-surface-700 dark:text-surface-300 leading-relaxed">
-            Data Processing Addendum (DPA), Standard Contractual Clauses (SCCs), security
-            questionnaire answers, and our AI risk assessment (EU AI Act). Click has not completed
-            a SOC 2 or ISO 27001 audit. Email{' '}
-            <a href="mailto:trust@clickapp.io" className="text-primary-600 dark:text-indigo-400 hover:underline underline-offset-4">
-              trust@clickapp.io
-            </a>
+            Need a Data Processing Addendum, Standard Contractual Clauses or answers to a security
+            questionnaire for your company? Click has not completed a SOC 2 or ISO 27001 audit. Ask
+            through{' '}
+            <a href="/contact?topic=other" className="text-primary-600 dark:text-indigo-400 hover:underline underline-offset-4">our contact form</a>
             .
           </p>
         </section>

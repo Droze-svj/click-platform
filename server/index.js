@@ -2360,6 +2360,7 @@ app.use('/api/jobs', require('./routes/jobs/progress'));
 app.use('/api/upload/chunked', require('./routes/upload/chunked'));
 app.use('/api/security', require('./routes/security'));
 app.use('/api/privacy', require('./routes/privacy'));
+app.use('/api/contact', require('./routes/contact'));
 app.use('/api/cache', require('./routes/cache'));
 app.use('/api/oauth/twitter', require('./routes/oauth/twitter'));
 app.use('/api/oauth/linkedin', require('./routes/oauth/linkedin'));
