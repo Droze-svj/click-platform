@@ -92,7 +92,7 @@
     "checkoutUnavailable": "Der Checkout für diesen Plan ist gerade nicht verfügbar. Es wurde nichts geändert. Bitte versuch es später erneut oder kontaktiere den Support.",
     "invoiceDownloadFailed": "Die Rechnung konnte nicht heruntergeladen werden. Bitte versuch es erneut.",
     "faq1Q": "Wie funktioniert die 14-Tage-Geld-zurück-Garantie?",
-    "faq1A": "Jedes erste Abo eines kostenpflichtigen Tarifs (Creator, Pro oder Agency) enthält eine bedingungslose 14-Tage-Geld-zurück-Garantie. Wenn Click nicht zu dir passt, schreib innerhalb von 14 Tagen nach deiner ersten Zahlung an {{email}} und du bekommst 100 % zurück. Ohne Hürden beim Kündigen und ohne Überredungsanrufe.",
+    "faq1A": "Jedes erste Abo eines kostenpflichtigen Tarifs (Creator, Pro oder Agency) enthält eine 14-Tage-Geld-zurück-Garantie. Wenn Click nicht zu dir passt, wähle auf dieser Seite innerhalb von 14 Tagen nach deiner ersten Zahlung „{{button}}“ und du bekommst 100 % zurück.",
     "faq2Q": "Wem gehören das Urheberrecht und die kommerziellen Rechte an meinen Videos und Digital-Twin-Assets?",
     "faq2A": "Dir gehören zu 100 % alle geistigen Eigentums- und kommerziellen Rechte an deinem Rohmaterial, deinen erstellten Clips, Skripten, Sprachnotizen und Digital-Twin-Avataren. Click erhebt keinen Anspruch auf Urheberrechte oder Lizenzgebühren an deinen Inhalten.",
     "faq3Q": "Wie kündige ich mein Abo oder wechsle den Tarif?",
@@ -170,7 +170,8 @@
     "feedbackLabel": "Weiteres Feedback (optional)",
     "feedbackPlaceholder": "Hilf uns, Click zu verbessern…",
     "submitRequest": "Anfrage senden",
-    "statusPending": "ausstehend"
+    "statusPending": "ausstehend",
+    "contactLink": "Kontakt"
   },
   "labsPage": {
     "title": "Labs",
@@ -2055,7 +2056,7 @@
     "subtitle": "Was veröffentlicht wurde, woran wir arbeiten und was als Nächstes kommt. Wird aktualisiert, sobald Funktionen live gehen und sich Prioritäten ändern.",
     "backToDashboard": "Zurück zum Dashboard",
     "open": "Offen",
-    "feedbackPrompt": "Haben Sie eine Lücke entdeckt? Geben Sie uns Feedback",
+    "feedbackPrompt": "Lücke entdeckt? Sag es uns über",
     "status_shipped": "Ausgeliefert",
     "status_in-progress": "Im Gange",
     "status_next-up": "Als nächstes",
@@ -2092,7 +2093,8 @@
     "item_teamWorkspaces_title": "Teamarbeitsbereiche für mehrere Ersteller",
     "item_teamWorkspaces_description": "Gemeinsames Brand Kit, gemeinsames Stilprofil und rollenbasiertes Veröffentlichen für Teams.",
     "item_mobileCapture_title": "Native mobile Capture-App",
-    "item_mobileCapture_description": "Auf dem Handy aufnehmen, automatisch schneiden und einreihen – und am Desktop-Editor fertigstellen."
+    "item_mobileCapture_description": "Auf dem Handy aufnehmen, automatisch schneiden und einreihen – und am Desktop-Editor fertigstellen.",
+    "feedbackLink": "das Kontaktformular"
   },
   "schedulerPage": {
     "loading": "Laden",
@@ -2558,7 +2560,10 @@
     "cmdGlobalAnalyticsDesc": "Plattformweite Statistiken",
     "refundRequestsTitle": "Erstattungsanfragen",
     "refundRequestsBody": "Kunden, die die 14-Tage-Erstattung angefordert haben. Erstatte den Betrag in Whop.",
-    "refundRequestsEmpty": "Keine Erstattungsanfragen."
+    "refundRequestsEmpty": "Keine Erstattungsanfragen.",
+    "messagesTitle": "Nachrichten",
+    "messagesBody": "Vom Kontaktformular gesendet. Antworte per E-Mail.",
+    "messagesEmpty": "Noch keine Nachrichten."
   },
   "infrastructurePage": {
     "loading": "Systemstatus wird geladen...",
@@ -11728,5 +11733,54 @@
     "potential": "{{lift}} Potenzial",
     "voteUp": "Guter Vorschlag",
     "voteDown": "Nichts für mich"
+  },
+  "privacyData": {
+    "title": "Deine Daten",
+    "exportTitle": "Deine Daten herunterladen",
+    "exportBody": "Eine Datei mit allem, was Click zu deinem Konto speichert: Profil, Inhalte, Beiträge, Untertitel, Einstellungen und Aktivität. Passwörter und Verbindungstoken sind nicht enthalten.",
+    "exportButton": "Meine Daten herunterladen",
+    "exporting": "Wird vorbereitet…",
+    "exportReady": "Deine Daten werden heruntergeladen.",
+    "exportFailed": "Deine Daten konnten nicht vorbereitet werden. Versuch es noch einmal.",
+    "deleteTitle": "Konto löschen",
+    "deleteBody": "Löscht dein Konto, deine Videos und Dateien, Untertitel, Skripte, geplante Beiträge, verbundene Social-Media-Konten und Einstellungen dauerhaft. Zahlungsbelege bleiben für die Buchhaltung erhalten. Das lässt sich nicht rückgängig machen.",
+    "deleteButton": "Konto dauerhaft löschen",
+    "dialogTitle": "Konto löschen?",
+    "dialogBody": "Alles wird sofort gelöscht und lässt sich nicht wiederherstellen. Wenn du einen Tarif bezahlst, wird er zuerst gekündigt, damit dir nichts mehr berechnet wird.",
+    "passwordLabel": "Aktuelles Passwort",
+    "confirmWord": "LÖSCHEN",
+    "typeToConfirm": "Gib {{word}} zur Bestätigung ein",
+    "keepAccount": "Konto behalten",
+    "deleteForever": "Endgültig löschen",
+    "deleting": "Wird gelöscht…",
+    "deleted": "Dein Konto und deine Daten wurden gelöscht.",
+    "wrongPassword": "Dieses Passwort ist nicht richtig.",
+    "cancelFirst": "Wir konnten dein Abo nicht automatisch kündigen. Kündige es zuerst in deinem Whop-Konto und lösche dann dein Konto.",
+    "deleteFailed": "Dein Konto konnte nicht gelöscht werden. Versuch es noch einmal."
+  },
+  "contactPage": {
+    "topicLabel": "Worum geht es?",
+    "topic": {
+      "support": "Support",
+      "billing": "Abrechnung",
+      "privacy": "Datenschutz & meine Daten",
+      "sales": "Agenturen & Vertrieb",
+      "other": "Etwas anderes"
+    },
+    "hint": {
+      "support": "Was hast du gemacht, und was ist stattdessen passiert?",
+      "billing": "Gib die E-Mail an, mit der du bei Whop zahlst, falls sie abweicht.",
+      "privacy": "Für eine Kopie oder Löschung deiner Daten schreib uns von der E-Mail deines Click-Kontos.",
+      "sales": "Teamgröße, Anzahl der Marken und was du vorhast.",
+      "other": "Alles, was wir wissen sollten."
+    },
+    "nameLabel": "Name",
+    "emailLabel": "E-Mail (für unsere Antwort)",
+    "messageLabel": "Nachricht",
+    "send": "Nachricht senden",
+    "sending": "Wird gesendet…",
+    "sendFailed": "Deine Nachricht konnte nicht gesendet werden. Versuch es noch einmal.",
+    "sentTitle": "Nachricht gesendet",
+    "sentBody": "Danke. Wir antworten an {{email}}."
   }
 }

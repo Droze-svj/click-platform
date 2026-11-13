@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <LegalPage kicker="Legal" title="Terms of Service" updated={new Date()}>
+    <LegalPage kicker="Legal" title="Terms of Service" updated={new Date('2026-11-13')}>
       <div className="prose prose-invert prose-slate max-w-none space-y-8 text-surface-700 dark:text-surface-300 leading-relaxed">
         
         <div className="p-4 rounded-xl bg-surface-100 dark:bg-white/5 not-prose text-xs text-surface-600 dark:text-slate-400">
@@ -115,7 +115,7 @@ export default function TermsPage() {
         <section className="space-y-4">
           <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">10. Dispute Resolution &amp; Binding Arbitration</h2>
           <p className="text-sm">
-            Before filing a formal claim, you agree to contact us at <a href="mailto:legal@clickapp.io" className="text-primary-500 hover:underline">legal@clickapp.io</a> to attempt informal resolution. Any dispute, controversy, or claim arising out of or relating to these Terms that cannot be resolved informally shall be settled by binding arbitration administered by the American Arbitration Association (AAA) or equivalent recognized arbitration provider. You and Click agree that claims will be brought only in an individual capacity and not as a plaintiff or class member in any class or representative proceeding.
+            Before filing a formal claim, you agree to contact us through <a href="/contact?topic=other" className="text-primary-500 hover:underline">our contact form</a> to attempt informal resolution. Any dispute, controversy, or claim arising out of or relating to these Terms that cannot be resolved informally shall be settled by binding arbitration administered by the American Arbitration Association (AAA) or equivalent recognized arbitration provider. You and Click agree that claims will be brought only in an individual capacity and not as a plaintiff or class member in any class or representative proceeding.
           </p>
         </section>
 
@@ -133,8 +133,8 @@ export default function TermsPage() {
           </p>
           <div className="p-4 rounded-xl bg-surface-100 dark:bg-white/5 not-prose space-y-1 text-sm">
             <p><strong>Click Legal Affairs</strong></p>
-            <p>Email: <a href="mailto:legal@clickapp.io" className="text-primary-500 hover:underline">legal@clickapp.io</a></p>
-            <p>Support: <a href="mailto:support@clickapp.io" className="text-primary-500 hover:underline">support@clickapp.io</a></p>
+            <p>Legal questions: <a href="/contact?topic=other" className="text-primary-500 hover:underline">our contact form</a></p>
+            <p>Support: <a href="/contact?topic=support" className="text-primary-500 hover:underline">our contact form</a></p>
           </div>
         </section>
 

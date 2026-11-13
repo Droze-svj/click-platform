@@ -63,7 +63,13 @@ const userSettingsSchema = new mongoose.Schema({
     // net for any writer that forgets; it is idempotent on ciphertext. Readers
     // decrypt with decryptToken, which passes legacy plaintext through.
     heygenApiKey: { type: String, default: '', set: encryptToken },
-    soraApiKey: { type: String, default: '', set: encryptToken }
+    soraApiKey: { type: String, default: '', set: encryptToken },
+    // Recorded biometric consent (voice cloning, digital twin). These weren't
+    // in the schema, so strict mode dropped every write: consent could never
+    // be recorded and GET /digital-twin/consent always answered false.
+    biometricConsent: { type: Boolean, default: false },
+    biometricConsentAt: Date,
+    biometricConsentVersion: String
   },
   // Appearance / display preferences (2026 settings overhaul)
   appearance: {

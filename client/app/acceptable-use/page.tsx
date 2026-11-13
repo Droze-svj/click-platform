@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function AcceptableUsePage() {
   return (
-    <LegalPage kicker="Legal" title="Acceptable Use Policy" updated={new Date()}>
+    <LegalPage kicker="Legal" title="Acceptable Use Policy" updated={new Date('2026-11-13')}>
 
         <section className="space-y-4 text-surface-700 dark:text-slate-300 leading-relaxed">
           <p>
@@ -69,7 +69,7 @@ export default function AcceptableUsePage() {
           <h2 className="text-2xl font-bold">Reporting abuse</h2>
           <p className="text-sm text-surface-700 dark:text-slate-300">
             See content on Click that violates this policy?{' '}
-            <a href="mailto:safety@clickapp.io" className="text-primary-500 hover:underline">safety@clickapp.io</a>.
+            Report it through <a href="/contact?topic=other" className="text-primary-500 hover:underline">our contact form</a>.
             We respond to verified reports within 5 business days.
           </p>
         </section>

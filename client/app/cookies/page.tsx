@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function CookiePolicyPage() {
   return (
-    <LegalPage kicker="Legal" title="Cookie Policy" updated={new Date()}>
+    <LegalPage kicker="Legal" title="Cookie Policy" updated={new Date('2026-11-13')}>
 
         <section className="space-y-4 text-surface-700 dark:text-slate-300 leading-relaxed">
           <p>
@@ -72,7 +72,7 @@ export default function CookiePolicyPage() {
           <h2 className="text-2xl font-bold">Contact</h2>
           <p className="text-sm text-surface-700 dark:text-slate-300">
             Questions about this policy?{' '}
-            <a href="mailto:privacy@clickapp.io" className="text-primary-500 hover:underline">privacy@clickapp.io</a>
+            Ask through <a href="/contact?topic=privacy" className="text-primary-500 hover:underline">our contact form</a>
           </p>
         </section>
 

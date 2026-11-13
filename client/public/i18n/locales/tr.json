@@ -92,7 +92,7 @@
     "checkoutUnavailable": "Bu plan için ödeme şu anda kullanılamıyor. Hiçbir şey değiştirilmedi. Daha sonra tekrar dene veya destekle iletişime geç.",
     "invoiceDownloadFailed": "Fatura indirilemedi. Lütfen tekrar dene.",
     "faq1Q": "14 günlük para iade garantisi nasıl işliyor?",
-    "faq1A": "Ücretli bir plana (Creator, Pro veya Agency) yaptığın her ilk abonelik, koşulsuz 14 günlük para iade garantisi içerir. Click sana uygun değilse ilk ödemenden sonraki 14 gün içinde {{email}} adresine e-posta gönder, ödemenin tamamını iade edelim. İptal için engel yok, seni vazgeçirmeye çalışan aramalar yok.",
+    "faq1A": "Ücretli bir plana (Creator, Pro veya Agency) yaptığın her ilk abonelik, 14 günlük para iade garantisi içerir. Click sana uygun değilse ilk ödemenden sonraki 14 gün içinde bu sayfada “{{button}}” seçeneğini seç, ödemenin tamamını (%100) geri al.",
     "faq2Q": "Videolarımın ve dijital ikiz varlıklarımın telif ve ticari hakları kime ait?",
     "faq2A": "Ham görüntülerin, oluşturulan klipler, senaryolar, ses notları ve dijital ikiz avatar çıktıların üzerindeki tüm fikri mülkiyet ve ticari haklar tamamen sende kalır. Click, içeriğin üzerinde telif ya da lisans bedeli talep etmez.",
     "faq3Q": "Aboneliğimi nasıl iptal eder veya değiştirebilirim?",
@@ -170,7 +170,8 @@
     "feedbackLabel": "Ek geri bildirim (isteğe bağlı)",
     "feedbackPlaceholder": "Click'i geliştirmemize yardım et…",
     "submitRequest": "Talebi gönder",
-    "statusPending": "beklemede"
+    "statusPending": "beklemede",
+    "contactLink": "Bize ulaşın"
   },
   "labsPage": {
     "title": "Labs",
@@ -2055,7 +2056,7 @@
     "subtitle": "Nelerin yayına alındığı, üzerinde neler çalıştığımız ve sırada ne olduğu. Özellikler yayına alındıkça ve öncelikler değiştikçe güncellenir.",
     "backToDashboard": "Kontrol paneline geri dön",
     "open": "Açık",
-    "feedbackPrompt": "Bir boşluk mu fark ettiniz? Geri bildirimi bırakın",
+    "feedbackPrompt": "Eksik bir şey mi gördünüz? Bize şuradan söyleyin:",
     "status_shipped": "Gönderildi",
     "status_in-progress": "Devam etmekte",
     "status_next-up": "Sonraki",
@@ -2092,7 +2093,8 @@
     "item_teamWorkspaces_title": "Çok yaratıcılı ekip çalışma alanları",
     "item_teamWorkspaces_description": "Ekipler için ortak marka kiti, ortak stil profili ve role dayalı yayınlama.",
     "item_mobileCapture_title": "Yerel mobil yakalama uygulaması",
-    "item_mobileCapture_description": "Telefonundan kaydet, otomatik kes ve sıraya al; sonra masaüstü düzenleyicide tamamla."
+    "item_mobileCapture_description": "Telefonundan kaydet, otomatik kes ve sıraya al; sonra masaüstü düzenleyicide tamamla.",
+    "feedbackLink": "iletişim formu"
   },
   "schedulerPage": {
     "loading": "Yükleniyor",
@@ -2558,7 +2560,10 @@
     "cmdGlobalAnalyticsDesc": "Platform genelindeki istatistikler",
     "refundRequestsTitle": "İade talepleri",
     "refundRequestsBody": "14 günlük iadeyi talep eden müşteriler. İadeyi Whop üzerinden yap.",
-    "refundRequestsEmpty": "İade talebi yok."
+    "refundRequestsEmpty": "İade talebi yok.",
+    "messagesTitle": "Mesajlar",
+    "messagesBody": "İletişim formundan gönderildi. E-postayla yanıtlayın.",
+    "messagesEmpty": "Henüz mesaj yok."
   },
   "infrastructurePage": {
     "loading": "Sistem durumu yükleniyor...",
@@ -11728,5 +11733,54 @@
     "potential": "{{lift}} potansiyel",
     "voteUp": "İyi öneri",
     "voteDown": "Bana göre değil"
+  },
+  "privacyData": {
+    "title": "Verileriniz",
+    "exportTitle": "Verilerinizi indirin",
+    "exportBody": "Click'in hesabınız hakkında sakladığı her şeyi içeren bir dosya: profil, içerik, gönderiler, altyazılar, ayarlar ve etkinlik. Şifreler ve bağlantı belirteçleri dahil edilmez.",
+    "exportButton": "Verilerimi indir",
+    "exporting": "Hazırlanıyor…",
+    "exportReady": "Verileriniz indiriliyor.",
+    "exportFailed": "Verileriniz hazırlanamadı. Tekrar deneyin.",
+    "deleteTitle": "Hesabınızı silin",
+    "deleteBody": "Hesabınızı, videolarınızı ve dosyalarınızı, altyazıları, senaryoları, zamanlanmış gönderileri, bağlı sosyal hesapları ve ayarları kalıcı olarak siler. Ödeme kayıtları muhasebe için saklanır. Bu işlem geri alınamaz.",
+    "deleteButton": "Hesabı kalıcı olarak sil",
+    "dialogTitle": "Hesabınız silinsin mi?",
+    "dialogBody": "Her şey hemen silinir ve geri getirilemez. Bir plan için ödeme yapıyorsanız, tekrar ücret alınmaması için önce iptal edilir.",
+    "passwordLabel": "Mevcut şifre",
+    "confirmWord": "SİL",
+    "typeToConfirm": "Onaylamak için {{word}} yazın",
+    "keepAccount": "Hesabımı koru",
+    "deleteForever": "Sonsuza dek sil",
+    "deleting": "Siliniyor…",
+    "deleted": "Hesabınız ve verileriniz silindi.",
+    "wrongPassword": "Bu şifre doğru değil.",
+    "cancelFirst": "Aboneliğinizi otomatik olarak iptal edemedik. Önce Whop hesabınızdan iptal edin, sonra hesabınızı silin.",
+    "deleteFailed": "Hesabınız silinemedi. Tekrar deneyin."
+  },
+  "contactPage": {
+    "topicLabel": "Konu nedir?",
+    "topic": {
+      "support": "Destek",
+      "billing": "Faturalandırma",
+      "privacy": "Gizlilik ve verilerim",
+      "sales": "Ajanslar ve satış",
+      "other": "Başka bir şey"
+    },
+    "hint": {
+      "support": "Ne yapıyordunuz ve onun yerine ne oldu?",
+      "billing": "Whop'ta ödeme yaptığınız e-posta farklıysa onu da yazın.",
+      "privacy": "Verilerinizin bir kopyası veya silinmesi için Click hesabınızdaki e-postadan yazın.",
+      "sales": "Ekip büyüklüğü, marka sayısı ve ne yapmak istediğiniz.",
+      "other": "Bilmemizi istediğiniz her şey."
+    },
+    "nameLabel": "Ad",
+    "emailLabel": "E-posta (yanıtımız için)",
+    "messageLabel": "Mesaj",
+    "send": "Mesajı gönder",
+    "sending": "Gönderiliyor…",
+    "sendFailed": "Mesajınız gönderilemedi. Tekrar deneyin.",
+    "sentTitle": "Mesaj gönderildi",
+    "sentBody": "Teşekkürler. {{email}} adresine yanıt vereceğiz."
   }
 }

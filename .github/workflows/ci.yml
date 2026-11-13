@@ -14,7 +14,9 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04, where the locked Playwright refuses to
+    # download Chromium, so `npm ci` failed before any test ran (2026-11-13).
+    runs-on: ubuntu-24.04
 
     services:
       mongodb:
@@ -149,7 +151,7 @@ jobs:
   # their own job so a sweep failure is legible at a glance instead of being
   # buried at the end of the long `test` job.
   sweeps:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     # Both sweeps need a database. This job used to declare none, so
@@ -214,7 +216,7 @@ jobs:
         if-no-files-found: ignore
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: test
 
     steps:
@@ -248,7 +250,7 @@ jobs:
       run: docker build -t click:latest .
 
   security:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
 
     # test:security boots the app + hits the DB; without a mongo service every

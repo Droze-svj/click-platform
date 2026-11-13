@@ -92,7 +92,7 @@
     "checkoutUnavailable": "このプランの購入手続きは現在ご利用いただけません。変更は行われていません。しばらくしてから再度お試しいただくか、サポートにお問い合わせください。",
     "invoiceDownloadFailed": "請求書をダウンロードできませんでした。もう一度お試しください。",
     "faq1Q": "14日間返金保証はどのような仕組みですか？",
-    "faq1A": "有料プラン（Creator、Pro、Agency）への初回のお申し込みには、無条件の14日間返金保証が付いています。Clickが合わなかった場合は、初回のお支払いから14日以内に{{email}}までメールをお送りください。100%返金いたします。解約の面倒な手続きや引き止めの電話はありません。",
+    "faq1A": "有料プラン（Creator、Pro、Agency）への初回のお申し込みには、14日間の返金保証が付いています。Clickが合わなかった場合は、初回のお支払いから14日以内にこのページで「{{button}}」を選択してください。100%返金されます。",
     "faq2Q": "動画やデジタルツインのアセットの著作権と商用利用の権利は誰にありますか？",
     "faq2A": "未編集の素材、生成したクリップ、スクリプト、ボイスメモ、デジタルツインのアバター出力に関する知的財産権と商用利用の権利は、すべてあなたが100%独占的に保持します。Clickは、あなたのコンテンツに対する著作権やライセンス使用料を一切主張しません。",
     "faq3Q": "サブスクリプションの解約やプラン変更はどうすればいいですか？",
@@ -170,7 +170,8 @@
     "feedbackLabel": "その他のご意見（任意）",
     "feedbackPlaceholder": "Clickの改善にご協力ください…",
     "submitRequest": "リクエストを送信",
-    "statusPending": "保留中"
+    "statusPending": "保留中",
+    "contactLink": "お問い合わせ"
   },
   "labsPage": {
     "title": "Labs",
@@ -2055,7 +2056,7 @@
     "subtitle": "公開済みの機能、取り組み中の機能、これからの予定をまとめています。機能のリリースや優先順位の変更に合わせて更新されます。",
     "backToDashboard": "ダッシュボードに戻る",
     "open": "開ける",
-    "feedbackPrompt": "ギャップを発見しましたか?フィードバックをドロップしてください",
+    "feedbackPrompt": "足りない機能はありますか？こちらからお知らせください：",
     "status_shipped": "出荷済み",
     "status_in-progress": "進行中",
     "status_next-up": "次は",
@@ -2092,7 +2093,8 @@
     "item_teamWorkspaces_title": "マルチクリエイターチームのワークスペース",
     "item_teamWorkspaces_description": "チーム向けに、共有ブランドキット、共有スタイルプロファイル、役割に応じた公開権限を提供します。",
     "item_mobileCapture_title": "ネイティブモバイルキャプチャアプリ",
-    "item_mobileCapture_description": "スマホで録画、自動カット、キュー登録まで行い、仕上げはデスクトップのエディターで。"
+    "item_mobileCapture_description": "スマホで録画、自動カット、キュー登録まで行い、仕上げはデスクトップのエディターで。",
+    "feedbackLink": "お問い合わせフォーム"
   },
   "schedulerPage": {
     "loading": "読み込み中",
@@ -2558,7 +2560,10 @@
     "cmdGlobalAnalyticsDesc": "プラットフォーム全体の統計",
     "refundRequestsTitle": "返金リクエスト",
     "refundRequestsBody": "14日間の返金を申請したお客様です。返金はWhopで行ってください。",
-    "refundRequestsEmpty": "返金リクエストはありません。"
+    "refundRequestsEmpty": "返金リクエストはありません。",
+    "messagesTitle": "メッセージ",
+    "messagesBody": "お問い合わせフォームからの送信です。メールで返信してください。",
+    "messagesEmpty": "まだメッセージはありません。"
   },
   "infrastructurePage": {
     "loading": "システムの状態を読み込み中...",
@@ -11728,5 +11733,54 @@
     "potential": "{{lift}}の伸びしろ",
     "voteUp": "良い提案",
     "voteDown": "私には合わない"
+  },
+  "privacyData": {
+    "title": "あなたのデータ",
+    "exportTitle": "データをダウンロード",
+    "exportBody": "Click があなたのアカウントについて保存しているすべて（プロフィール、コンテンツ、投稿、キャプション、設定、アクティビティ）をまとめたファイルです。パスワードと連携トークンは含まれません。",
+    "exportButton": "データをダウンロード",
+    "exporting": "準備中…",
+    "exportReady": "データをダウンロードしています。",
+    "exportFailed": "データを準備できませんでした。もう一度お試しください。",
+    "deleteTitle": "アカウントを削除",
+    "deleteBody": "アカウント、動画とファイル、キャプション、スクリプト、予約投稿、連携したソーシャルアカウント、設定を完全に削除します。支払い記録は会計のために保持されます。この操作は元に戻せません。",
+    "deleteButton": "アカウントを完全に削除",
+    "dialogTitle": "アカウントを削除しますか？",
+    "dialogBody": "すべてただちに削除され、復元できません。有料プランをご利用の場合は、再び請求されないよう先に解約されます。",
+    "passwordLabel": "現在のパスワード",
+    "confirmWord": "削除",
+    "typeToConfirm": "確認のため {{word}} と入力してください",
+    "keepAccount": "アカウントを残す",
+    "deleteForever": "完全に削除する",
+    "deleting": "削除中…",
+    "deleted": "アカウントとデータを削除しました。",
+    "wrongPassword": "パスワードが正しくありません。",
+    "cancelFirst": "サブスクリプションを自動で解約できませんでした。先に Whop アカウントから解約してから、アカウントを削除してください。",
+    "deleteFailed": "アカウントを削除できませんでした。もう一度お試しください。"
+  },
+  "contactPage": {
+    "topicLabel": "どのようなご用件ですか？",
+    "topic": {
+      "support": "サポート",
+      "billing": "請求",
+      "privacy": "プライバシーとデータ",
+      "sales": "代理店・営業",
+      "other": "その他"
+    },
+    "hint": {
+      "support": "何をしていて、代わりに何が起きましたか？",
+      "billing": "Whopで支払いに使っているメールが違う場合は、それも記入してください。",
+      "privacy": "データのコピーや削除をご希望の場合は、Clickアカウントのメールアドレスからご連絡ください。",
+      "sales": "チームの人数、ブランド数、やりたいことを教えてください。",
+      "other": "お伝えしたいことがあればご記入ください。"
+    },
+    "nameLabel": "名前",
+    "emailLabel": "メールアドレス（返信先）",
+    "messageLabel": "メッセージ",
+    "send": "メッセージを送信",
+    "sending": "送信中…",
+    "sendFailed": "メッセージを送信できませんでした。もう一度お試しください。",
+    "sentTitle": "送信しました",
+    "sentBody": "ありがとうございます。{{email}}に返信します。"
   }
 }

@@ -65,11 +65,21 @@ interface RefundRequest {
   ticket_id: string | null
 }
 
+interface ContactMessage {
+  id: string
+  name: string
+  email: string
+  topic: string
+  message: string
+  created_at: string
+}
+
 interface DashboardData {
   overview: AdminOverview
   recent_activity: { users: RecentUser[]; posts: RecentPost[] }
   // Only from the MongoDB dashboard; absent on the legacy Supabase one.
   refund_requests?: RefundRequest[]
+  contact_messages?: ContactMessage[]
   system_health: SystemHealth
 }
 
@@ -201,6 +211,27 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Recent activity */}
           <div className="lg:col-span-2 space-y-6">
+            {/* The contact form's messages: Click's only inbox. Reply by email. */}
+            {Array.isArray(data.contact_messages) && (
+              <div className="ds-surface-card p-5 sm:p-6">
+                <SectionHeader as="h3" title={t('adminPage.messagesTitle')} description={t('adminPage.messagesBody')} className="mb-4" />
+                {data.contact_messages.length === 0 ? (
+                  <p className="ds-text-caption px-1 py-2">{t('adminPage.messagesEmpty')}</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {data.contact_messages.map((m) => (
+                      <li key={m.id} className="rounded-xl border border-[var(--border-subtle)] p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <a href={`mailto:${m.email}`} className="text-sm font-medium text-theme-primary truncate hover:underline">{m.name ? `${m.name} · ${m.email}` : m.email}</a>
+                          <span className="ds-text-caption shrink-0">{t(`contactPage.topic.${m.topic}`)} · {new Date(m.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <p className="mt-1 text-sm text-theme-secondary whitespace-pre-wrap break-words line-clamp-4">{m.message}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
             {/* Refund requests reach no one unless email/Slack alerts are set
                 up; they are always listed here. Refunds are issued in Whop. */}
             {Array.isArray(data.refund_requests) && (

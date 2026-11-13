@@ -92,7 +92,7 @@
     "checkoutUnavailable": "此套餐暂时无法结账，未做任何更改。请稍后重试或联系支持团队。",
     "invoiceDownloadFailed": "无法下载发票，请重试。",
     "faq1Q": "14 天退款保证是怎么运作的？",
-    "faq1A": "首次订阅任意付费套餐（Creator、Pro 或 Agency）均享 14 天无条件退款保证。如果 Click 不适合你，请在首次扣款后 14 天内发邮件到 {{email}}，即可全额退款。无需繁琐的取消流程，也不会有挽留电话。",
+    "faq1A": "首次订阅任意付费套餐（Creator、Pro 或 Agency）均享 14 天退款保证。如果 Click 不适合你，请在首次付款后 14 天内在本页面选择“{{button}}”，即可获得 100% 退款。",
     "faq2Q": "我的视频和数字分身素材的版权与商业权利归谁？",
     "faq2A": "你的所有原始素材、生成的剪辑、脚本、语音笔记和数字分身形象输出，其知识产权和商业权利 100% 归你独享。Click 对你的内容不主张任何版权或授权费用。",
     "faq3Q": "如何取消或更改订阅？",
@@ -170,7 +170,8 @@
     "feedbackLabel": "其他反馈（选填）",
     "feedbackPlaceholder": "帮助我们改进 Click…",
     "submitRequest": "提交申请",
-    "statusPending": "待处理"
+    "statusPending": "待处理",
+    "contactLink": "联系我们"
   },
   "labsPage": {
     "title": "Labs",
@@ -2055,7 +2056,7 @@
     "subtitle": "已上线的功能、我们正在做的事，以及接下来的计划。随功能上线和优先级调整而更新。",
     "backToDashboard": "返回仪表板",
     "open": "打开",
-    "feedbackPrompt": "发现差距了吗？将反馈意见放入",
+    "feedbackPrompt": "发现了缺失的功能？请通过",
     "status_shipped": "已发货",
     "status_in-progress": "进行中",
     "status_next-up": "接下来",
@@ -2092,7 +2093,8 @@
     "item_teamWorkspaces_title": "多创作者团队工作空间",
     "item_teamWorkspaces_description": "为团队提供共享品牌套件、共享风格档案和基于角色的发布权限。",
     "item_mobileCapture_title": "本机移动捕捉应用程序",
-    "item_mobileCapture_description": "在手机上录制、自动剪辑并加入队列，然后在桌面编辑器上完成。"
+    "item_mobileCapture_description": "在手机上录制、自动剪辑并加入队列，然后在桌面编辑器上完成。",
+    "feedbackLink": "联系表单告诉我们"
   },
   "schedulerPage": {
     "loading": "加载中",
@@ -2558,7 +2560,10 @@
     "cmdGlobalAnalyticsDesc": "全平台统计",
     "refundRequestsTitle": "退款请求",
     "refundRequestsBody": "申请 14 天退款的客户。请在 Whop 中办理退款。",
-    "refundRequestsEmpty": "暂无退款请求。"
+    "refundRequestsEmpty": "暂无退款请求。",
+    "messagesTitle": "留言",
+    "messagesBody": "来自联系表单。请通过邮件回复。",
+    "messagesEmpty": "暂时没有留言。"
   },
   "infrastructurePage": {
     "loading": "正在加载系统状态...",
@@ -11728,5 +11733,54 @@
     "potential": "{{lift}} 潜力",
     "voteUp": "好建议",
     "voteDown": "不适合我"
+  },
+  "privacyData": {
+    "title": "你的数据",
+    "exportTitle": "下载你的数据",
+    "exportBody": "一个文件，包含 Click 存储的关于你账号的全部内容：个人资料、内容、帖子、字幕、设置和活动记录。不包含密码和连接令牌。",
+    "exportButton": "下载我的数据",
+    "exporting": "正在准备…",
+    "exportReady": "正在下载你的数据。",
+    "exportFailed": "无法准备你的数据。请重试。",
+    "deleteTitle": "删除你的账号",
+    "deleteBody": "永久删除你的账号、视频和文件、字幕、脚本、已排期的帖子、已连接的社交账号和设置。付款记录会因会计需要而保留。此操作无法撤销。",
+    "deleteButton": "永久删除账号",
+    "dialogTitle": "删除你的账号？",
+    "dialogBody": "所有内容会立即删除且无法恢复。如果你订阅了付费方案，会先取消，以免再次扣费。",
+    "passwordLabel": "当前密码",
+    "confirmWord": "删除",
+    "typeToConfirm": "输入 {{word}} 以确认",
+    "keepAccount": "保留我的账号",
+    "deleteForever": "永久删除",
+    "deleting": "正在删除…",
+    "deleted": "你的账号和数据已删除。",
+    "wrongPassword": "密码不正确。",
+    "cancelFirst": "我们无法自动取消你的订阅。请先在 Whop 账号中取消，然后再删除账号。",
+    "deleteFailed": "无法删除你的账号。请重试。"
+  },
+  "contactPage": {
+    "topicLabel": "是关于什么的？",
+    "topic": {
+      "support": "支持",
+      "billing": "计费",
+      "privacy": "隐私与我的数据",
+      "sales": "机构与销售",
+      "other": "其他"
+    },
+    "hint": {
+      "support": "你当时在做什么，结果发生了什么？",
+      "billing": "如果你在 Whop 上付款用的邮箱不同，请一并写上。",
+      "privacy": "如需获取或删除你的数据，请用 Click 账号的邮箱联系我们。",
+      "sales": "团队规模、品牌数量，以及你想做什么。",
+      "other": "任何你想让我们知道的事。"
+    },
+    "nameLabel": "姓名",
+    "emailLabel": "邮箱（用于回复）",
+    "messageLabel": "留言",
+    "send": "发送留言",
+    "sending": "发送中…",
+    "sendFailed": "留言发送失败，请重试。",
+    "sentTitle": "留言已发送",
+    "sentBody": "谢谢。我们会回复到 {{email}}。"
   }
 }

@@ -33,6 +33,7 @@ import { EmptyState } from '../../../components/ui/empty-state'
 import { PageShell } from '../../../components/ui'
 import MorningBriefSettings from '../../../components/settings/MorningBriefSettings'
 import AccountSecurityPanel from '../../../components/settings/AccountSecurityPanel'
+import PrivacyDataPanel from '../../../components/settings/PrivacyDataPanel'
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
 
@@ -455,7 +456,7 @@ export default function SettingsPage() {
             )}
             <SaveBlockedContext.Provider value={loadError}>
             {activeSection === 'profile' && <ProfileSection user={user} />}
-            {activeSection === 'security' && <SecuritySection onDeactivate={deactivateAccount} />}
+            {activeSection === 'security' && <SecuritySection onDeactivate={deactivateAccount} onDeleted={() => { try { localStorage.removeItem('token') } catch (_) { /* best effort */ } setTimeout(() => router.push('/'), 800) }} />}
             {activeSection === 'notifications' && (
               <NotificationsSection
                 settings={settings} setField={setField}
@@ -617,7 +618,7 @@ function ProfileSection({ user }: { user: any }) {
   )
 }
 
-function SecuritySection({ onDeactivate }: { onDeactivate: () => void }) {
+function SecuritySection({ onDeactivate, onDeleted }: { onDeactivate: () => void; onDeleted: () => void }) {
   const { t } = useTranslation()
   return (
     <div className="space-y-6">
@@ -631,6 +632,12 @@ function SecuritySection({ onDeactivate }: { onDeactivate: () => void }) {
         <SubHeader>{t('settingsPage.security.signInProtection')}</SubHeader>
         <div className="mt-3">
           <AccountSecurityPanel />
+        </div>
+      </Card>
+      <Card>
+        <SubHeader>{t('privacyData.title')}</SubHeader>
+        <div className="mt-3">
+          <PrivacyDataPanel onDeleted={onDeleted} />
         </div>
       </Card>
       <Card className="border-rose-500/30">

@@ -710,7 +710,7 @@ export default function BillingPage() {
                     </button>
                     {isOpen && (
                       <div className="px-4 pb-4 pt-1 text-xs text-theme-secondary leading-relaxed border-t border-[var(--border-subtle)]/50">
-                        {t(faq.a, { email: 'billing@clickapp.io' })}
+                        {t(faq.a, { button: t('billingPage.cancelRefund') })}
                       </div>
                     )}
                   </div>
@@ -736,7 +736,7 @@ export default function BillingPage() {
               <span className="text-theme-muted">·</span>
               <Link href="/ai-disclosure" className="text-primary hover:underline">{t('billingPage.aiDisclosure')}</Link>
               <span className="text-theme-muted">·</span>
-              <a href="mailto:billing@clickapp.io" className="text-theme-primary hover:underline">billing@clickapp.io</a>
+              <Link href="/contact?topic=billing" className="text-primary hover:underline">{t('billingPage.contactLink')}</Link>
             </div>
           </div>
         </div>

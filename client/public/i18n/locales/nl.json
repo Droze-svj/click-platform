@@ -92,7 +92,7 @@
     "checkoutUnavailable": "Afrekenen voor dit abonnement is nu niet beschikbaar. Er is niets gewijzigd. Probeer het later opnieuw of neem contact op met support.",
     "invoiceDownloadFailed": "De factuur kon niet worden gedownload. Probeer het opnieuw.",
     "faq1Q": "Hoe werkt de geld-terug-garantie van 14 dagen?",
-    "faq1A": "Elk eerste abonnement op een betaald plan (Creator, Pro of Agency) heeft een onvoorwaardelijke geld-terug-garantie van 14 dagen. Past Click niet bij je? Mail dan binnen 14 dagen na je eerste betaling naar {{email}} en je krijgt 100% terug. Geen gedoe bij het opzeggen en geen telefoontjes om je te laten blijven.",
+    "faq1A": "Elk eerste abonnement op een betaald plan (Creator, Pro of Agency) heeft een geld-terug-garantie van 14 dagen. Past Click niet bij je? Kies dan binnen 14 dagen na je eerste betaling \"{{button}}\" op deze pagina en je krijgt 100% terug.",
     "faq2Q": "Van wie zijn het auteursrecht en de commerciële rechten op mijn video's en digital-twin-assets?",
     "faq2A": "Je behoudt 100% van de exclusieve intellectuele-eigendomsrechten en commerciële rechten op al je ruwe beeldmateriaal, gegenereerde clips, scripts, spraaknotities en digital-twin-avatars. Click maakt geen aanspraak op auteursrecht of licentievergoedingen op jouw content.",
     "faq3Q": "Hoe zeg ik mijn abonnement op of wijzig ik het?",
@@ -170,7 +170,8 @@
     "feedbackLabel": "Aanvullende feedback (optioneel)",
     "feedbackPlaceholder": "Help ons Click te verbeteren…",
     "submitRequest": "Verzoek verzenden",
-    "statusPending": "in behandeling"
+    "statusPending": "in behandeling",
+    "contactLink": "Contact"
   },
   "labsPage": {
     "title": "Labs",
@@ -2055,7 +2056,7 @@
     "subtitle": "Wat er is uitgebracht, waar we aan werken en wat er nog komt. Wordt bijgewerkt zodra functies live gaan en prioriteiten veranderen.",
     "backToDashboard": "Terug naar dashboard",
     "open": "Open",
-    "feedbackPrompt": "Heb je een gat ontdekt? Geef feedback door",
+    "feedbackPrompt": "Mis je iets? Laat het ons weten via",
     "status_shipped": "Verzonden",
     "status_in-progress": "In uitvoering",
     "status_next-up": "Volgende",
@@ -2092,7 +2093,8 @@
     "item_teamWorkspaces_title": "Teamwerkruimten voor meerdere makers",
     "item_teamWorkspaces_description": "Gedeelde brand kit, gedeeld stijlprofiel en rolgebaseerd publiceren voor teams.",
     "item_mobileCapture_title": "Native mobiele opname-app",
-    "item_mobileCapture_description": "Opnemen, automatisch knippen en in de wachtrij zetten vanaf je telefoon, en afwerken in de desktopeditor."
+    "item_mobileCapture_description": "Opnemen, automatisch knippen en in de wachtrij zetten vanaf je telefoon, en afwerken in de desktopeditor.",
+    "feedbackLink": "het contactformulier"
   },
   "schedulerPage": {
     "loading": "Laden",
@@ -2558,7 +2560,10 @@
     "cmdGlobalAnalyticsDesc": "Statistieken voor het hele platform",
     "refundRequestsTitle": "Terugbetalingsverzoeken",
     "refundRequestsBody": "Klanten die om de terugbetaling binnen 14 dagen hebben gevraagd. Betaal terug in Whop.",
-    "refundRequestsEmpty": "Geen terugbetalingsverzoeken."
+    "refundRequestsEmpty": "Geen terugbetalingsverzoeken.",
+    "messagesTitle": "Berichten",
+    "messagesBody": "Verstuurd via het contactformulier. Antwoord per e-mail.",
+    "messagesEmpty": "Nog geen berichten."
   },
   "infrastructurePage": {
     "loading": "Systeemstatus laden...",
@@ -11728,5 +11733,54 @@
     "potential": "{{lift}} potentieel",
     "voteUp": "Goede suggestie",
     "voteDown": "Niet voor mij"
+  },
+  "privacyData": {
+    "title": "Jouw gegevens",
+    "exportTitle": "Download je gegevens",
+    "exportBody": "Een bestand met alles wat Click over je account bewaart: profiel, content, posts, ondertitels, instellingen en activiteit. Wachtwoorden en verbindingstokens zijn niet inbegrepen.",
+    "exportButton": "Mijn gegevens downloaden",
+    "exporting": "Voorbereiden…",
+    "exportReady": "Je gegevens worden gedownload.",
+    "exportFailed": "Je gegevens konden niet worden voorbereid. Probeer het opnieuw.",
+    "deleteTitle": "Verwijder je account",
+    "deleteBody": "Verwijdert je account, video's en bestanden, ondertitels, scripts, geplande posts, gekoppelde socialemedia-accounts en instellingen definitief. Betalingsgegevens worden bewaard voor de boekhouding. Dit kan niet ongedaan worden gemaakt.",
+    "deleteButton": "Account definitief verwijderen",
+    "dialogTitle": "Je account verwijderen?",
+    "dialogBody": "Alles wordt direct verwijderd en kan niet worden hersteld. Als je voor een abonnement betaalt, wordt dat eerst opgezegd zodat er niets meer wordt afgeschreven.",
+    "passwordLabel": "Huidig wachtwoord",
+    "confirmWord": "VERWIJDEREN",
+    "typeToConfirm": "Typ {{word}} om te bevestigen",
+    "keepAccount": "Mijn account behouden",
+    "deleteForever": "Voorgoed verwijderen",
+    "deleting": "Verwijderen…",
+    "deleted": "Je account en gegevens zijn verwijderd.",
+    "wrongPassword": "Dat wachtwoord klopt niet.",
+    "cancelFirst": "We konden je abonnement niet automatisch opzeggen. Zeg het eerst op via je Whop-account en verwijder daarna je account.",
+    "deleteFailed": "Je account kon niet worden verwijderd. Probeer het opnieuw."
+  },
+  "contactPage": {
+    "topicLabel": "Waar gaat het over?",
+    "topic": {
+      "support": "Support",
+      "billing": "Facturering",
+      "privacy": "Privacy en mijn gegevens",
+      "sales": "Bureaus en verkoop",
+      "other": "Iets anders"
+    },
+    "hint": {
+      "support": "Wat was je aan het doen en wat gebeurde er in plaats daarvan?",
+      "billing": "Vermeld het e-mailadres waarmee je bij Whop betaalt als dat anders is.",
+      "privacy": "Voor een kopie of verwijdering van je gegevens mail je vanaf het e-mailadres van je Click-account.",
+      "sales": "Teamgrootte, aantal merken en wat je wilt doen.",
+      "other": "Alles wat je ons wilt laten weten."
+    },
+    "nameLabel": "Naam",
+    "emailLabel": "E-mail (voor ons antwoord)",
+    "messageLabel": "Bericht",
+    "send": "Bericht versturen",
+    "sending": "Versturen…",
+    "sendFailed": "Je bericht kon niet worden verstuurd. Probeer het opnieuw.",
+    "sentTitle": "Bericht verstuurd",
+    "sentBody": "Bedankt. We antwoorden naar {{email}}."
   }
 }

@@ -24,7 +24,7 @@ export default function CompliancePage() {
             classification="Limited-risk"
             details={[
               "Click is a general-purpose creative-AI tool. Outputs that are wholly or substantially AI-generated carry a visible AI-disclosure marker and a C2PA provenance manifest, satisfying Art. 50 transparency obligations for synthetic content.",
-              "We perform a written AI risk assessment and review it at least annually. Available under NDA at trust@clickapp.io.",
+              "Questions about how Click uses AI: use the contact form (Something else).",
               "We do not deploy prohibited practices (Art. 5): no social scoring, no real-time remote biometric ID, no exploitation of vulnerabilities by age/disability/socioeconomic status.",
               "We monitor for systemic risk in any model classified as GPAI with systemic risk under Art. 51.",
             ]}
@@ -40,7 +40,7 @@ export default function CompliancePage() {
               "Standard Contractual Clauses + UK IDTA for EU/UK→US transfers; supplementary measures: encryption, access logs, vendor due diligence.",
               "Data subject rights served within 30 days (extendable to 90).",
               "EU representative appointed (Art. 27): Click EU GmbH, Berlin.",
-              "DPO contact: privacy@clickapp.io.",
+              "Privacy contact: the contact form (Privacy & my data).",
             ]}
           />
 
@@ -61,7 +61,7 @@ export default function CompliancePage() {
             details={[
               "Click is not directed to children under 13.",
               "Accounts are for adults: creating one means accepting the Terms, which require you to be at least 18.",
-              "Children's data, if discovered, is deleted within 7 days; complaints to privacy@clickapp.io.",
+              "Children's data, if discovered, is deleted; report it through the contact form (Privacy & my data).",
             ]}
           />
 
@@ -79,7 +79,7 @@ export default function CompliancePage() {
             title="DMCA (17 USC §512)"
             classification="In scope"
             details={[
-              "Designated agent registered with the US Copyright Office: Click, Inc., dmca@clickapp.io.",
+              "Copyright notices: the DMCA form at /legal/dmca.",
               "File a takedown or counter-notice at /legal/dmca.",
               "Repeat infringers terminated.",
             ]}
@@ -100,7 +100,7 @@ export default function CompliancePage() {
             details={[
               "We design for keyboard-only navigation, screen-reader landmarks, focus visibility, and 4.5:1 contrast minimum on body text.",
               "We fix reported accessibility barriers as product bugs.",
-              "Found a barrier? a11y@clickapp.io.",
+              "Found an accessibility barrier? Tell us through the contact form (Support).",
             ]}
           />
 
@@ -115,7 +115,7 @@ export default function CompliancePage() {
         </div>
 
         <p className="text-surface-500 text-sm mt-16 leading-relaxed">
-          Questions: <a href="mailto:compliance@clickapp.io" className="text-primary-600 dark:text-indigo-400 hover:underline underline-offset-4">compliance@clickapp.io</a>.
+          Questions: use <a href="/contact?topic=other" className="text-primary-600 dark:text-indigo-400 hover:underline underline-offset-4">our contact form</a>.
         </p>
           </LegalPage>
   );

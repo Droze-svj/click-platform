@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function AiDisclosurePage() {
   return (
-    <LegalPage kicker="Compliance & Trust" title="Responsible AI & Synthetic Media Disclosure" updated={new Date()}>
+    <LegalPage kicker="Compliance & Trust" title="Responsible AI & Synthetic Media Disclosure" updated={new Date('2026-11-13')}>
       <div className="prose prose-invert prose-slate max-w-none space-y-8 text-surface-700 dark:text-surface-300 leading-relaxed">
         
         <div className="p-4 rounded-xl bg-surface-100 dark:bg-white/5 not-prose text-xs text-surface-600 dark:text-slate-400 space-y-1">
@@ -86,7 +86,7 @@ export default function AiDisclosurePage() {
           </p>
           <div className="p-4 rounded-xl bg-surface-100 dark:bg-white/5 not-prose space-y-1 text-sm">
             <p><strong>Trust &amp; Safety / AI Compliance</strong></p>
-            <p>Email: <a href="mailto:safety@clickapp.io" className="text-primary-500 hover:underline">safety@clickapp.io</a></p>
+            <p>Write to us through <a href="/contact?topic=other" className="text-primary-500 hover:underline">our contact form</a></p>
             <p>Legal &amp; Copyright: <Link href="/legal/dmca" className="text-primary-500 hover:underline">DMCA Portal</Link></p>
           </div>
         </section>

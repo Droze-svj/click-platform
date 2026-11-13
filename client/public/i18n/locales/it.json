@@ -92,7 +92,7 @@
     "checkoutUnavailable": "Il checkout per questo piano non è disponibile al momento. Non è stato modificato nulla. Riprova più tardi o contatta l'assistenza.",
     "invoiceDownloadFailed": "Impossibile scaricare la fattura. Riprova.",
     "faq1Q": "Come funziona la garanzia di rimborso di 14 giorni?",
-    "faq1A": "Ogni primo abbonamento a un piano a pagamento (Creator, Pro o Agency) include una garanzia di rimborso di 14 giorni senza condizioni. Se Click non fa per te, scrivi a {{email}} entro 14 giorni dal primo addebito e ricevi un rimborso del 100%. Nessuna procedura complicata per disdire, nessuna telefonata per trattenerti.",
+    "faq1A": "Ogni primo abbonamento a un piano a pagamento (Creator, Pro o Agency) include una garanzia di rimborso di 14 giorni. Se Click non fa per te, scegli «{{button}}» in questa pagina entro 14 giorni dal primo pagamento e ricevi un rimborso del 100%.",
     "faq2Q": "Di chi sono il copyright e i diritti commerciali dei miei video e dei contenuti del mio gemello digitale?",
     "faq2A": "Mantieni il 100% della proprietà intellettuale e dei diritti commerciali esclusivi su tutto il tuo girato, le clip generate, gli script, le note vocali e i contenuti creati dal tuo avatar gemello digitale. Click non rivendica alcun copyright né royalty di licenza sui tuoi contenuti.",
     "faq3Q": "Come disdico o modifico il mio abbonamento?",
@@ -170,7 +170,8 @@
     "feedbackLabel": "Altri commenti (facoltativo)",
     "feedbackPlaceholder": "Aiutaci a migliorare Click...",
     "submitRequest": "Invia richiesta",
-    "statusPending": "in attesa"
+    "statusPending": "in attesa",
+    "contactLink": "Contattaci"
   },
   "labsPage": {
     "title": "Labs",
@@ -2055,7 +2056,7 @@
     "subtitle": "Cosa è già uscito, a cosa stiamo lavorando e cosa arriverà. Aggiornato man mano che le funzioni escono e le priorità cambiano.",
     "backToDashboard": "Torna al cruscotto",
     "open": "Aprire",
-    "feedbackPrompt": "Hai notato una lacuna? Lascia un feedback",
+    "feedbackPrompt": "Manca qualcosa? Dillo a noi tramite",
     "status_shipped": "Spedito",
     "status_in-progress": "In corso",
     "status_next-up": "Il prossimo passo",
@@ -2092,7 +2093,8 @@
     "item_teamWorkspaces_title": "Spazi di lavoro per team multi-creator",
     "item_teamWorkspaces_description": "Brand kit condiviso, profilo di stile condiviso e pubblicazione basata sui ruoli per i team.",
     "item_mobileCapture_title": "App di acquisizione mobile nativa",
-    "item_mobileCapture_description": "Registra, taglia in automatico e metti in coda dal telefono, poi rifinisci nell'editor desktop."
+    "item_mobileCapture_description": "Registra, taglia in automatico e metti in coda dal telefono, poi rifinisci nell'editor desktop.",
+    "feedbackLink": "il modulo di contatto"
   },
   "schedulerPage": {
     "loading": "Caricamento",
@@ -2558,7 +2560,10 @@
     "cmdGlobalAnalyticsDesc": "Statistiche dell'intera piattaforma",
     "refundRequestsTitle": "Richieste di rimborso",
     "refundRequestsBody": "Clienti che hanno chiesto il rimborso entro 14 giorni. Emetti il rimborso su Whop.",
-    "refundRequestsEmpty": "Nessuna richiesta di rimborso."
+    "refundRequestsEmpty": "Nessuna richiesta di rimborso.",
+    "messagesTitle": "Messaggi",
+    "messagesBody": "Inviati dal modulo di contatto. Rispondi via email.",
+    "messagesEmpty": "Ancora nessun messaggio."
   },
   "infrastructurePage": {
     "loading": "Caricamento dello stato del sistema...",
@@ -11728,5 +11733,54 @@
     "potential": "{{lift}} di potenziale",
     "voteUp": "Buon suggerimento",
     "voteDown": "Non fa per me"
+  },
+  "privacyData": {
+    "title": "I tuoi dati",
+    "exportTitle": "Scarica i tuoi dati",
+    "exportBody": "Un file con tutto ciò che Click conserva sul tuo account: profilo, contenuti, post, didascalie, impostazioni e attività. Password e token di connessione sono esclusi.",
+    "exportButton": "Scarica i miei dati",
+    "exporting": "Preparazione…",
+    "exportReady": "Il download dei tuoi dati è in corso.",
+    "exportFailed": "Non è stato possibile preparare i tuoi dati. Riprova.",
+    "deleteTitle": "Elimina il tuo account",
+    "deleteBody": "Elimina definitivamente il tuo account, i video e i file, le didascalie, gli script, i post programmati, gli account social collegati e le impostazioni. Le registrazioni dei pagamenti vengono conservate per la contabilità. Non si può annullare.",
+    "deleteButton": "Elimina l'account definitivamente",
+    "dialogTitle": "Eliminare il tuo account?",
+    "dialogBody": "Tutto viene eliminato subito e non può essere recuperato. Se paghi un piano, viene annullato prima così non ti verrà addebitato altro.",
+    "passwordLabel": "Password attuale",
+    "confirmWord": "ELIMINA",
+    "typeToConfirm": "Scrivi {{word}} per confermare",
+    "keepAccount": "Mantieni il mio account",
+    "deleteForever": "Elimina per sempre",
+    "deleting": "Eliminazione…",
+    "deleted": "Il tuo account e i tuoi dati sono stati eliminati.",
+    "wrongPassword": "Questa password non è corretta.",
+    "cancelFirst": "Non siamo riusciti ad annullare automaticamente il tuo abbonamento. Annullalo prima dal tuo account Whop, poi elimina il tuo account.",
+    "deleteFailed": "Non è stato possibile eliminare il tuo account. Riprova."
+  },
+  "contactPage": {
+    "topicLabel": "Di cosa si tratta?",
+    "topic": {
+      "support": "Assistenza",
+      "billing": "Fatturazione",
+      "privacy": "Privacy e i miei dati",
+      "sales": "Agenzie e vendite",
+      "other": "Altro"
+    },
+    "hint": {
+      "support": "Cosa stavi facendo e cosa è successo invece?",
+      "billing": "Indica l'email con cui paghi su Whop, se è diversa.",
+      "privacy": "Per ricevere una copia dei tuoi dati o cancellarli, scrivi dall'email del tuo account Click.",
+      "sales": "Dimensione del team, numero di brand e cosa vorresti fare.",
+      "other": "Tutto ciò che vuoi farci sapere."
+    },
+    "nameLabel": "Nome",
+    "emailLabel": "Email (per la nostra risposta)",
+    "messageLabel": "Messaggio",
+    "send": "Invia messaggio",
+    "sending": "Invio in corso…",
+    "sendFailed": "Non è stato possibile inviare il messaggio. Riprova.",
+    "sentTitle": "Messaggio inviato",
+    "sentBody": "Grazie. Ti risponderemo a {{email}}."
   }
 }

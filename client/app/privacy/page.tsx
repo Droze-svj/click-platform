@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPage kicker="Legal & Trust" title="Privacy Policy" updated={new Date()}>
+    <LegalPage kicker="Legal & Trust" title="Privacy Policy" updated={new Date('2026-11-13')}>
       <div className="prose prose-invert prose-slate max-w-none space-y-8 text-surface-700 dark:text-surface-300 leading-relaxed">
 
         <div className="p-4 rounded-xl bg-surface-100 dark:bg-white/5 not-prose text-xs text-surface-600 dark:text-slate-400 space-y-1">
@@ -64,62 +64,72 @@ export default function PrivacyPage() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">5. Third-Party Sub-Processors &amp; AI Data Flow</h2>
+          <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">5. Service Providers &amp; AI Data Flow</h2>
           <p>
-            To deliver enterprise-grade performance, we collaborate with vetted sub-processors bound by strict Data Processing Agreements (DPAs):
+            These providers process data for Click to run the service, under their own data-processing terms:
           </p>
           <div className="overflow-x-auto not-prose">
             <table className="w-full text-left text-xs border border-surface-200 dark:border-white/10 rounded-xl overflow-hidden">
               <thead className="bg-surface-100 dark:bg-white/5 text-surface-900 dark:text-white font-bold border-b border-surface-200 dark:border-white/10">
                 <tr>
-                  <th className="p-3">Sub-Processor</th>
-                  <th className="p-3">Role / Purpose</th>
-                  <th className="p-3">Data Location</th>
+                  <th className="p-3">Provider</th>
+                  <th className="p-3">What for</th>
+                  <th className="p-3">Location</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-200 dark:divide-white/10 text-surface-600 dark:text-surface-300">
                 <tr>
-                  <td className="p-3 font-semibold text-surface-900 dark:text-white">Whop Inc.</td>
-                  <td className="p-3">Merchant of Record, Payment Processing &amp; Billing</td>
+                  <td className="p-3 font-semibold text-surface-900 dark:text-white">Render Services, Inc.</td>
+                  <td className="p-3">Hosting the app and storing your uploaded and rendered files</td>
+                  <td className="p-3">United States (Oregon)</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-semibold text-surface-900 dark:text-white">MongoDB, Inc. (Atlas)</td>
+                  <td className="p-3">Database for your account, content and settings</td>
                   <td className="p-3">United States</td>
                 </tr>
                 <tr>
-                  <td className="p-3 font-semibold text-surface-900 dark:text-white">Google Cloud (Vertex AI)</td>
-                  <td className="p-3">Secure Video Rendering &amp; AI Transcription</td>
+                  <td className="p-3 font-semibold text-surface-900 dark:text-white">Google LLC (Gemini API)</td>
+                  <td className="p-3">AI video analysis, transcription, captions and writing</td>
                   <td className="p-3">United States / Global</td>
                 </tr>
                 <tr>
-                  <td className="p-3 font-semibold text-surface-900 dark:text-white">OpenAI LLC</td>
-                  <td className="p-3">Text &amp; Script Generation, Pacing Summaries</td>
+                  <td className="p-3 font-semibold text-surface-900 dark:text-white">OpenAI, L.L.C.</td>
+                  <td className="p-3">AI text generation (scripts, captions, summaries)</td>
                   <td className="p-3">United States</td>
                 </tr>
                 <tr>
-                  <td className="p-3 font-semibold text-surface-900 dark:text-white">HeyGen Inc.</td>
-                  <td className="p-3">Avatar Lip-Sync Synthesis (Optional User Selection)</td>
+                  <td className="p-3 font-semibold text-surface-900 dark:text-white">Whop, Inc.</td>
+                  <td className="p-3">Merchant of record: checkout, payments and subscriptions</td>
                   <td className="p-3">United States</td>
                 </tr>
                 <tr>
-                  <td className="p-3 font-semibold text-surface-900 dark:text-white">Supabase Inc. &amp; MongoDB</td>
-                  <td className="p-3">Encrypted Cloud Database &amp; Authentication</td>
-                  <td className="p-3">United States / EU</td>
-                </tr>
-                <tr>
-                  <td className="p-3 font-semibold text-surface-900 dark:text-white">Functional Software (Sentry)</td>
-                  <td className="p-3">Application Error &amp; Crash Diagnostics</td>
+                  <td className="p-3 font-semibold text-surface-900 dark:text-white">HeyGen / OpenAI Sora</td>
+                  <td className="p-3">Avatar videos, only if you add your own API key for them</td>
                   <td className="p-3">United States</td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-surface-500 dark:text-slate-400">
-            Our AI sub-processors operate under zero-retention or business API terms prohibiting the use of API payloads to train their models.
+          <p className="text-sm">
+            <strong>AI providers and your content.</strong> Click currently uses Google&apos;s Gemini API on its
+            free tier. Under Google&apos;s terms for that tier, Google may use content sent to the API, including
+            transcripts and frames from your videos, to improve its products, and people at Google may review it.
+            We will update this section when Click moves to a paid tier, under which Google does not use the
+            content that way. OpenAI does not use content sent through its API to train its models by default and
+            keeps it for up to 30 days for abuse monitoring.
           </p>
         </section>
 
         <section className="space-y-4">
           <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">6. International Data Transfers &amp; Security</h2>
           <p className="text-sm">
-            We employ industry-standard technical and organizational security measures, including AES-256 encryption at rest, TLS 1.3 encryption in transit, strict RBAC, and automated intrusion detection. When transferring data from the European Economic Area (EEA) or UK to third countries, we utilize standard contractual clauses (SCCs) approved by the European Commission.
+            Everything travels over HTTPS (TLS) with HSTS. Tokens for the social accounts you connect and two-factor
+            secrets are encrypted with AES-256-GCM before they are stored, and the database is encrypted at rest by
+            our database provider. Passwords are stored as bcrypt hashes. Your files are only reachable through signed
+            links that expire. Inside a workspace, access follows the roles its owner assigns. Our providers are based in
+            the United States; transfers from the European Economic Area or UK rely on their data-processing terms,
+            including the EU Standard Contractual Clauses where those terms offer them.
           </p>
         </section>
 
@@ -138,19 +148,18 @@ export default function PrivacyPage() {
         <section className="space-y-4">
           <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">8. Data Retention &amp; Account Deletion</h2>
           <p className="text-sm">
-            We retain account data for the duration of your active subscription. You can delete your account at any time via <code>Settings &rarr; Delete Account</code> or by contacting our privacy desk. Upon account deletion, all personal data, video drafts, and biometric identifiers are permanently expunged within 30 days, except where retention is mandated by tax or legal compliance statutes.
+            We retain account data for the duration of your active subscription. You can download your data and delete your account at any time in <code>Settings &rarr; Account &amp; Security &rarr; Your data</code>, or by contacting our privacy desk. Deleting your account erases your personal data, videos and files, drafts and biometric identifiers immediately (see <a href="/data-deletion" className="text-primary-500 underline">Deleting your data</a>), except where retention is mandated by tax or legal compliance statutes.
           </p>
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">9. Privacy Contact &amp; Data Protection Officer</h2>
+          <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">9. Privacy Contact</h2>
           <p className="text-sm">
-            If you have questions about this policy, wish to submit a Subject Access Request (SAR), or desire to exercise your privacy rights, contact our Data Protection Officer:
+            If you have questions about this policy, wish to submit a Subject Access Request (SAR), or desire to exercise your privacy rights, write to us:
           </p>
           <div className="p-4 rounded-xl bg-surface-100 dark:bg-white/5 not-prose space-y-1 text-sm">
-            <p><strong>Click Privacy Office &amp; DPO</strong></p>
-            <p>Email: <a href="mailto:privacy@clickapp.io" className="text-primary-500 hover:underline">privacy@clickapp.io</a></p>
-            <p>Direct Inquiries: <a href="mailto:dpo@clickapp.io" className="text-primary-500 hover:underline">dpo@clickapp.io</a></p>
+            <p><strong>Privacy requests</strong> (or use Settings → Account &amp; Security → Your data to download or delete your data yourself)</p>
+            <p>Write to us through <a href="/contact?topic=privacy" className="text-primary-500 hover:underline">our contact form</a></p>
           </div>
         </section>
 

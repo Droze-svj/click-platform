@@ -56,10 +56,8 @@ export default function SecurityPage() {
           </Section>
 
           <Section title="Report a problem">
-            Found a vulnerability? Email{' '}
-            <a href="mailto:security@clickapp.io" className="text-primary-600 dark:text-indigo-400 hover:underline underline-offset-4">
-              security@clickapp.io
-            </a>{' '}
+            Found a vulnerability? Tell us privately through{' '}
+            <a href="/contact?topic=support" className="text-primary-600 dark:text-indigo-400 hover:underline underline-offset-4">our contact form</a>{' '}
             or see{' '}
             <a href="/.well-known/security.txt" className="text-primary-600 dark:text-indigo-400 hover:underline underline-offset-4">
               /.well-known/security.txt

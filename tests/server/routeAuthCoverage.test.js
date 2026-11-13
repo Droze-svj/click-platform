@@ -61,6 +61,8 @@ const PUBLIC = new Map([
   [/^\/api\/(brand|content-ops|integrations|database|admin|disaster-recovery|test-mi|video\/test|free-ai-models)/,
     'router-level auth (router.use) or an API-key middleware the name scan cannot see — verified by probe'],
   [/^\/api\/cdn\/url$/, 'builds a public asset URL'],
+  [/^\/api\/contact\/$/,
+    'public contact form: people who cannot sign in must reach support/privacy; per-IP rate limit, honeypot, length caps, write-only'],
   [/^\/api\/privacy\/facebook-data-deletion$/,
     'Meta data-deletion callback — Meta\'s crawler calls it unauthenticated, so it '
     + 'CANNOT require a session. It authenticates the caller instead by verifying '

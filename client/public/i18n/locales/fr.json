@@ -92,7 +92,7 @@
     "checkoutUnavailable": "Le paiement pour cette offre n'est pas disponible pour le moment. Rien n'a été modifié. Réessayez plus tard ou contactez le support.",
     "invoiceDownloadFailed": "Impossible de télécharger la facture. Veuillez réessayer.",
     "faq1Q": "Comment fonctionne la garantie de remboursement de 14 jours ?",
-    "faq1A": "Chaque premier abonnement à une offre payante (Creator, Pro ou Agency) inclut une garantie de remboursement de 14 jours sans condition. Si Click ne vous convient pas, écrivez à {{email}} dans les 14 jours suivant votre premier paiement pour être remboursé à 100 %. Sans démarches compliquées pour résilier, sans appels de rétention.",
+    "faq1A": "Chaque premier abonnement à une offre payante (Creator, Pro ou Agency) inclut une garantie de remboursement de 14 jours. Si Click ne vous convient pas, choisissez « {{button}} » sur cette page dans les 14 jours suivant votre premier paiement pour être remboursé à 100 %.",
     "faq2Q": "À qui appartiennent les droits d'auteur et les droits commerciaux de mes vidéos et des contenus de mon jumeau numérique ?",
     "faq2A": "Vous conservez 100 % des droits de propriété intellectuelle et des droits commerciaux exclusifs sur l'ensemble de vos rushes, clips générés, scripts, notes vocales et contenus produits par votre avatar de jumeau numérique. Click ne revendique aucun droit d'auteur ni aucune redevance de licence sur votre contenu.",
     "faq3Q": "Comment résilier ou modifier mon abonnement ?",
@@ -170,7 +170,8 @@
     "feedbackLabel": "Commentaires supplémentaires (facultatif)",
     "feedbackPlaceholder": "Aidez-nous à améliorer Click...",
     "submitRequest": "Envoyer la demande",
-    "statusPending": "en attente"
+    "statusPending": "en attente",
+    "contactLink": "Nous contacter"
   },
   "labsPage": {
     "title": "Labs",
@@ -2055,7 +2056,7 @@
     "subtitle": "Ce qui est sorti, ce sur quoi nous travaillons et la suite. Mis à jour au fil des sorties et des priorités.",
     "backToDashboard": "Retour au tableau de bord",
     "open": "Ouvrir",
-    "feedbackPrompt": "Vous avez repéré une lacune ? Déposez vos commentaires",
+    "feedbackPrompt": "Une lacune ? Dites-le-nous via",
     "status_shipped": "Expédié",
     "status_in-progress": "En cours",
     "status_next-up": "Ensuite",
@@ -2092,7 +2093,8 @@
     "item_teamWorkspaces_title": "Espaces de travail d'équipe multi-créateurs",
     "item_teamWorkspaces_description": "Kit de marque partagé, profil de style partagé et publication par rôle pour les équipes.",
     "item_mobileCapture_title": "Application de capture mobile native",
-    "item_mobileCapture_description": "Filmez, coupez automatiquement et mettez en file depuis votre téléphone, puis terminez dans l'éditeur sur ordinateur."
+    "item_mobileCapture_description": "Filmez, coupez automatiquement et mettez en file depuis votre téléphone, puis terminez dans l'éditeur sur ordinateur.",
+    "feedbackLink": "le formulaire de contact"
   },
   "schedulerPage": {
     "loading": "Chargement",
@@ -2558,7 +2560,10 @@
     "cmdGlobalAnalyticsDesc": "Statistiques de toute la plateforme",
     "refundRequestsTitle": "Demandes de remboursement",
     "refundRequestsBody": "Clients ayant demandé le remboursement sous 14 jours. Effectuez le remboursement dans Whop.",
-    "refundRequestsEmpty": "Aucune demande de remboursement."
+    "refundRequestsEmpty": "Aucune demande de remboursement.",
+    "messagesTitle": "Messages",
+    "messagesBody": "Envoyés depuis le formulaire de contact. Répondez par e-mail.",
+    "messagesEmpty": "Aucun message pour l'instant."
   },
   "infrastructurePage": {
     "loading": "Chargement de l'état du système...",
@@ -11728,5 +11733,54 @@
     "potential": "{{lift}} de potentiel",
     "voteUp": "Bonne suggestion",
     "voteDown": "Pas pour moi"
+  },
+  "privacyData": {
+    "title": "Vos données",
+    "exportTitle": "Télécharger vos données",
+    "exportBody": "Un fichier avec tout ce que Click conserve sur votre compte : profil, contenus, publications, sous-titres, paramètres et activité. Les mots de passe et les jetons de connexion sont exclus.",
+    "exportButton": "Télécharger mes données",
+    "exporting": "Préparation…",
+    "exportReady": "Le téléchargement de vos données a commencé.",
+    "exportFailed": "Impossible de préparer vos données. Réessayez.",
+    "deleteTitle": "Supprimer votre compte",
+    "deleteBody": "Supprime définitivement votre compte, vos vidéos et fichiers, sous-titres, scripts, publications programmées, comptes sociaux connectés et paramètres. Les justificatifs de paiement sont conservés à des fins comptables. Cette action est irréversible.",
+    "deleteButton": "Supprimer définitivement le compte",
+    "dialogTitle": "Supprimer votre compte ?",
+    "dialogBody": "Tout est supprimé immédiatement et ne peut pas être récupéré. Si vous payez un abonnement, il est d'abord résilié pour que vous ne soyez plus débité.",
+    "passwordLabel": "Mot de passe actuel",
+    "confirmWord": "SUPPRIMER",
+    "typeToConfirm": "Saisissez {{word}} pour confirmer",
+    "keepAccount": "Garder mon compte",
+    "deleteForever": "Supprimer définitivement",
+    "deleting": "Suppression…",
+    "deleted": "Votre compte et vos données ont été supprimés.",
+    "wrongPassword": "Ce mot de passe est incorrect.",
+    "cancelFirst": "Nous n'avons pas pu résilier votre abonnement automatiquement. Résiliez-le d'abord depuis votre compte Whop, puis supprimez votre compte.",
+    "deleteFailed": "Impossible de supprimer votre compte. Réessayez."
+  },
+  "contactPage": {
+    "topicLabel": "De quoi s'agit-il ?",
+    "topic": {
+      "support": "Assistance",
+      "billing": "Facturation",
+      "privacy": "Confidentialité et mes données",
+      "sales": "Agences et ventes",
+      "other": "Autre chose"
+    },
+    "hint": {
+      "support": "Que faisiez-vous, et que s'est-il passé à la place ?",
+      "billing": "Indiquez l'e-mail avec lequel vous payez sur Whop s'il est différent.",
+      "privacy": "Pour obtenir une copie ou la suppression de vos données, écrivez depuis l'e-mail de votre compte Click.",
+      "sales": "Taille de l'équipe, nombre de marques et ce que vous souhaitez faire.",
+      "other": "Tout ce que vous voulez nous dire."
+    },
+    "nameLabel": "Nom",
+    "emailLabel": "E-mail (pour notre réponse)",
+    "messageLabel": "Message",
+    "send": "Envoyer le message",
+    "sending": "Envoi…",
+    "sendFailed": "Votre message n'a pas pu être envoyé. Réessayez.",
+    "sentTitle": "Message envoyé",
+    "sentBody": "Merci. Nous répondrons à {{email}}."
   }
 }

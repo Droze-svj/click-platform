@@ -50,7 +50,7 @@ export default function DmcaPage() {
         <p className="text-surface-600 dark:text-surface-400 text-lg leading-relaxed mb-10">
           Click respects copyright. Use this form to file a takedown notice under 17 U.S.C. §512(c)
           or a counter-notice under §512(g). Knowingly false statements may carry liability under §512(f).
-          Our designated DMCA agent: <strong className="text-surface-900 dark:text-surface-50">Click, Inc. — dmca@clickapp.io</strong>.
+          Notices sent with this form go straight to the Click team.
         </p>
 
         {/* Tab toggle */}
@@ -149,7 +149,7 @@ export default function DmcaPage() {
         )}
 
         <p className="text-surface-500 text-xs mt-12 leading-relaxed">
-          You can also submit by email to <a href="mailto:dmca@clickapp.io" className="text-indigo-400 hover:text-indigo-300 underline">dmca@clickapp.io</a> or by post to Click, Inc., DMCA Agent, 1 Market St., Wilmington DE 19801, USA.
+          You can also send a notice through <a href="/contact?topic=other" className="text-indigo-400 hover:text-indigo-300 underline">our contact form</a> (choose Something else and include everything §512(c)(3) requires).
         </p>
           </LegalPage>
   );

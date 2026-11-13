@@ -92,7 +92,7 @@
     "checkoutUnavailable": "Checkout untuk paket ini sedang tidak tersedia. Tidak ada yang diubah. Coba lagi nanti atau hubungi dukungan.",
     "invoiceDownloadFailed": "Gagal mengunduh invoice. Silakan coba lagi.",
     "faq1Q": "Bagaimana cara kerja jaminan uang kembali 14 hari?",
-    "faq1A": "Setiap langganan pertama kali ke paket berbayar (Creator, Pro, atau Agency) mencakup jaminan uang kembali 14 hari tanpa syarat. Jika Click ternyata tidak cocok untukmu, kirim email ke {{email}} dalam 14 hari setelah pembayaran pertamamu untuk mendapatkan pengembalian dana 100%. Tanpa proses pembatalan yang berbelit, tanpa telepon bujukan.",
+    "faq1A": "Setiap langganan pertama kali ke paket berbayar (Creator, Pro, atau Agency) mencakup jaminan uang kembali 14 hari. Jika Click ternyata tidak cocok untukmu, pilih \"{{button}}\" di halaman ini dalam 14 hari setelah pembayaran pertamamu dan kamu mendapatkan pengembalian dana 100%.",
     "faq2Q": "Siapa yang memiliki hak cipta dan hak komersial atas video dan aset kembaran digital saya?",
     "faq2A": "Kamu tetap memegang 100% hak kekayaan intelektual dan hak komersial eksklusif atas semua rekaman mentah, klip yang dihasilkan, skrip, catatan suara, dan hasil avatar kembaran digitalmu. Click tidak mengklaim hak cipta atau royalti lisensi atas kontenmu.",
     "faq3Q": "Bagaimana cara membatalkan atau mengubah langganan saya?",
@@ -170,7 +170,8 @@
     "feedbackLabel": "Masukan tambahan (opsional)",
     "feedbackPlaceholder": "Bantu kami meningkatkan Click…",
     "submitRequest": "Kirim permintaan",
-    "statusPending": "menunggu"
+    "statusPending": "menunggu",
+    "contactLink": "Hubungi kami"
   },
   "labsPage": {
     "title": "Labs",
@@ -2055,7 +2056,7 @@
     "subtitle": "Apa yang sudah rilis, apa yang sedang kami kerjakan, dan apa yang berikutnya. Diperbarui saat fitur rilis dan prioritas berubah.",
     "backToDashboard": "Kembali ke dasbor",
     "open": "Membuka",
-    "feedbackPrompt": "Menemukan celah? Berikan masukan",
+    "feedbackPrompt": "Ada yang kurang? Beri tahu kami lewat",
     "status_shipped": "Dikirim",
     "status_in-progress": "Sedang berlangsung",
     "status_next-up": "Selanjutnya",
@@ -2092,7 +2093,8 @@
     "item_teamWorkspaces_title": "Ruang kerja tim multi-kreator",
     "item_teamWorkspaces_description": "Brand kit bersama, profil gaya bersama, dan publikasi berbasis peran untuk tim.",
     "item_mobileCapture_title": "Aplikasi pengambilan seluler asli",
-    "item_mobileCapture_description": "Rekam, potong otomatis, dan antrekan dari ponselmu, lalu selesaikan di editor desktop."
+    "item_mobileCapture_description": "Rekam, potong otomatis, dan antrekan dari ponselmu, lalu selesaikan di editor desktop.",
+    "feedbackLink": "formulir kontak"
   },
   "schedulerPage": {
     "loading": "Memuat",
@@ -2558,7 +2560,10 @@
     "cmdGlobalAnalyticsDesc": "Statistik seluruh platform",
     "refundRequestsTitle": "Permintaan refund",
     "refundRequestsBody": "Pelanggan yang meminta refund 14 hari. Proses refund di Whop.",
-    "refundRequestsEmpty": "Tidak ada permintaan refund."
+    "refundRequestsEmpty": "Tidak ada permintaan refund.",
+    "messagesTitle": "Pesan",
+    "messagesBody": "Dikirim dari formulir kontak. Balas lewat email.",
+    "messagesEmpty": "Belum ada pesan."
   },
   "infrastructurePage": {
     "loading": "Memuat status sistem...",
@@ -11728,5 +11733,54 @@
     "potential": "Potensi {{lift}}",
     "voteUp": "Saran bagus",
     "voteDown": "Bukan untukku"
+  },
+  "privacyData": {
+    "title": "Data Anda",
+    "exportTitle": "Unduh data Anda",
+    "exportBody": "Satu file berisi semua yang disimpan Click tentang akun Anda: profil, konten, postingan, teks, pengaturan, dan aktivitas. Kata sandi dan token koneksi tidak disertakan.",
+    "exportButton": "Unduh data saya",
+    "exporting": "Menyiapkan…",
+    "exportReady": "Data Anda sedang diunduh.",
+    "exportFailed": "Data Anda tidak dapat disiapkan. Coba lagi.",
+    "deleteTitle": "Hapus akun Anda",
+    "deleteBody": "Menghapus akun, video dan file, teks, skrip, postingan terjadwal, akun sosial yang terhubung, dan pengaturan Anda secara permanen. Catatan pembayaran disimpan untuk keperluan akuntansi. Tindakan ini tidak dapat dibatalkan.",
+    "deleteButton": "Hapus akun secara permanen",
+    "dialogTitle": "Hapus akun Anda?",
+    "dialogBody": "Semuanya dihapus seketika dan tidak dapat dipulihkan. Jika Anda membayar paket, paket itu dibatalkan terlebih dahulu agar Anda tidak ditagih lagi.",
+    "passwordLabel": "Kata sandi saat ini",
+    "confirmWord": "HAPUS",
+    "typeToConfirm": "Ketik {{word}} untuk mengonfirmasi",
+    "keepAccount": "Pertahankan akun saya",
+    "deleteForever": "Hapus selamanya",
+    "deleting": "Menghapus…",
+    "deleted": "Akun dan data Anda telah dihapus.",
+    "wrongPassword": "Kata sandi itu salah.",
+    "cancelFirst": "Kami tidak dapat membatalkan langganan Anda secara otomatis. Batalkan dulu dari akun Whop Anda, lalu hapus akun Anda.",
+    "deleteFailed": "Akun Anda tidak dapat dihapus. Coba lagi."
+  },
+  "contactPage": {
+    "topicLabel": "Tentang apa?",
+    "topic": {
+      "support": "Dukungan",
+      "billing": "Penagihan",
+      "privacy": "Privasi & data saya",
+      "sales": "Agensi & penjualan",
+      "other": "Lainnya"
+    },
+    "hint": {
+      "support": "Apa yang sedang kamu lakukan, dan apa yang terjadi?",
+      "billing": "Sertakan email yang kamu pakai untuk membayar di Whop jika berbeda.",
+      "privacy": "Untuk salinan atau penghapusan datamu, tulis dari email akun Click-mu.",
+      "sales": "Ukuran tim, jumlah brand, dan apa yang ingin kamu lakukan.",
+      "other": "Apa pun yang ingin kamu sampaikan."
+    },
+    "nameLabel": "Nama",
+    "emailLabel": "Email (untuk balasan kami)",
+    "messageLabel": "Pesan",
+    "send": "Kirim pesan",
+    "sending": "Mengirim…",
+    "sendFailed": "Pesanmu gagal terkirim. Coba lagi.",
+    "sentTitle": "Pesan terkirim",
+    "sentBody": "Terima kasih. Kami akan membalas ke {{email}}."
   }
 }

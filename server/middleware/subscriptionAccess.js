@@ -3,6 +3,14 @@
 const { hasSubscriptionAccess, getSubscriptionStatus } = require('../services/subscriptionService');
 const { sendError } = require('../utils/response');
 const logger = require('../utils/logger');
+const { resolveTier } = require('../config/entitlements');
+
+// An ended trial or a lapsed paid plan drops to the Free plan (resolveTier),
+// which the pricing page promises "forever" with limits — and those limits are
+// enforced by the entitlement layer. These gates used to refuse such accounts
+// outright ("Your subscription has expired"), so on day 15 a non-paying user
+// could no longer upload or generate anything at all.
+const usable = (user) => hasSubscriptionAccess(user) || resolveTier(user) === 'free';
 
 /**
  * Check if user has active subscription
@@ -53,7 +61,7 @@ const requireActiveSubscription = (req, res, next) => {
 
     // Check subscription access
     try {
-      const hasAccess = hasSubscriptionAccess(req.user);
+      const hasAccess = usable(req.user);
 
       if (!hasAccess) {
         const status = getSubscriptionStatus(req.user);
@@ -144,7 +152,7 @@ const checkActiveSubscription = (req) => {
   }
   if (!req.user) return { ok: false, statusCode: 401, message: 'Authentication required' };
   try {
-    if (hasSubscriptionAccess(req.user)) return { ok: true };
+    if (usable(req.user)) return { ok: true };
     const status = getSubscriptionStatus(req.user);
     return {
       ok: false,
