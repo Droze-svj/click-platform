@@ -4,7 +4,11 @@ import "../styles/layout-autofit.css";
 import "./globals.css";
 import "./export-fonts.css";
 import React from 'react';
-import { Inter, Playfair_Display, Caveat, JetBrains_Mono, VT323 } from 'next/font/google';
+// Fonts are bundled (app/fonts, SIL OFL — see app/fonts/OFL.txt) rather than
+// fetched from Google at build time: next/font/google broke the Render build
+// (2026-11-13) when Google's CSS gave the builder a URL its loader couldn't
+// parse, and a deploy shouldn't depend on a third party answering.
+import localFont from 'next/font/local';
 import { ToastProvider } from '../contexts/ToastContext';
 import { WorkflowProvider } from '../contexts/WorkflowContext';
 import { PreferencesProvider } from '../hooks/usePreferences';
@@ -17,37 +21,43 @@ import PerformanceMonitor from '../components/PerformanceMonitor';
 import MotionProvider from '../components/MotionProvider';
 
 // Body default
-const inter = Inter({
-  subsets: ['latin'],
+const inter = localFont({
+  src: './fonts/Inter-normal-100-900.woff2',
+  weight: '100 900',
+  style: 'normal',
   display: 'swap',
   variable: '--font-inter',
 });
 
 // Caption fonts — exposed as CSS variables so `var(--font-…)` works inside
 // inline style strings (e.g. in TextMotionStudioView and any caption renderer).
-const playfair = Playfair_Display({
-  subsets: ['latin'],
+const playfair = localFont({
+  src: [
+    { path: './fonts/PlayfairDisplay-normal-400-900.woff2', weight: '400 900', style: 'normal' },
+    { path: './fonts/PlayfairDisplay-italic-400-900.woff2', weight: '400 900', style: 'italic' },
+  ],
   display: 'swap',
-  weight: ['400', '700', '800', '900'],
-  style: ['normal', 'italic'],
   variable: '--font-playfair',
 });
-const caveat = Caveat({
-  subsets: ['latin'],
+const caveat = localFont({
+  src: './fonts/Caveat-normal-400-700.woff2',
+  weight: '400 700',
+  style: 'normal',
   display: 'swap',
-  weight: ['400', '500', '600', '700'],
   variable: '--font-caveat',
 });
-const jetbrains = JetBrains_Mono({
-  subsets: ['latin'],
+const jetbrains = localFont({
+  src: './fonts/JetBrainsMono-normal-400-700.woff2',
+  weight: '400 700',
+  style: 'normal',
   display: 'swap',
-  weight: ['400', '500', '700'],
   variable: '--font-jetbrains',
 });
-const vt323 = VT323({
-  subsets: ['latin'],
+const vt323 = localFont({
+  src: './fonts/VT323-normal-400.woff2',
+  weight: '400',
+  style: 'normal',
   display: 'swap',
-  weight: ['400'],
   variable: '--font-vt323',
 });
 

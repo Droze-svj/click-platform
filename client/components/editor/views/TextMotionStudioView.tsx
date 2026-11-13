@@ -29,7 +29,7 @@ interface TextAnimation { id: string; name: string; mood: string; tag: string; p
 interface MotionPreset    { id: string; name: string; mood: string; tag: string; preview: 'ken-burns' | 'parallax' | 'shake' | 'zoom-pulse' | 'tilt' | 'pan-left' | 'pan-right' | 'orbit' | 'wobble' | 'breathe' | 'dolly-zoom' | 'glitch-shake' }
 interface FontEntry       { id: string; name: string; family: string; weights: number[]; mood: string; bestFor: string[] }
 
-// Loaded by next/font/google in app/layout.tsx — accessible via CSS vars.
+// Bundled via next/font/local in app/layout.tsx — accessible via CSS vars.
 // We chain to system fallbacks so dev-server cold loads still render text.
 const F_INTER     = 'var(--font-inter), "Inter", system-ui, sans-serif'
 const F_PLAYFAIR  = 'var(--font-playfair), "Playfair Display", Georgia, serif'
