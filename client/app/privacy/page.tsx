@@ -12,7 +12,7 @@ export default function PrivacyPage() {
       <div className="prose prose-invert prose-slate max-w-none space-y-8 text-surface-700 dark:text-surface-300 leading-relaxed">
 
         <div className="p-4 rounded-xl bg-surface-100 dark:bg-white/5 not-prose text-xs text-surface-600 dark:text-slate-400 space-y-1">
-          <p><strong>Your Privacy First:</strong> We do not sell your personal data. We do not use your private drafts, voice notes, or uploaded footage to train public artificial intelligence models.</p>
+          <p><strong>In short:</strong> We do not sell your personal data, and Click does not train AI models on your drafts, voice notes or footage. While Click uses Gemini&apos;s free tier, Google may use what is sent to it; see section 5.</p>
         </div>
 
         <section className="space-y-4">
@@ -102,6 +102,11 @@ export default function PrivacyPage() {
                   <td className="p-3 font-semibold text-surface-900 dark:text-white">Whop, Inc.</td>
                   <td className="p-3">Merchant of record: checkout, payments and subscriptions</td>
                   <td className="p-3">United States</td>
+                </tr>
+                <tr>
+                  <td className="p-3 font-semibold text-surface-900 dark:text-white">Functional Software, Inc. (Sentry)</td>
+                  <td className="p-3">Error reports from our servers: what failed, where, and your account ID. Never your content, files, passwords or IP address. Kept for up to 90 days.</td>
+                  <td className="p-3">European Union (Germany)</td>
                 </tr>
                 <tr>
                   <td className="p-3 font-semibold text-surface-900 dark:text-white">HeyGen / OpenAI Sora</td>

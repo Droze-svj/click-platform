@@ -252,7 +252,6 @@ async function generateContent(prompt, options = {}) {
     return null;
   }
 
-  const reqMessages = [{ role: 'user', content: prompt }];
   const runRequest = async () => {
     // Wrap the upstream call so quota / rate-limit / network errors degrade
     // to `null` instead of bubbling up. Every caller in the codebase already
@@ -337,7 +336,8 @@ async function generateContent(prompt, options = {}) {
         attributes: {
           'gen_ai.request.model': 'gemini-2.5-flash',
           'gen_ai.operation.name': 'request',
-          'gen_ai.request.messages': JSON.stringify(reqMessages),
+          // Sizes only: the prompt and reply are the user's content and stay out of Sentry.
+          'gen_ai.request.prompt_chars': prompt.length,
           'gen_ai.request.max_tokens': options.maxTokens || 1024,
           'gen_ai.request.temperature': options.temperature ?? 0.7,
         },
@@ -362,7 +362,7 @@ async function generateContent(prompt, options = {}) {
           const response = result.response;
           if (!response || !response.text) return null;
           const text = response.text().trim();
-          span.setAttribute('gen_ai.response.text', JSON.stringify([text]));
+          span.setAttribute('gen_ai.response.chars', text.length);
 
           const usage = response.usageMetadata || {};
           if (typeof usage.promptTokenCount === 'number') span.setAttribute('gen_ai.usage.input_tokens', usage.promptTokenCount);
