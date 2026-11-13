@@ -14,19 +14,23 @@ const FAQS = [
   },
   {
     q: 'What happens after my free trial?',
-    a: "There's no trial — Free is forever-free with limits (3 exports / month, 30-second clips, watermark). You only pay if you outgrow it, and you can upgrade or downgrade anytime. No card required to start. No surprise charges.",
+    a: "Every new account starts with 14 days of Pro, no card needed. After that you're on Free, which stays free with limits: 3 exports a month, up to 720p, videos up to 2 minutes, and a watermark. You only pay if you outgrow it. No surprise charges.",
   },
   {
     q: 'Who owns the content Click makes?',
     a: 'You do. Period. Click never claims license to your footage, transcripts, captions, voice clones, or generated assets. We process it on the way out; you own everything that comes back.',
   },
   {
+    q: 'Is my footage and my account safe?',
+    a: 'Your videos are only reachable through signed links that expire, so a file address can\'t be passed around. Connections to your social accounts are encrypted before they\'re stored, passwords are hashed, and you can turn on two-factor sign-in. Payments go through Whop: Click never sees your card number. You can download everything Click holds about you, or delete your account and all your files, yourself in Settings.',
+  },
+  {
     q: 'Can I switch plans or cancel later?',
-    a: 'Yes. Switch tiers from billing any time — proration is automatic. Cancel any time; you keep access until your billing period ends, and your library stays right where you left it.',
+    a: 'Yes. Change plans from Billing at any time. If you cancel, you keep access until the end of the period you paid for, then move to Free, and your library stays right where you left it.',
   },
   {
     q: 'Do you offer refunds?',
-    a: "14-day full refund on every paid plan, no questions asked. If Click didn't earn its keep in two weeks, that's on us. After that, we honour pro-rated refunds case by case.",
+    a: "Yes: a full refund within 14 days of your first payment on any paid plan, no questions asked. Ask from Billing in the app. After 14 days, we look at refund requests case by case.",
   },
   {
     q: 'Will my exports have a watermark?',

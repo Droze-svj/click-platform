@@ -80,7 +80,7 @@ export function Footer() {
               <Link href="/compliance" className="text-xs text-surface-400 dark:text-slate-500 hover:text-primary-500 transition-colors">Compliance</Link>
               <Link href="/ai-disclosure" className="text-xs text-surface-400 dark:text-slate-500 hover:text-primary-500 transition-colors">Responsible AI</Link>
               <Link href="/acceptable-use" className="text-xs text-surface-400 dark:text-slate-500 hover:text-primary-500 transition-colors">Acceptable Use</Link>
-              <Link href="/privacy#delete" className="text-xs text-surface-400 dark:text-slate-500 hover:text-primary-500 transition-colors">Delete my data</Link>
+              <Link href="/data-deletion" className="text-xs text-surface-400 dark:text-slate-500 hover:text-primary-500 transition-colors">Delete my data</Link>
             </div>
           </div>
         </div>
