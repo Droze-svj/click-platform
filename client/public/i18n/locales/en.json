@@ -92,7 +92,7 @@
     "checkoutUnavailable": "Checkout for this plan is not available right now. Nothing was changed. Please try again later or contact support.",
     "invoiceDownloadFailed": "Couldn't download the invoice. Please try again.",
     "faq1Q": "How does the 14-day money-back guarantee work?",
-    "faq1A": "Every first-time subscription to a paid plan (Creator, Pro or Agency) includes a 14-day money-back guarantee. If Click isn't the right fit for you, ask for a refund from Billing → Manage within 14 days of your first payment and you get 100% back.",
+    "faq1A": "Every first-time subscription to a paid plan (Creator, Pro or Agency) includes a 14-day money-back guarantee. If Click isn't the right fit for you, choose {{button}} on this page within 14 days of your first payment and you get 100% back.",
     "faq2Q": "Who owns the copyright and commercial rights to my videos and digital twin assets?",
     "faq2A": "You keep 100% exclusive intellectual property and commercial rights to all your raw footage, generated clips, scripts, voice notes and digital twin avatar outputs. Click claims no copyright or licensing royalties over your content.",
     "faq3Q": "How do I cancel or change my subscription?",

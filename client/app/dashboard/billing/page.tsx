@@ -710,7 +710,7 @@ export default function BillingPage() {
                     </button>
                     {isOpen && (
                       <div className="px-4 pb-4 pt-1 text-xs text-theme-secondary leading-relaxed border-t border-[var(--border-subtle)]/50">
-                        {t(faq.a)}
+                        {t(faq.a, { button: t('billingPage.cancelRefund') })}
                       </div>
                     )}
                   </div>

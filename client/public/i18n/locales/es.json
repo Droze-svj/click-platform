@@ -92,7 +92,7 @@
     "checkoutUnavailable": "El pago de este plan no está disponible ahora mismo. No se cambió nada. Inténtalo más tarde o contacta con soporte.",
     "invoiceDownloadFailed": "No se pudo descargar la factura. Inténtalo de nuevo.",
     "faq1Q": "¿Cómo funciona la garantía de devolución de 14 días?",
-    "faq1A": "Toda primera suscripción a un plan de pago (Creator, Pro o Agency) incluye una garantía de devolución incondicional de 14 días. Si Click no es lo que buscabas, escribe a {{email}} en los 14 días siguientes a tu primer cobro y te devolvemos el 100%. Sin trámites para cancelar ni llamadas de retención.",
+    "faq1A": "Toda primera suscripción a un plan de pago (Creator, Pro o Agency) incluye una garantía de devolución de 14 días. Si Click no es lo que buscabas, elige «{{button}}» en esta página en los 14 días siguientes a tu primer cobro y te devolvemos el 100%.",
     "faq2Q": "¿Quién es el titular de los derechos de autor y los derechos comerciales de mis videos y de los recursos de mi gemelo digital?",
     "faq2A": "Conservas el 100% de la propiedad intelectual y de los derechos comerciales, en exclusiva, sobre todo tu material original, los clips generados, los guiones, las notas de voz y los resultados de tu avatar de gemelo digital. Click no reclama derechos de autor ni regalías de licencia sobre tu contenido.",
     "faq3Q": "¿Cómo cancelo o cambio mi suscripción?",
@@ -170,7 +170,8 @@
     "feedbackLabel": "Comentarios adicionales (opcional)",
     "feedbackPlaceholder": "Ayúdanos a mejorar Click...",
     "submitRequest": "Enviar solicitud",
-    "statusPending": "pendiente"
+    "statusPending": "pendiente",
+    "contactLink": "Contáctanos"
   },
   "labsPage": {
     "title": "Labs",
@@ -2055,7 +2056,7 @@
     "subtitle": "Lo que ya se lanzó, en lo que estamos trabajando y lo que viene. Se actualiza a medida que se lanzan funciones y cambian las prioridades.",
     "backToDashboard": "Volver al tablero",
     "open": "Abierto",
-    "feedbackPrompt": "¿Viste una brecha? Deja comentarios en",
+    "feedbackPrompt": "¿Echas algo en falta? Cuéntanoslo a través de",
     "status_shipped": "Enviado",
     "status_in-progress": "En curso",
     "status_next-up": "Siguiente",
@@ -2092,7 +2093,8 @@
     "item_teamWorkspaces_title": "Espacios de trabajo en equipo de múltiples creadores",
     "item_teamWorkspaces_description": "Kit de marca compartido, perfil de estilo compartido y publicación por roles para equipos.",
     "item_mobileCapture_title": "Aplicación nativa de captura móvil",
-    "item_mobileCapture_description": "Graba, corta automáticamente y pon en cola desde tu teléfono, y termina en el editor de escritorio."
+    "item_mobileCapture_description": "Graba, corta automáticamente y pon en cola desde tu teléfono, y termina en el editor de escritorio.",
+    "feedbackLink": "el formulario de contacto"
   },
   "schedulerPage": {
     "loading": "Cargando",
@@ -2558,7 +2560,10 @@
     "cmdGlobalAnalyticsDesc": "Estadísticas de toda la plataforma",
     "refundRequestsTitle": "Solicitudes de reembolso",
     "refundRequestsBody": "Clientes que pidieron el reembolso de 14 días. Emite el reembolso en Whop.",
-    "refundRequestsEmpty": "No hay solicitudes de reembolso."
+    "refundRequestsEmpty": "No hay solicitudes de reembolso.",
+    "messagesTitle": "Mensajes",
+    "messagesBody": "Enviados desde el formulario de contacto. Responde por correo.",
+    "messagesEmpty": "Aún no hay mensajes."
   },
   "infrastructurePage": {
     "loading": "Cargando estado del sistema...",
@@ -11752,5 +11757,30 @@
     "wrongPassword": "Esa contraseña no es correcta.",
     "cancelFirst": "No pudimos cancelar tu suscripción automáticamente. Cancélala primero desde tu cuenta de Whop y luego elimina tu cuenta.",
     "deleteFailed": "No se pudo eliminar tu cuenta. Inténtalo de nuevo."
+  },
+  "contactPage": {
+    "topicLabel": "¿De qué se trata?",
+    "topic": {
+      "support": "Soporte",
+      "billing": "Facturación",
+      "privacy": "Privacidad y mis datos",
+      "sales": "Agencias y ventas",
+      "other": "Otra cosa"
+    },
+    "hint": {
+      "support": "¿Qué estabas haciendo y qué pasó en su lugar?",
+      "billing": "Incluye el correo con el que pagas en Whop si es distinto.",
+      "privacy": "Para obtener una copia de tus datos o eliminarlos, escríbenos desde el correo de tu cuenta de Click.",
+      "sales": "Tamaño del equipo, número de marcas y qué te gustaría hacer.",
+      "other": "Cualquier cosa que quieras que sepamos."
+    },
+    "nameLabel": "Nombre",
+    "emailLabel": "Correo (para nuestra respuesta)",
+    "messageLabel": "Mensaje",
+    "send": "Enviar mensaje",
+    "sending": "Enviando…",
+    "sendFailed": "No pudimos enviar tu mensaje. Inténtalo de nuevo.",
+    "sentTitle": "Mensaje enviado",
+    "sentBody": "Gracias. Te responderemos a {{email}}."
   }
 }

@@ -92,7 +92,7 @@
     "checkoutUnavailable": "Hiện chưa thể thanh toán gói này. Chưa có gì thay đổi. Vui lòng thử lại sau hoặc liên hệ bộ phận hỗ trợ.",
     "invoiceDownloadFailed": "Không thể tải hóa đơn xuống. Vui lòng thử lại.",
     "faq1Q": "Đảm bảo hoàn tiền 14 ngày hoạt động thế nào?",
-    "faq1A": "Mọi lần đăng ký gói trả phí đầu tiên (Creator, Pro hoặc Agency) đều có đảm bảo hoàn tiền 14 ngày vô điều kiện. Nếu Click không phù hợp với bạn, hãy gửi email tới {{email}} trong vòng 14 ngày kể từ lần thanh toán đầu tiên để được hoàn 100%. Không thủ tục hủy rườm rà, không gọi điện giữ chân.",
+    "faq1A": "Mọi lần đăng ký gói trả phí đầu tiên (Creator, Pro hoặc Agency) đều có đảm bảo hoàn tiền 14 ngày. Nếu Click không phù hợp với bạn, hãy chọn “{{button}}” trên trang này trong vòng 14 ngày kể từ lần thanh toán đầu tiên để được hoàn 100%.",
     "faq2Q": "Ai sở hữu bản quyền và quyền thương mại đối với video và tài sản bản sao số của tôi?",
     "faq2A": "Bạn giữ 100% quyền sở hữu trí tuệ và quyền thương mại độc quyền đối với toàn bộ cảnh quay gốc, clip được tạo, kịch bản, ghi chú giọng nói và sản phẩm đầu ra từ ảnh đại diện bản sao số của mình. Click không đòi bản quyền hay phí cấp phép nào đối với nội dung của bạn.",
     "faq3Q": "Làm sao để hủy hoặc đổi gói đăng ký?",
@@ -170,7 +170,8 @@
     "feedbackLabel": "Góp ý thêm (không bắt buộc)",
     "feedbackPlaceholder": "Giúp chúng tôi cải thiện Click…",
     "submitRequest": "Gửi yêu cầu",
-    "statusPending": "đang chờ"
+    "statusPending": "đang chờ",
+    "contactLink": "Liên hệ chúng tôi"
   },
   "labsPage": {
     "title": "Labs",
@@ -2055,7 +2056,7 @@
     "subtitle": "Những gì đã ra mắt, những gì chúng tôi đang làm và những gì sắp tới. Cập nhật khi tính năng ra mắt và ưu tiên thay đổi.",
     "backToDashboard": "Quay lại trang tổng quan",
     "open": "Mở",
-    "feedbackPrompt": "Phát hiện một khoảng trống? Thả phản hồi vào",
+    "feedbackPrompt": "Thấy còn thiếu gì? Hãy cho chúng tôi biết qua",
     "status_shipped": "Đã vận chuyển",
     "status_in-progress": "Đang tiến hành",
     "status_next-up": "Tiếp theo",
@@ -2092,7 +2093,8 @@
     "item_teamWorkspaces_title": "Không gian làm việc của nhóm nhiều người sáng tạo",
     "item_teamWorkspaces_description": "Bộ thương hiệu chung, hồ sơ phong cách chung và đăng bài theo vai trò dành cho các nhóm.",
     "item_mobileCapture_title": "Ứng dụng chụp di động gốc",
-    "item_mobileCapture_description": "Quay, tự động cắt và xếp hàng ngay trên điện thoại, rồi hoàn thiện trên trình chỉnh sửa máy tính."
+    "item_mobileCapture_description": "Quay, tự động cắt và xếp hàng ngay trên điện thoại, rồi hoàn thiện trên trình chỉnh sửa máy tính.",
+    "feedbackLink": "biểu mẫu liên hệ"
   },
   "schedulerPage": {
     "loading": "Đang tải",
@@ -2558,7 +2560,10 @@
     "cmdGlobalAnalyticsDesc": "Thống kê toàn nền tảng",
     "refundRequestsTitle": "Yêu cầu hoàn tiền",
     "refundRequestsBody": "Khách hàng đã yêu cầu hoàn tiền trong 14 ngày. Hãy hoàn tiền trên Whop.",
-    "refundRequestsEmpty": "Không có yêu cầu hoàn tiền."
+    "refundRequestsEmpty": "Không có yêu cầu hoàn tiền.",
+    "messagesTitle": "Tin nhắn",
+    "messagesBody": "Gửi từ biểu mẫu liên hệ. Trả lời qua email.",
+    "messagesEmpty": "Chưa có tin nhắn nào."
   },
   "infrastructurePage": {
     "loading": "Đang tải trạng thái hệ thống...",
@@ -11752,5 +11757,30 @@
     "wrongPassword": "Mật khẩu không đúng.",
     "cancelFirst": "Chúng tôi không thể tự động hủy gói đăng ký của bạn. Hãy hủy từ tài khoản Whop trước, rồi xóa tài khoản của bạn.",
     "deleteFailed": "Không thể xóa tài khoản của bạn. Hãy thử lại."
+  },
+  "contactPage": {
+    "topicLabel": "Bạn muốn nói về điều gì?",
+    "topic": {
+      "support": "Hỗ trợ",
+      "billing": "Thanh toán",
+      "privacy": "Quyền riêng tư và dữ liệu của tôi",
+      "sales": "Agency và bán hàng",
+      "other": "Việc khác"
+    },
+    "hint": {
+      "support": "Bạn đang làm gì và điều gì đã xảy ra thay vào đó?",
+      "billing": "Hãy ghi email bạn dùng để thanh toán trên Whop nếu khác.",
+      "privacy": "Để nhận bản sao hoặc xóa dữ liệu, hãy viết từ email của tài khoản Click.",
+      "sales": "Quy mô nhóm, số thương hiệu và điều bạn muốn làm.",
+      "other": "Bất cứ điều gì bạn muốn cho chúng tôi biết."
+    },
+    "nameLabel": "Tên",
+    "emailLabel": "Email (để chúng tôi trả lời)",
+    "messageLabel": "Tin nhắn",
+    "send": "Gửi tin nhắn",
+    "sending": "Đang gửi…",
+    "sendFailed": "Không gửi được tin nhắn. Hãy thử lại.",
+    "sentTitle": "Đã gửi tin nhắn",
+    "sentBody": "Cảm ơn bạn. Chúng tôi sẽ trả lời qua {{email}}."
   }
 }

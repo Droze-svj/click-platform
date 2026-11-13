@@ -98,7 +98,7 @@ export default function RefundPage() {
             To claim your 14-day refund or request billing assistance, submit a request through any of the following channels:
           </p>
           <div className="p-4 rounded-xl bg-surface-100 dark:bg-white/5 not-prose space-y-2 text-sm">
-            <p><strong>In the app:</strong> Billing → Manage → Refund. <strong>Or</strong> <a href="/contact?topic=billing" className="text-primary-500 hover:underline">our contact form</a></p>
+            <p><strong>In the app:</strong> Billing → Cancel / Refund. <strong>Or</strong> <a href="/contact?topic=billing" className="text-primary-500 hover:underline">our contact form</a></p>
             <p><strong>Topic:</strong> Billing, and write from the email on your Click account.</p>
             <p><strong>Information to Include:</strong> Your account email, transaction ID or invoice number (available on your Billing page).</p>
             <p className="text-xs text-surface-500 dark:text-slate-400 mt-2">
