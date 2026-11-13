@@ -32,7 +32,13 @@ beforeAll(async () => {
 // …-w1 database) against the rows the first pass left behind. That made
 // convertible come back 20 instead of 10 and failed only the coverage step.
 beforeEach(async () => {
-  for (const c of COLLECTIONS) { try { await db.collection(c).deleteMany({}); } catch (_) { /* noop */ } }
+  for (const c of COLLECTIONS) {
+    try { await db.collection(c).deleteMany({}); } catch (_) { /* noop */ }
+    // The rows below are bare { userId, marker }. If another suite in this
+    // worker compiled the real model (e.g. AgenticJob's unique jobId index),
+    // its indexes reject them; only the userId field matters here.
+    try { await db.collection(c).dropIndexes(); } catch (_) { /* collection may not exist */ }
+  }
 });
 
 afterEach(async () => {
