@@ -30,7 +30,9 @@ const requireAdmin = asyncHandler(async (req, res, next) => {
 
   const adminEmails = emailAllowlist('ADMIN_EMAILS');
   const email = (req.user.email || '').toLowerCase();
-  if (!email || !adminEmails.includes(email)) {
+  // The email must be proven: unverified accounts can sign in, so whoever
+  // registered an allowlisted address first would otherwise become admin.
+  if (!email || !adminEmails.includes(email) || req.user.emailVerified !== true) {
     return res.status(403).json({
       success: false,
       error: 'Admin access required'
@@ -51,7 +53,7 @@ const requireSuperAdmin = asyncHandler(async (req, res, next) => {
 
   const superAdminEmails = emailAllowlist('SUPER_ADMIN_EMAILS');
   const email = (req.user.email || '').toLowerCase();
-  if (!email || !superAdminEmails.includes(email)) {
+  if (!email || !superAdminEmails.includes(email) || req.user.emailVerified !== true) {
     return res.status(403).json({
       success: false,
       error: 'Super admin access required'
