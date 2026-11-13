@@ -13,7 +13,7 @@ export interface ContainerSize {
  * downstream layout reflows don't stall on rapid resize events.
  */
 export function useResizeObserver<T extends HTMLElement = HTMLDivElement>(): {
-  ref: React.RefObject<T | null>
+  ref: React.RefObject<T>
   size: ContainerSize
 } {
   const ref = useRef<T>(null)

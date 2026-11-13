@@ -142,6 +142,6 @@ describe('VoiceMemoScriptPanel', () => {
 
     fireEvent.click(screen.getByTestId('memo-copy'))
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(RESULT.markdown))
-    await waitFor(() => expect(screen.getByTestId('memo-copy')).toHaveTextContent('Copied ✓'))
+    expect(screen.getByTestId('memo-copy')).toHaveTextContent('Copied ✓')
   })
 })

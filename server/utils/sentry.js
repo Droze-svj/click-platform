@@ -6,7 +6,8 @@ let ProfilingIntegration = null;
 try {
   if (process.env.SENTRY_DSN && process.env.NODE_ENV === 'production') {
     Sentry = require('@sentry/node');
-    ProfilingIntegration = require('@sentry/profiling-node').ProfilingIntegration;
+    // @sentry/profiling-node is not loaded: it is a native profiler that only
+    // matters with tracing on, and its v10 export isn't ProfilingIntegration.
   }
 } catch (e) {
   // This is the Sentry bootstrap itself — logger may not be wired yet, so

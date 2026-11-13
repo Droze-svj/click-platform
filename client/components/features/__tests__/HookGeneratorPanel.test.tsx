@@ -53,6 +53,6 @@ describe('HookGeneratorPanel', () => {
 
     fireEvent.click(screen.getByTestId('hooks-copy'))
     await waitFor(() => expect(writeText).toHaveBeenCalledWith('Hook A'))
-    await waitFor(() => expect(screen.getByTestId('hooks-copy')).toHaveTextContent('Copied ✓'))
+    expect(screen.getByTestId('hooks-copy')).toHaveTextContent('Copied ✓')
   })
 })

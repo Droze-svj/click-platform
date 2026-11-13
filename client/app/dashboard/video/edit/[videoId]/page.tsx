@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { apiGet, apiPost, API_URL } from '../../../../../lib/api'
 import { useAuth } from '../../../../../hooks/useAuth'
 import { useSocket } from '../../../../../hooks/useSocket'
@@ -15,6 +15,11 @@ import ClickLoadingState from '@/components/click/ClickLoadingState'
 import { PageShell } from '../../../../../components/ui'
 import { useTranslation } from '../../../../../hooks/useTranslation'
 
+interface PageProps {
+  params: {
+    videoId: string
+  }
+}
 
 interface Video {
   _id: string
@@ -244,7 +249,7 @@ function MarketingBriefPanel({ brief }: { brief: any }) {
   )
 }
 
-export default function VideoEditPage() {
+export default function VideoEditPage({ params }: PageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { t } = useTranslation()
@@ -260,8 +265,7 @@ export default function VideoEditPage() {
   // Just-uploaded videos arrive with ?autoCaptions=1 so the editor builds a
   // speech-synced caption track on first open.
   const autoCaptions = searchParams?.get('autoCaptions') === '1'
-  // Route params via the hook: page props.params is a Promise since Next 15.
-  const videoId = useParams<{ videoId: string }>()?.videoId ?? ''
+  const videoId = params.videoId
   const { user } = useAuth()
   const { socket, connected, on, off } = useSocket(user?.id || null)
   const { resolvedTheme, toggle } = useTheme()
