@@ -13,6 +13,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const { authenticate } = require('../middleware/auth');
+const requireBiometricConsent = require('../middleware/requireBiometricConsent');
 const { aiLimiter } = require('../middleware/enhancedRateLimiter');
 const { sendSuccess, sendError } = require('../utils/response');
 const { toAbsolutePath } = require('../utils/pathUtils');
@@ -25,7 +26,7 @@ const NAME_MAX = 80;
  * POST /api/voice/clone
  * Body: { audioSampleUrl: "/uploads/....(mp3|wav|m4a|ogg|webm|mp4)", name }
  */
-router.post('/clone', authenticate, aiLimiter, async (req, res) => {
+router.post('/clone', authenticate, requireBiometricConsent, aiLimiter, async (req, res) => {
   try {
     const { audioSampleUrl, name } = req.body || {};
 

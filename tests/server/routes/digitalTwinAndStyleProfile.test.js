@@ -18,6 +18,8 @@ jest.mock('../../../server/middleware/auth', () => {
   return middleware;
 });
 
+// Consent itself is covered by biometricConsentGate.test.js.
+jest.mock('../../../server/middleware/requireBiometricConsent', () => (req, res, next) => next());
 const digitalTwinService = require('../../../server/services/digitalTwinService');
 
 describe('Digital Twin & User Style Profile Route Enhancements', () => {

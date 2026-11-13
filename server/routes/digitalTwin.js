@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateToken } = require('../middleware/auth');
+const requireBiometricConsent = require('../middleware/requireBiometricConsent');
 const digitalTwinService = require('../services/digitalTwinService');
 const usageService = require('../services/usageService');
 const logger = require('../utils/logger');
@@ -50,7 +51,7 @@ router.get('/jobs', authenticateToken, async (req, res) => {
  * @desc    Generate a digital twin video from a voice note
  * @access  Private
  */
-router.post('/generate', authenticateToken, async (req, res) => {
+router.post('/generate', authenticateToken, requireBiometricConsent, async (req, res) => {
   try {
     const { voiceNoteUrl, options = {} } = req.body || {};
     const userId = getUserIdFromReq(req) || req.user?._id || req.user?.id;

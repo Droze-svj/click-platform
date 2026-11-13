@@ -11,6 +11,8 @@ jest.mock('../../../server/middleware/auth', () => ({
   authenticate: (req, res, next) => { req.user = { _id: 'u1' }; next(); },
   authenticateToken: (req, res, next) => { req.user = { _id: 'u1' }; next(); },
 }));
+// Consent itself is covered by biometricConsentGate.test.js.
+jest.mock('../../../server/middleware/requireBiometricConsent', () => (req, res, next) => next());
 jest.mock('../../../server/middleware/enhancedRateLimiter', () => ({
   aiLimiter: (req, res, next) => next(),
 }));
