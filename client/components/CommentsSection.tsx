@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useState, useEffect, useCallback } from 'react'
 import { apiGet, apiPost, handleApiError } from '../lib/api'
 import { useAuth } from '../hooks/useAuth'
@@ -137,7 +136,7 @@ export default function CommentsSection({ entityType, entityId, teamId: teamIdPr
         <h3 className="text-lg font-semibold mb-2">{t('commentsSection.title')}</h3>
         <p className="text-sm text-gray-500">
           {t('commentsSection.needsTeam')}{' '}
-          <Link href="/dashboard/teams" className="text-indigo-500 underline">{t('commentsSection.needsTeamCta')}</Link>
+          <a href="/dashboard/teams" className="text-indigo-500 underline">{t('commentsSection.needsTeamCta')}</a>
         </p>
       </div>
     )

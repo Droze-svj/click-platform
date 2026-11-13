@@ -48,7 +48,7 @@ describe('CaptionAnglesPanel', () => {
 
     fireEvent.click(screen.getByTestId('captions-copy'))
     await waitFor(() => expect(writeText).toHaveBeenCalledWith('Save this.'))
-    await waitFor(() => expect(screen.getByTestId('captions-copy')).toHaveTextContent('Copied ✓'))
+    expect(screen.getByTestId('captions-copy')).toHaveTextContent('Copied ✓')
   })
 
   it('surfaces an API error', async () => {

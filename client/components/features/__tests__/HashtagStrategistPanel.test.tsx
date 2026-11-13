@@ -53,7 +53,7 @@ describe('HashtagStrategistPanel', () => {
 
     fireEvent.click(screen.getByTestId('hashtags-copy-all'))
     await waitFor(() => expect(writeText).toHaveBeenCalledWith('#reach #targeted #micro'))
-    await waitFor(() => expect(screen.getByTestId('hashtags-copy-all')).toHaveTextContent('Copied ✓'))
+    expect(screen.getByTestId('hashtags-copy-all')).toHaveTextContent('Copied ✓')
   })
 
   it('surfaces an API error', async () => {

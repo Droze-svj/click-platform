@@ -15,6 +15,7 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: false },
   eslint: { ignoreDuringBuilds: false },
   productionBrowserSourceMaps: false,
+  swcMinify: true,
   experimental: {
     workerThreads: false,
     cpus: 1,

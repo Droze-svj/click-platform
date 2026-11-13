@@ -378,7 +378,7 @@ const AssetLibraryView: React.FC<AssetLibraryViewProps> = (props) => {
     )
   }
 
-  const uploadZones: { label: string; icon: LucideIcon; color: string; ref: React.RefObject<HTMLInputElement | null>; type: 'music' | 'image' | 'broll' | 'sfx' }[] = [
+  const uploadZones: { label: string; icon: LucideIcon; color: string; ref: React.RefObject<HTMLInputElement>; type: 'music' | 'image' | 'broll' | 'sfx' }[] = [
     { label: 'Upload audio', icon: Music, color: 'emerald', ref: fileInputMusic, type: 'music' },
     { label: 'Upload image', icon: ImageIcon, color: 'indigo', ref: fileInputImages, type: 'image' },
     { label: 'Upload video', icon: Film, color: 'amber', ref: fileInputBroll, type: 'broll' },
