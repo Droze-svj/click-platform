@@ -16,6 +16,7 @@ try {
 }
 
 const logger = require('./logger');
+const { scrubEvent, scrubBreadcrumb } = require('./sentryScrub');
 
 /**
  * Initialize Sentry for error tracking and performance monitoring
@@ -48,29 +49,11 @@ function initSentry() {
       // Release tracking
       release: process.env.SENTRY_RELEASE || `click@${process.env.npm_package_version || '1.0.0'}`,
 
-      // Filter out sensitive data
-      beforeSend(event, hint) {
-        // Remove sensitive information
-        if (event.request) {
-          // Remove sensitive headers
-          if (event.request.headers) {
-            delete event.request.headers.authorization;
-            delete event.request.headers.cookie;
-          }
-
-          // Remove sensitive body data
-          if (event.request.data) {
-            if (typeof event.request.data === 'object') {
-              delete event.request.data.password;
-              delete event.request.data.token;
-              delete event.request.data.accessToken;
-              delete event.request.data.refreshToken;
-            }
-          }
-        }
-
-        return event;
-      },
+      // Nothing personal leaves the server: see utils/sentryScrub.
+      sendDefaultPii: false,
+      beforeSend: scrubEvent,
+      beforeSendTransaction: scrubEvent,
+      beforeBreadcrumb: scrubBreadcrumb,
 
       // Ignore certain errors
       ignoreErrors: [
@@ -156,11 +139,9 @@ function addBreadcrumb(message, category = 'default', level = 'info', data = {})
  */
 function setUser(user) {
   if (process.env.SENTRY_DSN && Sentry) {
-    Sentry.setUser({
-      id: user._id || user.id,
-      email: user.email,
-      username: user.username || user.name,
-    });
+    // Account id only — no email or name in a third-party error tracker.
+    const id = user && (user._id || user.id);
+    Sentry.setUser(id ? { id: String(id) } : null);
   }
 }
 

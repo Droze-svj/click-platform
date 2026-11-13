@@ -36,11 +36,18 @@ let Sentry = null;
 if (process.env.SENTRY_DSN) {
   try {
     Sentry = require('@sentry/node');
+    // Reports carry the error, route, device type and account id only —
+    // see utils/sentryScrub for what is removed before anything is sent.
+    const { scrubEvent, scrubBreadcrumb } = require('./utils/sentryScrub');
     Sentry.init({
       dsn: process.env.SENTRY_DSN,
       environment: process.env.NODE_ENV || 'development',
       tracesSampleRate: parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE || '0.1'),
       integrations: [],
+      sendDefaultPii: false,
+      beforeSend: scrubEvent,
+      beforeSendTransaction: scrubEvent,
+      beforeBreadcrumb: scrubBreadcrumb,
     });
     logger.info('✅ Sentry error tracking initialized');
   } catch (sentryInitErr) {
