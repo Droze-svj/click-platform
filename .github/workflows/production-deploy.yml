@@ -29,7 +29,7 @@ env:
 jobs:
   test:
     name: Run Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -63,7 +63,7 @@ jobs:
   build-and-deploy:
     name: Build and Deploy
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: production
     env:
       # Job-level so the notify steps' `if: env.SLACK_WEBHOOK_URL != ''` guard
@@ -242,7 +242,7 @@ jobs:
   performance-monitoring:
     name: Performance Monitoring
     needs: build-and-deploy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: success()
     steps:
       - name: Checkout code
@@ -271,7 +271,7 @@ jobs:
   cleanup:
     name: Cleanup
     needs: [build-and-deploy, performance-monitoring]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: always()
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

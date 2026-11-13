@@ -10,7 +10,7 @@ on:
 
 jobs:
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Runs the CI gate SMOKE (tests/e2e/ci-smoke.spec.js): a tiny, deterministic
     # check that the backend + frontend actually boot and serve — then the USER
     # JOURNEYS (tests/e2e/journeys): sign-up, profile, auth, every page, upload →
