@@ -11728,5 +11728,29 @@
     "potential": "{{lift}} potansiyel",
     "voteUp": "İyi öneri",
     "voteDown": "Bana göre değil"
+  },
+  "privacyData": {
+    "title": "Verileriniz",
+    "exportTitle": "Verilerinizi indirin",
+    "exportBody": "Click'in hesabınız hakkında sakladığı her şeyi içeren bir dosya: profil, içerik, gönderiler, altyazılar, ayarlar ve etkinlik. Şifreler ve bağlantı belirteçleri dahil edilmez.",
+    "exportButton": "Verilerimi indir",
+    "exporting": "Hazırlanıyor…",
+    "exportReady": "Verileriniz indiriliyor.",
+    "exportFailed": "Verileriniz hazırlanamadı. Tekrar deneyin.",
+    "deleteTitle": "Hesabınızı silin",
+    "deleteBody": "Hesabınızı, videolarınızı ve dosyalarınızı, altyazıları, senaryoları, zamanlanmış gönderileri, bağlı sosyal hesapları ve ayarları kalıcı olarak siler. Ödeme kayıtları muhasebe için saklanır. Bu işlem geri alınamaz.",
+    "deleteButton": "Hesabı kalıcı olarak sil",
+    "dialogTitle": "Hesabınız silinsin mi?",
+    "dialogBody": "Her şey hemen silinir ve geri getirilemez. Bir plan için ödeme yapıyorsanız, tekrar ücret alınmaması için önce iptal edilir.",
+    "passwordLabel": "Mevcut şifre",
+    "confirmWord": "SİL",
+    "typeToConfirm": "Onaylamak için {{word}} yazın",
+    "keepAccount": "Hesabımı koru",
+    "deleteForever": "Sonsuza dek sil",
+    "deleting": "Siliniyor…",
+    "deleted": "Hesabınız ve verileriniz silindi.",
+    "wrongPassword": "Bu şifre doğru değil.",
+    "cancelFirst": "Aboneliğinizi otomatik olarak iptal edemedik. Önce Whop hesabınızdan iptal edin, sonra hesabınızı silin.",
+    "deleteFailed": "Hesabınız silinemedi. Tekrar deneyin."
   }
 }

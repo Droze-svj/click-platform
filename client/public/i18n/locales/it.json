@@ -11728,5 +11728,29 @@
     "potential": "{{lift}} di potenziale",
     "voteUp": "Buon suggerimento",
     "voteDown": "Non fa per me"
+  },
+  "privacyData": {
+    "title": "I tuoi dati",
+    "exportTitle": "Scarica i tuoi dati",
+    "exportBody": "Un file con tutto ciò che Click conserva sul tuo account: profilo, contenuti, post, didascalie, impostazioni e attività. Password e token di connessione sono esclusi.",
+    "exportButton": "Scarica i miei dati",
+    "exporting": "Preparazione…",
+    "exportReady": "Il download dei tuoi dati è in corso.",
+    "exportFailed": "Non è stato possibile preparare i tuoi dati. Riprova.",
+    "deleteTitle": "Elimina il tuo account",
+    "deleteBody": "Elimina definitivamente il tuo account, i video e i file, le didascalie, gli script, i post programmati, gli account social collegati e le impostazioni. Le registrazioni dei pagamenti vengono conservate per la contabilità. Non si può annullare.",
+    "deleteButton": "Elimina l'account definitivamente",
+    "dialogTitle": "Eliminare il tuo account?",
+    "dialogBody": "Tutto viene eliminato subito e non può essere recuperato. Se paghi un piano, viene annullato prima così non ti verrà addebitato altro.",
+    "passwordLabel": "Password attuale",
+    "confirmWord": "ELIMINA",
+    "typeToConfirm": "Scrivi {{word}} per confermare",
+    "keepAccount": "Mantieni il mio account",
+    "deleteForever": "Elimina per sempre",
+    "deleting": "Eliminazione…",
+    "deleted": "Il tuo account e i tuoi dati sono stati eliminati.",
+    "wrongPassword": "Questa password non è corretta.",
+    "cancelFirst": "Non siamo riusciti ad annullare automaticamente il tuo abbonamento. Annullalo prima dal tuo account Whop, poi elimina il tuo account.",
+    "deleteFailed": "Non è stato possibile eliminare il tuo account. Riprova."
   }
 }

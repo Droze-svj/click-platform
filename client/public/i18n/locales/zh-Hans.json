@@ -11728,5 +11728,29 @@
     "potential": "{{lift}} 潜力",
     "voteUp": "好建议",
     "voteDown": "不适合我"
+  },
+  "privacyData": {
+    "title": "你的数据",
+    "exportTitle": "下载你的数据",
+    "exportBody": "一个文件，包含 Click 存储的关于你账号的全部内容：个人资料、内容、帖子、字幕、设置和活动记录。不包含密码和连接令牌。",
+    "exportButton": "下载我的数据",
+    "exporting": "正在准备…",
+    "exportReady": "正在下载你的数据。",
+    "exportFailed": "无法准备你的数据。请重试。",
+    "deleteTitle": "删除你的账号",
+    "deleteBody": "永久删除你的账号、视频和文件、字幕、脚本、已排期的帖子、已连接的社交账号和设置。付款记录会因会计需要而保留。此操作无法撤销。",
+    "deleteButton": "永久删除账号",
+    "dialogTitle": "删除你的账号？",
+    "dialogBody": "所有内容会立即删除且无法恢复。如果你订阅了付费方案，会先取消，以免再次扣费。",
+    "passwordLabel": "当前密码",
+    "confirmWord": "删除",
+    "typeToConfirm": "输入 {{word}} 以确认",
+    "keepAccount": "保留我的账号",
+    "deleteForever": "永久删除",
+    "deleting": "正在删除…",
+    "deleted": "你的账号和数据已删除。",
+    "wrongPassword": "密码不正确。",
+    "cancelFirst": "我们无法自动取消你的订阅。请先在 Whop 账号中取消，然后再删除账号。",
+    "deleteFailed": "无法删除你的账号。请重试。"
   }
 }

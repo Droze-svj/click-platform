@@ -11728,5 +11728,29 @@
     "potential": "Tiềm năng {{lift}}",
     "voteUp": "Gợi ý hay",
     "voteDown": "Không hợp với tôi"
+  },
+  "privacyData": {
+    "title": "Dữ liệu của bạn",
+    "exportTitle": "Tải xuống dữ liệu của bạn",
+    "exportBody": "Một tệp chứa mọi thứ Click lưu về tài khoản của bạn: hồ sơ, nội dung, bài đăng, phụ đề, cài đặt và hoạt động. Mật khẩu và mã thông báo kết nối không được đưa vào.",
+    "exportButton": "Tải dữ liệu của tôi",
+    "exporting": "Đang chuẩn bị…",
+    "exportReady": "Dữ liệu của bạn đang được tải xuống.",
+    "exportFailed": "Không thể chuẩn bị dữ liệu của bạn. Hãy thử lại.",
+    "deleteTitle": "Xóa tài khoản của bạn",
+    "deleteBody": "Xóa vĩnh viễn tài khoản, video và tệp, phụ đề, kịch bản, bài đăng đã lên lịch, tài khoản mạng xã hội đã kết nối và cài đặt của bạn. Hồ sơ thanh toán được giữ lại cho mục đích kế toán. Không thể hoàn tác.",
+    "deleteButton": "Xóa tài khoản vĩnh viễn",
+    "dialogTitle": "Xóa tài khoản của bạn?",
+    "dialogBody": "Mọi thứ bị xóa ngay và không thể khôi phục. Nếu bạn đang trả phí cho một gói, gói đó sẽ được hủy trước để bạn không bị tính phí nữa.",
+    "passwordLabel": "Mật khẩu hiện tại",
+    "confirmWord": "XÓA",
+    "typeToConfirm": "Nhập {{word}} để xác nhận",
+    "keepAccount": "Giữ tài khoản của tôi",
+    "deleteForever": "Xóa vĩnh viễn",
+    "deleting": "Đang xóa…",
+    "deleted": "Tài khoản và dữ liệu của bạn đã được xóa.",
+    "wrongPassword": "Mật khẩu không đúng.",
+    "cancelFirst": "Chúng tôi không thể tự động hủy gói đăng ký của bạn. Hãy hủy từ tài khoản Whop trước, rồi xóa tài khoản của bạn.",
+    "deleteFailed": "Không thể xóa tài khoản của bạn. Hãy thử lại."
   }
 }

@@ -11728,5 +11728,29 @@
     "potential": "Potensi {{lift}}",
     "voteUp": "Saran bagus",
     "voteDown": "Bukan untukku"
+  },
+  "privacyData": {
+    "title": "Data Anda",
+    "exportTitle": "Unduh data Anda",
+    "exportBody": "Satu file berisi semua yang disimpan Click tentang akun Anda: profil, konten, postingan, teks, pengaturan, dan aktivitas. Kata sandi dan token koneksi tidak disertakan.",
+    "exportButton": "Unduh data saya",
+    "exporting": "Menyiapkan…",
+    "exportReady": "Data Anda sedang diunduh.",
+    "exportFailed": "Data Anda tidak dapat disiapkan. Coba lagi.",
+    "deleteTitle": "Hapus akun Anda",
+    "deleteBody": "Menghapus akun, video dan file, teks, skrip, postingan terjadwal, akun sosial yang terhubung, dan pengaturan Anda secara permanen. Catatan pembayaran disimpan untuk keperluan akuntansi. Tindakan ini tidak dapat dibatalkan.",
+    "deleteButton": "Hapus akun secara permanen",
+    "dialogTitle": "Hapus akun Anda?",
+    "dialogBody": "Semuanya dihapus seketika dan tidak dapat dipulihkan. Jika Anda membayar paket, paket itu dibatalkan terlebih dahulu agar Anda tidak ditagih lagi.",
+    "passwordLabel": "Kata sandi saat ini",
+    "confirmWord": "HAPUS",
+    "typeToConfirm": "Ketik {{word}} untuk mengonfirmasi",
+    "keepAccount": "Pertahankan akun saya",
+    "deleteForever": "Hapus selamanya",
+    "deleting": "Menghapus…",
+    "deleted": "Akun dan data Anda telah dihapus.",
+    "wrongPassword": "Kata sandi itu salah.",
+    "cancelFirst": "Kami tidak dapat membatalkan langganan Anda secara otomatis. Batalkan dulu dari akun Whop Anda, lalu hapus akun Anda.",
+    "deleteFailed": "Akun Anda tidak dapat dihapus. Coba lagi."
   }
 }

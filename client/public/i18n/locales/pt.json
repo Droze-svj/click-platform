@@ -11728,5 +11728,29 @@
     "potential": "{{lift}} de potencial",
     "voteUp": "Boa sugestão",
     "voteDown": "Não é para mim"
+  },
+  "privacyData": {
+    "title": "Seus dados",
+    "exportTitle": "Baixe seus dados",
+    "exportBody": "Um arquivo com tudo que o Click guarda sobre sua conta: perfil, conteúdo, posts, legendas, configurações e atividade. Senhas e tokens de conexão ficam de fora.",
+    "exportButton": "Baixar meus dados",
+    "exporting": "Preparando…",
+    "exportReady": "Seus dados estão sendo baixados.",
+    "exportFailed": "Não foi possível preparar seus dados. Tente novamente.",
+    "deleteTitle": "Excluir sua conta",
+    "deleteBody": "Exclui permanentemente sua conta, seus vídeos e arquivos, legendas, roteiros, posts agendados, contas sociais conectadas e configurações. Os registros de pagamento são mantidos para fins contábeis. Isso não pode ser desfeito.",
+    "deleteButton": "Excluir conta permanentemente",
+    "dialogTitle": "Excluir sua conta?",
+    "dialogBody": "Tudo é excluído na hora e não dá para recuperar. Se você paga por um plano, ele é cancelado antes para que você não seja cobrado de novo.",
+    "passwordLabel": "Senha atual",
+    "confirmWord": "EXCLUIR",
+    "typeToConfirm": "Digite {{word}} para confirmar",
+    "keepAccount": "Manter minha conta",
+    "deleteForever": "Excluir para sempre",
+    "deleting": "Excluindo…",
+    "deleted": "Sua conta e seus dados foram excluídos.",
+    "wrongPassword": "Essa senha não está correta.",
+    "cancelFirst": "Não conseguimos cancelar sua assinatura automaticamente. Cancele primeiro na sua conta da Whop e depois exclua sua conta.",
+    "deleteFailed": "Não foi possível excluir sua conta. Tente novamente."
   }
 }

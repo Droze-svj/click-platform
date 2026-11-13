@@ -11728,5 +11728,29 @@
     "potential": "{{lift}} de potentiel",
     "voteUp": "Bonne suggestion",
     "voteDown": "Pas pour moi"
+  },
+  "privacyData": {
+    "title": "Vos données",
+    "exportTitle": "Télécharger vos données",
+    "exportBody": "Un fichier avec tout ce que Click conserve sur votre compte : profil, contenus, publications, sous-titres, paramètres et activité. Les mots de passe et les jetons de connexion sont exclus.",
+    "exportButton": "Télécharger mes données",
+    "exporting": "Préparation…",
+    "exportReady": "Le téléchargement de vos données a commencé.",
+    "exportFailed": "Impossible de préparer vos données. Réessayez.",
+    "deleteTitle": "Supprimer votre compte",
+    "deleteBody": "Supprime définitivement votre compte, vos vidéos et fichiers, sous-titres, scripts, publications programmées, comptes sociaux connectés et paramètres. Les justificatifs de paiement sont conservés à des fins comptables. Cette action est irréversible.",
+    "deleteButton": "Supprimer définitivement le compte",
+    "dialogTitle": "Supprimer votre compte ?",
+    "dialogBody": "Tout est supprimé immédiatement et ne peut pas être récupéré. Si vous payez un abonnement, il est d'abord résilié pour que vous ne soyez plus débité.",
+    "passwordLabel": "Mot de passe actuel",
+    "confirmWord": "SUPPRIMER",
+    "typeToConfirm": "Saisissez {{word}} pour confirmer",
+    "keepAccount": "Garder mon compte",
+    "deleteForever": "Supprimer définitivement",
+    "deleting": "Suppression…",
+    "deleted": "Votre compte et vos données ont été supprimés.",
+    "wrongPassword": "Ce mot de passe est incorrect.",
+    "cancelFirst": "Nous n'avons pas pu résilier votre abonnement automatiquement. Résiliez-le d'abord depuis votre compte Whop, puis supprimez votre compte.",
+    "deleteFailed": "Impossible de supprimer votre compte. Réessayez."
   }
 }

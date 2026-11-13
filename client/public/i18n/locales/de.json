@@ -11728,5 +11728,29 @@
     "potential": "{{lift}} Potenzial",
     "voteUp": "Guter Vorschlag",
     "voteDown": "Nichts für mich"
+  },
+  "privacyData": {
+    "title": "Deine Daten",
+    "exportTitle": "Deine Daten herunterladen",
+    "exportBody": "Eine Datei mit allem, was Click zu deinem Konto speichert: Profil, Inhalte, Beiträge, Untertitel, Einstellungen und Aktivität. Passwörter und Verbindungstoken sind nicht enthalten.",
+    "exportButton": "Meine Daten herunterladen",
+    "exporting": "Wird vorbereitet…",
+    "exportReady": "Deine Daten werden heruntergeladen.",
+    "exportFailed": "Deine Daten konnten nicht vorbereitet werden. Versuch es noch einmal.",
+    "deleteTitle": "Konto löschen",
+    "deleteBody": "Löscht dein Konto, deine Videos und Dateien, Untertitel, Skripte, geplante Beiträge, verbundene Social-Media-Konten und Einstellungen dauerhaft. Zahlungsbelege bleiben für die Buchhaltung erhalten. Das lässt sich nicht rückgängig machen.",
+    "deleteButton": "Konto dauerhaft löschen",
+    "dialogTitle": "Konto löschen?",
+    "dialogBody": "Alles wird sofort gelöscht und lässt sich nicht wiederherstellen. Wenn du einen Tarif bezahlst, wird er zuerst gekündigt, damit dir nichts mehr berechnet wird.",
+    "passwordLabel": "Aktuelles Passwort",
+    "confirmWord": "LÖSCHEN",
+    "typeToConfirm": "Gib {{word}} zur Bestätigung ein",
+    "keepAccount": "Konto behalten",
+    "deleteForever": "Endgültig löschen",
+    "deleting": "Wird gelöscht…",
+    "deleted": "Dein Konto und deine Daten wurden gelöscht.",
+    "wrongPassword": "Dieses Passwort ist nicht richtig.",
+    "cancelFirst": "Wir konnten dein Abo nicht automatisch kündigen. Kündige es zuerst in deinem Whop-Konto und lösche dann dein Konto.",
+    "deleteFailed": "Dein Konto konnte nicht gelöscht werden. Versuch es noch einmal."
   }
 }

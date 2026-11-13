@@ -11728,5 +11728,29 @@
     "potential": "{{lift}} potentieel",
     "voteUp": "Goede suggestie",
     "voteDown": "Niet voor mij"
+  },
+  "privacyData": {
+    "title": "Jouw gegevens",
+    "exportTitle": "Download je gegevens",
+    "exportBody": "Een bestand met alles wat Click over je account bewaart: profiel, content, posts, ondertitels, instellingen en activiteit. Wachtwoorden en verbindingstokens zijn niet inbegrepen.",
+    "exportButton": "Mijn gegevens downloaden",
+    "exporting": "Voorbereiden…",
+    "exportReady": "Je gegevens worden gedownload.",
+    "exportFailed": "Je gegevens konden niet worden voorbereid. Probeer het opnieuw.",
+    "deleteTitle": "Verwijder je account",
+    "deleteBody": "Verwijdert je account, video's en bestanden, ondertitels, scripts, geplande posts, gekoppelde socialemedia-accounts en instellingen definitief. Betalingsgegevens worden bewaard voor de boekhouding. Dit kan niet ongedaan worden gemaakt.",
+    "deleteButton": "Account definitief verwijderen",
+    "dialogTitle": "Je account verwijderen?",
+    "dialogBody": "Alles wordt direct verwijderd en kan niet worden hersteld. Als je voor een abonnement betaalt, wordt dat eerst opgezegd zodat er niets meer wordt afgeschreven.",
+    "passwordLabel": "Huidig wachtwoord",
+    "confirmWord": "VERWIJDEREN",
+    "typeToConfirm": "Typ {{word}} om te bevestigen",
+    "keepAccount": "Mijn account behouden",
+    "deleteForever": "Voorgoed verwijderen",
+    "deleting": "Verwijderen…",
+    "deleted": "Je account en gegevens zijn verwijderd.",
+    "wrongPassword": "Dat wachtwoord klopt niet.",
+    "cancelFirst": "We konden je abonnement niet automatisch opzeggen. Zeg het eerst op via je Whop-account en verwijder daarna je account.",
+    "deleteFailed": "Je account kon niet worden verwijderd. Probeer het opnieuw."
   }
 }

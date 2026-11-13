@@ -11728,5 +11728,29 @@
     "potential": "Potencjał {{lift}}",
     "voteUp": "Dobra sugestia",
     "voteDown": "Nie dla mnie"
+  },
+  "privacyData": {
+    "title": "Twoje dane",
+    "exportTitle": "Pobierz swoje dane",
+    "exportBody": "Plik ze wszystkim, co Click przechowuje o Twoim koncie: profil, treści, posty, napisy, ustawienia i aktywność. Hasła i tokeny połączeń są pominięte.",
+    "exportButton": "Pobierz moje dane",
+    "exporting": "Przygotowywanie…",
+    "exportReady": "Twoje dane są pobierane.",
+    "exportFailed": "Nie udało się przygotować Twoich danych. Spróbuj ponownie.",
+    "deleteTitle": "Usuń konto",
+    "deleteBody": "Trwale usuwa Twoje konto, filmy i pliki, napisy, skrypty, zaplanowane posty, połączone konta społecznościowe i ustawienia. Zapisy płatności są przechowywane do celów księgowych. Tego nie można cofnąć.",
+    "deleteButton": "Usuń konto na stałe",
+    "dialogTitle": "Usunąć konto?",
+    "dialogBody": "Wszystko zostanie usunięte od razu i nie da się tego odzyskać. Jeśli płacisz za plan, zostanie on najpierw anulowany, aby nie naliczać Ci kolejnych opłat.",
+    "passwordLabel": "Obecne hasło",
+    "confirmWord": "USUŃ",
+    "typeToConfirm": "Wpisz {{word}}, aby potwierdzić",
+    "keepAccount": "Zachowaj moje konto",
+    "deleteForever": "Usuń na zawsze",
+    "deleting": "Usuwanie…",
+    "deleted": "Twoje konto i dane zostały usunięte.",
+    "wrongPassword": "To hasło jest nieprawidłowe.",
+    "cancelFirst": "Nie udało się automatycznie anulować Twojej subskrypcji. Najpierw anuluj ją w koncie Whop, a potem usuń konto.",
+    "deleteFailed": "Nie udało się usunąć konta. Spróbuj ponownie."
   }
 }

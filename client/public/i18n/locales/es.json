@@ -11728,5 +11728,29 @@
     "potential": "{{lift}} de potencial",
     "voteUp": "Buena sugerencia",
     "voteDown": "No es para mí"
+  },
+  "privacyData": {
+    "title": "Tus datos",
+    "exportTitle": "Descarga tus datos",
+    "exportBody": "Un archivo con todo lo que Click guarda de tu cuenta: perfil, contenido, publicaciones, subtítulos, ajustes y actividad. Se excluyen las contraseñas y los tokens de conexión.",
+    "exportButton": "Descargar mis datos",
+    "exporting": "Preparando…",
+    "exportReady": "Tus datos se están descargando.",
+    "exportFailed": "No se pudieron preparar tus datos. Inténtalo de nuevo.",
+    "deleteTitle": "Eliminar tu cuenta",
+    "deleteBody": "Elimina de forma permanente tu cuenta, tus vídeos y archivos, subtítulos, guiones, publicaciones programadas, cuentas sociales conectadas y ajustes. Los registros de pago se conservan por motivos contables. No se puede deshacer.",
+    "deleteButton": "Eliminar cuenta definitivamente",
+    "dialogTitle": "¿Eliminar tu cuenta?",
+    "dialogBody": "Todo se elimina de inmediato y no se puede recuperar. Si pagas un plan, se cancela primero para que no te cobren de nuevo.",
+    "passwordLabel": "Contraseña actual",
+    "confirmWord": "ELIMINAR",
+    "typeToConfirm": "Escribe {{word}} para confirmar",
+    "keepAccount": "Conservar mi cuenta",
+    "deleteForever": "Eliminar para siempre",
+    "deleting": "Eliminando…",
+    "deleted": "Tu cuenta y tus datos se han eliminado.",
+    "wrongPassword": "Esa contraseña no es correcta.",
+    "cancelFirst": "No pudimos cancelar tu suscripción automáticamente. Cancélala primero desde tu cuenta de Whop y luego elimina tu cuenta.",
+    "deleteFailed": "No se pudo eliminar tu cuenta. Inténtalo de nuevo."
   }
 }
