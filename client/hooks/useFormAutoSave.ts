@@ -20,8 +20,8 @@ export function useFormAutoSave({
   debounceMs = 1000,
   onSave
 }: UseFormAutoSaveOptions) {
-  const timeoutRef = useRef<NodeJS.Timeout>()
-  const lastSavedRef = useRef<string>()
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
+  const lastSavedRef = useRef<string | undefined>(undefined)
 
   const save = useCallback(async (dataToSave: any) => {
     try {
