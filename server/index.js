@@ -2539,6 +2539,15 @@ app.use(async (req, res, next) => {
     req.path.startsWith('/socket.io') ||
     req.path.startsWith('/uploads')
   ) return next();
+  // Next's internal headers are never sent by a browser. `x-middleware-subrequest`
+  // made Next skip middleware entirely (CVE-2025-29927): the pages middleware
+  // hides in production answered 200 with it.
+  for (const h of Object.keys(req.headers)) {
+    if (h.startsWith('x-middleware-')) delete req.headers[h];
+  }
+  // The image optimizer is off (images.unoptimized) and its endpoint has had
+  // unauthenticated RCE/DoS advisories; nothing on the site uses it.
+  if (req.path === '/_next/image') return res.status(404).end();
   try { await __nextReady; } catch { /* fall through */ }
   if (__nextHandler) return __nextHandler(req, res);
   return next();

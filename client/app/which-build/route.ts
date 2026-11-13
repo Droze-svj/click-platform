@@ -1,6 +1,9 @@
+import { devOnlyNotFound } from '@/lib/devOnlyRoute'
 export const runtime = 'nodejs'
 
 export async function GET(req: Request) {
+  const hidden = devOnlyNotFound()
+  if (hidden) return hidden
   const marker = 'run31-which-build'
   const ts = Date.now()
   try {

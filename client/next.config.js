@@ -26,6 +26,10 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react', 'recharts', 'date-fns'],
   },
   images: {
+    // No server-side optimizer: its endpoint (/_next/image) has had
+    // unauthenticated RCE and DoS advisories, and the few next/image uses
+    // (avatars, thumbnails) don't need it. The server also refuses the path.
+    unoptimized: true,
     remotePatterns: [
       { protocol: 'https', hostname: 'commondatastorage.googleapis.com' },
       { protocol: 'https', hostname: 'storage.googleapis.com' },

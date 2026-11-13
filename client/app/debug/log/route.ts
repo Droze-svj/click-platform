@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { devOnlyNotFound } from '@/lib/devOnlyRoute'
 
 const INGEST =
   'http://127.0.0.1:5556/ingest/ff7d38f2-f61b-412e-9a79-ebc734d5bd4a'
@@ -30,6 +31,8 @@ function redact(input: any): any {
 }
 
 export async function POST(req: Request) {
+  const hidden = devOnlyNotFound()
+  if (hidden) return hidden
   try {
     console.log('🔍 DEBUG API: Received request')
     const body = await req.json().catch(() => ({}))
