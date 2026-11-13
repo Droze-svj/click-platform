@@ -17,7 +17,7 @@ import { useEffect, useRef, useState } from 'react';
  *   return <div ref={ref}>{width < 480 ? <Compact/> : <Full/>}</div>;
  */
 export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): {
-  ref: React.RefObject<T>;
+  ref: React.RefObject<T | null>;
   width: number;
 } {
   const ref = useRef<T>(null);

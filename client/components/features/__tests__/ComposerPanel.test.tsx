@@ -71,7 +71,7 @@ describe('ComposerPanel', () => {
 
     fireEvent.click(screen.getByTestId('composer-copy'))
     await waitFor(() => expect(writeText).toHaveBeenCalledWith('Hook A\n\nCaption one\n\n#a #b'))
-    expect(screen.getByTestId('composer-copy')).toHaveTextContent('Copied ✓')
+    await waitFor(() => expect(screen.getByTestId('composer-copy')).toHaveTextContent('Copied ✓'))
   })
 
   it('critiques the assembled draft inline and shows score + fixes', async () => {
