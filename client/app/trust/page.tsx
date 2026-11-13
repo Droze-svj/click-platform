@@ -8,16 +8,14 @@ export const metadata = {
     "Click's commitments on data, security, AI, sub-processors, uptime, and compliance.",
 };
 
+// Must match the providers table in app/privacy/page.tsx (§5) and production's config.
 const SUBPROCESSORS = [
-  { name: 'OpenAI', purpose: 'Transcription, captions, generation', region: 'US', dpa: 'https://openai.com/policies/data-processing-addendum' },
-  { name: 'Anthropic', purpose: 'Reasoning, generation', region: 'US', dpa: 'https://www.anthropic.com/legal/dpa' },
-  { name: 'Google AI', purpose: 'Analysis, translation', region: 'US/EU', dpa: 'https://cloud.google.com/terms/data-processing-addendum' },
-  { name: 'Whop / Stripe', purpose: 'Payments, billing', region: 'US/EU', dpa: 'https://stripe.com/legal/dpa' },
-  { name: 'Render', purpose: 'Application hosting', region: 'US/EU', dpa: 'https://render.com/legal/dpa' },
-  { name: 'Vercel', purpose: 'Frontend hosting / edge', region: 'Global', dpa: 'https://vercel.com/legal/dpa' },
-  { name: 'Cloudflare', purpose: 'CDN, DDoS, WAF', region: 'Global', dpa: 'https://www.cloudflare.com/cloudflare-customer-dpa/' },
-  { name: 'Sentry', purpose: 'Error tracking', region: 'US/EU', dpa: 'https://sentry.io/legal/dpa/' },
-  { name: 'Resend / SES', purpose: 'Transactional email', region: 'US', dpa: 'https://aws.amazon.com/service-terms/' },
+  { name: 'Render', purpose: 'Hosting the app, storing uploaded and rendered files', region: 'US (Oregon)', dpa: 'https://render.com/dpa' },
+  { name: 'MongoDB Atlas', purpose: 'Database: account, content, settings', region: 'US', dpa: 'https://www.mongodb.com/legal/data-processing-agreement' },
+  { name: 'Google (Gemini API)', purpose: 'Video analysis, transcription, captions, writing', region: 'US / Global', dpa: 'https://ai.google.dev/gemini-api/terms' },
+  { name: 'OpenAI', purpose: 'Text generation', region: 'US', dpa: 'https://openai.com/policies/data-processing-addendum' },
+  { name: 'Whop', purpose: 'Checkout, payments, subscriptions', region: 'US', dpa: 'https://whop.com/privacy' },
+  { name: 'Sentry', purpose: 'Server error reports (no content, no IP)', region: 'EU (Germany)', dpa: 'https://sentry.io/legal/dpa/' },
 ];
 
 export default function TrustPage() {
@@ -45,11 +43,11 @@ export default function TrustPage() {
         <section className="mb-16">
           <h2 className="text-2xl font-black mb-6 tracking-tight">Our commitments</h2>
           <ul className="text-surface-700 dark:text-surface-300 leading-relaxed space-y-3 list-disc pl-6">
-            <li><strong>No training on your private content</strong> — see Privacy §4.</li>
+            <li><strong>Click doesn&apos;t train AI models on your content.</strong> One caveat while Click runs on Gemini&apos;s free tier: Google&apos;s terms let it use what is sent to it. See <Link href="/privacy" className="text-primary-600 dark:text-indigo-400 underline underline-offset-4">Privacy §5</Link>.</li>
             <li><strong>AI use can be disclosed</strong> — exports can carry a C2PA provenance manifest that records AI involvement. The signing status above shows whether signing is switched on right now.</li>
             <li><strong>Self-serve data export &amp; deletion</strong> — in Settings → Account &amp; Security → Your data; deletion is immediate.</li>
             <li><strong>Sensible defaults</strong> — HTTPS everywhere, connected-account tokens encrypted at rest (AES-256-GCM), bcrypt password hashing, optional two-step sign-in. Details on the <Link href="/security" className="text-primary-600 dark:text-indigo-400 underline underline-offset-4">Security</Link> page.</li>
-            <li><strong>Sub-processors disclosed and DPA-bound</strong> (table below). 30-day notice before adding new ones.</li>
+            <li><strong>Every provider that handles your data is listed</strong> in the table below, with the terms it processes data under.</li>
           </ul>
         </section>
 
@@ -62,7 +60,7 @@ export default function TrustPage() {
                   <th className="text-left px-4 py-3 font-black">Provider</th>
                   <th className="text-left px-4 py-3 font-black">Purpose</th>
                   <th className="text-left px-4 py-3 font-black">Region</th>
-                  <th className="text-left px-4 py-3 font-black">DPA</th>
+                  <th className="text-left px-4 py-3 font-black">Terms</th>
                 </tr>
               </thead>
               <tbody className="text-surface-700 dark:text-surface-300">

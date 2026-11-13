@@ -1,11 +1,15 @@
 const logger = require('../utils/logger');
 const { captureException, addBreadcrumb } = require('../utils/sentry');
+const { redactForLog } = require('../utils/sentryScrub');
 
 const errorHandler = (err, req, res, next) => {
+  // Path without the query string: signed-media signatures and OAuth codes live there.
+  const routePath = `${req.baseUrl || ''}${req.path || ''}` || String(req.originalUrl || '').split('?')[0];
+
   // Add breadcrumb for debugging (wrap in try-catch to prevent Sentry errors from breaking error handler)
   try {
     addBreadcrumb('Error occurred', 'error', 'error', {
-      url: req.originalUrl,
+      url: routePath,
       method: req.method,
       error: err.message,
     });
@@ -19,14 +23,10 @@ const errorHandler = (err, req, res, next) => {
     captureException(err, {
       userId: req.user?._id,
       tags: {
-        route: req.originalUrl,
+        route: routePath,
         method: req.method,
       },
-      extra: {
-        ip: req.ip,
-        query: req.query,
-        // Don't include body as it may contain sensitive data
-      },
+      // No IP, query or body: they hold personal data and secrets.
     });
   } catch (sentryErr) {
     // Ignore Sentry errors - don't let them break the error handler
@@ -42,8 +42,9 @@ const errorHandler = (err, req, res, next) => {
       method: req.method,
       ip: req.ip,
       userId: req.user?._id,
-      body: req.body,
-      query: req.query
+      // Redacted: a failed login or password change must not put the password in the logs.
+      body: redactForLog(req.body),
+      query: redactForLog(req.query)
     });
   } catch (loggerErr) {
     // Fallback to console if logger fails — console is the only safe transport here.
