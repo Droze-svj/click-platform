@@ -39,11 +39,28 @@ if (process.env.SENTRY_DSN) {
     // Reports carry the error, route, device type and account id only —
     // see utils/sentryScrub for what is removed before anything is sent.
     const { scrubEvent, scrubBreadcrumb } = require('./utils/sentryScrub');
+    // Errors only by default. Tracing sets up OpenTelemetry and hooks every
+    // module the app loads; on the 512 MB instance that cost ~180 MB and,
+    // with Next 15, ran the process out of heap (2026-11-13). Set
+    // SENTRY_TRACES_SAMPLE_RATE > 0 to opt back into performance tracing.
+    const tracesSampleRate = parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE || '0');
+    const tracing = Number.isFinite(tracesSampleRate) && tracesSampleRate > 0;
     Sentry.init({
       dsn: process.env.SENTRY_DSN,
       environment: process.env.NODE_ENV || 'development',
-      tracesSampleRate: parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE || '0.1'),
-      integrations: [],
+      ...(tracing
+        ? { tracesSampleRate }
+        : {
+            skipOpenTelemetrySetup: true,
+            defaultIntegrations: false,
+            integrations: [
+              Sentry.eventFiltersIntegration(),
+              Sentry.functionToStringIntegration(),
+              Sentry.linkedErrorsIntegration(),
+              Sentry.dedupeIntegration(),
+              Sentry.nodeContextIntegration(),
+            ],
+          }),
       sendDefaultPii: false,
       beforeSend: scrubEvent,
       beforeSendTransaction: scrubEvent,
