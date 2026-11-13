@@ -22,7 +22,7 @@ export default function ContentQuickPreview({ content, children }: ContentQuickP
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [previewData, setPreviewData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const timeoutRef = useRef<NodeJS.Timeout>()
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
   const handleMouseEnter = () => {
     timeoutRef.current = setTimeout(async () => {

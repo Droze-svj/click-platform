@@ -58,9 +58,9 @@ export function useVideoEditorAutosave({
     lastSaved: null,
     message: ''
   })
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>()
-  const idleTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
-  const lastSavedRef = useRef<string>()
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const idleTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const lastSavedRef = useRef<string | undefined>(undefined)
   const lastSavedDateRef = useRef<Date | null>(null)
   const saveKey = `video-editor-state-${videoId || 'local'}`
   const backupIndexRef = useRef(0)
@@ -70,7 +70,7 @@ export function useVideoEditorAutosave({
   // out-of-order writes from clobbering newer state with older state.
   const inFlightRef = useRef(false)
   const pendingRef = useRef<VideoEditorState | null>(null)
-  const retryTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const retryAttemptRef = useRef(0)
   const latestStateRef = useRef<VideoEditorState | null>(null)
 

@@ -12,7 +12,7 @@ export interface GPUAdapterInfo {
 export interface WebGPURenderer {
   isGPUActive: boolean
   adapterInfo: GPUAdapterInfo | null
-  canvasRef: React.RefObject<HTMLCanvasElement>
+  canvasRef: React.RefObject<HTMLCanvasElement | null>
   applyGPUFilters: (filterString: string) => void
 }
 

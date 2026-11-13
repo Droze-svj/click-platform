@@ -44,7 +44,7 @@ describe('CarouselComposerPanel', () => {
 
     fireEvent.click(screen.getByTestId('carousel-copy-all'))
     await waitFor(() => expect(writeText).toHaveBeenCalledWith('1. A\n\n2. B'))
-    expect(screen.getByTestId('carousel-copy-all')).toHaveTextContent('Copied ✓')
+    await waitFor(() => expect(screen.getByTestId('carousel-copy-all')).toHaveTextContent('Copied ✓'))
   })
 
   it('surfaces an API error', async () => {
