@@ -138,7 +138,7 @@ export default function PrivacyPage() {
         <section className="space-y-4">
           <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">8. Data Retention &amp; Account Deletion</h2>
           <p className="text-sm">
-            We retain account data for the duration of your active subscription. You can delete your account at any time via <code>Settings &rarr; Delete Account</code> or by contacting our privacy desk. Upon account deletion, all personal data, video drafts, and biometric identifiers are permanently expunged within 30 days, except where retention is mandated by tax or legal compliance statutes.
+            We retain account data for the duration of your active subscription. You can download your data and delete your account at any time in <code>Settings &rarr; Account &amp; Security &rarr; Your data</code>, or by contacting our privacy desk. Deleting your account erases your personal data, videos and files, drafts and biometric identifiers immediately (see <a href="/data-deletion" className="text-primary-500 underline">Deleting your data</a>), except where retention is mandated by tax or legal compliance statutes.
           </p>
         </section>
 

@@ -2037,96 +2037,12 @@ router.post('/deactivate', require('../middleware/auth'), async (req, res) => {
 
 /**
  * DELETE /api/auth/delete
- * Permanently delete user account
+ * Superseded by DELETE /api/privacy/delete, which erases the account and all
+ * its data. This one only read Supabase (production has none), so it could
+ * only ever answer "Database error".
  */
-router.delete('/delete', require('../middleware/auth'), async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const { password, confirmDelete } = req.body;
-
-    if (!password || confirmDelete !== 'DELETE_MY_ACCOUNT') {
-      return res.status(400).json({
-        success: false,
-        error: 'Password and confirmation "DELETE_MY_ACCOUNT" are required'
-      });
-    }
-
-    // Verify password
-    const { data: user, error: fetchError } = await supabase
-      .from('users')
-      .select('password, email')
-      .eq('id', userId)
-      .single();
-
-    if (fetchError) {
-      return res.status(500).json({ success: false, error: 'Database error' });
-    }
-
-    const bcrypt = require('bcryptjs');
-    const isValidPassword = (await require('../utils/passwordCompat').comparePasswordCompat(password, user.password)).match;
-
-    if (!isValidPassword) {
-      return res.status(400).json({ success: false, error: 'Invalid password' });
-    }
-
-    // Mark account for deletion (we'll actually delete after 30 days)
-    const deletionDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({
-        scheduled_deletion_at: deletionDate.toISOString(),
-        deletion_reason: 'User requested permanent deletion',
-        social_links: {} // Clear all social connections
-      })
-      .eq('id', userId);
-
-    if (updateError) {
-      return res.status(500).json({ success: false, error: 'Failed to schedule account deletion' });
-    }
-
-    // Send confirmation email
-    try {
-      const deletionContent = {
-        to: user.email,
-        subject: 'Account Deletion Confirmation - Click Platform',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #dc2626; text-align: center;">Account Deletion Scheduled</h2>
-            <p>Your Click Platform account has been scheduled for permanent deletion.</p>
-
-            <div style="background-color: #fef2f2; border: 1px solid #fecaca; padding: 20px; margin: 20px 0; border-radius: 5px;">
-              <p><strong>Important:</strong> Your account will be permanently deleted on <strong>${deletionDate.toDateString()}</strong>.</p>
-              <p>If you change your mind, you can cancel this deletion by logging back into your account before this date.</p>
-            </div>
-
-            <p>If you did not request account deletion, please contact our support team immediately.</p>
-
-            <br>
-            <p>Best regards,<br><strong>Click Platform Team</strong></p>
-          </div>
-        `
-      };
-
-      await sendWelcomeEmail(user.email, `${req.user.first_name} ${req.user.last_name}`, deletionContent);
-    } catch (emailError) {
-      logger.error('Failed to send deletion confirmation email', { error: emailError });
-    }
-
-    logger.info('Account deletion scheduled', { userId, deletionDate: deletionDate.toISOString() });
-
-    res.json({
-      success: true,
-      message: `Account deletion scheduled. Your account will be permanently deleted on ${deletionDate.toDateString()}.`,
-      data: {
-        deletionDate: deletionDate.toISOString()
-      }
-    });
-
-  } catch (error) {
-    
-    res.status(500).json({ success: false, error: 'Server error' });
-  }
+router.delete('/delete', require('../middleware/auth'), (req, res) => {
+  res.status(410).json({ success: false, code: 'MOVED', error: 'Account deletion moved to DELETE /api/privacy/delete.' });
 });
 
 /**

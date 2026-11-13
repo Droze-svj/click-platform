@@ -4,12 +4,11 @@ const express = require('express');
 const crypto = require('crypto');
 const auth = require('../middleware/auth');
 const {
-  exportUserData,
-  deleteUserData,
   anonymizeUserData,
   getPrivacySettings,
   updatePrivacySettings,
 } = require('../services/privacyService');
+const { eraseAccount, exportAccount } = require('../services/accountErasureService');
 const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess, sendError } = require('../utils/response');
 const { createRateLimiter } = require('../middleware/enhancedRateLimiter');
@@ -72,10 +71,12 @@ router.put('/settings', auth, asyncHandler(async (req, res) => {
  */
 router.get('/export', auth, privacyLimiter, asyncHandler(async (req, res) => {
   auditPrivacyAction(req, 'DATA EXPORT requested');
-  const exportData = await exportUserData(req.user._id);
+  // Everything stored about the account, every collection, secrets removed.
+  // (It used to cover the profile, content, scheduled posts and logs only.)
+  const exportData = await exportAccount(req.user._id);
 
   res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Content-Disposition', `attachment; filename="user-data-${req.user._id}.json"`);
+  res.setHeader('Content-Disposition', `attachment; filename="click-data-${req.user._id}.json"`);
   res.json(exportData);
 }));
 
@@ -100,15 +101,52 @@ router.post('/anonymize', auth, privacyLimiter, asyncHandler(async (req, res) =>
  * Delete user data (GDPR right to be forgotten)
  */
 router.delete('/delete', auth, privacyLimiter, asyncHandler(async (req, res) => {
-  const { confirm } = req.body;
+  const { confirm, password } = req.body || {};
 
   if (confirm !== 'DELETE') {
     return sendError(res, 'Confirmation required. Send confirm: "DELETE"', 400);
   }
 
-  auditPrivacyAction(req, 'ACCOUNT DELETION (right to be forgotten)');
-  const result = await deleteUserData(req.user._id);
-  sendSuccess(res, 'User data deleted', 200, result);
+  const User = require('../models/User');
+  const user = await User.findById(req.user._id).select('+password');
+  if (!user) return sendError(res, 'Account not found', 404);
+
+  // Irreversible: a stolen session alone must not be enough to wipe the account.
+  // (403, not 401 — the client signs out on 401.)
+  if (user.password) {
+    const { comparePasswordCompat } = require('../utils/passwordCompat');
+    if (!password || !(await comparePasswordCompat(String(password), user.password)).match) {
+      return sendError(res, 'Enter your current password to delete your account.', 403);
+    }
+  }
+
+  // Stop the renewal first, or the card keeps being charged for an account
+  // that no longer exists.
+  const sub = user.subscription || {};
+  const membershipId = sub.whopSubscriptionId;
+  const paying = membershipId && sub.plan && sub.plan !== 'free' && ['active', 'trialing', 'past_due'].includes(sub.status);
+  if (paying) {
+    const { cancelWhopMembership } = require('../services/whopMonetizationService');
+    const whop = await cancelWhopMembership(membershipId, { mode: 'immediate' });
+    if (!whop.success) {
+      logger.warn('[privacy] erasure stopped: subscription could not be cancelled', { userId: String(user._id), reason: whop.reason });
+      return res.status(409).json({
+        success: false,
+        code: 'SUBSCRIPTION_ACTIVE',
+        error: 'Cancel your subscription first so you are not charged again, then delete your account. You can cancel it from your Whop account.',
+        manageUrl: 'https://whop.com/hub/',
+      });
+    }
+  }
+
+  auditPrivacyAction(req, 'ACCOUNT ERASURE (right to be forgotten)');
+  const result = await eraseAccount(user._id);
+  sendSuccess(res, 'Your account and data were deleted', 200, {
+    erased: true,
+    collections: Object.keys(result.collections).length,
+    files: result.files,
+    ...(result.failed.length ? { incomplete: result.failed.map((k) => k.replace(/:failed$/, '')) } : {}),
+  });
 }));
 
 /**

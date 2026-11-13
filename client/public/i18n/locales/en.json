@@ -11728,5 +11728,29 @@
     "potential": "{{lift}} potential",
     "voteUp": "Good suggestion",
     "voteDown": "Not for me"
+  },
+  "privacyData": {
+    "title": "Your data",
+    "exportTitle": "Download your data",
+    "exportBody": "A file with everything Click stores about your account: profile, content, posts, captions, settings and activity. Passwords and connection tokens are left out.",
+    "exportButton": "Download my data",
+    "exporting": "Preparing…",
+    "exportReady": "Your data is downloading.",
+    "exportFailed": "Couldn't prepare your data. Try again.",
+    "deleteTitle": "Delete your account",
+    "deleteBody": "Permanently deletes your account, your videos and files, captions, scripts, scheduled posts, connected social accounts and settings. Payment records are kept for accounting. This can't be undone.",
+    "deleteButton": "Delete account permanently",
+    "dialogTitle": "Delete your account?",
+    "dialogBody": "Everything is deleted right away and can't be recovered. If you pay for a plan, it's cancelled first so you aren't charged again.",
+    "passwordLabel": "Current password",
+    "confirmWord": "DELETE",
+    "typeToConfirm": "Type {{word}} to confirm",
+    "keepAccount": "Keep my account",
+    "deleteForever": "Delete forever",
+    "deleting": "Deleting…",
+    "deleted": "Your account and data were deleted.",
+    "wrongPassword": "That password isn't right.",
+    "cancelFirst": "We couldn't cancel your subscription automatically. Cancel it from your Whop account first, then delete your account.",
+    "deleteFailed": "Couldn't delete your account. Try again."
   }
 }
