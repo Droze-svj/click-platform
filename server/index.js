@@ -51,16 +51,16 @@ if (process.env.SENTRY_DSN) {
       ...(tracing
         ? { tracesSampleRate }
         : {
-            skipOpenTelemetrySetup: true,
-            defaultIntegrations: false,
-            integrations: [
-              Sentry.eventFiltersIntegration(),
-              Sentry.functionToStringIntegration(),
-              Sentry.linkedErrorsIntegration(),
-              Sentry.dedupeIntegration(),
-              Sentry.nodeContextIntegration(),
-            ],
-          }),
+          skipOpenTelemetrySetup: true,
+          defaultIntegrations: false,
+          integrations: [
+            Sentry.eventFiltersIntegration(),
+            Sentry.functionToStringIntegration(),
+            Sentry.linkedErrorsIntegration(),
+            Sentry.dedupeIntegration(),
+            Sentry.nodeContextIntegration(),
+          ],
+        }),
       sendDefaultPii: false,
       beforeSend: scrubEvent,
       beforeSendTransaction: scrubEvent,
