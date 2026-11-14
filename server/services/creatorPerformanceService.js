@@ -44,6 +44,72 @@ function computeRetentionDelta(metrics = {}) {
   return clamp(retention - benchmark, -1, 1);
 }
 
+/** True when the metrics carry a measured retention value (not just a default). */
+function hasRetentionSignal(metrics = {}) {
+  const r = metrics.retentionRate ?? metrics.completionRate ?? null;
+  if (typeof r === 'number' && Number.isFinite(r)) return true;
+  const pct = metrics.watchTime?.averagePercentage;
+  return pct != null && Number.isFinite(Number(pct));
+}
+
+/**
+ * Reach signal: this post's views against the creator's OWN typical views on
+ * the same platform (`metrics.baselineViews`, a median supplied by the caller).
+ * log2 scale so 2x typical = +0.5, 4x = +1, half = -0.5. Returns null when there
+ * is no baseline yet (cold start) — never a guessed number.
+ */
+function computeReachDelta(metrics = {}) {
+  const views = Number(metrics.views ?? metrics.videoViews);
+  const base = Number(metrics.baselineViews);
+  if (!(views > 0) || !(base > 0)) return null;
+  return clamp(Math.log2(views / base) / 2, -1, 1);
+}
+
+/**
+ * The learning signal for one post. Uses every measured signal available:
+ * retention vs benchmark, and reach vs the creator's own baseline. Most
+ * creators only see views/likes for posts they publish themselves, so before
+ * this the loop learned nothing (retention-only → 0) from those posts.
+ */
+function computePerformanceDelta(metrics = {}) {
+  const signals = [];
+  if (hasRetentionSignal(metrics)) signals.push(computeRetentionDelta(metrics));
+  const reach = computeReachDelta(metrics);
+  if (reach != null) signals.push(reach);
+  if (signals.length === 0) return 0;
+  return clamp(signals.reduce((a, b) => a + b, 0) / signals.length, -1, 1);
+}
+
+// Fewer posts than this on a platform → no baseline (honest cold start).
+const MIN_BASELINE_POSTS = 3;
+const BASELINE_WINDOW = 30;
+
+/**
+ * Median views of the creator's recent posted posts on one platform, excluding
+ * `excludePostId`. Returns { medianViews, sampleSize } or { medianViews:null }
+ * when there are fewer than MIN_BASELINE_POSTS measured posts.
+ */
+async function getViewsBaseline(userId, platform, excludePostId = null) {
+  const ScheduledPost = require('../models/ScheduledPost');
+  const filter = {
+    userId: String(userId),
+    platform,
+    status: 'posted',
+    'analytics.views': { $gt: 0 },
+  };
+  if (excludePostId) filter._id = { $ne: excludePostId };
+  const rows = await ScheduledPost.find(filter)
+    .sort({ postedAt: -1 })
+    .limit(BASELINE_WINDOW)
+    .select('analytics.views')
+    .lean();
+  const views = rows.map((r) => Number(r.analytics?.views) || 0).filter((v) => v > 0).sort((a, b) => a - b);
+  if (views.length < MIN_BASELINE_POSTS) return { medianViews: null, sampleSize: views.length };
+  const mid = Math.floor(views.length / 2);
+  const medianViews = views.length % 2 ? views[mid] : (views[mid - 1] + views[mid]) / 2;
+  return { medianViews, sampleSize: views.length };
+}
+
 /**
  * Walk the project's overlays/segments and yield distinct (facet, key) pairs
  * representing every style choice on screen. We don't time-slice picks
@@ -156,7 +222,7 @@ async function ingestPostPerformance({ userId, contentId, metrics } = {}) {
     return { updated: 0 };
   }
 
-  const delta = computeRetentionDelta(metrics);
+  const delta = computePerformanceDelta(metrics);
   const picks = extractPicks(content);
   if (picks.length === 0) {
     logger.info('[creatorPerformance] no style picks on content', { contentId });
@@ -220,5 +286,8 @@ module.exports = {
   ingestPostPerformance,
   ingestBatch,
   computeRetentionDelta,
+  computeReachDelta,
+  computePerformanceDelta,
+  getViewsBaseline,
   extractPicks,
 };

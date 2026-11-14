@@ -2359,6 +2359,8 @@ app.use('/api/pro-mode', require('./routes/pro-mode'));
 // AI voice/brand/defaults controls. Powers personalizationService across every
 // AI surface (repurpose copy, generation, the autonomous pipeline).
 app.use('/api/me', require('./routes/me-personalization'));
+// Creators log how a published video did → the 6h learning pass learns from it.
+app.use('/api/post-results', require('./routes/post-results'));
 
 // Status page (public)
 
