@@ -11,22 +11,28 @@ interface Props {
 
 export function PricingToggle({ period, onChange, freeMonths = 2 }: Props) {
   return (
-    <div className="inline-flex items-center gap-2 p-1.5 rounded-full bg-white/5 border border-white/10" role="tablist" aria-label="Billing period">
+    <div
+      className="inline-flex items-center gap-1 p-1.5 rounded-full bg-surface-card border-2 border-surface-100 dark:border-white/10"
+      role="group"
+      aria-label="Billing period"
+    >
       {(['monthly', 'yearly'] as BillingPeriod[]).map((p) => {
         const active = p === period;
         return (
-          <button type="button"
+          <button
+            type="button"
             key={p}
-            role="tab"
-            aria-selected={active}
+            aria-pressed={active}
             onClick={() => onChange(p)}
-            className={`relative px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${
-              active ? 'bg-white text-black shadow-lg' : 'text-slate-400 hover:text-white'
+            className={`px-5 py-2 rounded-full text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/50 ${
+              active
+                ? 'bg-surface-900 dark:bg-white text-white dark:text-black'
+                : 'text-surface-600 dark:text-slate-300 hover:text-surface-900 dark:hover:text-white'
             }`}
           >
             {p === 'monthly' ? 'Monthly' : 'Yearly'}
             {p === 'yearly' && (
-              <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-bold normal-case tracking-normal">
+              <span className="ml-2 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 text-[10px] font-bold">
                 {freeMonths} months free
               </span>
             )}
