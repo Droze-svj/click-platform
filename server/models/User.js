@@ -179,6 +179,8 @@ const userSchema = new mongoose.Schema({
       platformUserId: String,
       platformUsername: String,
       pages: [mongoose.Schema.Types.Mixed],
+      // The Page posts go to when none is picked (set on Connected accounts).
+      defaultPageId: String,
       state: String, // Temporary, for OAuth flow
       // accounts[]/activeAccountId/states are declared on EVERY platform, not
       // just twitter. Mongoose sub-schemas are strict: an undeclared path is

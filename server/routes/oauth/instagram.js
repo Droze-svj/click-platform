@@ -10,7 +10,10 @@ const instagramService = require('../../services/instagramOAuthService');
 const OAuthStorage = require('../../utils/oauthStorage');
 const { sendSuccess, sendError } = require('../../utils/response');
 const asyncHandler = require('../../middleware/asyncHandler');
+const { recordDirectPost } = require('../../services/publishedPostRecorder');
 const { oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
+const { ownUploadFile } = require('../../utils/ownUploadFile');
+const { normalizeUploadsPath } = require('../../utils/mediaUrlSigner');
 const router = express.Router();
 
 const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
@@ -41,8 +44,14 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
     return sendError(res, 'An image or video URL is required for Instagram posts', 400);
   }
 
+  // Our own /uploads files are sent to Instagram as signed public links. Only
+  // sign a file the caller was given access to (a valid signature).
+  if (normalizeUploadsPath(mediaUrl) && !ownUploadFile(mediaUrl)) {
+    return sendError(res, 'This video link has expired. Render or open the video again, then post.', 403);
+  }
+
   const options = {};
-  if (instagramAccountId) options.instagramAccountId = instagramAccountId;
+  if (instagramAccountId) options.accountId = String(instagramAccountId);
   if (isCarousel) options.isCarousel = isCarousel;
   if (children) options.children = children;
   // Rendered exports are often signed URLs without a .mp4 suffix, so the
@@ -51,6 +60,7 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
 
   const userId = req.userId || req.user?._id || req.user?.id;
   const post = await instagramService.postToInstagram(userId, mediaUrl, caption || '', options);
+  await recordDirectPost({ userId, platform: 'instagram', result: post, contentId: req.body.contentId, caption });
 
   sendSuccess(res, 'Instagram post published successfully', 200, { post });
 }));

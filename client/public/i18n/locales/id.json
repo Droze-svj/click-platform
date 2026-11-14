@@ -2292,7 +2292,17 @@
     "globalRegistryMatrix": "Semua platform",
     "secureOauthConnection": "Koneksi OAuth aman",
     "lastGlobalSync": "Terakhir disinkronkan",
-    "encrypted256": "Enkripsi 256-bit"
+    "encrypted256": "Enkripsi 256-bit",
+    "fbPages": {
+      "title": "Halaman Facebook kamu",
+      "hint": "Video Facebook diposting ke Halaman default kamu.",
+      "postsGoHere": "Diposting di sini",
+      "makeDefault": "Posting di sini",
+      "makeDefaultFor": "Posting ke {{page}} secara default",
+      "noPages": "Tidak ada Halaman. Facebook hanya mengizinkan aplikasi memposting ke Halaman: buat Halaman atau hubungkan ulang lalu pilih.",
+      "hasInstagram": "Instagram tertaut",
+      "loadFailed": "Halaman Facebook kamu tidak dapat dimuat."
+    }
   },
   "tasksPage": {
     "defaultTaskTitle": "Tugas Baru",

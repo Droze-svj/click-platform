@@ -2292,7 +2292,17 @@
     "globalRegistryMatrix": "All platforms",
     "secureOauthConnection": "Secure OAuth connection",
     "lastGlobalSync": "Last synced",
-    "encrypted256": "256-bit encryption"
+    "encrypted256": "256-bit encryption",
+    "fbPages": {
+      "title": "Your Facebook Pages",
+      "hint": "Facebook videos are posted to your default Page.",
+      "postsGoHere": "Posts go here",
+      "makeDefault": "Post here",
+      "makeDefaultFor": "Post to {{page}} by default",
+      "noPages": "No Pages found. Facebook only allows apps to post to Pages: create a Page or reconnect and select one.",
+      "hasInstagram": "Instagram linked",
+      "loadFailed": "Couldn't load your Facebook Pages."
+    }
   },
   "tasksPage": {
     "defaultTaskTitle": "New Task",

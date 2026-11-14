@@ -9,6 +9,7 @@ const OAuthStorage = require('../../utils/oauthStorage');
 const { sendSuccess, sendError } = require('../../utils/response');
 const { resolveOAuthCallbackUrl } = require('../../utils/oauthCallbackUrl');
 const asyncHandler = require('../../middleware/asyncHandler');
+const { recordDirectPost } = require('../../services/publishedPostRecorder');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
 const logger = require('../../utils/logger');
 const { materializeVideoSource } = require('../../utils/ownUploadFile');
@@ -153,6 +154,8 @@ router.post('/upload', auth, oauthPostLimiter, asyncHandler(async (req, res) => 
       description: description || '',
       ...(options || {}),
     });
+    // So the analytics sync and the learning loop can see how it does.
+    await recordDirectPost({ userId, platform: 'youtube', result: video, contentId: req.body.contentId, caption: title });
 
     sendSuccess(res, 'YouTube video uploaded successfully', 200, { video });
   } finally {

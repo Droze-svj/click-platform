@@ -9,8 +9,11 @@ const OAuthStorage = require('../../utils/oauthStorage');
 const { sendSuccess, sendError } = require('../../utils/response');
 const { resolveOAuthCallbackUrl } = require('../../utils/oauthCallbackUrl');
 const asyncHandler = require('../../middleware/asyncHandler');
+const { recordDirectPost } = require('../../services/publishedPostRecorder');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
 const ssx = require('../../utils/oauthServerSideExchange');
+const { ownUploadFile } = require('../../utils/ownUploadFile');
+const { normalizeUploadsPath } = require('../../utils/mediaUrlSigner');
 const router = express.Router();
 
 const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
@@ -81,41 +84,60 @@ router.post('/complete', auth, oauthTokenLimiter, asyncHandler(async (req, res) 
 }));
 
 /**
- * GET /api/oauth/facebook/pages
- * Get user's Facebook pages
- */
-router.get('/pages', auth, asyncHandler(async (req, res) => {
-  const userId = req.userId || req.user?._id || req.user?.id;
-  const fbRow = await loadFacebookOauth(userId);
-
-  if (!fbRow?.connected) {
-    return sendError(res, 'Facebook account not connected', 400);
-  }
-
-  const pages = fbRow.pages || [];
-  sendSuccess(res, 'Pages retrieved', 200, { pages });
-}));
-
-/**
  * POST /api/oauth/facebook/post
  * Post to Facebook
  */
 router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
-  const { text, pageId, link, imageUrl } = req.body;
+  const { text, pageId, link, imageUrl, videoUrl } = req.body;
+  const caption = typeof text === 'string' ? text : '';
 
-  if (!text || text.trim().length === 0) {
-    return sendError(res, 'Post text is required', 400);
+  if (!caption.trim() && !videoUrl) {
+    return sendError(res, 'Post text or a video is required', 400);
+  }
+  // Our own /uploads files are sent to Meta as signed public links. Only sign a
+  // file the caller was given access to (a valid signature, as everywhere else).
+  for (const ref of [videoUrl, imageUrl]) {
+    if (ref && normalizeUploadsPath(ref) && !ownUploadFile(ref)) {
+      return sendError(res, 'This video link has expired. Render or open the video again, then post.', 403);
+    }
   }
 
   const options = {};
-  if (pageId) options.pageId = pageId;
+  if (pageId) options.pageId = String(pageId);
   if (link) options.link = link;
   if (imageUrl) options.imageUrl = imageUrl;
+  if (videoUrl) options.videoUrl = videoUrl;
 
   const userId = req.userId || req.user?._id || req.user?.id;
-  const post = await facebookService.postToFacebook(userId, text, options);
+  const post = await facebookService.postToFacebook(userId, caption.trim(), options);
+  await recordDirectPost({ userId, platform: 'facebook', result: post, contentId: req.body.contentId, caption });
 
   sendSuccess(res, 'Facebook post published successfully', 200, { post });
+}));
+
+/**
+ * GET /api/oauth/facebook/pages
+ * The creator's Facebook Pages (names only, never tokens) and the default one.
+ */
+router.get('/pages', auth, asyncHandler(async (req, res) => {
+  const userId = req.userId || req.user?._id || req.user?.id;
+  sendSuccess(res, 'Facebook Pages', 200, await facebookService.listPages(userId));
+}));
+
+/**
+ * PUT /api/oauth/facebook/default-page { pageId }
+ * Which Page posts go to when none is chosen.
+ */
+router.put('/default-page', auth, asyncHandler(async (req, res) => {
+  const pageId = req.body?.pageId;
+  if (!pageId || typeof pageId !== 'string') return sendError(res, 'pageId is required', 400);
+  const userId = req.userId || req.user?._id || req.user?.id;
+  try {
+    sendSuccess(res, 'Default Page updated', 200, await facebookService.setDefaultPage(userId, pageId));
+  } catch (err) {
+    if (err.statusCode === 404) return sendError(res, err.message, 404);
+    throw err;
+  }
 }));
 
 // DELETE /api/oauth/facebook/disconnect is answered by the multi-account handler

@@ -2292,7 +2292,17 @@
     "globalRegistryMatrix": "Tüm platformlar",
     "secureOauthConnection": "Güvenli OAuth bağlantısı",
     "lastGlobalSync": "Son senkronizasyon",
-    "encrypted256": "256 bit şifreleme"
+    "encrypted256": "256 bit şifreleme",
+    "fbPages": {
+      "title": "Facebook Sayfaların",
+      "hint": "Facebook videoları varsayılan Sayfanda paylaşılır.",
+      "postsGoHere": "Buraya paylaşılır",
+      "makeDefault": "Buraya paylaş",
+      "makeDefaultFor": "Varsayılan olarak {{page}} sayfasına paylaş",
+      "noPages": "Sayfa bulunamadı. Facebook uygulamaların yalnızca Sayfalara paylaşım yapmasına izin verir: bir Sayfa oluştur ya da yeniden bağlanıp seç.",
+      "hasInstagram": "Instagram bağlı",
+      "loadFailed": "Facebook Sayfaların yüklenemedi."
+    }
   },
   "tasksPage": {
     "defaultTaskTitle": "Yeni Görev",

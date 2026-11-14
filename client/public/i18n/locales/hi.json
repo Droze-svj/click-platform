@@ -2292,7 +2292,17 @@
     "globalRegistryMatrix": "सभी प्लेटफ़ॉर्म",
     "secureOauthConnection": "सुरक्षित OAuth कनेक्शन",
     "lastGlobalSync": "आखिरी सिंक",
-    "encrypted256": "256-बिट एन्क्रिप्शन"
+    "encrypted256": "256-बिट एन्क्रिप्शन",
+    "fbPages": {
+      "title": "आपके Facebook पेज",
+      "hint": "Facebook वीडियो आपके डिफ़ॉल्ट पेज पर पोस्ट होते हैं।",
+      "postsGoHere": "यहीं पोस्ट होगा",
+      "makeDefault": "यहाँ पोस्ट करें",
+      "makeDefaultFor": "डिफ़ॉल्ट रूप से {{page}} पर पोस्ट करें",
+      "noPages": "कोई पेज नहीं मिला। Facebook ऐप्स को सिर्फ़ पेजों पर पोस्ट करने देता है: एक पेज बनाएँ या फिर से कनेक्ट करके उसे चुनें।",
+      "hasInstagram": "Instagram जुड़ा है",
+      "loadFailed": "आपके Facebook पेज लोड नहीं हो सके।"
+    }
   },
   "tasksPage": {
     "defaultTaskTitle": "नया कार्य",

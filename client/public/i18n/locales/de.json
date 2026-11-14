@@ -2292,7 +2292,17 @@
     "globalRegistryMatrix": "Alle Plattformen",
     "secureOauthConnection": "Sichere OAuth-Verbindung",
     "lastGlobalSync": "Zuletzt synchronisiert",
-    "encrypted256": "256-Bit-Verschlüsselung"
+    "encrypted256": "256-Bit-Verschlüsselung",
+    "fbPages": {
+      "title": "Deine Facebook-Seiten",
+      "hint": "Facebook-Videos werden auf deiner Standardseite gepostet.",
+      "postsGoHere": "Hier wird gepostet",
+      "makeDefault": "Hier posten",
+      "makeDefaultFor": "Standardmäßig auf {{page}} posten",
+      "noPages": "Keine Seiten gefunden. Facebook erlaubt Apps nur das Posten auf Seiten: Erstelle eine Seite oder verbinde dich neu und wähle sie aus.",
+      "hasInstagram": "Instagram verknüpft",
+      "loadFailed": "Deine Facebook-Seiten konnten nicht geladen werden."
+    }
   },
   "tasksPage": {
     "defaultTaskTitle": "Neue Aufgabe",

@@ -1,6 +1,7 @@
 'use client'
 
 import { isPlatformConnected } from '../../../lib/connections'
+import { FacebookPagesPicker } from '../../../components/social/FacebookPagesPicker'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
@@ -336,6 +337,8 @@ export default function SocialPage() {
                         </div>
                       )
                     })}
+
+                    {id === 'facebook' && <FacebookPagesPicker refreshKey={accountList.length} />}
 
                     {/* Add another account on this same platform. The
                         backend now appends to accounts[] instead of

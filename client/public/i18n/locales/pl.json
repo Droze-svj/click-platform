@@ -2292,7 +2292,17 @@
     "globalRegistryMatrix": "Wszystkie platformy",
     "secureOauthConnection": "Bezpieczne połączenie OAuth",
     "lastGlobalSync": "Ostatnia synchronizacja",
-    "encrypted256": "Szyfrowanie 256-bitowe"
+    "encrypted256": "Szyfrowanie 256-bitowe",
+    "fbPages": {
+      "title": "Twoje strony na Facebooku",
+      "hint": "Filmy na Facebooku trafiają na twoją domyślną stronę.",
+      "postsGoHere": "Tu publikujemy",
+      "makeDefault": "Publikuj tutaj",
+      "makeDefaultFor": "Domyślnie publikuj na {{page}}",
+      "noPages": "Nie znaleziono stron. Facebook pozwala aplikacjom publikować tylko na stronach: utwórz stronę albo połącz ponownie i ją wybierz.",
+      "hasInstagram": "Połączono z Instagramem",
+      "loadFailed": "Nie udało się wczytać twoich stron na Facebooku."
+    }
   },
   "tasksPage": {
     "defaultTaskTitle": "Nowe zadanie",

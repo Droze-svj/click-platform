@@ -2292,7 +2292,17 @@
     "globalRegistryMatrix": "すべてのプラットフォーム",
     "secureOauthConnection": "安全なOAuth接続",
     "lastGlobalSync": "最終同期",
-    "encrypted256": "256ビット暗号化"
+    "encrypted256": "256ビット暗号化",
+    "fbPages": {
+      "title": "Facebook ページ",
+      "hint": "Facebook の動画はデフォルトのページに投稿されます。",
+      "postsGoHere": "ここに投稿",
+      "makeDefault": "ここに投稿する",
+      "makeDefaultFor": "デフォルトで {{page}} に投稿",
+      "noPages": "ページが見つかりません。Facebook ではアプリはページにのみ投稿できます。ページを作成するか、再接続して選択してください。",
+      "hasInstagram": "Instagram 連携済み",
+      "loadFailed": "Facebook ページを読み込めませんでした。"
+    }
   },
   "tasksPage": {
     "defaultTaskTitle": "新しいタスク",

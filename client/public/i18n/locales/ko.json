@@ -2292,7 +2292,17 @@
     "globalRegistryMatrix": "모든 플랫폼",
     "secureOauthConnection": "보안 OAuth 연결",
     "lastGlobalSync": "마지막 동기화",
-    "encrypted256": "256비트 암호화"
+    "encrypted256": "256비트 암호화",
+    "fbPages": {
+      "title": "내 Facebook 페이지",
+      "hint": "Facebook 동영상은 기본 페이지에 게시됩니다.",
+      "postsGoHere": "여기에 게시",
+      "makeDefault": "여기에 게시하기",
+      "makeDefaultFor": "기본으로 {{page}}에 게시",
+      "noPages": "페이지가 없습니다. Facebook은 앱이 페이지에만 게시하도록 허용합니다. 페이지를 만들거나 다시 연결해 선택하세요.",
+      "hasInstagram": "Instagram 연결됨",
+      "loadFailed": "Facebook 페이지를 불러오지 못했습니다."
+    }
   },
   "tasksPage": {
     "defaultTaskTitle": "새 작업",
