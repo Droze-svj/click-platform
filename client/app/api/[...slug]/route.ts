@@ -78,10 +78,11 @@ async function proxy(req: NextRequest, slug: string[]) {
   })
 }
 
-type Ctx = { params: Promise<{ slug: string[] }> | { slug: string[] } }
+// Next 15: route params arrive as a Promise.
+type Ctx = { params: Promise<{ slug: string[] }> }
 
 async function resolveSlug(ctx: Ctx): Promise<string[]> {
-  const p = ctx.params instanceof Promise ? await ctx.params : ctx.params
+  const p = await ctx.params
   return p?.slug || []
 }
 

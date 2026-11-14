@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Sparkles, Filter, Loader2, FolderOpen, Search, CheckSquare, Square, Download, Trash2, Send, Zap } from 'lucide-react'
@@ -247,12 +248,12 @@ export default function ClipHubByContentPage() {
               {selectMode ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
               {t('clipDetailPage.select')}
             </button>
-            <a
+            <Link
               href="/dashboard/clips/hub"
               className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-[10px] font-black uppercase tracking-widest text-[var(--text-main)] flex items-center gap-2 transition-all"
             >
               <FolderOpen className="w-3.5 h-3.5" /> {t('clipDetailPage.allClips')}
-            </a>
+            </Link>
             <div className="flex items-center gap-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
               <Filter className="w-3 h-3 text-[var(--text-dim)]" />
               <label className="text-[9px] font-black text-[var(--text-dim)] uppercase tracking-widest mr-1">{t('clipDetailPage.sortLabel')}</label>

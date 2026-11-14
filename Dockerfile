@@ -161,6 +161,11 @@ COPY --from=frontend-builder /app/client/node_modules ./client/node_modules
 RUN mkdir -p uploads/videos uploads/clips uploads/thumbnails uploads/music uploads/quotes logs
 
 ENV NODE_ENV=production
+# Render Standard = 2 GB. Pin the JS heap to 1 GB instead of trusting V8's
+# container heuristic: Next 15 + Express need ~300-450 MB, and the other
+# ~1 GB is headroom for FFmpeg render child processes (they count against
+# the same container limit but not against the Node heap).
+ENV NODE_OPTIONS=--max-old-space-size=1024
 EXPOSE 5001
 
 # Liveness probe = "is the process up", so hit /api/health/light (always 200 when
