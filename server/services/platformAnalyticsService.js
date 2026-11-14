@@ -8,6 +8,7 @@ const axiosLib = require('axios');
 const axios = axiosLib.create({ timeout: 15000 });
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
+const { GRAPH_BASE } = require('../utils/metaGraph');
 
 /**
  * Access token for a connected platform, from the user's stored OAuth
@@ -135,10 +136,20 @@ async function syncLinkedInAnalytics(userId, postId, platformPostId) {
  */
 async function syncFacebookAnalytics(userId, postId, platformPostId) {
   try {
-    const accessToken = await getValidAccessToken(userId, 'facebook');
+    // Page post insights are read with the PAGE token (the user token is
+    // rejected). Feed post ids are "<pageId>_<postId>"; video ids are bare,
+    // so those fall back to the creator's first connected Page.
+    const { resolvePage } = require('./facebookOAuthService');
+    const pageHint = String(platformPostId).includes('_') ? String(platformPostId).split('_')[0] : null;
+    let accessToken;
+    try {
+      accessToken = (await resolvePage(userId, pageHint)).accessToken;
+    } catch (_) {
+      accessToken = (await resolvePage(userId, null)).accessToken;
+    }
 
     // Facebook Graph API - Get post insights
-    const response = await axios.get(`https://graph.facebook.com/v18.0/${platformPostId}/insights`, {
+    const response = await axios.get(`${GRAPH_BASE}/${platformPostId}/insights`, {
       params: {
         metric: 'post_impressions,post_engaged_users,post_clicks',
         access_token: accessToken,
@@ -161,7 +172,7 @@ async function syncFacebookAnalytics(userId, postId, platformPostId) {
     });
 
     // Get post reactions
-    const reactionsResponse = await axios.get(`https://graph.facebook.com/v18.0/${platformPostId}`, {
+    const reactionsResponse = await axios.get(`${GRAPH_BASE}/${platformPostId}`, {
       params: {
         fields: 'reactions.summary(true),comments.summary(true),shares',
         access_token: accessToken,
@@ -215,7 +226,7 @@ async function syncInstagramAnalytics(userId, postId, platformPostId) {
     const accessToken = await getValidAccessToken(userId, 'instagram');
 
     // Fetch the public counts and media type in one call
-    const mediaRes = await axios.get(`https://graph.facebook.com/v18.0/${platformPostId}`, {
+    const mediaRes = await axios.get(`${GRAPH_BASE}/${platformPostId}`, {
       params: {
         fields: 'media_type,like_count,comments_count,media_product_type',
         access_token: accessToken,
@@ -231,12 +242,12 @@ async function syncInstagramAnalytics(userId, postId, platformPostId) {
     // Insights metric set differs by media type. Use the smallest valid intersection
     // and rely on the API to surface only what's available.
     let metricSet;
-    if (mediaProductType === 'REELS') {
-      metricSet = 'plays,reach,saved,shares,total_interactions';
-    } else if (mediaType === 'VIDEO') {
-      metricSet = 'video_views,reach,impressions,saved';
+    // Meta replaced `plays`, `video_views` and `impressions` with `views` in
+    // 2025; asking for the retired names fails the whole insights call.
+    if (mediaProductType === 'REELS' || mediaType === 'VIDEO') {
+      metricSet = 'views,reach,saved,shares,total_interactions';
     } else {
-      metricSet = 'reach,impressions,saved';
+      metricSet = 'views,reach,saved,shares';
     }
 
     let impressions = 0;
@@ -247,7 +258,7 @@ async function syncInstagramAnalytics(userId, postId, platformPostId) {
 
     try {
       const insightsRes = await axios.get(
-        `https://graph.facebook.com/v18.0/${platformPostId}/insights`,
+        `${GRAPH_BASE}/${platformPostId}/insights`,
         { params: { metric: metricSet, access_token: accessToken } }
       );
       const items = insightsRes.data?.data || [];
@@ -256,6 +267,7 @@ async function syncInstagramAnalytics(userId, postId, platformPostId) {
         switch (item.name) {
         case 'impressions': impressions = value; break;
         case 'reach': reach = value; break;
+        case 'views':
         case 'video_views':
         case 'plays': videoViews = value; break;
         case 'saved': saves = value; break;

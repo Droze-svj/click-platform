@@ -2270,9 +2270,9 @@
     "platformDesc": {
       "twitter": "短い投稿とスレッド。",
       "youtube": "長尺動画とShorts。",
-      "instagram": "写真とReelsでビジュアルストーリーを伝えます。",
+      "instagram": "リールと投稿。Facebook 経由で接続します。Facebook ページにリンクした Instagram のビジネスまたはクリエイターアカウントが必要です。",
       "linkedin": "ビジネス向けの投稿や記事。",
-      "facebook": "ページ、グループ、Reels。",
+      "facebook": "管理している Facebook ページへの投稿と動画。",
       "tiktok": "ショート動画。",
       "google": "YouTube アナリティクス + Search Console の分析情報。読み取り専用。"
     },

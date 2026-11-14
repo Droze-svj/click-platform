@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPage kicker="Legal & Trust" title="Privacy Policy" updated={new Date('2026-11-13')}>
+    <LegalPage kicker="Legal & Trust" title="Privacy Policy" updated={new Date('2026-11-14')}>
       <div className="prose prose-invert prose-slate max-w-none space-y-8 text-surface-700 dark:text-surface-300 leading-relaxed">
 
         <div className="p-4 rounded-xl bg-surface-100 dark:bg-white/5 not-prose text-xs text-surface-600 dark:text-slate-400 space-y-1">
@@ -123,6 +123,37 @@ export default function PrivacyPage() {
             We will update this section when Click moves to a paid tier, under which Google does not use the
             content that way. OpenAI does not use content sent through its API to train its models by default and
             keeps it for up to 30 days for abuse monitoring.
+          </p>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="text-2xl font-black text-surface-900 dark:text-white tracking-tight">5a. Accounts You Connect (YouTube, TikTok, Facebook, Instagram)</h2>
+          <p className="text-sm">
+            When you connect a social account, you choose to give Click permission to act for you on that platform. Click uses that access only to:
+          </p>
+          <ul className="list-disc pl-6 space-y-2 text-sm">
+            <li>publish the videos and captions you approve or schedule, to the account and Page you choose;</li>
+            <li>read your account name and picture so you can see which account is connected;</li>
+            <li>read the view, like, comment, share and watch-time numbers of posts you published with Click, so Click can show you how they did and improve its suggestions for your next videos.</li>
+          </ul>
+          <p className="text-sm">
+            Access tokens are encrypted (AES-256-GCM) before they are stored. We do not sell this data, use it for advertising, share it with
+            other users, or use it to train AI models. You can disconnect an account at any time on the Connected accounts page, which deletes its
+            tokens; you can also remove Click&apos;s access from the platform&apos;s own settings. Deleting your Click account deletes everything we
+            stored from connected accounts.
+          </p>
+          <p className="text-sm">
+            <strong>YouTube.</strong> Click uses YouTube API Services; by connecting YouTube you agree to the{' '}
+            <a href="https://www.youtube.com/t/terms" className="text-primary-500 underline" rel="noopener noreferrer" target="_blank">YouTube Terms of Service</a>, and Google&apos;s handling of your data is described in the{' '}
+            <a href="https://policies.google.com/privacy" className="text-primary-500 underline" rel="noopener noreferrer" target="_blank">Google Privacy Policy</a>.
+            You can revoke Click&apos;s access at{' '}
+            <a href="https://security.google.com/settings/security/permissions" className="text-primary-500 underline" rel="noopener noreferrer" target="_blank">Google security settings</a>.
+            Click&apos;s use and transfer of information received from Google APIs adheres to the{' '}
+            <a href="https://developers.google.com/terms/api-services-user-data-policy" className="text-primary-500 underline" rel="noopener noreferrer" target="_blank">Google API Services User Data Policy</a>, including the Limited Use requirements.
+          </p>
+          <p className="text-sm">
+            <strong>Facebook and Instagram.</strong> To delete the data Click received through Facebook Login, remove Click in your Facebook settings
+            (Settings → Apps and websites) or follow the steps on <a href="/data-deletion" className="text-primary-500 underline">Deleting your data</a>.
           </p>
         </section>
 

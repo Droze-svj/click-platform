@@ -2270,9 +2270,9 @@
     "platformDesc": {
       "twitter": "Posts curtos e threads.",
       "youtube": "Vídeos longos e Shorts.",
-      "instagram": "Narrativa visual com fotos e Reels.",
+      "instagram": "Reels e publicações. Conecta pelo Facebook: requer uma conta comercial ou de criador do Instagram vinculada a uma Página do Facebook.",
       "linkedin": "Posts e artigos profissionais.",
-      "facebook": "Páginas, grupos e Reels.",
+      "facebook": "Publicações e vídeos nas Páginas do Facebook que você gerencia.",
       "tiktok": "Vídeos curtos.",
       "google": "Informações do YouTube Analytics + Search Console. Somente leitura."
     },
