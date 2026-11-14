@@ -14,17 +14,21 @@ const HEX = 'a1b2c3d4e5f6a1b2c3d4e5f6';
 const UUID = 'd29c7011-1111-2222-3333-444455556666';
 const COLL = 'contents';
 
-// Two models on the SAME collection — String (today) and ObjectId (#131 cut-over).
-const StringContent = mongoose.models.RehearsalStr
-  || mongoose.model('RehearsalStr', new mongoose.Schema({ userId: String, title: String }), COLL);
-const ObjContent = mongoose.models.RehearsalObj
-  || mongoose.model('RehearsalObj', new mongoose.Schema({ userId: mongoose.Schema.Types.ObjectId, title: String }), COLL);
-
-let db, contentId;
+let db, contentId, StringContent, ObjContent;
 
 beforeAll(async () => {
   await connectTestDb();
-  db = mongoose.connection.db;
+  // Private database: the migrations rewrite EVERY row of the collection, so on
+  // the shared test DB a parallel suite's migration flipped this suite's row
+  // back mid-test (CI flake 2026-11-14), and this suite's deleteMany wiped
+  // other suites' content.
+  const conn = mongoose.connection.useDb('test_userid_flip_rehearsal', { useCache: true });
+  db = conn.db;
+  // Two models on the SAME collection — String (today) and ObjectId (#131 cut-over).
+  StringContent = conn.models.RehearsalStr
+    || conn.model('RehearsalStr', new mongoose.Schema({ userId: String, title: String }), COLL);
+  ObjContent = conn.models.RehearsalObj
+    || conn.model('RehearsalObj', new mongoose.Schema({ userId: mongoose.Schema.Types.ObjectId, title: String }), COLL);
 });
 
 beforeEach(async () => {

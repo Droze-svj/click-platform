@@ -155,10 +155,9 @@ const FEATURES = {
     rollout: { stage: 'agency-first', addedAt: '2026-06-01', descendTo: 'pro', descendOn: '2027-01-01' } },
   retention_heatmap:{ label: 'Retention heatmap',        category: 'analytics', minTier: 'agency',
     rollout: { stage: 'agency-first', addedAt: '2026-06-01', descendTo: 'pro', descendOn: '2027-01-01' } },
-  priority_gpu:     { label: 'Dedicated GPU pods',       category: 'compute', minTier: 'agency',
-    rollout: { stage: 'agency-first', addedAt: '2026-06-01', descendTo: 'pro', descendOn: '2027-01-01' } },
-  webgpu_rendering: { label: 'WebGPU real-time preview', category: 'compute', minTier: 'agency',
-    rollout: { stage: 'agency-first', addedAt: '2026-06-01', descendTo: 'pro', descendOn: '2027-01-01' } },
+  // 'Dedicated GPU pods' and 'WebGPU real-time preview' were listed here and
+  // sold on the Agency plan, but neither exists (no GPU pool; the WebGPU hook
+  // is unused). Removed 2026-11-14 — add a feature back only once it ships.
 };
 
 // ─── LIMITS ──────────────────────────────────────────────────────────────────

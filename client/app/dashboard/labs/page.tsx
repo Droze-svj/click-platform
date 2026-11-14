@@ -18,7 +18,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   FlaskConical, Crown, Lock, Sparkles, ArrowRight, CheckCircle2,
-  Mic, Volume2, Activity, Cpu, ScanLine, Palette, Plug, Boxes,
+  Mic, Volume2, Activity, ScanLine, Palette, Plug, Boxes,
   type LucideIcon,
 } from 'lucide-react'
 import { ErrorBoundary } from '../../../components/ErrorBoundary'
@@ -46,8 +46,6 @@ const FEATURE_ICON: Record<string, LucideIcon> = {
   generative_dubbing: Mic,
   ai_foley: Volume2,
   retention_heatmap: Activity,
-  priority_gpu: Cpu,
-  webgpu_rendering: ScanLine,
   white_label: Palette,
   client_portal: Boxes,
   api_access: Plug,

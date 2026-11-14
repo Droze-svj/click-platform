@@ -1,11 +1,13 @@
 /**
- * GET /api/analytics/global — public marketing-surface metrics.
+ * GET /api/analytics/global — public, aggregate platform counts.
  *
- * Drives the Stats section + LiveDemo "creators online" anchor on the
- * public landing page. Public on purpose (these numbers are marketing
- * copy). Cached 5 minutes in Redis on cache hit; degrades to honest
- * defaults if Mongo / Redis are down so a dead infra never breaks the
- * landing page.
+ * Public on purpose (no per-user data, only totals). Cached 5 minutes.
+ *
+ * Only measured numbers are returned. This endpoint used to substitute
+ * hard-coded marketing figures (25,000 creators, 145M clips) whenever a count
+ * failed while still labelling the response "live", and it always returned a
+ * made-up 312% "brand lift" and 99.9% uptime. A count that can't be read is
+ * now `null`, and `source` is "live" only when every count was measured.
  */
 
 const express = require('express');
@@ -14,69 +16,49 @@ const redisCache = require('../../utils/redisCache');
 
 const router = express.Router();
 
-const CACHE_KEY = 'click:cache:global-metrics:v1';
+const CACHE_KEY = 'click:cache:global-metrics:v2';
 const CACHE_TTL_SEC = 300; // 5 min
 
-// Fallback values used when Mongo is unavailable. These are the same
-// numbers the landing was hard-coding before this endpoint existed —
-// shown only when we genuinely can't read live data.
-const FALLBACK = {
-  creators: 25_000,
-  clipsGenerated: 145_000_000,
-  brandLiftPct: 312,
-  uptimePct: 99.9,
-  source: 'fallback',
-};
+async function safeCount(modelPath, filter, label) {
+  try {
+    const Model = require(modelPath);
+    return await Model.countDocuments(filter);
+  } catch (err) {
+    logger.warn(`[analytics/global] ${label} count failed`, { error: err.message });
+    return null;
+  }
+}
 
 router.get('/', async (req, res) => {
-  // Cache hit — return immediately.
   try {
     const cached = await redisCache.get(CACHE_KEY);
-    if (cached) {
-      return res.json({ ...cached, source: 'cache' });
-    }
+    if (cached) return res.json({ ...cached, cached: true });
   } catch (err) {
     logger.warn('[analytics/global] redis read failed', { error: err.message });
   }
 
-  // Fresh compute. Each model is wrapped in a try/catch so a single
-  // failed query doesn't blank the whole endpoint.
-  let creators = FALLBACK.creators;
-  let clipsGenerated = FALLBACK.clipsGenerated;
+  // "Accounts", not "active creators": this counts every account that has not
+  // expired, which is all it can honestly claim.
+  const [accounts, videos] = await Promise.all([
+    safeCount('../../models/User', { 'subscription.status': { $ne: 'expired' } }, 'User'),
+    safeCount('../../models/Content', { type: 'video' }, 'Content'),
+  ]);
 
-  try {
-    const User = require('../../models/User');
-    creators = await User.countDocuments({
-      'subscription.status': { $ne: 'expired' },
-    });
-  } catch (err) {
-    logger.warn('[analytics/global] User count failed', { error: err.message });
-  }
-
-  try {
-    const Content = require('../../models/Content');
-    clipsGenerated = await Content.countDocuments({ type: 'video' });
-  } catch (err) {
-    logger.warn('[analytics/global] Content count failed', { error: err.message });
-  }
-
-  // If both queries failed AND we got the fallback numbers literally, mark
-  // the response as fallback so the client can hide the "live" pill.
-  const isLive = creators !== FALLBACK.creators || clipsGenerated !== FALLBACK.clipsGenerated;
-
+  const measured = accounts !== null && videos !== null;
   const payload = {
-    creators,
-    clipsGenerated,
-    brandLiftPct: FALLBACK.brandLiftPct,
-    uptimePct: FALLBACK.uptimePct,
+    accounts,
+    videos,
     lastUpdated: new Date().toISOString(),
-    source: isLive ? 'live' : 'fallback',
+    source: measured ? 'live' : 'unavailable',
   };
 
-  try {
-    await redisCache.set(CACHE_KEY, payload, CACHE_TTL_SEC);
-  } catch (err) {
-    logger.warn('[analytics/global] redis write failed', { error: err.message });
+  // Don't cache a partial/failed read — the next request should try again.
+  if (measured) {
+    try {
+      await redisCache.set(CACHE_KEY, payload, CACHE_TTL_SEC);
+    } catch (err) {
+      logger.warn('[analytics/global] redis write failed', { error: err.message });
+    }
   }
 
   return res.json(payload);
