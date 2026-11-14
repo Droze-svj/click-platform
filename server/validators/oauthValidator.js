@@ -27,10 +27,15 @@ const validateCallback = [
   param('platform')
     .isIn(['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook', 'google'])
     .withMessage('Invalid or unsupported platform'),
+  // A user who clicks "Cancel" on the provider's consent screen comes back with
+  // ?error=access_denied and no code — let that through so the route redirects
+  // to the dashboard with a message instead of answering with a 400 JSON page.
   query('code')
+    .if(query('error').not().exists())
     .notEmpty()
     .withMessage('Authorization code is required'),
   query('state')
+    .if(query('error').not().exists())
     .notEmpty()
     .withMessage('State parameter is required'),
   handleValidationErrors

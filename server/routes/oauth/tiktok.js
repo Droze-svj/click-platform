@@ -10,10 +10,8 @@ const { sendSuccess, sendError } = require('../../utils/response');
 const { resolveOAuthCallbackUrl } = require('../../utils/oauthCallbackUrl');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
-const logger = require('../../utils/logger');
 const { materializeVideoSource, ownUploadFile } = require('../../utils/ownUploadFile');
 const { unescape: unescapeHtml } = require('validator');
-const { verifyState } = require('../../utils/oauthState');
 const router = express.Router();
 
 const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
@@ -37,52 +35,11 @@ router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) =
   sendSuccess(res, 'Authorization URL generated', 200, { url, state });
 }));
 
-/**
- * GET /api/oauth/tiktok/callback
- * Handle TikTok OAuth callback
- */
-router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
-  const { code, state, error } = req.query;
-
-  if (error) {
-    logger.error('TikTok OAuth callback error', { error });
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    return res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent(error)}`);
-  }
-
-  if (!code || !state) {
-    return sendError(res, 'Missing authorization code or state', 400);
-  }
-
-  try {
-    const stateData = verifyState(state);
-    if (!stateData || typeof stateData !== 'object' || !stateData.userId) {
-      logger.warn(`TikTok OAuth callback received invalid/forged/expired state`);
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      return res.redirect(`${frontendUrl}/dashboard/social?error=invalid_state`);
-    }
-
-    const { userId, redirectUri: originalRedirectUri } = stateData;
-
-    // Exchange the code for token
-    const tokens = await tiktokService.exchangeCodeForToken(code, resolveOAuthCallbackUrl('tiktok', req));
-    const accessToken = tokens.access_token || tokens.accessToken;
-    const profile = await tiktokService.getUserProfile(accessToken);
-    
-    // Connect the account
-    await tiktokService.connectAccount(userId, tokens, profile);
-
-    logger.info(`TikTok OAuth connection successful`, { userId });
-
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const successRedirectUri = `${originalRedirectUri || `${frontendUrl}/dashboard/social`}?success=true&platform=tiktok`;
-    res.redirect(successRedirectUri);
-  } catch (err) {
-    logger.error('TikTok OAuth callback error', { error: err.message });
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent(err.message)}&platform=tiktok`);
-  }
-}));
+// GET /api/oauth/tiktok/callback is handled by the shared router
+// (server/routes/oauth.js): it verifies the signed state, exchanges the code
+// with the exact redirect_uri used at authorize time, saves the account and
+// redirects to /dashboard/social. The handler that used to live here
+// shadowed it and never finished the connection.
 
 /**
  * POST /api/oauth/tiktok/complete

@@ -2270,9 +2270,9 @@
     "platformDesc": {
       "twitter": "Kısa gönderiler ve flood'lar.",
       "youtube": "Uzun videolar ve Shorts.",
-      "instagram": "Fotoğraflar ve Reels ile görsel hikâye anlatımı.",
+      "instagram": "Reels ve gönderiler. Facebook üzerinden bağlanır: bir Facebook Sayfasına bağlı Instagram işletme veya içerik üreticisi hesabı gerekir.",
       "linkedin": "Profesyonel gönderiler ve makaleler.",
-      "facebook": "Sayfalar, gruplar ve Reels.",
+      "facebook": "Yönettiğin Facebook Sayfalarında gönderiler ve videolar.",
       "tiktok": "Kısa video.",
       "google": "YouTube Analytics + Search Console analizleri. Salt okunur."
     },

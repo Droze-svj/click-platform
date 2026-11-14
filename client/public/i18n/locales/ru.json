@@ -2270,9 +2270,9 @@
     "platformDesc": {
       "twitter": "Короткие посты и треды.",
       "youtube": "Длинные видео и Shorts.",
-      "instagram": "Визуальные истории в фото и Reels.",
+      "instagram": "Reels и публикации. Подключается через Facebook: нужен бизнес-аккаунт или аккаунт автора Instagram, связанный со страницей Facebook.",
       "linkedin": "Профессиональные посты и статьи.",
-      "facebook": "Страницы, группы и Reels.",
+      "facebook": "Публикации и видео на страницах Facebook, которыми вы управляете.",
       "tiktok": "Короткие видео.",
       "google": "YouTube Analytics + статистика Search Console. Только для чтения."
     },

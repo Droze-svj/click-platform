@@ -18,7 +18,9 @@ const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
 
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const API_BASE = 'https://www.googleapis.com/youtube/v3';
-const DEFAULT_SCOPE = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
+// yt-analytics.readonly: average view percentage / watch time per video, the
+// retention signal the learning loop scores hooks and captions with.
+const DEFAULT_SCOPE = 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/yt-analytics.readonly https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email';
 const LOG_CONTEXT = { service: 'youtube-oauth' };
 
 // Delegates to the shared resolver so the authorize step and the token

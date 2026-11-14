@@ -9,7 +9,11 @@ const crypto = require('crypto');
 
 const TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
 const API_BASE = 'https://open.tiktokapis.com/v2';
-const DEFAULT_SCOPE = 'user.info.basic,video.upload,video.publish';
+// video.list is what /v2/video/query/ needs for post analytics (views, likes,
+// comments, shares). Without it every TikTok analytics sync is a scope error.
+// Profile stats (follower counts) additionally need user.info.stats — add it
+// through TIKTOK_SCOPE once the TikTok app has that scope approved.
+const DEFAULT_SCOPE = 'user.info.basic,video.upload,video.publish,video.list';
 const LOG_CONTEXT = { service: 'tiktok-oauth' };
 
 // Delegates to the shared resolver so the authorize step and the token

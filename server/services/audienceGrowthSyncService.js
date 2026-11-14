@@ -4,6 +4,7 @@
 const SocialConnection = require('../models/SocialConnection');
 const { recordAudienceGrowth } = require('./socialPerformanceMetricsService');
 const { getValidAccessToken } = require('./tokenRefreshService');
+const { GRAPH_BASE } = require('../utils/metaGraph');
 const axiosLib = require('axios');
 // Timeout-defaulted instance so a hung provider can't stall the growth sync.
 const axios = axiosLib.create({ timeout: 15000 });
@@ -129,8 +130,8 @@ async function syncLinkedInFollowers(userId, accessToken, connection) {
 async function syncFacebookFollowers(userId, accessToken, connection, platform) {
   try {
     const endpoint = platform === 'instagram' 
-      ? `https://graph.facebook.com/v18.0/${connection.platformUserId}`
-      : `https://graph.facebook.com/v18.0/${connection.platformUserId}`;
+      ? `${GRAPH_BASE}/${connection.platformUserId}`
+      : `${GRAPH_BASE}/${connection.platformUserId}`;
 
     const response = await axios.get(endpoint, {
       params: {

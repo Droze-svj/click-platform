@@ -36,47 +36,11 @@ router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) =
   sendSuccess(res, { url, state }, 'Authorization URL generated', 200);
 }));
 
-/**
- * GET /api/oauth/youtube/callback
- * Handle YouTube OAuth callback
- */
-router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
-  const { code, state, error } = req.query;
-
-  if (error) {
-    logger.error('YouTube OAuth callback error', { error });
-    return res.send(`<!DOCTYPE html><html><head><title>YouTube OAuth Error</title></head><body style="font-family: Arial; padding: 40px; text-align: center;"><h1>OAuth Error</h1><p>Error: ${String(error).replace(/[<>&"]/g, '')}</p></body></html>`);
-  }
-
-  if (!code || !state) {
-    return res.send(`<!DOCTYPE html><html><head><title>Missing Parameters</title></head><body style="font-family: Arial; padding: 40px; text-align: center;"><h1>Missing Parameters</h1></body></html>`);
-  }
-
-  // Show success page (kept as-is for the helper-script flow; sanitised inputs)
-  const safeCode = String(code).replace(/[<>&"]/g, '');
-  const safeState = String(state).replace(/[<>&"]/g, '');
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>YouTube OAuth - Authorization Successful</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
-        .success { background: #d4edda; border: 1px solid #c3e6cb; padding: 20px; border-radius: 5px; margin: 20px 0; }
-        .code-box { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; border-radius: 5px; margin: 10px 0; word-break: break-all; }
-      </style>
-    </head>
-    <body>
-      <h1>YouTube Authorization Successful</h1>
-      <div class="success"><p>Use the code below to complete the connection.</p></div>
-      <p><strong>Code:</strong></p>
-      <div class="code-box">${safeCode}</div>
-      <p><strong>State:</strong></p>
-      <div class="code-box">${safeState}</div>
-    </body>
-    </html>
-  `);
-}));
+// GET /api/oauth/youtube/callback is handled by the shared router
+// (server/routes/oauth.js): it verifies the signed state, exchanges the code
+// with the exact redirect_uri used at authorize time, saves the account and
+// redirects to /dashboard/social. The handler that used to live here
+// shadowed it and never finished the connection.
 
 /**
  * POST /api/oauth/youtube/complete

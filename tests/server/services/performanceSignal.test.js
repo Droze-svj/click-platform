@@ -49,9 +49,9 @@ describe('platform analytics sync saves the numbers', () => {
   it('persists views/likes and stamps lastUpdated only when they move', async () => {
     const post = await ScheduledPost.create({
       userId: 'sync-user', platform: 'tiktok', status: 'posted', scheduledTime: new Date(),
-      postedAt: new Date(), platformPostId: 'vid-1', contentId: 'c-sync',
+      postedAt: new Date(), platformPostId: '7300000000000000001', contentId: 'c-sync',
     });
-    mockPost.mockResolvedValue({ data: { data: { videos: [{ id: 'vid-1', view_count: 1500, like_count: 70, comment_count: 4, share_count: 2 }] } } });
+    mockPost.mockResolvedValue({ data: { data: { videos: [{ id: '7300000000000000001', view_count: 1500, like_count: 70, comment_count: 4, share_count: 2 }] } } });
 
     await syncPostAnalytics('sync-user', post._id);
     const first = await ScheduledPost.findById(post._id).lean();
@@ -62,7 +62,7 @@ describe('platform analytics sync saves the numbers', () => {
     const same = await ScheduledPost.findById(post._id).lean();
     expect(same.analytics.lastUpdated.getTime()).toBe(stamped);
 
-    mockPost.mockResolvedValue({ data: { data: { videos: [{ id: 'vid-1', view_count: 2600, like_count: 90, comment_count: 4, share_count: 2 }] } } });
+    mockPost.mockResolvedValue({ data: { data: { videos: [{ id: '7300000000000000001', view_count: 2600, like_count: 90, comment_count: 4, share_count: 2 }] } } });
     await new Promise((r) => setTimeout(r, 5));
     await syncPostAnalytics('sync-user', post._id);
     const moved = await ScheduledPost.findById(post._id).lean();

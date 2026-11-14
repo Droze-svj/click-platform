@@ -2270,9 +2270,9 @@
     "platformDesc": {
       "twitter": "짧은 게시물과 스레드.",
       "youtube": "롱폼 동영상과 Shorts.",
-      "instagram": "사진과 Reels로 전하는 비주얼 스토리텔링.",
+      "instagram": "릴스와 게시물. Facebook을 통해 연결됩니다. Facebook 페이지에 연결된 Instagram 비즈니스 또는 크리에이터 계정이 필요합니다.",
       "linkedin": "전문적인 게시물과 아티클.",
-      "facebook": "페이지, 그룹, Reels.",
+      "facebook": "관리하는 Facebook 페이지의 게시물과 동영상.",
       "tiktok": "숏폼 동영상.",
       "google": "YouTube 분석 + Search Console 통계. 읽기 전용입니다."
     },

@@ -629,10 +629,22 @@ cron.schedule('* * * * *', async () => {
             }
 
             post.status = 'posted';
+            // postToSocialMedia returns the platform id as `externalId`. It
+            // used to be missing from this chain, so every post got the
+            // `post-<timestamp>` fallback and no analytics sync could ever
+            // find it on the platform.
             post.platformPostId = result?.platformPostId
+              || result?.externalId
               || result?.id
               || result?._id?.toString()
               || `post-${Date.now()}`;
+            if (result?.publishId) {
+              // TikTok: platformPostId is the video id when TikTok published
+              // it straight away, else the publish_id. Keep the publish_id
+              // either way; syncTikTokAnalytics resolves the video id from it.
+              post.metadata = { ...(post.metadata || {}), tiktokPublishId: result.publishId };
+              post.markModified('metadata');
+            }
             // Guard against ObjectId values sneaking in — analytics sync
             // expects a string and skips anything that looks like a Mongo
             // id (24-hex).
@@ -642,7 +654,7 @@ cron.schedule('* * * * *', async () => {
               });
             }
             post.postedAt = new Date();
-            const platformUrl = result?.url || result?.platformPostUrl || null;
+            const platformUrl = result?.url || result?.postUrl || result?.platformPostUrl || null;
             await post.save();
 
             logger.info('Post published', {

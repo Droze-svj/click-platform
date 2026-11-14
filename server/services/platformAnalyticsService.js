@@ -8,6 +8,7 @@ const axiosLib = require('axios');
 const axios = axiosLib.create({ timeout: 15000 });
 const logger = require('../utils/logger');
 const { captureException } = require('../utils/sentry');
+const { GRAPH_BASE } = require('../utils/metaGraph');
 
 /**
  * Access token for a connected platform, from the user's stored OAuth
@@ -135,10 +136,20 @@ async function syncLinkedInAnalytics(userId, postId, platformPostId) {
  */
 async function syncFacebookAnalytics(userId, postId, platformPostId) {
   try {
-    const accessToken = await getValidAccessToken(userId, 'facebook');
+    // Page post insights are read with the PAGE token (the user token is
+    // rejected). Feed post ids are "<pageId>_<postId>"; video ids are bare,
+    // so those fall back to the creator's first connected Page.
+    const { resolvePage } = require('./facebookOAuthService');
+    const pageHint = String(platformPostId).includes('_') ? String(platformPostId).split('_')[0] : null;
+    let accessToken;
+    try {
+      accessToken = (await resolvePage(userId, pageHint)).accessToken;
+    } catch (_) {
+      accessToken = (await resolvePage(userId, null)).accessToken;
+    }
 
     // Facebook Graph API - Get post insights
-    const response = await axios.get(`https://graph.facebook.com/v18.0/${platformPostId}/insights`, {
+    const response = await axios.get(`${GRAPH_BASE}/${platformPostId}/insights`, {
       params: {
         metric: 'post_impressions,post_engaged_users,post_clicks',
         access_token: accessToken,
@@ -161,7 +172,7 @@ async function syncFacebookAnalytics(userId, postId, platformPostId) {
     });
 
     // Get post reactions
-    const reactionsResponse = await axios.get(`https://graph.facebook.com/v18.0/${platformPostId}`, {
+    const reactionsResponse = await axios.get(`${GRAPH_BASE}/${platformPostId}`, {
       params: {
         fields: 'reactions.summary(true),comments.summary(true),shares',
         access_token: accessToken,
@@ -215,7 +226,7 @@ async function syncInstagramAnalytics(userId, postId, platformPostId) {
     const accessToken = await getValidAccessToken(userId, 'instagram');
 
     // Fetch the public counts and media type in one call
-    const mediaRes = await axios.get(`https://graph.facebook.com/v18.0/${platformPostId}`, {
+    const mediaRes = await axios.get(`${GRAPH_BASE}/${platformPostId}`, {
       params: {
         fields: 'media_type,like_count,comments_count,media_product_type',
         access_token: accessToken,
@@ -231,12 +242,12 @@ async function syncInstagramAnalytics(userId, postId, platformPostId) {
     // Insights metric set differs by media type. Use the smallest valid intersection
     // and rely on the API to surface only what's available.
     let metricSet;
-    if (mediaProductType === 'REELS') {
-      metricSet = 'plays,reach,saved,shares,total_interactions';
-    } else if (mediaType === 'VIDEO') {
-      metricSet = 'video_views,reach,impressions,saved';
+    // Meta replaced `plays`, `video_views` and `impressions` with `views` in
+    // 2025; asking for the retired names fails the whole insights call.
+    if (mediaProductType === 'REELS' || mediaType === 'VIDEO') {
+      metricSet = 'views,reach,saved,shares,total_interactions';
     } else {
-      metricSet = 'reach,impressions,saved';
+      metricSet = 'views,reach,saved,shares';
     }
 
     let impressions = 0;
@@ -247,7 +258,7 @@ async function syncInstagramAnalytics(userId, postId, platformPostId) {
 
     try {
       const insightsRes = await axios.get(
-        `https://graph.facebook.com/v18.0/${platformPostId}/insights`,
+        `${GRAPH_BASE}/${platformPostId}/insights`,
         { params: { metric: metricSet, access_token: accessToken } }
       );
       const items = insightsRes.data?.data || [];
@@ -256,6 +267,7 @@ async function syncInstagramAnalytics(userId, postId, platformPostId) {
         switch (item.name) {
         case 'impressions': impressions = value; break;
         case 'reach': reach = value; break;
+        case 'views':
         case 'video_views':
         case 'plays': videoViews = value; break;
         case 'saved': saves = value; break;
@@ -421,29 +433,98 @@ function parseIso8601Duration(iso) {
 }
 
 /**
- * Sync analytics from TikTok
- * Uses TikTok Content Posting API video list when available; otherwise returns placeholder.
+ * Is this a TikTok "token is no longer valid" failure? Those propagate so the
+ * caller's refresh / reconnect handling sees them.
+ */
+function isTikTokAuthFailure(err) {
+  const code = err?.response?.data?.error?.code;
+  return err?.response?.status === 401 || code === 40101 || code === 'access_token_invalid';
+}
+
+// A private (SELF_ONLY) post completes without a public video id. Re-ask
+// TikTok at most this often instead of on every 15-minute analytics tick.
+const TIKTOK_COMPLETE_RECHECK_MS = 60 * 60 * 1000;
+
+/**
+ * The TikTok video id for a published post. Direct Post gives back a
+ * publish_id, not a video id; the video id only exists once TikTok has made the
+ * post public, and comes from /v2/post/publish/status/fetch/. Resolves and
+ * persists it (platformPostId := video id; metadata keeps the publish_id).
+ * @returns {Promise<string|null>} null when there is no public video (yet).
+ */
+async function resolveTikTokVideoId(accessToken, userId, postId, platformPostId) {
+  const TikTok = require('./TikTokSocialService');
+  if (TikTok.isTikTokVideoId(platformPostId)) return platformPostId;
+
+  const post = await ScheduledPost.findOne({ _id: postId, userId }).select('metadata platformPostId').lean();
+  const meta = (post && post.metadata && typeof post.metadata === 'object') ? post.metadata : {};
+  if (TikTok.isTikTokVideoId(meta.tiktokVideoId)) return meta.tiktokVideoId;
+
+  const publishId = meta.tiktokPublishId || (TikTok.isTikTokPublishId(platformPostId) ? platformPostId : null);
+  if (!publishId) return null;
+  if (meta.tiktokPublishStatus === 'FAILED') return null;
+  if (meta.tiktokPublishStatus === 'PUBLISH_COMPLETE' && meta.tiktokStatusCheckedAt
+      && Date.now() - new Date(meta.tiktokStatusCheckedAt).getTime() < TIKTOK_COMPLETE_RECHECK_MS) {
+    return null;
+  }
+
+  const status = await TikTok.fetchPublishStatus(accessToken, publishId);
+  const nextMeta = {
+    ...meta,
+    tiktokPublishId: publishId,
+    tiktokPublishStatus: status.status || null,
+    tiktokStatusCheckedAt: new Date(),
+  };
+  const set = { metadata: nextMeta };
+  if (status.videoId) {
+    nextMeta.tiktokVideoId = status.videoId;
+    set.platformPostId = status.videoId;
+  }
+  await ScheduledPost.updateOne({ _id: postId, userId }, { $set: set });
+
+  if (!status.videoId) {
+    logger.info('TikTok post has no public video id yet; no analytics to read', {
+      postId, publishId, tiktokStatus: status.status, failReason: status.failReason,
+    });
+  }
+  return status.videoId || null;
+}
+
+/**
+ * Sync analytics from TikTok: resolve the video id (see resolveTikTokVideoId),
+ * then read its counts from /v2/video/query/ (needs the video.list scope).
+ * Returns null — "no data", the post's previous numbers stay — when there is no
+ * public video yet or TikTok can't be read right now; the ingestion cron
+ * retries on its next tick.
  */
 async function syncTikTokAnalytics(userId, postId, platformPostId) {
   try {
     const accessToken = await getAccessTokenForPlatform(userId, 'tiktok');
 
     try {
+      const videoId = await resolveTikTokVideoId(accessToken, userId, postId, platformPostId);
+      if (!videoId) return null;
+
       const response = await axios.post(
-        'https://open.tiktokapis.com/v2/video/list/?fields=id,view_count,like_count,comment_count,share_count',
-        { max_count: 20 },
+        'https://open.tiktokapis.com/v2/video/query/?fields=id,view_count,like_count,comment_count,share_count',
+        { filters: { video_ids: [videoId] } },
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json; charset=UTF-8',
           },
         }
       );
 
+      const apiError = response.data?.error;
+      if (apiError?.code && apiError.code !== 'ok') {
+        throw new Error(`TikTok video/query failed: ${apiError.code} ${apiError.message || ''}`.trim());
+      }
       const items = response.data?.data?.videos || [];
-      const v = items.find((item) => item.id === platformPostId);
+      const v = items.find((item) => String(item.id) === videoId);
       if (!v) {
-        throw new Error(`TikTok video ${platformPostId} not found in list`);
+        logger.info('TikTok video/query returned no data for the video (deleted or not public)', { postId, videoId });
+        return null;
       }
       const views = parseInt(v.view_count || 0, 10);
       const likes = parseInt(v.like_count || 0, 10);
@@ -472,26 +553,18 @@ async function syncTikTokAnalytics(userId, postId, platformPostId) {
         syncedAt: new Date(),
       };
     } catch (apiErr) {
-      if (apiErr.response?.status === 401 || apiErr.response?.data?.error?.code === 40101) {
+      if (isTikTokAuthFailure(apiErr)) {
         throw apiErr;
       }
-      logger.warn('TikTok video/list API unavailable; marking as zero-engagement so cron retries later', {
-        error: apiErr.message,
+      // Return null, NOT a zero snapshot: syncPostAnalytics merges whatever is
+      // returned onto post.analytics, so zeros on a transient failure wiped the
+      // post's real numbers. With null the post stays due and the cron retries.
+      logger.warn('TikTok analytics unavailable right now; will retry', {
+        error: apiErr.response?.data?.error?.code || apiErr.message,
+        postId,
         platformPostId,
       });
-      // Returning `null` previously left posts with `lastAnalyticsSync: null`
-      // forever — the ingestion cron's `$or` clause never picked them up
-      // again. Return a zero-engagement snapshot with a recent
-      // syncedAt so the cron's "stale" filter eventually re-tries.
-      return {
-        platform: 'tiktok',
-        engagement: 0,
-        impressions: 0,
-        reach: 0,
-        engagementBreakdown: { likes: 0, comments: 0, shares: 0, views: 0 },
-        syncedAt: new Date(),
-        syncError: apiErr.message,
-      };
+      return null;
     }
   } catch (error) {
     logger.error('TikTok analytics sync error', { error: error.message, userId, postId });

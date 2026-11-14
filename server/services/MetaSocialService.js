@@ -4,97 +4,84 @@ const { assertPublicUrl } = require('../utils/urlGuard');
 
 const GRAPH_TIMEOUT_MS = 20000;
 
+const { GRAPH_BASE } = require('../utils/metaGraph');
+const { publicMediaUrl } = require('../utils/publicMediaUrl');
+
+const VIDEO_RE = /\.(mp4|mov|m4v|webm)(\?|$)/i;
+
+function captionOf(contentData) {
+  const { title, description } = contentData || {};
+  return [description || title || ''].join('').slice(0, 2200);
+}
+
 class MetaSocialService {
   /**
-   * Posts to Instagram via the Content Publishing API
-   * Requires a Facebook Page linked to an Instagram Business Account
+   * Instagram (scheduler path). `auth` is getSocialCredentials(userId,
+   * 'instagram'): the Page access token + { igUserId, pageId } metadata stored
+   * when the creator connected Instagram through Facebook Login. This used to
+   * read an `igUserId` that was never stored and always posted `image_url`,
+   * so no scheduled Instagram post could succeed.
    */
   static async postToInstagram(auth, contentData) {
-    const { description, mediaUrl } = contentData;
-    const { igUserId, accessToken } = auth; // Instagram Business Account ID
-
-    if (!igUserId) throw new Error('Instagram User ID missing');
-    // SSRF defense-in-depth: never forward an internal/non-public media URL to
-    // the Graph API (which fetches it server-side).
+    const igUserId = auth?.igUserId || auth?.metadata?.igUserId || null;
+    if (!igUserId || !auth?.accessToken) {
+      throw new Error('Instagram account not connected. Connect Instagram (through Facebook) again.');
+    }
+    const mediaUrl = publicMediaUrl(contentData?.mediaUrl);
+    if (!mediaUrl) throw new Error('Instagram posts need a video or image');
+    // SSRF defense-in-depth: Meta fetches the URL server-side.
     await assertPublicUrl(mediaUrl);
 
-    logger.info(`[Instagram] Preparing media container: ${mediaUrl}`);
-
-    try {
-      // 1. Create Media Container
-      const containerRes = await axios.post(
-        `https://graph.facebook.com/v18.0/${igUserId}/media`,
-        null,
-        {
-          params: {
-            image_url: mediaUrl, // or video_url for reels
-            caption: description,
-            access_token: accessToken
-          },
-          timeout: GRAPH_TIMEOUT_MS,
-        }
-      );
-
-      const containerId = containerRes.data.id;
-      logger.info(`[Instagram] Container created: ${containerId}. Waiting for processing...`);
-
-      // 2. Publish Media
-      const publishRes = await axios.post(
-        `https://graph.facebook.com/v18.0/${igUserId}/media_publish`,
-        null,
-        {
-          params: {
-            creation_id: containerId,
-            access_token: accessToken
-          },
-          timeout: GRAPH_TIMEOUT_MS,
-        }
-      );
-
-      logger.info(`[Instagram] Post successful: ${publishRes.data.id}`);
-      return {
-        id: publishRes.data.id,
-        url: `https://www.instagram.com/reels/${publishRes.data.id}/` // Generic URL format
-      };
-    } catch (error) {
-      logger.error('[Instagram] Post failed', { 
-        error: error.response?.data || error.message 
-      });
-      throw error;
-    }
+    const { publishInstagramMedia } = require('./instagramOAuthService');
+    const result = await publishInstagramMedia({
+      igBusinessId: igUserId,
+      pageAccessToken: auth.accessToken,
+      mediaUrl,
+      caption: captionOf(contentData),
+      options: { coverUrl: contentData?.thumbnailUrl ? publicMediaUrl(contentData.thumbnailUrl) : undefined },
+    });
+    logger.info('[Instagram] Post successful', { id: result.id });
+    return { id: result.id, url: result.url || null };
   }
 
   /**
-   * Posts to Facebook Page feed
+   * Facebook Page (scheduler path). `auth` is getSocialCredentials(userId,
+   * 'facebook'), which carries the creator's Pages with decrypted page tokens.
+   * Meta only lets apps publish to Pages, authenticated with the Page token.
    */
   static async postToFacebookPage(auth, contentData) {
-    const { description, mediaUrl } = contentData;
-    const { pageId, accessToken } = auth;
+    const pages = Array.isArray(auth?.pages) ? auth.pages.filter((p) => p && p.id && p.accessToken) : [];
+    const wanted = auth?.pageId || contentData?.pageId || null;
+    const page = wanted ? pages.find((p) => p.id === String(wanted)) : pages[0];
+    if (!page) {
+      throw new Error('No Facebook Page connected. Facebook only allows apps to post to Pages: reconnect Facebook and select a Page you manage.');
+    }
 
-    logger.info(`[Facebook] Posting to page: ${pageId}`);
+    const message = captionOf(contentData);
+    const mediaUrl = contentData?.mediaUrl ? publicMediaUrl(contentData.mediaUrl) : null;
     if (mediaUrl) await assertPublicUrl(mediaUrl); // SSRF defense-in-depth
+    logger.info('[Facebook] Posting to page', { pageId: page.id });
 
     try {
-      const endpoint = mediaUrl ? `/${pageId}/photos` : `/${pageId}/feed`;
-      const res = await axios.post(
-        `https://graph.facebook.com/v18.0${endpoint}`,
-        null,
-        {
-          params: {
-            message: description,
-            url: mediaUrl,
-            access_token: accessToken
-          },
-          timeout: GRAPH_TIMEOUT_MS,
-        }
-      );
-
-      return {
-        id: res.data.id,
-        url: `https://www.facebook.com/${res.data.id}`
-      };
+      let endpoint;
+      let params;
+      if (mediaUrl && VIDEO_RE.test(mediaUrl)) {
+        endpoint = `/${page.id}/videos`;
+        params = { file_url: mediaUrl, description: message, title: contentData?.title || undefined, access_token: page.accessToken };
+      } else if (mediaUrl) {
+        endpoint = `/${page.id}/photos`;
+        params = { url: mediaUrl, caption: message, access_token: page.accessToken };
+      } else {
+        endpoint = `/${page.id}/feed`;
+        params = { message, access_token: page.accessToken };
+      }
+      const res = await axios.post(`${GRAPH_BASE}${endpoint}`, null, {
+        params,
+        timeout: mediaUrl && VIDEO_RE.test(mediaUrl) ? 120000 : GRAPH_TIMEOUT_MS,
+      });
+      return { id: res.data.id, url: `https://www.facebook.com/${res.data.post_id || res.data.id}` };
     } catch (error) {
-      logger.error('[Facebook] Post failed', { error: error.message });
+      logger.error('[Facebook] Post failed', { error: error.response?.data?.error?.message || error.message });
       throw error;
     }
   }

@@ -9,6 +9,8 @@ const { resolveOAuthCallbackUrl } = require('../utils/oauthCallbackUrl');
 const User = require('../models/User');
 const OAuthStorage = require('../utils/oauthStorage');
 const { retryWithBackoff } = require('../utils/retryWithBackoff');
+const { GRAPH_BASE, DIALOG_BASE } = require('../utils/metaGraph');
+const { publicMediaUrl } = require('../utils/publicMediaUrl');
 
 // Supabase users have UUIDs; Mongoose User.findById throws CastError on them.
 // These helpers route reads/writes to either User.oauth.facebook (legacy
@@ -35,8 +37,10 @@ async function writeFacebookOauth(userId, patch) {
   }
 }
 
-const GRAPH_API_BASE = 'https://graph.facebook.com/v18.0';
-const DEFAULT_SCOPE = 'pages_manage_posts,pages_read_engagement,pages_show_list,public_profile';
+const GRAPH_API_BASE = GRAPH_BASE;
+// business_management: Pages owned through a Meta Business portfolio only show
+// up in /me/accounts with it. read_insights: post analytics.
+const DEFAULT_SCOPE = 'pages_show_list,pages_read_engagement,pages_manage_posts,read_insights,business_management,public_profile';
 const LOG_CONTEXT = { service: 'facebook-oauth' };
 
 function isConfigured() {
@@ -76,7 +80,7 @@ async function getAuthorizationUrl(userId, state, callbackUrl) {
   });
 
   logger.info('Facebook OAuth authorization URL generated', { ...LOG_CONTEXT, userId });
-  return `https://www.facebook.com/v18.0/dialog/oauth?${params.toString()}`;
+  return `${DIALOG_BASE}?${params.toString()}`;
 }
 
 // callbackUrl MUST be the value the authorize step used; the callback route
@@ -154,12 +158,13 @@ async function getFacebookUserInfo(accessToken) {
 async function getFacebookPages(accessToken) {
   try {
     const response = await axios.get(`${GRAPH_API_BASE}/me/accounts`, {
-      params: { access_token: accessToken, fields: 'id,name,access_token' },
+      params: { access_token: accessToken, fields: 'id,name,access_token,instagram_business_account' },
     });
-    return response.data.data.map(page => ({
+    return (response.data.data || []).map(page => ({
       id: page.id,
       name: page.name,
       accessToken: page.access_token,
+      instagramBusinessId: page.instagram_business_account?.id || null,
     }));
   } catch (error) {
     logger.warn('Facebook pages fetch error', { ...LOG_CONTEXT, error: error.message });
@@ -170,13 +175,10 @@ async function getFacebookPages(accessToken) {
 async function getFacebookClient(userId, pageIdOrAccountId = null) {
   // Read through the unified credential store. The first positional arg is
   // either a Facebook Page id (for page-targeted posts) or a Facebook user
-  // accountId (for multi-account selection). We try as accountId first;
-  // if that miss yields no creds, treat it as a pageId and fall back.
+  // accountId (for multi-account selection).
   const oauthService = require('./oauthService');
   let creds = await oauthService.getSocialCredentials(userId, 'facebook', pageIdOrAccountId);
   if (!creds || !creds.accessToken) {
-    // Maybe pageIdOrAccountId is a Page id rather than account id — load
-    // active credentials and look up the page below.
     creds = await oauthService.getSocialCredentials(userId, 'facebook', null);
   }
   if (!creds || !creds.accessToken) {
@@ -195,15 +197,42 @@ async function getFacebookClient(userId, pageIdOrAccountId = null) {
   return creds.accessToken;
 }
 
+/**
+ * The Page a post goes to, with its page access token. Meta only lets apps
+ * publish to Pages (posting to a personal profile via /me/feed was removed), so
+ * without an explicit pageId we use the creator's first connected Page.
+ */
+async function resolvePage(userId, pageId = null) {
+  const oauthService = require('./oauthService');
+  const creds = await oauthService.getSocialCredentials(userId, 'facebook', null);
+  if (!creds || !creds.accessToken) throw new Error('Facebook account not connected');
+  const pages = Array.isArray(creds.pages) ? creds.pages.filter((p) => p && p.id && p.accessToken) : [];
+  const page = pageId ? pages.find((p) => p.id === String(pageId)) : pages[0];
+  if (!page) {
+    throw new Error(pageId
+      ? 'That Facebook Page is not connected. Reconnect Facebook and select the Page.'
+      : 'No Facebook Page connected. Facebook only allows apps to post to Pages: reconnect Facebook and select a Page you manage.');
+  }
+  return { pageId: page.id, pageName: page.name || null, accessToken: page.accessToken };
+}
+
 async function postToFacebook(userId, text, options = {}, retries = 1) {
   if (!userId || !text) throw new Error('userId and text are required');
 
-  const accessToken = await getFacebookClient(userId, options.pageId);
-  const targetId = options.pageId || 'me';
+  const { pageId: targetId, accessToken } = await resolvePage(userId, options.pageId || null);
+
+  if (options.videoUrl) {
+    const videoRes = await axios.post(`${GRAPH_API_BASE}/${targetId}/videos`, null, {
+      params: { access_token: accessToken, file_url: publicMediaUrl(options.videoUrl), description: text },
+      timeout: 120000,
+    });
+    logger.info('Facebook video post successful', { ...LOG_CONTEXT, userId, postId: videoRes.data.id });
+    return { id: videoRes.data.id, url: `https://www.facebook.com/${videoRes.data.id}`, text };
+  }
 
   if (options.imageUrl) {
     const photoRes = await axios.post(`${GRAPH_API_BASE}/${targetId}/photos`, null, {
-      params: { access_token: accessToken, url: options.imageUrl, caption: text },
+      params: { access_token: accessToken, url: publicMediaUrl(options.imageUrl), caption: text },
     });
     logger.info('Facebook post successful', { ...LOG_CONTEXT, userId, postId: photoRes.data.id });
     return {
@@ -265,8 +294,12 @@ async function replyToComment(userId, commentId, message) {
  * Refresh a long-lived access token
  */
 async function refreshAccessToken(userId) {
-  const fbOauth = await readFacebookOauth(userId);
-  if (!fbOauth?.accessToken) throw new Error('Facebook not connected');
+  // Read the DECRYPTED token through the credential store. This used to send
+  // the encrypted value from the raw row to Meta, so every refresh failed and
+  // creators got "reconnect" notices.
+  const oauthService = require('./oauthService');
+  const creds = await oauthService.getSocialCredentials(userId, 'facebook', null);
+  if (!creds?.accessToken) throw new Error('Facebook not connected');
 
   try {
     const response = await axios.get(`${GRAPH_API_BASE}/oauth/access_token`, {
@@ -274,16 +307,23 @@ async function refreshAccessToken(userId) {
         grant_type: 'fb_exchange_token',
         client_id: process.env.FACEBOOK_APP_ID,
         client_secret: process.env.FACEBOOK_APP_SECRET,
-        fb_exchange_token: fbOauth.accessToken
-      }
+        fb_exchange_token: creds.accessToken,
+      },
     });
 
     const { access_token, expires_in } = response.data;
-
-    await writeFacebookOauth(userId, {
+    const pages = await getFacebookPages(access_token);
+    await oauthService.saveSocialCredentials(userId, 'facebook', {
       accessToken: access_token,
-      expiresAt: expires_in ? new Date(Date.now() + expires_in * 1000).toISOString() : null,
-      lastRefreshAt: new Date().toISOString(),
+      refreshToken: null,
+      platformUserId: creds.platformUserId,
+      extra: {
+        platformUserId: creds.platformUserId,
+        platformUsername: creds.platformUsername || null,
+        expiresAt: expires_in ? new Date(Date.now() + expires_in * 1000).toISOString() : null,
+        // Keep the stored Pages if the lookup came back empty (transient error).
+        ...(pages.length ? { pages } : {}),
+      },
     });
 
     logger.info('Facebook token refreshed successfully', { ...LOG_CONTEXT, userId });
@@ -330,6 +370,7 @@ module.exports = {
   getFacebookUserInfo,
   getFacebookPages,
   getFacebookClient,
+  resolvePage,
   postToFacebook,
   replyToComment,
   refreshAccessToken,

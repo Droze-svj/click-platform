@@ -2270,9 +2270,9 @@
     "platformDesc": {
       "twitter": "Korte posts en threads.",
       "youtube": "Lange video's en Shorts.",
-      "instagram": "Visueel vertellen met foto's en Reels.",
+      "instagram": "Reels en posts. Koppelt via Facebook: vereist een Instagram-bedrijfs- of makersaccount dat aan een Facebook-pagina is gekoppeld.",
       "linkedin": "Professionele posts en artikelen.",
-      "facebook": "Pagina's, groepen en Reels.",
+      "facebook": "Posts en video's op Facebook-pagina's die je beheert.",
       "tiktok": "Korte video's.",
       "google": "YouTube Analytics en Search Console-inzichten. Alleen-lezen."
     },

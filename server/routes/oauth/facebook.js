@@ -11,7 +11,6 @@ const { resolveOAuthCallbackUrl } = require('../../utils/oauthCallbackUrl');
 const asyncHandler = require('../../middleware/asyncHandler');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
 const ssx = require('../../utils/oauthServerSideExchange');
-const logger = require('../../utils/logger');
 const router = express.Router();
 
 const isMongoUserId = (id) => mongoose.Types.ObjectId.isValid(String(id));
@@ -44,39 +43,11 @@ router.get('/authorize', auth, oauthAuthLimiter, asyncHandler(async (req, res) =
   sendSuccess(res, 'Authorization URL generated', 200, { url: finalUrl, state });
 }));
 
-/**
- * GET /api/oauth/facebook/callback
- * Handle Facebook OAuth callback
- */
-router.get('/callback', oauthTokenLimiter, asyncHandler(async (req, res) => {
-  const { code, state, error } = req.query;
-
-  if (error) {
-    logger.error('Facebook OAuth callback error', { error });
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    return res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent(error)}`);
-  }
-
-  if (!code || !state) {
-    return sendError(res, 'Missing authorization code or state', 400);
-  }
-
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-  try {
-    // Hardened path: exchange server-side so the code never reaches the browser
-    // URL. (Page enrichment that /complete does is recoverable via /status.)
-    if (ssx.serverSideExchangeEnabled()) {
-      const u = ssx.unwrapCallbackState(state);
-      if (!u) return res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent('Invalid OAuth state')}`);
-      await facebookService.exchangeCodeForToken(u.userId, code, u.innerState, resolveOAuthCallbackUrl('facebook', req));
-      return res.redirect(`${frontendUrl}/dashboard/social?connected=facebook&success=true`);
-    }
-    res.redirect(`${frontendUrl}/dashboard/social?platform=facebook&code=${code}&state=${state}`);
-  } catch (err) {
-    logger.error('Facebook OAuth callback error', { error: err.message });
-    res.redirect(`${frontendUrl}/dashboard/social?error=${encodeURIComponent(err.message)}`);
-  }
-}));
+// GET /api/oauth/facebook/callback is handled by the shared router
+// (server/routes/oauth.js): it verifies the signed state, exchanges the code
+// with the exact redirect_uri used at authorize time, saves the account and
+// redirects to /dashboard/social. The handler that used to live here
+// shadowed it and never finished the connection.
 
 /**
  * POST /api/oauth/facebook/complete

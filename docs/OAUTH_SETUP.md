@@ -1,5 +1,8 @@
 # OAuth Integration Setup Guide
 
+> **Out of date — see [social-apps-setup.md](social-apps-setup.md)** for the current, verified setup of TikTok, YouTube/Google, Facebook and Instagram (2026-11-14).
+
+
 This guide will help you set up OAuth integrations for LinkedIn, Facebook, Instagram, and Twitter.
 
 ---

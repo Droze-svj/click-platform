@@ -133,9 +133,27 @@ async function saveSocialCredentials(userId, platform, credentials) {
     }
     const primary = existingAccounts.find((a) => a.isPrimary) || existingAccounts[0];
 
+    // Facebook Pages (and their page access tokens) are what Page/Instagram
+    // publishing authenticates with. They were passed in `extra.pages` but never
+    // written, so no page token was ever stored. Page tokens are secrets:
+    // encrypted like every other token.
+    const pagesUpdate = Array.isArray(credentials.extra?.pages)
+      ? {
+        pages: credentials.extra.pages
+          .filter((pg) => pg && pg.id)
+          .map((pg) => ({
+            id: String(pg.id),
+            name: pg.name || null,
+            accessToken: pg.accessToken ? encrypt(pg.accessToken) : null,
+            instagramBusinessId: pg.instagramBusinessId || null,
+          })),
+      }
+      : {};
+
     user.oauth[platformKey] = {
       ...platformRow,
       ...accountUpdate,
+      ...pagesUpdate,
       accounts: existingAccounts,
       activeAccountId: platformRow.activeAccountId || primary?.accountId,
       connected: true,
@@ -197,13 +215,20 @@ async function getSocialCredentials(userId, platform, accountId = null) {
     if (!account) account = accounts.find((a) => a.isPrimary) || accounts[0];
     if (!account) return null;
 
+    const plainRow = typeof row.toObject === 'function' ? row.toObject() : row;
     return {
-      ...row,
+      ...plainRow,
       accessToken: account.accessToken ? decrypt(account.accessToken) : null,
       refreshToken: account.refreshToken ? decrypt(account.refreshToken) : null,
       platformUserId: account.platformUserId,
       platformUsername: account.platformUsername || row.platformUsername || null,
       accountId: account.accountId,
+      // Per-account, not the root copy (which is whichever account saved last).
+      metadata: account.metadata ?? plainRow.metadata ?? null,
+      expiresAt: account.expiresAt ?? plainRow.expiresAt ?? null,
+      ...(Array.isArray(plainRow.pages)
+        ? { pages: plainRow.pages.map((pg) => ({ ...pg, accessToken: pg.accessToken ? decrypt(pg.accessToken) : null })) }
+        : {}),
     };
   } catch (error) {
     logger.error('Failed to get social credentials', { error: error.message, platform });

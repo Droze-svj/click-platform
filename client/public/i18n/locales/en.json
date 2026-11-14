@@ -2270,9 +2270,9 @@
     "platformDesc": {
       "twitter": "Short posts and threads.",
       "youtube": "Long-form videos and Shorts.",
-      "instagram": "Visual storytelling with photos and Reels.",
+      "instagram": "Reels and posts. Connects through Facebook: needs an Instagram Business or Creator account linked to a Facebook Page.",
       "linkedin": "Professional posts and articles.",
-      "facebook": "Pages, groups and Reels.",
+      "facebook": "Posts and videos on Facebook Pages you manage.",
       "tiktok": "Short-form video.",
       "google": "YouTube Analytics + Search Console insights. Read-only."
     },

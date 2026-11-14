@@ -6,6 +6,7 @@ const { apiLimiter, oauthLimiter } = require('../middleware/enhancedRateLimiter'
 const entitlements = require('../config/entitlements');
 const enforcement = require('../services/entitlementEnforcement');
 const { signState, verifyState } = require('../utils/oauthState');
+const { resolveOAuthCallbackUrl } = require('../utils/oauthCallbackUrl');
 const router = express.Router();
 
 const SOCIAL_PLATFORMS = ['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook', 'google'];
@@ -152,11 +153,19 @@ router.get('/:platform/connect', auth, oauthLimiter, validateConnect, asyncHandl
     }
   }
 
+  // The redirect_uri sent to the provider. Resolved ONCE here (env override,
+  // else API_URL, else the forwarded request host) and carried inside the signed
+  // state, so the token exchange in the callback sends the byte-identical value.
+  // Before this, tiktok/youtube/instagram fell back to http://localhost:5001 at
+  // authorize time and every exchange got a default with no request → mismatch.
+  const callbackUrl = resolveOAuthCallbackUrl(plat, req);
+
   // Create state payload
   const statePayload = {
     userId,
     platform: plat,
-    redirectUri: baseRedirect
+    redirectUri: baseRedirect,
+    cb: callbackUrl,
   };
 
   // Handle PKCE for Twitter (special case)
@@ -170,9 +179,6 @@ router.get('/:platform/connect', auth, oauthLimiter, validateConnect, asyncHandl
   const state = signState(statePayload);
 
   try {
-    const callbackUrl = service.defaultRedirectUri?.(req) ||
-      `${process.env.API_URL || process.env.BACKEND_URL || 'http://localhost:5001'}/api/oauth/${plat}/callback`;
-    
     // Pass the signed state and callback URL to the service
     const result = await service.getAuthorizationUrl(userId, state, callbackUrl);
     
@@ -236,17 +242,21 @@ router.get('/:platform/callback', validateCallback, asyncHandler(async (req, res
   }
 
   try {
-    const { userId, redirectUri: originalRedirectUri, codeVerifier } = stateData;
+    const { userId, redirectUri: originalRedirectUri } = stateData;
+    // Same redirect_uri the authorize step sent (signed into the state), or —
+    // for a flow started before this field existed — the same resolver.
+    const callbackUrl = (typeof stateData.cb === 'string' && stateData.cb) || resolveOAuthCallbackUrl(plat, req);
 
     // Standardize token exchange
-    // Newer services handle connection internally in exchangeCodeForToken, 
+    // Newer services handle connection internally in exchangeCodeForToken,
     // older ones use the tokens -> profile -> connect flow.
     if (service.exchangeCodeForToken.length >= 3) {
-      // Platform supports (userId, code, state) pattern (Instagram, LinkedIn, Facebook)
-      await service.exchangeCodeForToken(userId, code, stateData.state || state);
+      // (userId, code, state, callbackUrl): Facebook, Google, LinkedIn, Twitter
+      await service.exchangeCodeForToken(userId, code, stateData.state || state, callbackUrl);
     } else {
-      // Platform supports (code, codeVerifier) pattern (Twitter, YouTube, TikTok)
-      const tokens = await service.exchangeCodeForToken(code, codeVerifier);
+      // (code, callbackUrl): YouTube, TikTok, Instagram. This used to pass the
+      // PKCE verifier as the 2nd argument, so the exchange sent no redirect_uri.
+      const tokens = await service.exchangeCodeForToken(code, callbackUrl);
       const profile = await service.getUserProfile(tokens.access_token || tokens.accessToken);
       await service.connectAccount(userId, tokens, profile);
     }
