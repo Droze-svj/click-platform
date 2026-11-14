@@ -1,5 +1,8 @@
 # OAuth callback URLs to register per provider
 
+> **Out of date — see [social-apps-setup.md](social-apps-setup.md)** for the current, verified setup of TikTok, YouTube/Google, Facebook and Instagram (2026-11-14).
+
+
 For each provider, paste the **Callback URL** column into the matching field in their developer console. Replace `${APP_URL}` with your actual deployed origin (e.g. `https://click.app` or `https://click-platform-xxx.onrender.com`).
 
 > Meta / Facebook / Instagram are intentionally **not in this list** — handled separately.
