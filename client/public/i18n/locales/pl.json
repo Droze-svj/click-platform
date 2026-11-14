@@ -5162,6 +5162,7 @@
     "dialogLabel": "Zgoda na pliki cookie",
     "heading": "Używamy plików cookie",
     "bodyIntro": "Click wykorzystuje absolutnie niezbędne pliki cookie, aby zapewnić Ci zalogowanie i działanie produktu. Za Twoją zgodą używamy również opcjonalnych analitycznych plików cookie, aby zrozumieć, w jaki sposób twórcy korzystają z Click, abyśmy mogli je ulepszyć. Możesz to zmienić w dowolnym momencie",
+    "bodyShort": "Używamy niezbędnych plików cookie, aby utrzymać Twoje logowanie. Analityczne pliki cookie tylko za Twoją zgodą.",
     "settingsLink": "Ustawienia",
     "bodySeeOur": "Zobacz nasze",
     "cookiePolicyLink": "Polityka plików cookie",

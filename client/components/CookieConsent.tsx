@@ -59,33 +59,38 @@ export function CookieConsent() {
   // who've already chosen.
   if (!mounted || choice !== null) return null
 
+  // Both choices get the SAME button style, size and position weight: consent
+  // rules (GDPR / ePrivacy guidance) require refusing to be as easy and as
+  // visible as accepting. On phones the banner uses a one-line summary and
+  // side-by-side buttons so it stays a small strip instead of covering the page.
+  const choiceButton =
+    'flex-1 min-w-0 px-3 py-2.5 rounded-xl border-2 border-primary-500 bg-primary-500 text-white text-xs font-bold leading-tight hover:bg-primary-600 hover:border-primary-600 transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/50'
+
   return (
     <div
       role="dialog"
       aria-label={t('cookieConsent.dialogLabel')}
       aria-describedby="cookie-consent-body"
-      className="fixed inset-x-3 bottom-3 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md z-[100] bg-surface-card border-2 border-surface-100 dark:border-white/10 rounded-3xl shadow-[0_40px_80px_rgba(0,0,0,0.4)] backdrop-blur-xl p-6 sm:p-7"
+      className="fixed inset-x-3 bottom-3 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-md max-h-[35vh] overflow-y-auto z-[100] bg-surface-card border-2 border-surface-100 dark:border-white/10 rounded-2xl sm:rounded-3xl shadow-[0_40px_80px_rgba(0,0,0,0.4)] backdrop-blur-xl p-4 sm:p-7"
     >
-      <h2 className="text-sm font-bold text-surface-900 dark:text-white mb-2">{t('cookieConsent.heading')}</h2>
-      <p id="cookie-consent-body" className="text-xs text-surface-500 dark:text-slate-400 leading-relaxed mb-5">
-        {t('cookieConsent.bodyIntro')}{' '}
-        <Link href="/dashboard/settings" className="text-primary-500 hover:underline">{t('cookieConsent.settingsLink')}</Link>.
-        {' '}{t('cookieConsent.bodySeeOur')}{' '}
-        <Link href="/cookies" className="text-primary-500 hover:underline">{t('cookieConsent.cookiePolicyLink')}</Link>.
-      </p>
-      <div className="flex flex-col sm:flex-row gap-2.5">
-        <button
-          type="button"
-          onClick={() => persist('rejected')}
-          className="flex-1 px-4 py-2.5 rounded-xl border-2 border-surface-100 dark:border-white/10 bg-surface-page dark:bg-black/30 text-xs font-bold text-surface-700 dark:text-slate-300 hover:border-surface-200 dark:hover:border-white/20 transition-colors"
-        >
+      <h2 className="hidden sm:block text-sm font-bold text-surface-900 dark:text-white mb-2">{t('cookieConsent.heading')}</h2>
+      <div id="cookie-consent-body" className="text-xs text-surface-500 dark:text-slate-400 leading-relaxed mb-3 sm:mb-5">
+        <p className="sm:hidden">
+          {t('cookieConsent.bodyShort')}{' '}
+          <Link href="/cookies" className="text-primary-500 underline">{t('cookieConsent.cookiePolicyLink')}</Link>
+        </p>
+        <p className="hidden sm:block">
+          {t('cookieConsent.bodyIntro')}{' '}
+          <Link href="/dashboard/settings" className="text-primary-500 hover:underline">{t('cookieConsent.settingsLink')}</Link>.
+          {' '}{t('cookieConsent.bodySeeOur')}{' '}
+          <Link href="/cookies" className="text-primary-500 hover:underline">{t('cookieConsent.cookiePolicyLink')}</Link>.
+        </p>
+      </div>
+      <div className="flex flex-row gap-2.5">
+        <button type="button" onClick={() => persist('rejected')} className={choiceButton}>
           {t('cookieConsent.rejectButton')}
         </button>
-        <button
-          type="button"
-          onClick={() => persist('accepted')}
-          className="flex-1 px-4 py-2.5 rounded-xl bg-primary-500 text-white text-xs font-bold hover:bg-primary-600 transition-colors shadow-lg"
-        >
+        <button type="button" onClick={() => persist('accepted')} className={choiceButton}>
           {t('cookieConsent.acceptButton')}
         </button>
       </div>

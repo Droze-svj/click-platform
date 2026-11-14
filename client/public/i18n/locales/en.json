@@ -5162,6 +5162,7 @@
     "dialogLabel": "Cookie consent",
     "heading": "We use cookies",
     "bodyIntro": "Click uses strictly-necessary cookies to keep you signed in and the product working. With your consent we also use optional analytics cookies to understand how creators use Click so we can improve it. You can change this any time in",
+    "bodyShort": "We use necessary cookies to keep you signed in. Analytics cookies only if you accept.",
     "settingsLink": "Settings",
     "bodySeeOur": "See our",
     "cookiePolicyLink": "Cookie Policy",

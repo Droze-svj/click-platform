@@ -5162,6 +5162,7 @@
     "dialogLabel": "Cookie 同意",
     "heading": "我们使用cookies",
     "bodyIntro": "Click 使用严格必要的 cookie 来保持您的登录状态和产品的正常运行。经您同意，我们还使用可选的分析 cookie 来了解创作者如何使用 Click，以便我们改进它。您可以随时更改此设置",
+    "bodyShort": "我们使用必要的 cookie 来保持您的登录状态。仅在您同意后才使用分析 cookie。",
     "settingsLink": "设置",
     "bodySeeOur": "看看我们的",
     "cookiePolicyLink": "Cookie 政策",
