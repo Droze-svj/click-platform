@@ -47,7 +47,7 @@ export function Hero() {
           className="text-[2.75rem] sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[0.92] text-surface-900 dark:text-white uppercase italic flex flex-col items-center"
         >
           <span className="block">CLICK EDITS.</span>
-          <span className="text-transparent bg-clip-text pr-[0.15em] box-decoration-clone bg-gradient-to-r from-primary-400 via-surface-900 dark:via-white to-fuchsia-400">
+          <span className="text-transparent bg-clip-text pr-[0.15em] box-decoration-clone bg-gradient-to-r from-primary-400 via-surface-900 to-fuchsia-500 dark:via-white dark:to-fuchsia-400">
             YOU SHOW UP.
           </span>
         </m.h1>

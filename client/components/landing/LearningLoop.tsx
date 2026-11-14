@@ -95,7 +95,7 @@ export function LearningLoop() {
         </div>
 
         <p className="mt-8 max-w-3xl mx-auto text-center text-sm text-surface-500 dark:text-slate-400 leading-relaxed">
-          Click learns from posts it published for you, once the platform reports their numbers, so it needs a few posts before the suggestions become personal. The analytics view that shows which hooks and styles worked is part of Pro and included in the 14-day trial.
+          Click learns from the posts it publishes for you and from the numbers you add for videos you posted yourself, so it needs a few posts before the suggestions become personal. The detailed view of which hooks and styles worked is part of Pro and included in the 14-day trial.
         </p>
       </div>
     </section>
