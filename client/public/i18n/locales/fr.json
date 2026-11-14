@@ -5162,6 +5162,7 @@
     "dialogLabel": "Consentement aux cookies",
     "heading": "Nous utilisons des cookies",
     "bodyIntro": "Click utilise des cookies strictement nécessaires pour rester connecté et pour que le produit fonctionne. Avec votre consentement, nous utilisons également des cookies analytiques facultatifs pour comprendre comment les créateurs utilisent Click afin que nous puissions l'améliorer. Vous pouvez modifier cela à tout moment",
+    "bodyShort": "Nous utilisons des cookies nécessaires pour vous garder connecté. Cookies d'analyse uniquement si vous acceptez.",
     "settingsLink": "Paramètres",
     "bodySeeOur": "Voir notre",
     "cookiePolicyLink": "Politique en matière de cookies",

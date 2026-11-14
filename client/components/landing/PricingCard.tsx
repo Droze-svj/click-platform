@@ -1,129 +1,94 @@
 'use client';
 
-import { m } from 'framer-motion';
-import { ArrowRight, Sparkles, Zap, ShieldCheck, Cpu } from 'lucide-react';
+import { ArrowRight, Check } from 'lucide-react';
 import type { Plan, BillingPeriod } from '../../lib/plans';
 import { formatPrice, formatPriceCadence, freeMonthsYearly } from '../../lib/plans';
-import { PlanFeatureList } from './PlanFeatureList';
+import { PLAN_HIGHLIGHTS } from './planCompare';
 
 interface Props {
   plan: Plan;
   period: BillingPeriod;
   onSelect: (plan: Plan) => void;
-  index: number;
 }
 
-export function PricingCard({ plan, period, onSelect, index }: Props) {
+export function PricingCard({ plan, period, onSelect }: Props) {
   const Icon = plan.icon;
   const featured = plan.featured;
   const freeMonths = freeMonthsYearly(plan);
+  const highlights = PLAN_HIGHLIGHTS[plan.id] ?? [];
 
   return (
-    <m.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-100px' }}
-      transition={{ delay: index * 0.1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className={`relative flex flex-col h-full rounded-[3rem] p-10 transition-all duration-500 group overflow-hidden animate-cinematic-reveal ${
+    <div
+      className={`relative flex flex-col h-full rounded-[2rem] p-7 md:p-8 bg-surface-card border-2 transition-colors ${
         featured
-          ? 'bg-surface-card backdrop-blur-[60px] border-2 border-primary-500/40 shadow-[0_60px_120px_rgba(0,0,0,0.5)] ring-4 ring-primary-500/5'
-          : 'bg-surface-card backdrop-blur-[40px] border-2 border-surface-100 dark:border-white/5 hover:border-primary-500/30 hover:shadow-[0_40px_80px_rgba(0,0,0,0.4)]'
+          ? 'border-primary-500/60 shadow-[0_40px_90px_rgba(79,70,229,0.25)]'
+          : 'border-surface-100 dark:border-white/5 hover:border-primary-500/30'
       }`}
-      style={{ animationDelay: `${index * 0.1}s` }}
     >
       {featured && (
-        <>
-          <div
-            aria-hidden="true"
-            className="absolute -inset-px rounded-[3rem] bg-[conic-gradient(from_0deg,transparent,rgba(99,102,241,0.2),transparent_30%,transparent_60%,rgba(217,70,239,0.2),transparent)] opacity-100 motion-safe:animate-[spin_10s_linear_infinite] pointer-events-none -z-10"
-          />
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-primary-500 text-white text-[10px] font-black uppercase tracking-[0.5em] px-6 py-2 rounded-b-2xl shadow-2xl shadow-primary-500/50 italic z-20">
-            MOST_POPULAR
-          </div>
-          <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
-             <Sparkles size={180} className="text-primary-500" />
-          </div>
-        </>
+        <p className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-primary-500 text-white text-[11px] font-bold uppercase tracking-wider px-4 py-1 rounded-full shadow-lg">
+          Most popular
+        </p>
       )}
 
-      {/* Internal Glow */}
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-
-      {/* Header HUD */}
-      <div className="flex items-center gap-6 mb-10 relative z-10">
-        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${plan.gradient} flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-transform duration-500 magnetic-hover`}>
-          <Icon className="w-7 h-7 text-white" aria-hidden="true" />
-        </div>
-        <div>
-          <h4 className="text-2xl font-black uppercase tracking-tighter italic text-surface-900 dark:text-white leading-none mb-2">{plan.name}</h4>
-          <div className="text-[10px] font-black uppercase tracking-[0.3em] text-surface-400 dark:text-slate-600 italic leading-none opacity-60 group-hover:opacity-100 transition-opacity">{plan.tagline}</div>
+      <div className="flex items-center gap-4 mb-6">
+        <span className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${plan.gradient} flex items-center justify-center shrink-0`}>
+          <Icon className="w-5 h-5 text-white" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <h3 className="text-xl font-black tracking-tight text-surface-900 dark:text-white leading-none mb-1.5">{plan.name}</h3>
+          <p className="text-xs font-medium text-surface-500 dark:text-slate-400 leading-none">{plan.tagline}</p>
         </div>
       </div>
 
-      {/* Pricing Matrix */}
-      <div className="mt-4 flex items-baseline gap-3 relative z-10">
-        <div className="text-6xl font-black tabular-nums tracking-tighter text-surface-900 dark:text-white italic leading-none">
-          {formatPrice(plan, period)}
-        </div>
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span className="text-5xl font-black tabular-nums tracking-tighter text-surface-900 dark:text-white leading-none">
+          {plan.priceMonthly === 0 ? '$0' : formatPrice(plan, period)}
+        </span>
         {plan.priceMonthly > 0 && (
-          <div className="text-[11px] font-black uppercase tracking-[0.3em] text-surface-400 dark:text-slate-600 italic">{formatPriceCadence(period)}</div>
+          <span className="text-xs font-semibold text-surface-500 dark:text-slate-400 whitespace-nowrap">{formatPriceCadence('monthly')}</span>
         )}
       </div>
-      
-      {period === 'yearly' && plan.priceYearly > 0 && (
-        <m.div 
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="mt-4 inline-flex items-center gap-3 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-black uppercase tracking-widest italic"
+      <p className="mt-2 min-h-[1.25rem] text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+        {period === 'yearly' && plan.priceYearly > 0
+          ? `$${plan.priceYearly.toLocaleString('en-US')} billed yearly, ${freeMonths} months free`
+          : plan.id === 'free'
+            ? 'Free for as long as you like'
+            : ''}
+      </p>
+
+      <ul className="mt-6 mb-8 space-y-3 flex-1">
+        {highlights.map((h) => (
+          <li key={h} className="flex items-start gap-3 text-sm text-surface-700 dark:text-slate-200">
+            <Check className={`w-4 h-4 mt-0.5 shrink-0 ${featured ? 'text-fuchsia-400' : 'text-primary-400'}`} aria-hidden="true" />
+            <span className="leading-snug">{h}</span>
+          </li>
+        ))}
+      </ul>
+
+      <button
+        type="button"
+        onClick={() => onSelect(plan)}
+        className={`w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/50 ${
+          featured
+            ? 'bg-primary-500 hover:bg-primary-600 text-white'
+            : plan.id === 'free'
+              ? 'bg-transparent border-2 border-surface-200 dark:border-white/15 text-surface-900 dark:text-white hover:border-primary-500/50'
+              : 'bg-surface-900 dark:bg-white text-white dark:text-black hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white dark:hover:text-white'
+        }`}
+      >
+        {plan.cta.label}
+        <ArrowRight className="w-4 h-4" aria-hidden="true" />
+      </button>
+
+      {plan.cta.subLabel && (
+        <a
+          href="/contact?topic=sales"
+          className="mt-3 block text-center text-xs font-semibold text-surface-500 dark:text-slate-400 hover:text-primary-500 transition-colors"
         >
-          <Zap size={12} />
-          {freeMonths} MONTHS FREE
-        </m.div>
+          {plan.cta.subLabel}
+        </a>
       )}
-
-      <div className="my-10 h-[2px] bg-gradient-to-r from-transparent via-surface-100 dark:via-white/5 to-transparent relative z-10" />
-
-      {/* Feature Lattice */}
-      <div className="flex-1 relative z-10">
-         <PlanFeatureList features={plan.features} featured={featured} />
-      </div>
-
-      {/* Tactical CTA */}
-      <div className="mt-12 relative z-10">
-        <m.button
-          whileHover={{ y: -5, scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          type="button"
-          onClick={() => onSelect(plan)}
-          className={`w-full py-6 rounded-2xl font-black uppercase tracking-[0.5em] italic text-[11px] transition-all flex items-center justify-center gap-4 active:scale-[0.98] shadow-2xl border-none btn-shimmer magnetic-hover ${
-            featured
-              ? 'bg-primary-500 hover:bg-primary-600 text-white shadow-primary-500/40'
-              : plan.id === 'free'
-                ? 'bg-surface-page dark:bg-black/40 hover:bg-surface-page/80 text-surface-900 dark:text-white border-2 border-surface-100 dark:border-white/10'
-                : 'bg-surface-900 dark:bg-white text-white dark:text-black hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white'
-          }`}
-        >
-          {plan.cta.label.toUpperCase()}
-          <ArrowRight className="w-5 h-5 group-hover:translate-x-3 transition-transform duration-500" aria-hidden="true" />
-        </m.button>
-
-        {plan.cta.subLabel && (
-          <a
-            href="/contact?topic=sales"
-            className="mt-6 block text-center text-[9px] font-black uppercase tracking-[0.6em] text-surface-400 dark:text-slate-700 hover:text-primary-500 transition-all italic leading-none magnetic-hover"
-          >
-            {plan.cta.subLabel.toUpperCase()}
-          </a>
-        )}
-      </div>
-
-      {/* Decorative HUD Elements */}
-      <div className="absolute bottom-4 left-6 opacity-0 group-hover:opacity-10 transition-opacity duration-1000">
-         <div className="flex items-center gap-3">
-            <Cpu size={12} className="text-surface-900 dark:text-white" />
-            <span className="text-[8px] font-black uppercase tracking-widest text-surface-900 dark:text-white">NODE_{index + 1}</span>
-         </div>
-      </div>
-    </m.div>
+    </div>
   );
 }

@@ -2,9 +2,15 @@
 
 import Link from 'next/link';
 import ClickLogo from '../ClickLogo';
-import { Menu, X, ShieldCheck, Cpu, Zap } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+
+const LINKS = [
+  { href: '#how-it-works', label: 'How it works' },
+  { href: '#learning-loop', label: 'What Click learns' },
+  { href: '#pricing', label: 'Pricing' },
+  { href: '#faq', label: 'FAQ' },
+];
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
@@ -16,74 +22,65 @@ export function Nav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  const close = () => setMobileMenuOpen(false);
+
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-[100] px-4 sm:px-6 lg:px-12 transition-all duration-500 ${
-        scrolled ? 'backdrop-blur-[60px] bg-surface-page/85 border-b border-surface-100 dark:border-white/10 py-3 md:py-4 shadow-2xl' : 'bg-transparent py-4 md:py-6'
+      aria-label="Main"
+      className={`fixed top-0 left-0 right-0 z-[100] px-4 sm:px-6 lg:px-12 transition-colors duration-300 ${
+        scrolled || mobileMenuOpen
+          ? 'backdrop-blur-xl bg-surface-page/90 border-b border-surface-100 dark:border-white/10 py-3'
+          : 'bg-transparent py-4 md:py-6'
       }`}
     >
-      <div className="max-w-[1900px] mx-auto flex items-center justify-between">
-        <Link href="/" aria-label="Click home" className="flex shrink-0 items-center gap-6 group cursor-pointer magnetic-hover">
-          <div className="relative">
-             <div className="absolute inset-0 bg-primary-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-             <ClickLogo size={36} showWordmark wordmarkClassName="text-2xl sm:text-3xl md:text-4xl whitespace-nowrap tracking-tighter italic font-black uppercase" />
-          </div>
+      <div className="max-w-[1600px] mx-auto flex items-center justify-between">
+        <Link href="/" aria-label="Click home" className="flex shrink-0 items-center rounded-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/50">
+          <ClickLogo size={36} showWordmark wordmarkClassName="text-2xl sm:text-3xl md:text-4xl whitespace-nowrap tracking-tighter italic font-black uppercase" />
         </Link>
 
-        {/* Desktop Nav HUD */}
-        <div className="hidden md:flex items-center gap-8 lg:gap-10 text-sm font-semibold text-surface-600 dark:text-slate-300">
-          <a href="#features" className="hover:text-primary-500 transition-colors">Features</a>
-          <a href="#workflow" className="hover:text-primary-500 transition-colors">How it works</a>
-          <a href="#pricing" className="hover:text-primary-500 transition-colors">Pricing</a>
-          <div className="w-1 h-1 rounded-full bg-surface-300 dark:bg-white/20" aria-hidden="true" />
+        <div className="hidden md:flex items-center gap-7 lg:gap-9 text-sm font-semibold text-surface-600 dark:text-slate-300">
+          {LINKS.map((l) => (
+            <a key={l.href} href={l.href} className="hover:text-primary-500 transition-colors">{l.label}</a>
+          ))}
+          <span className="w-1 h-1 rounded-full bg-surface-300 dark:bg-white/20" aria-hidden="true" />
           <Link href="/login" className="text-surface-900 dark:text-white hover:text-primary-500 transition-colors">Log in</Link>
         </div>
 
         <div className="flex items-center gap-3 sm:gap-6">
           <Link
             href="/register"
-            className="whitespace-nowrap px-4 py-2.5 sm:px-7 sm:py-3.5 rounded-full bg-surface-900 dark:bg-white text-white dark:text-black text-xs sm:text-sm font-bold hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-all shadow-[0_20px_40px_rgba(0,0,0,0.3)] active:scale-95 group flex items-center gap-3 border-none btn-shimmer magnetic-hover"
+            className="whitespace-nowrap px-5 py-2.5 sm:px-7 sm:py-3 rounded-full bg-surface-900 dark:bg-white text-white dark:text-black text-xs sm:text-sm font-bold hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/60"
           >
-            <ShieldCheck size={16} className="hidden sm:block group-hover:rotate-12 transition-transform" aria-hidden="true" />
             Start free
           </Link>
-          
+
           <button
             type="button"
-            title={mobileMenuOpen ? "Close mobile menu" : "Open mobile menu"}
-            aria-label={mobileMenuOpen ? "Close mobile menu" : "Open mobile menu"}
-            className="md:hidden w-11 h-11 shrink-0 rounded-xl bg-surface-page dark:bg-white/5 border-2 border-surface-100 dark:border-white/10 flex items-center justify-center text-surface-900 dark:text-white transition-all active:scale-90 magnetic-hover"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="landing-mobile-menu"
+            className="md:hidden w-11 h-11 shrink-0 rounded-xl bg-surface-page dark:bg-white/5 border-2 border-surface-100 dark:border-white/10 flex items-center justify-center text-surface-900 dark:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/50"
+            onClick={() => setMobileMenuOpen((o) => !o)}
           >
-            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            {mobileMenuOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu - High Fidelity */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <m.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="absolute top-full left-0 right-0 bg-surface-page border-b-2 border-surface-100 dark:border-white/10 px-6 py-8 flex flex-col gap-6 md:hidden backdrop-blur-[80px] shadow-[0_40px_100px_rgba(0,0,0,0.5)] overflow-hidden bg-noise-grain"
-          >
-            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-xl font-semibold text-surface-700 dark:text-slate-200 hover:text-primary-500 transition-colors">Features</a>
-            <a href="#workflow" onClick={() => setMobileMenuOpen(false)} className="text-xl font-semibold text-surface-700 dark:text-slate-200 hover:text-primary-500 transition-colors">How it works</a>
-            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-xl font-semibold text-surface-700 dark:text-slate-200 hover:text-primary-500 transition-colors">Pricing</a>
-            <div className="h-px bg-surface-100 dark:bg-white/5" />
-            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="text-xl font-semibold text-surface-900 dark:text-white hover:text-primary-500 transition-colors">Log in</Link>
-            
-            {/* Mobile HUD Elements */}
-            <div className="mt-8 flex items-center gap-6 opacity-30">
-               <Cpu size={24} className="text-primary-500" />
-               <div className="h-px flex-1 bg-surface-100 dark:bg-white/5" />
-               <span className="text-[10px] font-black uppercase tracking-widest italic text-surface-300">Click mobile</span>
-            </div>
-          </m.div>
-        )}
-      </AnimatePresence>
+      {mobileMenuOpen && (
+        <div
+          id="landing-mobile-menu"
+          className="absolute top-full left-0 right-0 bg-surface-page border-b-2 border-surface-100 dark:border-white/10 px-6 py-6 flex flex-col gap-5 md:hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)]"
+        >
+          {LINKS.map((l) => (
+            <a key={l.href} href={l.href} onClick={close} className="text-lg font-semibold text-surface-700 dark:text-slate-200 hover:text-primary-500 transition-colors">
+              {l.label}
+            </a>
+          ))}
+          <div className="h-px bg-surface-100 dark:bg-white/5" />
+          <Link href="/login" onClick={close} className="text-lg font-semibold text-surface-900 dark:text-white hover:text-primary-500 transition-colors">Log in</Link>
+        </div>
+      )}
     </nav>
   );
 }

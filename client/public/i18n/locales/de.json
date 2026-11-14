@@ -5162,6 +5162,7 @@
     "dialogLabel": "Cookie-Zustimmung",
     "heading": "Wir verwenden Cookies",
     "bodyIntro": "Click verwendet unbedingt notwendige Cookies, damit Sie angemeldet bleiben und das Produkt funktioniert. Mit Ihrer Zustimmung verwenden wir auch optionale Analysecookies, um zu verstehen, wie Ersteller Click verwenden, damit wir es verbessern können. Sie können dies jederzeit ändern",
+    "bodyShort": "Wir verwenden notwendige Cookies, damit Sie angemeldet bleiben. Analyse-Cookies nur mit Ihrer Zustimmung.",
     "settingsLink": "Einstellungen",
     "bodySeeOur": "Sehen Sie sich unsere an",
     "cookiePolicyLink": "Cookie-Richtlinie",

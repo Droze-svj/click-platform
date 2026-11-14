@@ -5162,6 +5162,7 @@
     "dialogLabel": "Çerez onayı",
     "heading": "Çerezleri kullanıyoruz",
     "bodyIntro": "Click, oturum açmanızı ve ürünün çalışır durumda kalmasını sağlamak için kesinlikle gerekli çerezleri kullanır. İzniniz doğrultusunda, içerik oluşturucuların Click'i nasıl kullandığını anlamak ve böylece onu geliştirebilmemiz için isteğe bağlı analiz çerezleri de kullanırız. Bunu istediğiniz zaman değiştirebilirsiniz",
+    "bodyShort": "Oturumunuzun açık kalması için zorunlu çerezler kullanırız. Analiz çerezlerini yalnızca kabul ederseniz kullanırız.",
     "settingsLink": "Ayarlar",
     "bodySeeOur": "Bizimkilere bakın",
     "cookiePolicyLink": "Çerez Politikası",

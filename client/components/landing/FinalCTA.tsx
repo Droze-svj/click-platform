@@ -1,50 +1,35 @@
-'use client';
-
 import Link from 'next/link';
-import { m } from 'framer-motion';
-import { Wand2 } from 'lucide-react';
-import { useLandingTheme } from './LandingThemeContext';
+import { ArrowRight } from 'lucide-react';
 
 export function FinalCTA() {
-  const { niche, accent } = useLandingTheme();
-  const accentText = niche ? accent.textAccent : 'text-indigo-500';
   return (
-    <section className="py-32 px-6 relative flex flex-col items-center justify-center min-h-[60vh]">
+    <section aria-labelledby="final-cta-heading" className="py-20 md:py-28 px-4 sm:px-6 relative font-inter">
       <div aria-hidden="true" className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-transparent dark:to-[#050505]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-indigo-600/15 blur-[160px] rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-primary-600/15 blur-[160px] rounded-full" />
       </div>
-      <m.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-100px' }}
-        className="max-w-4xl w-full mx-auto text-center"
-      >
-        {/* Small invitation pill — Click speaking directly to the visitor. */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-8">
-          <Wand2 className="w-3 h-3" aria-hidden="true" />
-          Click is ready when you are
-        </div>
-
-        <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-8">
-          STOP EDITING. <span className={`${accentText} transition-colors duration-500`}>START SHIPPING.</span>
+      <div className="max-w-3xl w-full mx-auto text-center">
+        <h2
+          id="final-cta-heading"
+          className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter uppercase italic leading-[0.95] text-surface-900 dark:text-white mb-6"
+        >
+          Start with your <span className="text-transparent bg-clip-text pr-[0.15em] box-decoration-clone bg-gradient-to-r from-primary-400 to-fuchsia-400">next video.</span>
         </h2>
-        <p className="text-surface-600 dark:text-slate-400 text-xl md:text-2xl font-medium mb-12 max-w-2xl mx-auto">
-          You bring the idea. Click handles the cuts, the captions, the schedule, the five platforms. Then it remembers what worked and gets sharper for tomorrow.
+        <p className="text-surface-600 dark:text-slate-300 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
+          Upload it, let Click edit and package it, and post it. Then see what Click takes from the results into the one after.
         </p>
 
         <Link
           href="/register?plan=free"
-          className="inline-flex group px-12 py-6 rounded-full bg-surface-900 text-white dark:bg-white dark:text-black text-lg font-black uppercase tracking-widest hover:bg-primary-600 dark:hover:bg-slate-200 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_50px_rgba(255,255,255,0.4)] items-center justify-center gap-4 active:scale-95"
+          className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full bg-surface-900 text-white dark:bg-white dark:text-black text-base md:text-lg font-bold hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white dark:hover:text-white transition-colors shadow-[0_30px_60px_rgba(0,0,0,0.4)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/60"
         >
-          Try Click free
-          <Wand2 className="w-6 h-6 group-hover:rotate-12 transition-transform" aria-hidden="true" />
+          Start free
+          <ArrowRight className="w-5 h-5 motion-safe:group-hover:translate-x-1 motion-safe:transition-transform" aria-hidden="true" />
         </Link>
 
-        <p className="mt-6 text-xs text-surface-500 dark:text-slate-400 font-bold uppercase tracking-widest">
-          Free forever · No card · First clip in 90 seconds · Cancel anytime
+        <p className="mt-6 text-sm text-surface-500 dark:text-slate-400 font-medium">
+          14 days of Pro free · No card needed · Cancel any time
         </p>
-      </m.div>
+      </div>
     </section>
   );
 }
