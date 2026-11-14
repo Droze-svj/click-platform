@@ -271,7 +271,10 @@ async function dispatchWithRecovery(userId, platform, auth, contentData, isRetry
       success: true,
       platform,
       externalId: result.id,
-      postUrl: result.url
+      postUrl: result.url,
+      // TikTok Direct Post: the publish_id, kept so the analytics sync can
+      // resolve the video id later when it wasn't public yet at publish time.
+      ...(result.publishId ? { publishId: result.publishId } : {}),
     };
   } catch (error) {
     const isAuthError = error.response?.status === 401 || error.message?.includes('expired') || error.message?.includes('auth');
