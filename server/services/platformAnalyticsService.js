@@ -550,7 +550,14 @@ async function syncPostAnalytics(userId, postId) {
     // trains the UserStyleProfile EMA once per real analytics change — instead
     // of the previous inline path that re-trained on every 15-minute sync and
     // inflated sampleSize/performanceScore.
-    const prevAnalytics = post.analytics || {};
+    // Read the previous values as a PLAIN object. Spreading the hydrated
+    // Mongoose nested path (`{ ...post.analytics }`) copies internal getters
+    // whose nested objects come out undefined, and the save then fails
+    // validation ("Cast to Object failed … analytics.engagementBreakdown") — so
+    // no sync ever persisted. toObject() gives real values to merge onto.
+    const prevAnalytics = (typeof post.toObject === 'function'
+      ? post.toObject().analytics
+      : post.analytics) || {};
     const moved = ['views', 'videoViews', 'likes', 'comments', 'shares', 'reach'].some(
       (k) => (Number(analytics[k]) || 0) !== (Number(prevAnalytics[k]) || 0)
     );

@@ -161,9 +161,17 @@ userStyleProfileSchema.statics.recordAverage = async function recordAverage(user
  * 0.7. `sampleSize` tracks confidence so the UI can label "limited data".
  */
 userStyleProfileSchema.statics.recordPerformance = async function recordPerformance(
-  userId, weightedFacet, key, retentionDelta,
+  rawUserId, weightedFacet, key, retentionDelta,
 ) {
-  if (!userId || !weightedFacet || !key || typeof retentionDelta !== 'number') return null;
+  if (!rawUserId || !weightedFacet || !key || typeof retentionDelta !== 'number') return null;
+  // The learning cron passes ScheduledPost.userId, which is stored as a STRING.
+  // The update below is an aggregation pipeline, which Mongoose does not cast:
+  // `$set: { userId }` wrote the string over the ObjectId, so every pass created
+  // an orphan profile keyed by a string that no reader (they query by ObjectId)
+  // ever found — the loop learned into a document nobody read. Cast here.
+  const userId = (typeof rawUserId === 'string' && /^[a-f0-9]{24}$/i.test(rawUserId))
+    ? new mongoose.Types.ObjectId(rawUserId)
+    : rawUserId;
   const allowed = [
     'weightedFonts', 'weightedCaptionStyles', 'weightedAnimations', 'weightedMotions',
     'weightedColorGrades', 'weightedTransitions', 'weightedHooks',
