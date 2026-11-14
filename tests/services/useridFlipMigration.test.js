@@ -20,7 +20,9 @@ let db;
 
 beforeAll(async () => {
   await connectTestDb();
-  db = mongoose.connection.db;
+  // Private database: this suite wipes and migrates whole collections, which on
+  // the shared test DB rewrote other suites' rows mid-test (CI flake 2026-11-14).
+  db = mongoose.connection.useDb('test_userid_flip_migration', { useCache: true }).db;
 });
 
 // Clear BEFORE as well as after. These tests assert a count over the WHOLE

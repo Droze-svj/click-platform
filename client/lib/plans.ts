@@ -177,8 +177,8 @@ export const PLANS: Plan[] = [
       { label: 'AI client-feedback engine', included: true },
       { label: 'Early access: white-label exports & client portal', included: true, tooltip: 'Agency-exclusive early access — explore in Labs' },
       { label: 'Early access: generative dubbing + AI foley', included: true, tooltip: 'Agency-exclusive early access — explore in Labs' },
-      { label: 'Early access: retention heatmap + WebGPU preview', included: true, tooltip: 'Agency-exclusive early access — explore in Labs' },
-      { label: 'Early access: developer API + dedicated GPU pods', included: true, tooltip: 'Agency-exclusive early access — explore in Labs' },
+      { label: 'Early access: retention heatmap', included: true, tooltip: 'Agency-exclusive early access — explore in Labs' },
+      { label: 'Early access: developer API', included: true, tooltip: 'Agency-exclusive early access — explore in Labs' },
     ],
     checkoutUrl: {
       monthly: process.env.NEXT_PUBLIC_WHOP_URL_AGENCY_MONTHLY || '',

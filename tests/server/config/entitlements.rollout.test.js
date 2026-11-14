@@ -78,7 +78,7 @@ describe('entitlements — Agency-first rollout', () => {
     it('no current-behavior change: agency-first features are Agency-only today', () => {
       // Regression guard — the migrated 2026 flagship features must still be
       // Agency-exclusive right now (descend dates are in the future).
-      ['generative_dubbing', 'ai_foley', 'retention_heatmap', 'priority_gpu', 'webgpu_rendering']
+      ['generative_dubbing', 'ai_foley', 'retention_heatmap']
         .forEach((id) => {
           expect(hasFeature('agency', id)).toBe(true);
           expect(hasFeature('pro', id)).toBe(false);
