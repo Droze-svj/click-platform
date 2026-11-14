@@ -14,6 +14,7 @@ import { StatsCardSkeleton, ContentSkeleton } from '@/components/LoadingSkeleton
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from '@/hooks/useTranslation'
+import { LogResultsPanel } from '@/components/analytics/LogResultsPanel'
 import { useContainerWidth } from '@/hooks/useContainerWidth'
 import { cn } from '@/lib/utils'
 import {
@@ -270,6 +271,9 @@ export default function AnalyticsPage() {
             )}
           </Panel>
         )}
+
+        {/* ── Log a video's results → the learning loop learns from it ── */}
+        <LogResultsPanel onLogged={fetchMatrix} />
 
         {/* ── Recent posts ledger (real /analytics/creator/stats) ──────── */}
         <Panel variant="bento" className="ds-anim-rise overflow-hidden p-0">

@@ -14,7 +14,7 @@
 const cron = require('node-cron');
 const mongoose = require('mongoose');
 const ScheduledPost = require('../models/ScheduledPost');
-const { ingestPostPerformance } = require('./creatorPerformanceService');
+const { ingestPostPerformance, getViewsBaseline } = require('./creatorPerformanceService');
 const logger = require('../utils/logger');
 
 // Optional Sentry — mirror utils/googleAI.js so a missing @sentry/node in
@@ -100,6 +100,21 @@ async function runLearningTick() {
     // the tail waited 60h. Cursor on `_id` so we don't re-pull posts
     // we just stamped `lastLearnedAt` on.
     let cursor = null;
+    // Per-tick cache of each creator's typical views per platform — the reach
+    // half of the learning signal compares a post against its own creator.
+    const baselines = new Map();
+    const baselineFor = async (userId, platform) => {
+      const key = `${userId}|${platform}`;
+      if (!baselines.has(key)) {
+        try {
+          baselines.set(key, (await getViewsBaseline(userId, platform)).medianViews);
+        } catch (err) {
+          logger.warn('Views baseline lookup failed', { ...LOG_CONTEXT, error: err.message });
+          baselines.set(key, null);
+        }
+      }
+      return baselines.get(key);
+    };
     while (summary.processed + summary.failed < MAX_PER_TICK) {
       const page = await findEligiblePostsPage(cursor);
       if (page.length === 0) break;
@@ -107,10 +122,13 @@ async function runLearningTick() {
       summary.eligible += page.length;
       for (const p of page) {
         try {
+          const baselineViews = p.userId != null && p.platform
+            ? await baselineFor(p.userId, p.platform)
+            : null;
           const r = await ingestPostPerformance({
             userId: p.userId,
             contentId: p.contentId,
-            metrics: p.analytics || {},
+            metrics: { ...(p.analytics || {}), baselineViews },
           });
           summary.processed += 1;
           summary.picksUpdated += r?.updated || 0;

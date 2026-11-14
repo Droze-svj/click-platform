@@ -1,169 +1,101 @@
 'use client';
 
 import Link from 'next/link';
-import { m } from 'framer-motion';
-import { Sparkles, ArrowRight, Play, Zap, ShieldCheck, Globe, Cpu, Terminal, Activity } from 'lucide-react';
-import { useLandingTheme } from './LandingThemeContext';
+import { m, useReducedMotion, type MotionProps } from 'framer-motion';
+import { ArrowRight, Scissors, Package, Send, BarChart3, RefreshCw } from 'lucide-react';
+
+// The loop the whole page is about. Each step is a real product surface:
+// editor → packaging (hook check, reframe, caption, posting time) → publish →
+// platform analytics ingestion → the 6-hourly learning pass.
+const LOOP = [
+  { icon: Scissors, label: 'Edit' },
+  { icon: Package, label: 'Package' },
+  { icon: Send, label: 'Publish' },
+  { icon: BarChart3, label: 'Measure' },
+  { icon: RefreshCw, label: 'Learn' },
+];
 
 export function Hero() {
-  const { niche, accent } = useLandingTheme();
-  // Re-tint the headline only when a niche is chosen; otherwise keep the exact
-  // default gradient so an untouched landing is unchanged.
-  const headlineGradient = niche
-    ? `bg-gradient-to-r ${accent.gradient}`
-    : 'bg-gradient-to-r from-primary-400 via-surface-900 dark:via-white to-fuchsia-400';
+  const reduce = useReducedMotion();
+  const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+  const rise = (delay: number): MotionProps =>
+    reduce
+      ? {}
+      : {
+          initial: { opacity: 0, y: 24 },
+          animate: { opacity: 1, y: 0 },
+          transition: { delay, duration: 0.8, ease: EASE },
+        };
+
   return (
-    <section className="relative pt-28 sm:pt-32 md:pt-40 pb-20 md:pb-32 px-4 sm:px-6 flex flex-col items-center overflow-hidden font-inter">
-      
-      {/* High-Fidelity Spectral Atmosphere */}
+    <section className="relative pt-28 sm:pt-32 md:pt-40 pb-16 md:pb-24 px-4 sm:px-6 flex flex-col items-center overflow-hidden font-inter">
       <div aria-hidden="true" className="absolute inset-0 -z-10 pointer-events-none">
-        <div className="absolute top-[-5%] left-[-10%] w-[60%] h-[60%] bg-primary-600/15 blur-[160px] rounded-full mix-blend-screen opacity-60 animate-[pulse_8s_infinite]" />
-        <div className="absolute top-[20%] right-[-10%] w-[50%] h-[60%] bg-fuchsia-600/10 blur-[180px] rounded-full mix-blend-screen opacity-40" />
-        <div className="absolute bottom-[-10%] left-[20%] w-[50%] h-[40%] bg-blue-600/10 blur-[160px] rounded-full mix-blend-screen opacity-40" />
+        <div className="absolute top-[-5%] left-[-10%] w-[60%] h-[60%] bg-primary-600/15 blur-[160px] rounded-full opacity-60" />
+        <div className="absolute top-[20%] right-[-10%] w-[50%] h-[60%] bg-fuchsia-600/10 blur-[180px] rounded-full opacity-40" />
       </div>
 
-      <div className="w-full max-w-[1900px] mx-auto text-center space-y-8 md:space-y-10 relative z-10">
-        
-        {/* Release Protocol Pill */}
-        <m.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-          className="inline-flex items-center gap-4 px-6 md:px-8 py-3 rounded-full bg-primary-500/10 border-2 border-primary-500/20 text-primary-500 text-[11px] md:text-xs font-bold uppercase tracking-[0.15em] shadow-[0_0_40px_rgba(99,102,241,0.2)] hover:bg-primary-500/20 transition-all cursor-default group magnetic-hover max-w-full"
-        >
-          <Sparkles className="w-3 h-3 md:w-4 md:h-4 animate-pulse text-spectral-glow shrink-0" />
-          <span className="whitespace-normal text-left sm:text-center">Meet Click — the editor that ships while you sleep</span>
-        </m.div>
-
-        {/* Cinematic Headline Matrix */}
-        <div className="space-y-4 md:space-y-6">
-          <m.h1
-            initial={{ opacity: 0, y: 80 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-[2.75rem] sm:text-7xl md:text-8xl lg:text-9xl break-words font-black tracking-tighter leading-[0.9] text-surface-900 dark:text-white uppercase italic group text-spectral-glow flex flex-col items-center"
-          >
-            <span className="block relative">
-              CLICK EDITS.
-              <m.span
-                initial={{ width: 0 }}
-                animate={{ width: '100%' }}
-                transition={{ delay: 0.8, duration: 1.5, ease: "easeInOut" }}
-                className="absolute -bottom-4 left-0 h-1 bg-gradient-to-r from-transparent via-primary-500 to-transparent opacity-50"
-              />
-            </span>
-            <span className={`text-transparent bg-clip-text pr-[0.15em] box-decoration-clone ${headlineGradient} drop-shadow-[0_0_30px_rgba(99,102,241,0.3)] transition-all duration-500`}>
-              YOU SHOW UP.
-            </span>
-          </m.h1>
-
-          <m.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:gap-10 pt-2 md:pt-4"
-          >
-            <div className="flex items-center gap-3 md:gap-4 group/h magnetic-hover">
-              <Cpu size={16} className="text-primary-500 group-hover:rotate-12 transition-transform shrink-0" />
-              <span className="text-xs md:text-sm font-semibold text-surface-600 dark:text-slate-300 uppercase tracking-wider">Edits like you</span>
-            </div>
-            <div className="hidden sm:block w-1.5 h-1.5 rounded-full bg-primary-500/20 shadow-inner animate-pulse" />
-            <div className="flex items-center gap-3 md:gap-4 group/h magnetic-hover">
-              <Globe size={16} className="text-fuchsia-500 group-hover:rotate-12 transition-transform shrink-0" />
-              <span className="text-xs md:text-sm font-semibold text-surface-600 dark:text-slate-300 uppercase tracking-wider">Posts everywhere</span>
-            </div>
-            <div className="hidden sm:block w-1.5 h-1.5 rounded-full bg-primary-500/20 shadow-inner animate-pulse [animation-delay:1s]" />
-            <div className="flex items-center gap-3 md:gap-4 group/h magnetic-hover">
-              <ShieldCheck size={16} className="text-emerald-500 group-hover:rotate-12 transition-transform shrink-0" />
-              <span className="text-xs md:text-sm font-semibold text-surface-600 dark:text-slate-300 uppercase tracking-wider">Learns every post</span>
-            </div>
-          </m.div>
-        </div>
-
+      <div className="w-full max-w-6xl mx-auto text-center space-y-7 md:space-y-9 relative z-10">
         <m.p
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 1 }}
-          className="text-surface-600 dark:text-slate-300 text-lg md:text-2xl font-normal max-w-3xl mx-auto leading-relaxed"
+          {...rise(0)}
+          className="inline-flex items-center px-5 py-2 rounded-full bg-primary-500/10 border border-primary-500/25 text-primary-600 dark:text-primary-300 text-[11px] md:text-xs font-bold uppercase tracking-[0.15em] max-w-full"
         >
-          Drop one raw video. Click cuts the dead air, writes the hooks, picks the post time, and ships it to TikTok, Reels, Shorts, X, and LinkedIn — then watches what works and gets sharper for tomorrow. You stay creative. Click stays awake.
+          The video editor that knows marketing
         </m.p>
 
-        {/* Tactical Actions HUD */}
-        <m.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 1 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 pt-2"
+        <m.h1
+          {...rise(0.05)}
+          className="text-[2.75rem] sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[0.92] text-surface-900 dark:text-white uppercase italic flex flex-col items-center"
         >
+          <span className="block">CLICK EDITS.</span>
+          <span className="text-transparent bg-clip-text pr-[0.15em] box-decoration-clone bg-gradient-to-r from-primary-400 via-surface-900 to-fuchsia-500 dark:via-white dark:to-fuchsia-400">
+            YOU SHOW UP.
+          </span>
+        </m.h1>
+
+        <m.p
+          {...rise(0.15)}
+          className="text-surface-600 dark:text-slate-300 text-lg md:text-2xl font-normal max-w-3xl mx-auto leading-relaxed"
+        >
+          Click edits your raw video, then packages it to get watched: a stronger hook, captions, the right format for each platform and a time to post. After it goes out, Click reads how the post did and uses that on your next video.
+        </m.p>
+
+        <m.ol
+          {...rise(0.2)}
+          aria-label="How Click works, step by step"
+          className="flex flex-wrap items-center justify-center gap-x-2 gap-y-2 text-xs md:text-sm font-semibold text-surface-700 dark:text-slate-200"
+        >
+          {LOOP.map(({ icon: Icon, label }, i) => (
+            <li key={label} className="flex items-center gap-2">
+              {i > 0 && <ArrowRight className="w-3.5 h-3.5 text-surface-400 dark:text-slate-500" aria-hidden="true" />}
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-card border border-surface-200 dark:border-white/10">
+                <Icon className="w-3.5 h-3.5 text-primary-500" aria-hidden="true" />
+                {label}
+              </span>
+            </li>
+          ))}
+          <li className="sr-only">Then the next video starts from what Click learned.</li>
+        </m.ol>
+
+        <m.div {...rise(0.25)} className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 pt-1">
           <Link
             href="/register?plan=free"
-            className="group w-full sm:w-auto px-10 py-5 rounded-full bg-surface-900 dark:bg-white text-white dark:text-black text-base font-bold transition-all shadow-[0_40px_80px_rgba(0,0,0,0.5)] hover:shadow-[0_60px_120px_rgba(0,0,0,0.7)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white flex items-center justify-center gap-6 active:scale-95 border-none btn-shimmer magnetic-hover"
+            className="group w-full sm:w-auto px-10 py-4 rounded-full bg-surface-900 dark:bg-white text-white dark:text-black text-base font-bold transition-colors shadow-[0_30px_60px_rgba(0,0,0,0.45)] hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white dark:hover:text-white flex items-center justify-center gap-3 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/60"
           >
             Start free
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform duration-300" aria-hidden="true" />
+            <ArrowRight className="w-5 h-5 motion-safe:group-hover:translate-x-1 motion-safe:transition-transform" aria-hidden="true" />
           </Link>
           <a
-            href="#workflow"
-            className="group w-full sm:w-auto px-10 py-5 rounded-full bg-surface-card dark:bg-black/40 backdrop-blur-[40px] border-2 border-surface-100 dark:border-white/10 text-surface-900 dark:text-white text-base font-bold hover:bg-surface-card hover:border-primary-500/40 transition-all flex items-center justify-center gap-6 active:scale-95 shadow-2xl magnetic-hover"
+            href="#how-it-works"
+            className="w-full sm:w-auto px-10 py-4 rounded-full bg-surface-card border-2 border-surface-200 dark:border-white/10 text-surface-900 dark:text-white text-base font-bold hover:border-primary-500/50 transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/60"
           >
-            <Play className="w-5 h-5 fill-current group-hover:scale-110 transition-transform duration-300" aria-hidden="true" />
             See how it works
           </a>
         </m.div>
 
-        {/* Trust micro-line under the CTAs */}
-        <m.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.9, duration: 1 }}
-          className="text-sm text-surface-500 dark:text-slate-400 font-medium"
-        >
-          Free plan, no card needed. Your first clip in about 90 seconds.
+        <m.p {...rise(0.3)} className="text-sm text-surface-500 dark:text-slate-400 font-medium">
+          14 days of Pro free, then the Free plan. No card needed.
         </m.p>
       </div>
-
-      {/* High-Fidelity HUD Decorations — ambient signals of Click being alive.
-          Left rail: a "Click is thinking" pulse. Right rail: an honest 5-platform
-          ping array (no fabricated uptime number — we don't have a real one to
-          quote yet, and the platform-ping pattern reads as "the editor is
-          watching the feeds" which is more on-brand anyway). */}
-      <div className="absolute bottom-24 left-12 hidden xl:flex flex-col gap-6 opacity-20 pointer-events-none">
-         <div className="flex items-center gap-4">
-            <Activity size={24} className="text-primary-500 animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.8em] italic text-primary-500">Click is cooking</span>
-         </div>
-         <div className="h-[2px] w-64 bg-surface-100 dark:bg-white/5 rounded-full overflow-hidden border border-white/5">
-            <m.div
-              initial={{ width: 0 }}
-              animate={{ width: '92%' }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="h-full bg-gradient-to-r from-primary-500 to-fuchsia-500 shadow-[0_0_15px_rgba(99,102,241,0.8)]"
-            />
-         </div>
-      </div>
-
-      <div className="absolute bottom-24 right-12 hidden xl:flex flex-col gap-6 opacity-20 pointer-events-none items-end text-right">
-         <div className="flex items-center gap-4 justify-end">
-            <span className="text-[10px] font-black uppercase tracking-[0.8em] italic text-primary-500">Listening to five feeds</span>
-            <Terminal size={24} className="text-primary-500" />
-         </div>
-         <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic leading-none max-w-[180px]">TikTok · Reels · Shorts · X · LinkedIn</p>
-         <div className="flex gap-1">
-            {[1,2,3,4,5].map(i => (
-              <m.div
-                key={i}
-                animate={{ opacity: [0.3, 1, 0.3] }}
-                transition={{ duration: 2, delay: i * 0.2, repeat: Infinity }}
-                className="w-4 h-1 bg-primary-500/40 rounded-full"
-              />
-            ))}
-         </div>
-      </div>
-
-      {/* Cinematic Gradient Fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-surface-page via-surface-page/50 to-transparent z-10 pointer-events-none" />
-
     </section>
   );
 }

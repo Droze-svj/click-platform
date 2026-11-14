@@ -176,6 +176,24 @@ const scheduledPostSchema = new mongoose.Schema({
   },
   lastAnalyticsSync: Date,
   analytics: {
+    // Headline counts. Every platform sync in platformAnalyticsService returns
+    // these at the top level (views/likes/comments/shares/saves + YouTube's
+    // watchTime), and ~15 services read them as `analytics.views` etc. They used
+    // to be undeclared, so the strict schema dropped them on save and every
+    // reader saw undefined. Also written by POST /api/performance/results when a
+    // creator logs the numbers of a video they posted themselves.
+    views: { type: Number, default: 0 },
+    likes: { type: Number, default: 0 },
+    comments: { type: Number, default: 0 },
+    shares: { type: Number, default: 0 },
+    saves: { type: Number, default: 0 },
+    // Average share of the video watched, 0-100. null = not measured — the
+    // learner treats a missing value as "no retention signal", never as 0%.
+    watchTime: {
+      averagePercentage: { type: Number, default: null },
+      averageSeconds: { type: Number, default: null },
+      totalMinutes: { type: Number, default: null },
+    },
     // Reach & Impressions
     impressions: {
       type: Number,
