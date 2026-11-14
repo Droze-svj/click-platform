@@ -9,6 +9,7 @@ const OAuthStorage = require('../../utils/oauthStorage');
 const { sendSuccess, sendError } = require('../../utils/response');
 const { resolveOAuthCallbackUrl } = require('../../utils/oauthCallbackUrl');
 const asyncHandler = require('../../middleware/asyncHandler');
+const { recordDirectPost } = require('../../services/publishedPostRecorder');
 const { oauthAuthLimiter, oauthTokenLimiter, oauthPostLimiter } = require('../../middleware/oauthRateLimiter');
 const { materializeVideoSource, ownUploadFile } = require('../../utils/ownUploadFile');
 const { unescape: unescapeHtml } = require('validator');
@@ -128,6 +129,7 @@ router.post('/post', auth, oauthPostLimiter, asyncHandler(async (req, res) => {
   const post = await tiktokService.postToTikTok(userId, ownFile
     ? { videoPath: ownFile, caption }
     : { mediaUrl: videoUrl, caption });
+  await recordDirectPost({ userId, platform: 'tiktok', result: post, contentId: req.body.contentId, caption });
 
   sendSuccess(res, 'TikTok post published successfully', 200, { post });
 }));

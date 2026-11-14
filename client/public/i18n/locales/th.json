@@ -2292,7 +2292,17 @@
     "globalRegistryMatrix": "ทุกแพลตฟอร์ม",
     "secureOauthConnection": "การเชื่อมต่อ OAuth ที่ปลอดภัย",
     "lastGlobalSync": "ซิงก์ล่าสุด",
-    "encrypted256": "การเข้ารหัส 256 บิต"
+    "encrypted256": "การเข้ารหัส 256 บิต",
+    "fbPages": {
+      "title": "เพจ Facebook ของคุณ",
+      "hint": "วิดีโอ Facebook จะโพสต์ไปยังเพจเริ่มต้นของคุณ",
+      "postsGoHere": "โพสต์ที่นี่",
+      "makeDefault": "โพสต์ที่นี่",
+      "makeDefaultFor": "โพสต์ไปที่ {{page}} เป็นค่าเริ่มต้น",
+      "noPages": "ไม่พบเพจ Facebook อนุญาตให้แอปโพสต์ได้เฉพาะในเพจ: สร้างเพจ หรือเชื่อมต่อใหม่แล้วเลือกเพจ",
+      "hasInstagram": "ลิงก์ Instagram แล้ว",
+      "loadFailed": "โหลดเพจ Facebook ของคุณไม่สำเร็จ"
+    }
   },
   "tasksPage": {
     "defaultTaskTitle": "งานใหม่",

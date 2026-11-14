@@ -2292,7 +2292,17 @@
     "globalRegistryMatrix": "Alle platforms",
     "secureOauthConnection": "Veilige OAuth-verbinding",
     "lastGlobalSync": "Laatst gesynchroniseerd",
-    "encrypted256": "256-bits versleuteling"
+    "encrypted256": "256-bits versleuteling",
+    "fbPages": {
+      "title": "Je Facebook-pagina's",
+      "hint": "Facebook-video's worden op je standaardpagina geplaatst.",
+      "postsGoHere": "Hier wordt geplaatst",
+      "makeDefault": "Hier plaatsen",
+      "makeDefaultFor": "Standaard op {{page}} plaatsen",
+      "noPages": "Geen pagina's gevonden. Facebook laat apps alleen op pagina's posten: maak een pagina of koppel opnieuw en selecteer er een.",
+      "hasInstagram": "Instagram gekoppeld",
+      "loadFailed": "Kon je Facebook-pagina's niet laden."
+    }
   },
   "tasksPage": {
     "defaultTaskTitle": "Nieuwe taak",

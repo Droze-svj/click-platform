@@ -7,6 +7,7 @@ import {
   Share2,
   Youtube,
   Instagram,
+  Facebook,
   Smartphone,
   Send,
   CheckCircle2,
@@ -30,6 +31,7 @@ import {
   ShieldCheck,
   ZapOff
 } from 'lucide-react'
+import { isPlatformConnected } from '@/lib/connections'
 import { apiGet, apiPost, apiPatch } from '../../../lib/api'
 import { m, AnimatePresence } from 'framer-motion'
 import { loadEditorContentPreferences, saveEditorContentPreferences, hasSavedExportPreset } from '../../../utils/editorUtils'
@@ -218,18 +220,21 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
       const title = projectName || 'Made with Click'
       const results = await Promise.allSettled(selectedPlatforms.map((platform) => {
         if (platform === 'instagram') {
-          // Instagram fetches the video from its own servers — it needs a
-          // public URL, not a file that only exists on this server.
-          if (!isPublicUrl) return Promise.reject(new Error('Instagram needs a public video URL — enable cloud storage and render again'))
-          return apiPost(`/oauth/instagram/post`, { videoUrl: url, isReel: true, caption: title })
+          // Instagram fetches the video itself; the server turns our own
+          // /uploads file into a signed public link for it.
+          return apiPost(`/oauth/instagram/post`, { videoUrl: url, isReel: true, caption: title, contentId: videoId })
+        }
+        if (platform === 'facebook') {
+          // Posted as a video on the creator's default Facebook Page.
+          return apiPost(`/oauth/facebook/post`, { text: title, videoUrl: url, contentId: videoId })
         }
         if (platform === 'youtube') {
           // The server resolves our own media to the file on disk and
           // downloads any other URL before uploading.
-          return apiPost(`/oauth/youtube/upload`, { videoFile: url, title, description: 'Made with Click' })
+          return apiPost(`/oauth/youtube/upload`, { videoFile: url, title, description: 'Made with Click', contentId: videoId })
         }
         if (platform === 'tiktok') {
-          return apiPost(`/oauth/tiktok/post`, { videoUrl: url, caption: title })
+          return apiPost(`/oauth/tiktok/post`, { videoUrl: url, caption: title, contentId: videoId })
         }
         return Promise.reject(new Error(`Posting to ${platform} isn't supported here yet`))
       }))
@@ -267,9 +272,10 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
     : null
 
   const PLATFORMS = [
-    { id: 'tiktok', label: 'TikTok', icon: Smartphone, color: 'from-pink-500 to-rose-600', glow: 'rgba(244,63,94,0.3)', connected: !!connectedAccounts.tiktok },
-    { id: 'youtube', label: 'YouTube Shorts', icon: Youtube, color: 'from-red-600 to-red-700', glow: 'rgba(220,38,38,0.3)', connected: !!connectedAccounts.youtube },
-    { id: 'instagram', label: 'Instagram Reels', icon: Instagram, color: 'from-purple-500 to-pink-500', glow: 'rgba(217,70,239,0.3)', connected: !!connectedAccounts.instagram },
+    { id: 'tiktok', label: 'TikTok', icon: Smartphone, color: 'from-pink-500 to-rose-600', glow: 'rgba(244,63,94,0.3)', connected: isPlatformConnected(connectedAccounts.tiktok) },
+    { id: 'youtube', label: 'YouTube Shorts', icon: Youtube, color: 'from-red-600 to-red-700', glow: 'rgba(220,38,38,0.3)', connected: isPlatformConnected(connectedAccounts.youtube) },
+    { id: 'instagram', label: 'Instagram Reels', icon: Instagram, color: 'from-purple-500 to-pink-500', glow: 'rgba(217,70,239,0.3)', connected: isPlatformConnected(connectedAccounts.instagram) },
+    { id: 'facebook', label: 'Facebook Page', icon: Facebook, color: 'from-blue-600 to-blue-700', glow: 'rgba(37,99,235,0.3)', connected: isPlatformConnected(connectedAccounts.facebook) },
   ]
 
   const containerVariants = {
@@ -999,7 +1005,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
 
                 <Button
                   onClick={handlePublish}
-                  disabled={isPublishing || !/^https?:\/\//i.test(renderResult?.url || '')}
+                  disabled={isPublishing || !/^(https?:\/\/|\/uploads\/)/i.test(renderResult?.url || '')}
                   loading={isPublishing}
                   size="lg"
                   leftIcon={!isPublishing ? <Send className="h-5 w-5" aria-hidden /> : undefined}
@@ -1009,7 +1015,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
               </div>
             )}
 
-            {!connectedAccounts.tiktok && !connectedAccounts.youtube && !connectedAccounts.instagram && (
+            {!['tiktok', 'youtube', 'instagram', 'facebook'].some((p) => isPlatformConnected(connectedAccounts[p])) && (
               <EmptyStateBlock onConnect={() => setActiveCategory?.('accounts')} />
             )}
           </div>
@@ -1028,7 +1034,7 @@ const EmptyStateBlock: React.FC<{ onConnect: () => void }> = ({ onConnect }) => 
     <h4 className="ds-text-h3 text-theme-primary">No accounts connected</h4>
     <p className="text-sm text-theme-muted">
       Link your accounts in the{' '}
-      <button type="button" onClick={onConnect} className="font-semibold text-theme-primary underline underline-offset-4">Social Vault</button>{' '}
+      <button type="button" onClick={onConnect} className="font-semibold text-theme-primary underline underline-offset-4">Connect Accounts</button>{' '}
       to publish directly.
     </p>
   </div>

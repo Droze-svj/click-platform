@@ -52,7 +52,9 @@ class MetaSocialService {
   static async postToFacebookPage(auth, contentData) {
     const pages = Array.isArray(auth?.pages) ? auth.pages.filter((p) => p && p.id && p.accessToken) : [];
     const wanted = auth?.pageId || contentData?.pageId || null;
-    const page = wanted ? pages.find((p) => p.id === String(wanted)) : pages[0];
+    const page = wanted
+      ? pages.find((p) => p.id === String(wanted))
+      : (pages.find((p) => auth?.defaultPageId && p.id === String(auth.defaultPageId)) || pages[0]);
     if (!page) {
       throw new Error('No Facebook Page connected. Facebook only allows apps to post to Pages: reconnect Facebook and select a Page you manage.');
     }

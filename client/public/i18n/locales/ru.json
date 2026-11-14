@@ -2292,7 +2292,17 @@
     "globalRegistryMatrix": "Все платформы",
     "secureOauthConnection": "Безопасное соединение OAuth",
     "lastGlobalSync": "Последняя синхронизация",
-    "encrypted256": "256-битное шифрование"
+    "encrypted256": "256-битное шифрование",
+    "fbPages": {
+      "title": "Ваши страницы Facebook",
+      "hint": "Видео для Facebook публикуются на странице по умолчанию.",
+      "postsGoHere": "Публикуется сюда",
+      "makeDefault": "Публиковать сюда",
+      "makeDefaultFor": "Публиковать на {{page}} по умолчанию",
+      "noPages": "Страницы не найдены. Facebook разрешает приложениям публиковать только на страницах: создайте страницу или переподключитесь и выберите её.",
+      "hasInstagram": "Instagram привязан",
+      "loadFailed": "Не удалось загрузить ваши страницы Facebook."
+    }
   },
   "tasksPage": {
     "defaultTaskTitle": "Новая задача",

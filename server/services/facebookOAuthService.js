@@ -207,7 +207,9 @@ async function resolvePage(userId, pageId = null) {
   const creds = await oauthService.getSocialCredentials(userId, 'facebook', null);
   if (!creds || !creds.accessToken) throw new Error('Facebook account not connected');
   const pages = Array.isArray(creds.pages) ? creds.pages.filter((p) => p && p.id && p.accessToken) : [];
-  const page = pageId ? pages.find((p) => p.id === String(pageId)) : pages[0];
+  const page = pageId
+    ? pages.find((p) => p.id === String(pageId))
+    : (pages.find((p) => creds.defaultPageId && p.id === String(creds.defaultPageId)) || pages[0]);
   if (!page) {
     throw new Error(pageId
       ? 'That Facebook Page is not connected. Reconnect Facebook and select the Page.'
@@ -216,8 +218,35 @@ async function resolvePage(userId, pageId = null) {
   return { pageId: page.id, pageName: page.name || null, accessToken: page.accessToken };
 }
 
+/** The creator's Pages (no tokens) and which one posts go to by default. */
+async function listPages(userId) {
+  const oauthService = require('./oauthService');
+  const creds = await oauthService.getSocialCredentials(userId, 'facebook', null);
+  if (!creds || !creds.accessToken) return { connected: false, pages: [], defaultPageId: null };
+  const pages = (Array.isArray(creds.pages) ? creds.pages : []).filter((p) => p && p.id);
+  const defaultPageId = (creds.defaultPageId && pages.some((p) => p.id === String(creds.defaultPageId)))
+    ? String(creds.defaultPageId)
+    : (pages[0]?.id || null);
+  return {
+    connected: true,
+    defaultPageId,
+    pages: pages.map((p) => ({ id: p.id, name: p.name || null, hasInstagram: !!p.instagramBusinessId })),
+  };
+}
+
+async function setDefaultPage(userId, pageId) {
+  const { pages } = await listPages(userId);
+  if (!pages.some((p) => p.id === String(pageId))) {
+    const err = new Error('That Page is not connected. Reconnect Facebook and select it.');
+    err.statusCode = 404;
+    throw err;
+  }
+  await writeFacebookOauth(userId, { defaultPageId: String(pageId) });
+  return { defaultPageId: String(pageId) };
+}
+
 async function postToFacebook(userId, text, options = {}, retries = 1) {
-  if (!userId || !text) throw new Error('userId and text are required');
+  if (!userId || (!text && !options.videoUrl)) throw new Error('userId and text (or a video) are required');
 
   const { pageId: targetId, accessToken } = await resolvePage(userId, options.pageId || null);
 
@@ -371,6 +400,8 @@ module.exports = {
   getFacebookPages,
   getFacebookClient,
   resolvePage,
+  listPages,
+  setDefaultPage,
   postToFacebook,
   replyToComment,
   refreshAccessToken,

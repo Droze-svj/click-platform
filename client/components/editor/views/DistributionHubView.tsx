@@ -16,6 +16,7 @@ import {
   Loader2,
   Youtube,
   Instagram,
+  Facebook,
   Smartphone
 } from 'lucide-react'
 import { m, AnimatePresence } from 'framer-motion'
@@ -36,6 +37,7 @@ const PLATFORMS = [
   { id: 'tiktok', label: 'TikTok', icon: Smartphone, c: 'text-rose-500', bg: 'bg-rose-500/10', b: 'border-rose-500/20' },
   { id: 'instagram', label: 'Instagram', icon: Instagram, c: 'text-fuchsia-500', bg: 'bg-fuchsia-500/10', b: 'border-fuchsia-500/20' },
   { id: 'youtube', label: 'YouTube', icon: Youtube, c: 'text-red-500', bg: 'bg-red-500/10', b: 'border-red-500/20' },
+  { id: 'facebook', label: 'Facebook', icon: Facebook, c: 'text-blue-600', bg: 'bg-blue-600/10', b: 'border-blue-600/20' },
 ] as const
 
 type PlatformId = typeof PLATFORMS[number]['id']
@@ -164,26 +166,25 @@ const DistributionHubView: React.FC<DistributionHubViewProps> = ({ videoId, vide
           if (platform === 'youtube') {
             // The server resolves our own media to the file on disk and
             // downloads any other URL before uploading.
-            return apiPost('/oauth/youtube/upload', { videoFile: videoUrl, title: caption, description: description.trim() })
+            return apiPost('/oauth/youtube/upload', { videoFile: videoUrl, title: caption, description: description.trim(), contentId: videoId })
           }
           if (platform === 'instagram') {
-            // A video goes out as a Reel (imageUrl posted it as a photo).
-            // Instagram fetches it from its own servers, so it must be public.
-            if (!isPublicUrl) return Promise.reject(new Error('Instagram needs a public video URL'))
-            return apiPost('/oauth/instagram/post', { videoUrl, isReel: true, caption })
+            // A video goes out as a Reel. Instagram fetches it itself; the
+            // server turns our own /uploads file into a signed public link.
+            return apiPost('/oauth/instagram/post', { videoUrl, isReel: true, caption, contentId: videoId })
+          }
+          if (platform === 'facebook') {
+            // Posted as a video on the creator's default Facebook Page.
+            return apiPost('/oauth/facebook/post', { text: caption, videoUrl, contentId: videoId })
           }
           if (platform === 'tiktok') {
             // /post accepts a URL (the server fetches it); /upload wanted a
             // server file path and failed for every editor publish.
-            return apiPost('/oauth/tiktok/post', { videoUrl, caption })
+            return apiPost('/oauth/tiktok/post', { videoUrl, caption, contentId: videoId })
           }
-          // Twitter, LinkedIn and Facebook have no video-upload route here
-          // (/oauth/<platform>/upload only exists for YouTube/TikTok, so this
-          // always failed). They post the caption with a link to the video.
+          // Twitter and LinkedIn have no video-upload route here. They post
+          // the caption with a link to the video.
           const withLink = isPublicUrl ? `${caption}${caption ? '\n\n' : ''}${videoUrl}` : caption
-          if (platform === 'facebook') {
-            return apiPost('/oauth/facebook/post', { text: caption, ...(isPublicUrl ? { link: videoUrl } : {}) })
-          }
           if (platform === 'linkedin') return apiPost('/oauth/linkedin/post', { text: withLink })
           if (platform === 'twitter') return apiPost('/oauth/twitter/post', { text: withLink })
           return Promise.reject(new Error(`Publishing to ${platform} isn't supported here`))

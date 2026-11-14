@@ -2292,7 +2292,17 @@
     "globalRegistryMatrix": "كل المنصات",
     "secureOauthConnection": "اتصال OAuth آمن",
     "lastGlobalSync": "آخر مزامنة",
-    "encrypted256": "تشفير 256 بت"
+    "encrypted256": "تشفير 256 بت",
+    "fbPages": {
+      "title": "صفحاتك على فيسبوك",
+      "hint": "تُنشر فيديوهات فيسبوك على صفحتك الافتراضية.",
+      "postsGoHere": "يُنشر هنا",
+      "makeDefault": "انشر هنا",
+      "makeDefaultFor": "النشر على {{page}} افتراضيًا",
+      "noPages": "لم يتم العثور على صفحات. يسمح فيسبوك للتطبيقات بالنشر على الصفحات فقط: أنشئ صفحة أو أعد الاتصال واخترها.",
+      "hasInstagram": "Instagram مرتبط",
+      "loadFailed": "تعذّر تحميل صفحاتك على فيسبوك."
+    }
   },
   "tasksPage": {
     "defaultTaskTitle": "مهمة جديدة",

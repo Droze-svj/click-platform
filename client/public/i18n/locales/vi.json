@@ -2292,7 +2292,17 @@
     "globalRegistryMatrix": "Tất cả nền tảng",
     "secureOauthConnection": "Kết nối OAuth an toàn",
     "lastGlobalSync": "Đồng bộ lần cuối",
-    "encrypted256": "Mã hóa 256 bit"
+    "encrypted256": "Mã hóa 256 bit",
+    "fbPages": {
+      "title": "Trang Facebook của bạn",
+      "hint": "Video Facebook được đăng lên Trang mặc định của bạn.",
+      "postsGoHere": "Đăng tại đây",
+      "makeDefault": "Đăng tại đây",
+      "makeDefaultFor": "Mặc định đăng lên {{page}}",
+      "noPages": "Không tìm thấy Trang. Facebook chỉ cho ứng dụng đăng lên Trang: hãy tạo Trang hoặc kết nối lại và chọn Trang.",
+      "hasInstagram": "Đã liên kết Instagram",
+      "loadFailed": "Không tải được các Trang Facebook của bạn."
+    }
   },
   "tasksPage": {
     "defaultTaskTitle": "Nhiệm vụ mới",

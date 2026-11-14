@@ -2292,7 +2292,17 @@
     "globalRegistryMatrix": "Todas las plataformas",
     "secureOauthConnection": "Conexión OAuth segura",
     "lastGlobalSync": "Última sincronización",
-    "encrypted256": "Cifrado de 256 bits"
+    "encrypted256": "Cifrado de 256 bits",
+    "fbPages": {
+      "title": "Tus páginas de Facebook",
+      "hint": "Los videos de Facebook se publican en tu página predeterminada.",
+      "postsGoHere": "Se publica aquí",
+      "makeDefault": "Publicar aquí",
+      "makeDefaultFor": "Publicar en {{page}} por defecto",
+      "noPages": "No se encontraron páginas. Facebook solo permite a las apps publicar en páginas: crea una página o vuelve a conectar y selecciónala.",
+      "hasInstagram": "Instagram vinculado",
+      "loadFailed": "No se pudieron cargar tus páginas de Facebook."
+    }
   },
   "tasksPage": {
     "defaultTaskTitle": "Nueva tarea",

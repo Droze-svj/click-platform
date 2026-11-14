@@ -2292,7 +2292,17 @@
     "globalRegistryMatrix": "所有平台",
     "secureOauthConnection": "安全 OAuth 连接",
     "lastGlobalSync": "上次同步",
-    "encrypted256": "256 位加密"
+    "encrypted256": "256 位加密",
+    "fbPages": {
+      "title": "你的 Facebook 公共主页",
+      "hint": "Facebook 视频会发布到你的默认公共主页。",
+      "postsGoHere": "发布到这里",
+      "makeDefault": "发布到这里",
+      "makeDefaultFor": "默认发布到 {{page}}",
+      "noPages": "未找到公共主页。Facebook 只允许应用发布到公共主页：请创建一个公共主页，或重新连接并选择它。",
+      "hasInstagram": "已关联 Instagram",
+      "loadFailed": "无法加载你的 Facebook 公共主页。"
+    }
   },
   "tasksPage": {
     "defaultTaskTitle": "新任务",

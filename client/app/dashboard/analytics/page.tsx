@@ -6,7 +6,7 @@ import {
   Boxes, Clock, BarChart3, Waves, MoreHorizontal,
   Music, Instagram, Youtube, Video as VideoIcon, ArrowUpRight,
 } from 'lucide-react'
-import { apiGet } from '@/lib/api'
+import { apiGet, apiPost } from '@/lib/api'
 import { PageShell } from '../../../components/ui'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import ToastContainer from '@/components/ToastContainer'
@@ -117,6 +117,18 @@ export default function AnalyticsPage() {
 
   useEffect(() => { fetchMatrix() }, [fetchMatrix])
 
+  // The Refresh button pulls fresh numbers from the connected platforms first
+  // (the background sync only runs every 15 minutes), then reloads the page.
+  const syncNow = useCallback(async () => {
+    setRefreshing(true)
+    try {
+      await apiPost('/analytics/platform/sync-all', { limit: 25 })
+    } catch {
+      // Not connected / platform hiccup: still show what we have.
+    }
+    await fetchMatrix()
+  }, [fetchMatrix])
+
   const availablePlatforms = useMemo(
     () => Array.from(new Set(nodes.map(n => n.platform).filter(Boolean))),
     [nodes]
@@ -171,7 +183,7 @@ export default function AnalyticsPage() {
               <Button
                 variant="primary"
                 size="md"
-                onClick={fetchMatrix}
+                onClick={syncNow}
                 loading={refreshing}
                 leftIcon={!refreshing ? <RefreshCw size={16} aria-hidden /> : undefined}
               >
