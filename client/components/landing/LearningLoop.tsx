@@ -61,9 +61,9 @@ export function LearningLoop() {
           {LOOP.map(({ icon: Icon, label, detail }, i) => (
             <li
               key={label}
-              className="relative rounded-2xl border-2 border-primary-500/20 bg-primary-500/[0.06] p-4 md:p-5 flex items-center gap-3"
+              className="relative click-vessel p-4 md:p-5 flex items-center gap-3"
             >
-              <span className="w-10 h-10 rounded-xl bg-primary-500/15 flex items-center justify-center text-primary-500 shrink-0">
+              <span className="click-aperture-icon w-10 h-10 shrink-0">
                 <Icon className="w-5 h-5" aria-hidden="true" />
               </span>
               <span className="min-w-0">
@@ -82,7 +82,7 @@ export function LearningLoop() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           {LESSONS.map(({ icon: Icon, title, body }) => (
-            <div key={title} className="rounded-3xl bg-surface-card border-2 border-surface-100 dark:border-white/5 p-6 md:p-7">
+            <div key={title} className="ds-surface-card ds-hover-lift p-6 md:p-7">
               <div className="flex items-center gap-3 mb-3">
                 <span className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-500 shrink-0">
                   <Icon className="w-5 h-5" aria-hidden="true" />

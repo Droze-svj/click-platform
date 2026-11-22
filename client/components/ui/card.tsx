@@ -6,13 +6,14 @@ import { cn } from "../../lib/utils"
  * Card renders EXACTLY as before (plain `bg-card` shell) so existing usage is
  * unchanged. Passing a variant opts into the new glass surfaces from globals.
  */
-export type PanelVariant = "glass" | "elevated" | "subtle" | "bento"
+export type PanelVariant = "glass" | "elevated" | "subtle" | "bento" | "aperture"
 
 const panelVariants: Record<PanelVariant, string> = {
   glass: "ds-surface-card p-5",
   elevated: "ds-surface-elevated p-5",
   subtle: "ds-surface-subtle p-5",
   bento: "ds-surface-card ds-hover-lift p-5",
+  aperture: "click-vessel p-5",
 }
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {

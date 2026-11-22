@@ -16,6 +16,7 @@ export type ButtonVariant =
   | "ghost"
   | "destructive"
   | "gradient"
+  | "click"
 export type ButtonSize = "sm" | "md" | "lg"
 
 export interface ButtonProps
@@ -43,22 +44,22 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+      "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
 
     const variants: Record<ButtonVariant, string> = {
       // existing
-      default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+      default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm active:scale-[0.985]",
       outline:
-        "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        "border border-input bg-background/80 backdrop-blur-sm hover:bg-accent hover:text-accent-foreground",
       ghost: "hover:bg-accent hover:text-accent-foreground",
       destructive:
         "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
-      // new expressive
-      primary: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+      // expressive Kinetic Aperture variants
+      primary: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow-primary active:scale-[0.985]",
       secondary:
-        "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-      gradient:
-        "text-white shadow-sm bg-gradient-to-r from-indigo-500 to-fuchsia-500 hover:from-indigo-500/90 hover:to-fuchsia-500/90",
+        "border border-input bg-background/80 backdrop-blur-sm hover:bg-accent hover:text-accent-foreground",
+      gradient: "click-btn-energy",
+      click: "click-btn-energy rounded-full font-semibold tracking-tight",
     }
 
     const sizes: Record<ButtonSize, string> = {

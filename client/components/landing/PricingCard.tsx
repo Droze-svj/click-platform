@@ -19,14 +19,14 @@ export function PricingCard({ plan, period, onSelect }: Props) {
 
   return (
     <div
-      className={`relative flex flex-col h-full rounded-[2rem] p-7 md:p-8 bg-surface-card border-2 transition-colors ${
+      className={`relative flex flex-col h-full p-7 md:p-8 transition-colors ${
         featured
-          ? 'border-primary-500/60 shadow-[0_40px_90px_rgba(79,70,229,0.25)]'
-          : 'border-surface-100 dark:border-white/5 hover:border-primary-500/30'
+          ? 'click-vessel border-primary-500/60 shadow-[0_32px_84px_rgba(79,70,229,0.24)]'
+          : 'ds-surface-card hover:border-primary-500/35'
       }`}
     >
       {featured && (
-        <p className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-primary-500 text-white text-[11px] font-bold uppercase tracking-wider px-4 py-1 rounded-full shadow-lg">
+        <p className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white text-[11px] font-bold uppercase tracking-wider px-4 py-1 rounded-full shadow-lg">
           Most popular
         </p>
       )}
@@ -71,7 +71,7 @@ export function PricingCard({ plan, period, onSelect }: Props) {
         onClick={() => onSelect(plan)}
         className={`w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/50 ${
           featured
-            ? 'bg-primary-500 hover:bg-primary-600 text-white'
+            ? 'click-btn-energy'
             : plan.id === 'free'
               ? 'bg-transparent border-2 border-surface-200 dark:border-white/15 text-surface-900 dark:text-white hover:border-primary-500/50'
               : 'bg-surface-900 dark:bg-white text-white dark:text-black hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white dark:hover:text-white'

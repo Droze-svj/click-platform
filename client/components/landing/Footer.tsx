@@ -44,7 +44,7 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
 
 export function Footer() {
   return (
-    <footer className="border-t-2 border-surface-100 dark:border-white/5 py-14 md:py-20 px-4 sm:px-6 relative bg-surface-page font-inter">
+    <footer className="relative z-10 border-t border-[var(--click-vessel-border)] py-14 md:py-20 px-4 sm:px-6 bg-[var(--click-vessel-bg)] backdrop-blur-xl font-inter">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
           <div className="lg:col-span-4 flex flex-col items-start gap-4">

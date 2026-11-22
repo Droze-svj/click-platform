@@ -531,12 +531,12 @@ html[data-focus-mode="true"] [data-focus-secondary] {
     box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1),
     opacity 150ms ease !important;
 }
-/* Exclude animated elements from transition interference */
-[data-animate],
-canvas,
-video,
-svg,
-img {
+/* Exclude animated elements from transition interference during theme flips */
+.theme-transitioning [data-animate],
+.theme-transitioning canvas,
+.theme-transitioning video,
+.theme-transitioning svg,
+.theme-transitioning img {
   transition: none !important;
 }
 
@@ -3075,7 +3075,7 @@ html {
 }
 .bg-noise-grain::before {
   content: "";
-  position: absolute;
+  position: fixed;
   inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   opacity: 0.025;
@@ -3484,5 +3484,768 @@ html[data-swarm="authority"][data-theme="light"] {
   --tint-indigo-bg: #ecfeff;
   --tint-indigo-fg: #155e75;
   --tint-indigo-edge: #22d3ee;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Click Visual Identity — "Kinetic Aperture" (2026 Signature System)
+   ──────────────────────────────────────────────────────────────────────────
+   Translates directional-energy AI storytelling into Click's own creator-studio
+   language:
+     1. Foundational geometry: Open Aperture Arc + Directional Focus Cursor
+     2. Spectrum shift: sharp, luminous leading edges diffusing softly at the tail
+     3. Atmospheric background canvas: multi-layer studio depth + viewfinder reticle
+     4. Active thinking motif: <ClickSignal /> (idle / thinking / synthesizing / complete)
+     5. Intentional motion: anticipation-then-release physics curves on compositor props
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Gradient color-space interpolation tokens (progressive enhancement). */
+:root {
+  --in-oklab: ;
+  --in-oklch: ;
+}
+
+@supports (background: linear-gradient(in oklab, white, black)) {
+  :root {
+    --in-oklab: in oklab;
+    --in-oklch: in oklch;
+  }
+}
+
+/* ── Signature Tokens — Light Mode (Warm Studio Alabaster) ────────────────── */
+:root {
+  --click-canvas-base: #f5f6fc;
+  --click-canvas-depth: #eceefa;
+  --click-energy-lead: #4f46e5;       /* Crisp leading indigo */
+  --click-energy-mid: #7c3aed;        /* Electric studio violet */
+  --click-energy-tail: #0ea5e9;       /* Luminous aperture cyan */
+  --click-energy-warm: #d946ef;       /* Harmonic fuchsia bloom */
+
+  --click-beam-alpha-1: 0.16;
+  --click-beam-alpha-2: 0.12;
+  --click-beam-alpha-3: 0.09;
+  --click-arc-opacity: 0.42;
+  --click-reticle-color: rgba(79, 70, 229, 0.09);
+  --click-vignette-edge: rgba(236, 238, 250, 0.72);
+
+  /* Specular glass & elevated surfaces tuned for light mode */
+  --click-vessel-bg: rgba(255, 255, 255, 0.78);
+  --click-vessel-bg-strong: rgba(255, 255, 255, 0.92);
+  --click-vessel-border: rgba(79, 70, 229, 0.14);
+  --click-vessel-border-hover: rgba(79, 70, 229, 0.34);
+  --click-vessel-specular: rgba(255, 255, 255, 0.95);
+  --click-vessel-shadow:
+    0 1px 1px rgba(15, 23, 42, 0.04),
+    0 4px 16px -2px rgba(79, 70, 229, 0.06),
+    0 14px 36px -8px rgba(15, 23, 42, 0.06);
+  --click-vessel-shadow-hover:
+    0 2px 4px rgba(15, 23, 42, 0.05),
+    0 12px 30px -4px rgba(79, 70, 229, 0.13),
+    0 24px 48px -12px rgba(15, 23, 42, 0.09);
+
+  /* Refine page & glass foundations so atmosphere gently breathes through */
+  --page-bg: var(--click-canvas-base);
+  --click-body-bg: var(--click-canvas-base);
+  --surface-page-color: var(--click-canvas-base);
+  --surface-page: linear-gradient(
+    165deg var(--in-oklab),
+    #f8f9fe 0%,
+    #f3f5fc 52%,
+    #eceffa 100%
+  );
+  --glass-surface: rgba(255, 255, 255, 0.74);
+  --glass-surface-heavy: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(79, 70, 229, 0.13);
+  --glass-border-strong: rgba(79, 70, 229, 0.28);
+
+  /* Physics-based easing: anticipation → clean release (transform only, never opacity) */
+  --click-ease-release: cubic-bezier(0.16, 1, 0.3, 1);
+  --click-ease-spring: linear(
+    0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%,
+    1.017, 1.077, 1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%,
+    1.129 32.8%, 1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%,
+    0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1.004 83.8%, 1
+  );
+  --click-ease-anticipation: linear(
+    0, -0.025 6%, -0.04 12%, 0.04 19%, 0.42 32%, 0.86 48%,
+    1.03 63%, 1.015 76%, 1
+  );
+}
+
+@supports not (animation-timing-function: linear(0, 1)) {
+  :root {
+    --click-ease-spring: cubic-bezier(0.34, 1.38, 0.64, 1);
+    --click-ease-anticipation: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+/* ── Signature Tokens — Dark Mode (Deep Obsidian-Indigo Studio) ───────────── */
+.dark {
+  --click-canvas-base: #060711;
+  --click-canvas-depth: #0a0c1b;
+  --click-energy-lead: #818cf8;       /* Luminous electric indigo */
+  --click-energy-mid: #6366f1;        /* Core Click indigo */
+  --click-energy-tail: #38bdf8;       /* Aperture cyan trail */
+  --click-energy-warm: #e879f9;       /* Soft fuchsia harmonic */
+
+  --click-beam-alpha-1: 0.24;
+  --click-beam-alpha-2: 0.17;
+  --click-beam-alpha-3: 0.13;
+  --click-arc-opacity: 0.55;
+  --click-reticle-color: rgba(165, 180, 252, 0.11);
+  --click-vignette-edge: rgba(4, 5, 12, 0.76);
+
+  --click-vessel-bg: rgba(13, 15, 30, 0.68);
+  --click-vessel-bg-strong: rgba(16, 19, 38, 0.86);
+  --click-vessel-border: rgba(165, 180, 252, 0.13);
+  --click-vessel-border-hover: rgba(129, 140, 248, 0.36);
+  --click-vessel-specular: rgba(255, 255, 255, 0.12);
+  --click-vessel-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 2px 8px rgba(0, 0, 0, 0.42),
+    0 16px 40px -10px rgba(0, 0, 0, 0.55);
+  --click-vessel-shadow-hover:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 4px 14px rgba(0, 0, 0, 0.48),
+    0 20px 52px -10px rgba(99, 102, 241, 0.22);
+
+  --page-bg: var(--click-canvas-base);
+  --click-body-bg: var(--click-canvas-base);
+  --surface-page-color: var(--click-canvas-base);
+  --surface-page: linear-gradient(
+    165deg var(--in-oklab),
+    #080a18 0%,
+    #060711 55%,
+    #04050c 100%
+  );
+  --glass-surface: rgba(12, 14, 28, 0.62);
+  --glass-surface-heavy: rgba(15, 18, 35, 0.82);
+  --glass-border: rgba(165, 180, 252, 0.1);
+  --glass-border-strong: rgba(165, 180, 252, 0.22);
+  --glass-blur: blur(28px) saturate(165%);
+}
+
+/* ── Swarm-Reactive Spectrum Shift ────────────────────────────────────────── */
+html[data-swarm="viral"] {
+  --click-energy-lead: #fb7185;
+  --click-energy-mid: #f43f5e;
+  --click-energy-tail: #fb923c;
+  --click-energy-warm: #f472b6;
+}
+html[data-swarm="trust"] {
+  --click-energy-lead: #2dd4bf;
+  --click-energy-mid: #10b981;
+  --click-energy-tail: #38bdf8;
+  --click-energy-warm: #34d399;
+}
+html[data-swarm="authority"] {
+  --click-energy-lead: #38bdf8;
+  --click-energy-mid: #06b6d4;
+  --click-energy-tail: #818cf8;
+  --click-energy-warm: #60a5fa;
+}
+html[data-swarm="coach"] {
+  --click-energy-lead: #818cf8;
+  --click-energy-mid: #6366f1;
+  --click-energy-tail: #38bdf8;
+  --click-energy-warm: #e879f9;
+}
+
+/* Light-mode readable leading edges for Swarm modes */
+html[data-swarm="viral"]:not(.dark),
+html[data-swarm="viral"][data-theme="light"] {
+  --click-energy-lead: #e11d48;
+  --click-energy-mid: #f43f5e;
+}
+html[data-swarm="trust"]:not(.dark),
+html[data-swarm="trust"][data-theme="light"] {
+  --click-energy-lead: #0d9488;
+  --click-energy-mid: #059669;
+}
+html[data-swarm="authority"]:not(.dark),
+html[data-swarm="authority"][data-theme="light"] {
+  --click-energy-lead: #0284c7;
+  --click-energy-mid: #0891b2;
+}
+html[data-swarm="coach"]:not(.dark),
+html[data-swarm="coach"][data-theme="light"] {
+  --click-energy-lead: #4f46e5;
+  --click-energy-mid: #6366f1;
+}
+
+/* Unify body canvas so legacy starter gradients never bleed through */
+body {
+  background: var(--click-canvas-base);
+  color: var(--text-primary);
+}
+.dark body {
+  background: var(--click-canvas-base);
+  color: var(--text-primary);
+}
+
+/* ── Global Atmospheric Background System (<ClickAmbientCanvas />) ────────── */
+.click-atmosphere {
+  z-index: 0;
+  isolation: isolate;
+  background-color: var(--click-canvas-base);
+  background-image:
+    radial-gradient(
+      ellipse 80% 55% at 50% -10%,
+      color-mix(in oklab, var(--click-energy-mid) 16%, transparent) 0%,
+      transparent 70%
+    );
+}
+
+.click-atmosphere-beam {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+/* Primary directional ribbon: sharp concentrated leading edge → diffused tail */
+.click-atmosphere-beam-primary {
+  top: -18%;
+  left: -12%;
+  width: min(78vw, 980px);
+  height: min(68vh, 680px);
+  opacity: var(--click-beam-alpha-1);
+  background:
+    radial-gradient(
+      ellipse 56% 42% at 32% 38%,
+      var(--click-energy-lead) 0%,
+      color-mix(in oklab, var(--click-energy-mid) 68%, transparent) 34%,
+      color-mix(in oklab, var(--click-energy-tail) 26%, transparent) 64%,
+      transparent 82%
+    );
+  filter: blur(68px);
+  transform: translate3d(0, 0, 0) rotate(-11deg);
+}
+
+/* Secondary counter-balancing bloom: lower-right harmonic tail */
+.click-atmosphere-beam-secondary {
+  right: -14%;
+  bottom: -20%;
+  width: min(70vw, 880px);
+  height: min(64vh, 640px);
+  opacity: var(--click-beam-alpha-2);
+  background:
+    radial-gradient(
+      ellipse 55% 48% at 62% 58%,
+      var(--click-energy-warm) 0%,
+      color-mix(in oklab, var(--click-energy-mid) 52%, transparent) 42%,
+      transparent 78%
+    );
+  filter: blur(84px);
+  transform: translate3d(0, 0, 0) rotate(14deg);
+}
+
+/* Tertiary cyan aperture crest: gives directional forward pull near top-right */
+.click-atmosphere-beam-tertiary {
+  top: 8%;
+  right: 6%;
+  width: min(46vw, 560px);
+  height: min(42vh, 420px);
+  opacity: var(--click-beam-alpha-3);
+  background:
+    radial-gradient(
+      circle at 40% 40%,
+      var(--click-energy-tail) 0%,
+      color-mix(in oklab, var(--click-energy-lead) 35%, transparent) 44%,
+      transparent 76%
+    );
+  filter: blur(72px);
+  transform: translate3d(0, 0, 0);
+}
+
+/* Signature open-aperture hairline echoing Click's curved "C" geometry */
+.click-atmosphere-aperture-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: var(--click-arc-opacity);
+  mix-blend-mode: screen;
+}
+
+:root:not(.dark) .click-atmosphere-aperture-svg {
+  mix-blend-mode: multiply;
+  opacity: calc(var(--click-arc-opacity) * 0.65);
+}
+
+/* Studio viewfinder micro-dot reticle — pure CSS pattern, radially masked */
+.click-atmosphere-reticle {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--click-reticle-color) 1.15px,
+    transparent 0
+  );
+  background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 72% 62% at 50% 34%,
+    #000 18%,
+    rgba(0, 0, 0, 0.35) 62%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 72% 62% at 50% 34%,
+    #000 18%,
+    rgba(0, 0, 0, 0.35) 62%,
+    transparent 100%
+  );
+}
+
+/* Soft perimeter vignette anchors foreground legibility */
+.click-atmosphere-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 85% 80% at 50% 42%,
+    transparent 45%,
+    var(--click-vignette-edge) 100%
+  );
+}
+
+/* Variant tuning across software surfaces */
+.click-atmosphere[data-click-atmosphere="hero"] {
+  --click-beam-alpha-1: 0.34;
+  --click-beam-alpha-2: 0.24;
+  --click-beam-alpha-3: 0.2;
+  --click-arc-opacity: 0.72;
+}
+:root:not(.dark) .click-atmosphere[data-click-atmosphere="hero"] {
+  --click-beam-alpha-1: 0.22;
+  --click-beam-alpha-2: 0.16;
+  --click-beam-alpha-3: 0.14;
+}
+
+.click-atmosphere[data-click-atmosphere="app"] {
+  --click-beam-alpha-1: 0.18;
+  --click-beam-alpha-2: 0.12;
+  --click-beam-alpha-3: 0.09;
+  --click-arc-opacity: 0.36;
+}
+:root:not(.dark) .click-atmosphere[data-click-atmosphere="app"] {
+  --click-beam-alpha-1: 0.11;
+  --click-beam-alpha-2: 0.08;
+  --click-beam-alpha-3: 0.06;
+}
+
+.click-atmosphere[data-click-atmosphere="auth"] .click-atmosphere-beam-primary {
+  top: 50%;
+  left: 50%;
+  width: min(85vw, 760px);
+  height: min(75vh, 620px);
+  transform: translate3d(-50%, -56%, 0) rotate(-8deg);
+}
+.click-atmosphere[data-click-atmosphere="auth"] {
+  --click-beam-alpha-1: 0.28;
+  --click-beam-alpha-2: 0.18;
+  --click-arc-opacity: 0.6;
+}
+
+.click-atmosphere[data-click-atmosphere="legal"] {
+  --click-beam-alpha-1: 0.1;
+  --click-beam-alpha-2: 0.07;
+  --click-beam-alpha-3: 0.05;
+  --click-arc-opacity: 0.22;
+}
+.click-atmosphere[data-click-atmosphere="legal"] .click-atmosphere-reticle {
+  opacity: 0.45;
+}
+
+/* Compositor-only slow atmospheric drift — opt in only when motion is allowed */
+@keyframes click-beam-drift-a {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(-11deg);
+  }
+  50% {
+    transform: translate3d(3.5%, 2.5%, 0) scale(1.06) rotate(-7deg);
+  }
+}
+
+@keyframes click-beam-drift-b {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(14deg);
+  }
+  50% {
+    transform: translate3d(-3%, -2.5%, 0) scale(1.07) rotate(10deg);
+  }
+}
+
+@keyframes click-beam-drift-c {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: var(--click-beam-alpha-3);
+  }
+  50% {
+    transform: translate3d(-2%, 3%, 0) scale(1.08);
+    opacity: calc(var(--click-beam-alpha-3) * 1.35);
+  }
+}
+
+/* Dedicated auth spotlight drift that preserves centered translate3d(-50%, -56%, 0) */
+@keyframes click-beam-drift-auth {
+  0%, 100% {
+    transform: translate3d(-50%, -56%, 0) scale(1) rotate(-8deg);
+  }
+  50% {
+    transform: translate3d(-48%, -54%, 0) scale(1.06) rotate(-4deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .click-atmosphere:not([data-click-atmosphere="legal"]) .click-atmosphere-beam {
+    will-change: transform, opacity;
+  }
+  .click-atmosphere:not([data-click-atmosphere="legal"]):not([data-click-atmosphere="auth"]) .click-atmosphere-beam-primary {
+    animation: click-beam-drift-a 24s ease-in-out infinite;
+  }
+  .click-atmosphere[data-click-atmosphere="auth"] .click-atmosphere-beam-primary {
+    animation: click-beam-drift-auth 24s ease-in-out infinite;
+  }
+  .click-atmosphere:not([data-click-atmosphere="legal"]) .click-atmosphere-beam-secondary {
+    animation: click-beam-drift-b 28s ease-in-out infinite;
+  }
+  .click-atmosphere:not([data-click-atmosphere="legal"]) .click-atmosphere-beam-tertiary {
+    animation: click-beam-drift-c 20s ease-in-out infinite;
+  }
+}
+
+/* Focus mode & explicit user reduced-motion calm the ambient background */
+html[data-focus-mode="true"] .click-atmosphere-beam,
+html[data-reduced-motion="true"] .click-atmosphere-beam {
+  animation: none !important;
+}
+html[data-focus-mode="true"] .click-atmosphere {
+  opacity: 0.45;
+}
+
+/* ── Signature Click Vessels & Upgraded ds- Surfaces ──────────────────────── */
+.ds-surface-card,
+.dark .ds-surface-card {
+  background: var(--click-vessel-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--click-vessel-border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--click-vessel-shadow);
+  background-image: linear-gradient(
+    180deg var(--in-oklab),
+    var(--click-vessel-specular) 0%,
+    transparent 1.5px
+  );
+  background-origin: border-box;
+}
+
+.ds-surface-elevated,
+.dark .ds-surface-elevated {
+  background: var(--click-vessel-bg-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--click-vessel-border-hover);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--click-vessel-shadow-hover);
+  background-image: linear-gradient(
+    180deg var(--in-oklab),
+    var(--click-vessel-specular) 0%,
+    transparent 1.5px
+  );
+  background-origin: border-box;
+}
+
+.ds-surface-subtle {
+  background: color-mix(in oklab, var(--click-vessel-bg) 78%, transparent);
+  border: 1px solid var(--click-vessel-border);
+  border-radius: var(--radius-xl);
+}
+
+/* Expressive Click Vessel: squircle geometry + sharp leading-edge spectrum accent */
+.click-vessel {
+  position: relative;
+  background: var(--click-vessel-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--click-vessel-border);
+  border-radius: 1.35rem;
+  box-shadow: var(--click-vessel-shadow);
+  transition:
+    border-color 220ms ease,
+    box-shadow 260ms var(--click-ease-release),
+    transform 260ms var(--click-ease-release);
+}
+
+.click-vessel::before {
+  content: "";
+  position: absolute;
+  inset-block-start: -1px;
+  inset-inline: 12%;
+  height: 1.5px;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg var(--in-oklab),
+    var(--click-energy-lead) 0%,
+    var(--click-energy-tail) 38%,
+    transparent 100%
+  );
+  opacity: 0.72;
+  transition: opacity 240ms ease, inset-inline 280ms var(--click-ease-release);
+}
+
+.click-vessel:hover {
+  border-color: var(--click-vessel-border-hover);
+  box-shadow: var(--click-vessel-shadow-hover);
+}
+
+.click-vessel:hover::before {
+  inset-inline: 6%;
+  opacity: 1;
+}
+
+/* Progressive enhancement: super-ellipse squircle curvature where supported */
+@supports (corner-shape: squircle) {
+  .click-vessel,
+  .ds-surface-card,
+  .ds-surface-elevated,
+  .click-aperture-icon {
+    corner-shape: squircle;
+  }
+}
+
+/* Directional energy pill (sharp leading dot/edge → diffused translucent tail) */
+.click-beam-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background: linear-gradient(
+    90deg var(--in-oklab),
+    color-mix(in oklab, var(--click-energy-lead) 18%, var(--click-vessel-bg)) 0%,
+    var(--click-vessel-bg) 58%,
+    color-mix(in oklab, var(--click-energy-tail) 10%, var(--click-vessel-bg)) 100%
+  );
+  border: 1px solid color-mix(in oklab, var(--click-energy-lead) 32%, transparent);
+  box-shadow:
+    0 1px 0 var(--click-vessel-specular) inset,
+    0 4px 18px -4px color-mix(in oklab, var(--click-energy-mid) 22%, transparent);
+}
+
+/* Luminous aperture icon vessel (empty states, hero steps, AI highlights) */
+.click-aperture-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1.125rem;
+  background: linear-gradient(
+    135deg var(--in-oklab),
+    color-mix(in oklab, var(--click-energy-lead) 22%, transparent) 0%,
+    color-mix(in oklab, var(--click-energy-tail) 10%, transparent) 100%
+  );
+  border: 1px solid color-mix(in oklab, var(--click-energy-lead) 36%, transparent);
+  color: var(--click-energy-lead);
+  box-shadow:
+    0 1px 0 var(--click-vessel-specular) inset,
+    0 8px 24px -6px color-mix(in oklab, var(--click-energy-mid) 28%, transparent);
+}
+
+/* Directional energy CTA button surface */
+.click-btn-energy {
+  position: relative;
+  overflow: hidden;
+  color: #ffffff;
+  background: linear-gradient(
+    112deg var(--in-oklch),
+    var(--click-energy-mid) 0%,
+    var(--click-energy-lead) 48%,
+    var(--click-energy-warm) 100%
+  );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.28) inset,
+    0 8px 24px -6px color-mix(in oklab, var(--click-energy-mid) 52%, transparent);
+  transition:
+    transform 320ms var(--click-ease-spring),
+    box-shadow 220ms ease,
+    filter 200ms ease;
+}
+
+.click-btn-energy:hover:not(:disabled) {
+  transform: translateY(-1.5px);
+  filter: brightness(1.06);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.36) inset,
+    0 14px 32px -6px color-mix(in oklab, var(--click-energy-mid) 62%, transparent);
+}
+
+.click-btn-energy:active:not(:disabled) {
+  transform: translateY(0.5px) scale(0.985);
+}
+
+/* Directional spectrum gradient text — crisp start, luminous mid, vibrant tail */
+.click-spectrum-text {
+  background: linear-gradient(
+    100deg var(--in-oklch),
+    var(--click-energy-lead) 0%,
+    var(--click-energy-tail) 48%,
+    var(--click-energy-warm) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Upgrade ds-bg-mesh to echo Click's directional spectrum */
+.ds-bg-mesh {
+  background-color: var(--click-canvas-base);
+  background-image:
+    radial-gradient(at 18% 20%, color-mix(in oklab, var(--click-energy-lead) 20%, transparent) 0px, transparent 52%),
+    radial-gradient(at 84% 16%, color-mix(in oklab, var(--click-energy-tail) 14%, transparent) 0px, transparent 50%),
+    radial-gradient(at 78% 84%, color-mix(in oklab, var(--click-energy-warm) 13%, transparent) 0px, transparent 52%);
+}
+
+/* ── <ClickSignal /> Living AI Presence Animations (compositor-only) ──────── */
+.click-signal-halo {
+  position: absolute;
+  inset: -22%;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--click-energy-lead) 34%, transparent) 0%,
+    color-mix(in oklab, var(--click-energy-tail) 14%, transparent) 48%,
+    transparent 74%
+  );
+  opacity: 0.45;
+  transform: scale(0.92);
+}
+
+.click-signal[data-click-signal="thinking"] .click-signal-halo,
+.click-signal[data-click-signal="synthesizing"] .click-signal-halo {
+  opacity: 0.85;
+}
+
+.click-signal-orbit {
+  transform-origin: 24px 24px;
+}
+
+.click-signal-prism {
+  transform-origin: 28px 28px;
+  filter: drop-shadow(0 0 4px color-mix(in oklab, var(--click-energy-lead) 45%, transparent));
+}
+
+.click-signal-ripple {
+  position: absolute;
+  inset: 4%;
+  border-radius: 9999px;
+  border: 1.5px solid color-mix(in oklab, var(--click-energy-lead) 65%, transparent);
+  pointer-events: none;
+  opacity: 0;
+}
+
+@keyframes click-signal-orbit-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes click-signal-breathe {
+  0%, 100% {
+    opacity: 0.36;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes click-signal-prism-pulse {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.08); }
+}
+
+@keyframes click-signal-ripple-out {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .click-signal[data-click-signal="idle"] .click-signal-halo {
+    animation: click-signal-breathe 4.4s ease-in-out infinite;
+  }
+  .click-signal[data-click-signal="thinking"] .click-signal-orbit {
+    animation: click-signal-orbit-spin 2.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  }
+  .click-signal[data-click-signal="thinking"] .click-signal-halo {
+    animation: click-signal-breathe 2.2s ease-in-out infinite;
+  }
+  .click-signal[data-click-signal="synthesizing"] .click-signal-orbit {
+    animation: click-signal-orbit-spin 1.6s linear infinite;
+  }
+  .click-signal[data-click-signal="synthesizing"] .click-signal-prism {
+    animation: click-signal-prism-pulse 1.6s ease-in-out infinite;
+  }
+  .click-signal[data-click-signal="synthesizing"] .click-signal-ripple-1 {
+    animation: click-signal-ripple-out 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+  .click-signal[data-click-signal="synthesizing"] .click-signal-ripple-2 {
+    animation: click-signal-ripple-out 2s cubic-bezier(0.16, 1, 0.3, 1) 1s infinite;
+  }
+}
+
+html[data-focus-mode="true"] .click-signal-halo,
+html[data-focus-mode="true"] .click-signal-ripple,
+html[data-reduced-motion="true"] .click-signal-halo,
+html[data-reduced-motion="true"] .click-signal-orbit,
+html[data-reduced-motion="true"] .click-signal-prism,
+html[data-reduced-motion="true"] .click-signal-ripple {
+  animation: none !important;
+}
+
+/* ── Forced Colors Mode (Windows High Contrast) ───────────────────────────── */
+@media (forced-colors: active) {
+  .click-atmosphere-beam,
+  .click-atmosphere-aperture-svg,
+  .click-atmosphere-reticle,
+  .click-atmosphere-vignette,
+  .click-signal-halo {
+    display: none !important;
+  }
+  .click-vessel,
+  .click-beam-pill,
+  .click-aperture-icon,
+  .ds-surface-card,
+  .ds-surface-elevated,
+  .ds-surface-subtle {
+    background: Canvas !important;
+    color: CanvasText !important;
+    border: 1px solid CanvasText !important;
+    box-shadow: none !important;
+  }
+  .click-vessel::before {
+    display: none !important;
+  }
+  .click-btn-energy {
+    background: ButtonFace !important;
+    color: ButtonText !important;
+    border: 2px solid ButtonText !important;
+  }
+  .click-spectrum-text {
+    background: none !important;
+    -webkit-text-fill-color: CanvasText !important;
+    color: CanvasText !important;
+  }
+  .click-signal svg path,
+  .click-signal svg circle {
+    stroke: CanvasText !important;
+    fill: CanvasText !important;
+  }
 }
 /* ── end Click 2026 design system ──────────────────────────────────────────── */

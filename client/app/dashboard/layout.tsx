@@ -7,6 +7,7 @@ import LogEmitter from '../../utils/logEmitter'
 import SidebarNav from '../../components/SidebarNav'
 import DashboardHeader from '../../components/dashboard/DashboardHeader'
 import ClickDynamicIsland from '../../components/click/ClickDynamicIsland'
+import ClickAmbientCanvas from '../../components/click/ClickAmbientCanvas'
 import GlobalCommandPalette from '../../components/GlobalCommandPalette'
 import WorkflowRail from '../../components/WorkflowRail'
 import OnboardingNudge from '../../components/OnboardingNudge'
@@ -32,21 +33,24 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         // the visible area instead of forcing a horizontal scrollbar
         // that hides actual content like stat cards and CTAs.
         <LayoutPreferencesProvider>
-            <div className="dashboard-layout flex min-h-screen bg-[var(--page-bg)] overflow-x-hidden transition-colors duration-500">
-                <SidebarNav />
-                <main className="flex-1 min-w-0 pb-24 lg:pb-0 flex flex-col overflow-x-hidden">
-                    <DashboardHeader />
-                    {/* App-wide warning when AI providers are unconfigured
-                        (every AI feature is returning canned fallback output).
-                        Renders nothing in normal "live AI" mode. */}
-                    <AIHealthBanner />
-                    <ClickDynamicIsland />
-                    <WorkflowRail />
-                    <OnboardingNudge />
-                    <div className="flex-1 min-w-0">
-                        {children}
-                    </div>
-                </main>
+            <div className="dashboard-layout relative flex min-h-screen bg-[var(--page-bg)] overflow-x-clip transition-colors duration-500">
+                <ClickAmbientCanvas variant="app" />
+                <div className="relative z-10 flex flex-1 min-w-0">
+                    <SidebarNav />
+                    <main className="flex-1 min-w-0 pb-24 lg:pb-0 flex flex-col overflow-x-clip">
+                        <DashboardHeader />
+                        {/* App-wide warning when AI providers are unconfigured
+                            (every AI feature is returning canned fallback output).
+                            Renders nothing in normal "live AI" mode. */}
+                        <AIHealthBanner />
+                        <WorkflowRail />
+                        <OnboardingNudge />
+                        <div className="flex-1 min-w-0">
+                            {children}
+                        </div>
+                    </main>
+                </div>
+                <ClickDynamicIsland />
                 <GlobalCommandPalette />
                 {/* App-wide paywall: any gated API call triggers this once. */}
                 <UpgradeGateListener />

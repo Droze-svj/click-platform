@@ -14,8 +14,8 @@ export default function NotFound() {
   const { t } = useTranslation()
   return (
     <AuthShell width="md">
-      <Card variant="elevated" className="p-8 sm:p-10 text-center space-y-5">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl ds-surface-subtle">
+      <Card variant="aperture" className="p-8 sm:p-10 text-center space-y-5">
+        <div className="mx-auto click-aperture-icon h-14 w-14">
           <Icon icon={Compass} size="lg" className="text-primary" />
         </div>
         <p className="ds-text-label text-theme-muted">404</p>
@@ -24,7 +24,7 @@ export default function NotFound() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-1">
           <Link
             href="/"
-            className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="inline-flex h-11 items-center justify-center rounded-full click-btn-energy px-6 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             {t('notFoundPage.home')}
           </Link>
