@@ -29,13 +29,13 @@ export function Nav() {
       aria-label="Main"
       className={`fixed top-0 left-0 right-0 z-[100] px-4 sm:px-6 lg:px-12 transition-colors duration-300 ${
         scrolled || mobileMenuOpen
-          ? 'backdrop-blur-xl bg-surface-page/90 border-b border-surface-100 dark:border-white/10 py-3'
+          ? 'backdrop-blur-xl bg-[var(--click-vessel-bg-strong)] border-b border-[var(--click-vessel-border)] py-3'
           : 'bg-transparent py-4 md:py-6'
       }`}
     >
       <div className="max-w-[1600px] mx-auto flex items-center justify-between">
         <Link href="/" aria-label="Click home" className="flex shrink-0 items-center rounded-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/50">
-          <ClickLogo size={36} showWordmark wordmarkClassName="text-2xl sm:text-3xl md:text-4xl whitespace-nowrap tracking-tighter italic font-black uppercase" />
+          <ClickLogo size={36} showWordmark aura wordmarkClassName="text-2xl sm:text-3xl md:text-4xl whitespace-nowrap tracking-tighter italic font-black uppercase" />
         </Link>
 
         <div className="hidden md:flex items-center gap-7 lg:gap-9 text-sm font-semibold text-surface-600 dark:text-slate-300">

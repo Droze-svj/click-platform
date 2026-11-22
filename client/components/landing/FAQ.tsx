@@ -60,7 +60,7 @@ export function FAQ() {
           {FAQS.map((f) => (
             <details
               key={f.q}
-              className="group rounded-2xl bg-surface-card border-2 border-surface-100 dark:border-white/5 overflow-hidden open:border-primary-500/30"
+              className="group ds-surface-card overflow-hidden open:border-primary-500/40 transition-colors"
             >
               <summary className="cursor-pointer list-none flex items-center justify-between gap-4 px-5 md:px-6 py-4 md:py-5 hover:bg-surface-900/[0.03] dark:hover:bg-white/[0.03] transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-primary-500/50 [&::-webkit-details-marker]:hidden">
                 <span className="font-bold text-base md:text-lg text-surface-900 dark:text-white">{f.q}</span>

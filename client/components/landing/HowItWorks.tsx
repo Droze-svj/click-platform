@@ -56,10 +56,10 @@ export function HowItWorks() {
           {STEPS.map(({ icon: Icon, title, body }, i) => (
             <li
               key={title}
-              className="rounded-3xl bg-surface-card border-2 border-surface-100 dark:border-white/5 p-6 md:p-7 flex flex-col gap-4"
+              className="click-vessel ds-hover-lift p-6 md:p-7 flex flex-col gap-4"
             >
               <div className="flex items-center justify-between">
-                <span className="w-11 h-11 rounded-2xl bg-primary-500/10 border border-primary-500/25 flex items-center justify-center text-primary-500">
+                <span className="click-aperture-icon w-11 h-11">
                   <Icon className="w-5 h-5" aria-hidden="true" />
                 </span>
                 <span className="text-sm font-black tabular-nums text-surface-400 dark:text-slate-500" aria-hidden="true">

@@ -1,6 +1,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { cn } from "../../lib/utils"
+import ClickAmbientCanvas from "../click/ClickAmbientCanvas"
 
 /**
  * Frame for the public policy/document pages: privacy, terms, security,
@@ -48,12 +49,13 @@ const LegalPage = React.forwardRef<HTMLElement, LegalPageProps>(
       <main
         ref={ref}
         className={cn(
-          "min-h-screen bg-surface-page text-surface-900 dark:text-surface-50 px-6 py-24 font-inter",
+          "relative min-h-screen text-surface-900 dark:text-surface-50 px-6 py-24 font-inter overflow-x-clip",
           className
         )}
         {...props}
       >
-        <div className={cn("mx-auto space-y-10", width === "wide" ? "max-w-4xl" : "max-w-3xl")}>
+        <ClickAmbientCanvas variant="legal" />
+        <div className={cn("relative z-10 mx-auto space-y-10", width === "wide" ? "max-w-4xl" : "max-w-3xl")}>
           {backHref ? (
             <Link
               href={backHref}

@@ -2,6 +2,7 @@ import * as React from "react"
 import Link from "next/link"
 import { ChevronRight } from "lucide-react"
 import { cn } from "../../lib/utils"
+import ClickAmbientCanvas from "../click/ClickAmbientCanvas"
 
 /**
  * Page-level layout primitives.
@@ -258,13 +259,14 @@ const AuthShell = React.forwardRef<HTMLElement, AuthShellProps>(
     <main
       ref={ref}
       className={cn(
-        "relative min-h-screen ds-bg-mesh flex items-center justify-center px-4 py-12",
+        "relative min-h-screen ds-bg-mesh flex items-center justify-center px-4 py-12 overflow-x-clip",
         className
       )}
       {...props}
     >
+      <ClickAmbientCanvas variant="auth" positioning="absolute" />
       {corner ? <div className="absolute top-6 right-6 z-50">{corner}</div> : null}
-      <div className={cn("w-full ds-anim-rise", AUTH_WIDTHS[width], contentClassName)}>{children}</div>
+      <div className={cn("relative z-10 w-full ds-anim-rise", AUTH_WIDTHS[width], contentClassName)}>{children}</div>
     </main>
   )
 )

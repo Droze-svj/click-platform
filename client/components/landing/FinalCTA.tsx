@@ -7,12 +7,12 @@ export function FinalCTA() {
       <div aria-hidden="true" className="absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-primary-600/15 blur-[160px] rounded-full" />
       </div>
-      <div className="max-w-3xl w-full mx-auto text-center">
+      <div className="max-w-3xl w-full mx-auto text-center click-vessel px-6 py-12 sm:px-12 sm:py-16">
         <h2
           id="final-cta-heading"
           className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter uppercase italic leading-[0.95] text-surface-900 dark:text-white mb-6"
         >
-          Start with your <span className="text-transparent bg-clip-text pr-[0.15em] box-decoration-clone bg-gradient-to-r from-primary-400 to-fuchsia-400">next video.</span>
+          Start with your <span className="text-transparent bg-clip-text pr-[0.15em] box-decoration-clone click-spectrum-text">next video.</span>
         </h2>
         <p className="text-surface-600 dark:text-slate-300 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
           Upload it, let Click edit and package it, and post it. Then see what Click takes from the results into the one after.
@@ -20,7 +20,7 @@ export function FinalCTA() {
 
         <Link
           href="/register?plan=free"
-          className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full bg-surface-900 text-white dark:bg-white dark:text-black text-base md:text-lg font-bold hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white dark:hover:text-white transition-colors shadow-[0_30px_60px_rgba(0,0,0,0.4)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/60"
+          className="group inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full click-btn-energy text-base md:text-lg font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-500/60"
         >
           Start free
           <ArrowRight className="w-5 h-5 motion-safe:group-hover:translate-x-1 motion-safe:transition-transform" aria-hidden="true" />

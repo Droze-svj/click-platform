@@ -774,6 +774,11 @@ export function clearApiCache(endpoint?: string): void {
  * const newUser = await apiPost('/users', { name: 'John', email: 'john@example.com' })
  * ```
  */
+// Every successful write clears the GET cache (cache.clear() in apiPost/Put/
+// Patch/Delete below). Cached reads such as /analytics/dashboard stayed stale
+// for 5 minutes after the write that changed them: Analytics → Refresh synced
+// fresh numbers from the platforms and then re-read the old cached copy, and a
+// result saved with "Tell Click how your video did" didn't move the totals.
 export async function apiPost<T = any>(
   endpoint: string,
   data?: any,
@@ -781,6 +786,7 @@ export async function apiPost<T = any>(
 ): Promise<T> {
   return rateLimitRequest(async () => {
     const response = await api.post<T>(endpoint, data, config)
+    cache.clear()
     return response.data
   })
 }
@@ -805,6 +811,7 @@ export async function apiPut<T = any>(
 ): Promise<T> {
   return rateLimitRequest(async () => {
     const response = await api.put<T>(endpoint, data, config)
+    cache.clear()
     return response.data
   })
 }
@@ -829,6 +836,7 @@ export async function apiPatch<T = any>(
 ): Promise<T> {
   return rateLimitRequest(async () => {
     const response = await api.patch<T>(endpoint, data, config)
+    cache.clear()
     return response.data
   })
 }
@@ -848,6 +856,7 @@ export async function apiPatch<T = any>(
 export async function apiDelete<T = any>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
   return rateLimitRequest(async () => {
     const response = await api.delete<T>(endpoint, config)
+    cache.clear()
     return response.data
   })
 }

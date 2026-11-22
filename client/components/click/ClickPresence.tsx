@@ -1,21 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Sparkles } from 'lucide-react'
 import { clickVoice, type ClickIntent } from '@/lib/clickVoice'
+import ClickSignal, { type ClickSignalState } from './ClickSignal'
 
 /**
- * ClickPresence — tiny ambient indicator in the dashboard header that
- * signals what Click is doing in the background. Concretely makes the
- * "Click grows with users" promise visible: idle → drafting → learning →
- * rendering, looped quietly.
- *
- * Drop into any persistent surface (e.g. <DashboardLayout> header).
- * State can be:
- *  - driven externally (pass `state` prop) when you know what Click is
- *    actively doing (e.g. during render, set 'rendering'),
- *  - or left ambient (no prop) — cycles through idle/learning/drafting
- *    every ~6s so the dashboard never feels frozen.
+ * ClickPresence — ambient indicator that signals what Click is doing in the
+ * background using Click's living <ClickSignal /> motif inside a directional
+ * beam pill. Makes Click's active intelligence transparent and approachable.
  */
 
 type PresenceState = Extract<
@@ -28,6 +20,18 @@ const AMBIENT_CYCLE: PresenceState[] = [
   'presence.learning',
   'presence.drafting',
 ]
+
+function mapPresenceToSignal(state: PresenceState): ClickSignalState {
+  switch (state) {
+    case 'presence.rendering':
+      return 'synthesizing'
+    case 'presence.learning':
+    case 'presence.drafting':
+      return 'thinking'
+    default:
+      return 'idle'
+  }
+}
 
 interface ClickPresenceProps {
   /** Force a specific state. Omit for ambient cycling. */
@@ -48,19 +52,16 @@ export default function ClickPresence({ state, className = '' }: ClickPresencePr
 
   const active = state ?? AMBIENT_CYCLE[ambientIdx]
   const copy = clickVoice(active)
-  const isActive = active !== 'presence.idle'
+  const signalState = mapPresenceToSignal(active)
 
   return (
     <div
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] ${className}`}
+      className={`click-beam-pill px-3 py-1.5 ${className}`}
       title={copy}
       aria-live="polite"
     >
-      <Sparkles
-        className={`w-3 h-3 ${isActive ? 'text-indigo-400 animate-pulse' : 'text-slate-500'}`}
-        aria-hidden="true"
-      />
-      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">
+      <ClickSignal state={signalState} size="xs" />
+      <span className="text-[11px] font-semibold tracking-wide text-theme-secondary">
         {copy}
       </span>
     </div>

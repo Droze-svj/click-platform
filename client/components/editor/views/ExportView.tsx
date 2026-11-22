@@ -339,7 +339,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
         </div>
 
         {/* Quality Controls Cluster */}
-        <div className="mb-10 grid grid-cols-1 gap-6 text-left lg:grid-cols-2">
+        <div className="mb-10 grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-6 text-left">
           {/* Primary Specs */}
           <div className="space-y-6 rounded-2xl ds-surface-subtle p-6">
             <div className="space-y-3">
@@ -453,7 +453,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
         </div>
 
         {/* Preset Grid */}
-        <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="mb-10 grid grid-cols-[repeat(auto-fit,minmax(min(100%,7.5rem),1fr))] gap-3">
           {EXPORT_PRESETS.map(p => {
             const active = selectedPreset === p.id
             return (
@@ -732,7 +732,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
             </button>
 
             {Object.keys(batchResults).length > 0 && (
-              <div className="flex flex-col items-center justify-center gap-3 ds-anim-fade-in sm:flex-row sm:flex-wrap">
+              <div className="flex flex-wrap items-center justify-center gap-3 ds-anim-fade-in">
                 {Object.entries(batchResults).map(([fmtId, res]) => (
                   <a
                     key={fmtId}
@@ -749,7 +749,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
             )}
 
             {renderResult?.downloadUrl && (
-                <div className="flex flex-col items-center justify-center gap-3 ds-anim-fade-in sm:flex-row">
+                <div className="flex flex-wrap items-center justify-center gap-3 ds-anim-fade-in [&>*]:whitespace-nowrap">
                   <a
                     href={renderResult.downloadUrl}
                     target="_blank"
@@ -843,7 +843,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
             description={`Production archives (${savedExports.length})`}
           />
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-4">
             {savedExports.map((s: any) => {
               const downloadUrl = s.downloadUrl || (s.url?.startsWith('http') ? s.url : (typeof window !== 'undefined' ? window.location.origin : '') + (s.url || ''))
               return (
@@ -962,7 +962,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-4">
               {PLATFORMS.map(platform => {
                 const active = selectedPlatforms.includes(platform.id)
                 return (
@@ -995,7 +995,7 @@ const ExportView: React.FC<ExportViewProps> = ({ videoId, videoUrl, textOverlays
             </div>
 
             {selectedPlatforms.length > 0 && (
-              <div className="flex flex-col items-center justify-between gap-4 rounded-2xl ds-surface-subtle p-6 ds-anim-rise lg:flex-row">
+              <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl ds-surface-subtle p-6 ds-anim-rise">
                 <div className="space-y-1 text-center lg:text-left">
                   <h4 className="ds-text-h3 text-theme-primary">Publish</h4>
                   <p className="text-sm text-theme-muted">

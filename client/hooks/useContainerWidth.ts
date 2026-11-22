@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 /**
  * useContainerWidth — measure an element's own width via ResizeObserver.
@@ -17,14 +17,19 @@ import { useEffect, useRef, useState } from 'react';
  *   return <div ref={ref}>{width < 480 ? <Compact/> : <Full/>}</div>;
  */
 export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): {
-  ref: React.RefObject<T | null>;
+  ref: React.RefCallback<T>;
   width: number;
 } {
-  const ref = useRef<T>(null);
+  // A callback ref, not useRef + a mount-only effect: pages render a loading
+  // skeleton first and attach the ref to the real shell later. The old effect
+  // ran once, found ref.current === null and never observed anything, so width
+  // stayed 0 forever — Settings kept its desktop side-nav on phones (content
+  // squeezed to ~40px), and every caller's "narrow" layout never kicked in.
+  const [el, setEl] = useState<T | null>(null);
+  const ref = useCallback((node: T | null) => setEl(node), []);
   const [width, setWidth] = useState(0);
 
   useEffect(() => {
-    const el = ref.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
 
     const ro = new ResizeObserver((entries) => {
@@ -35,7 +40,7 @@ export function useContainerWidth<T extends HTMLElement = HTMLDivElement>(): {
 
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [el]);
 
   return { ref, width };
 }

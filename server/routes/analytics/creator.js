@@ -11,6 +11,7 @@
  */
 
 const express = require('express');
+const { postMetrics } = require('../../utils/postMetrics');
 const auth = require('../../middleware/auth');
 const asyncHandler = require('../../middleware/asyncHandler');
 const logger = require('../../utils/logger');
@@ -51,15 +52,10 @@ router.get('/stats', auth, asyncHandler(async (req, res) => {
 
     const stats = posts.map(post => {
       const content = contentMap[String(post.contentId)] || {};
-      const eb = post.analytics?.engagementBreakdown || {};
-      const views = eb.views || post.analytics?.engagement || 0;
-      const likes = eb.likes || 0;
-      const shares = eb.shares || 0;
-      const comments = eb.comments || 0;
-      const totalEngagement = likes + shares + comments;
-      const engagementRate = views > 0
-        ? parseFloat(((totalEngagement / views) * 100).toFixed(2))
-        : 0;
+      // Views used to fall back to analytics.engagement (the interaction
+      // count), so every post synced from X showed its likes+replies as views
+      // and a 100% engagement rate. One shared reading of the numbers now.
+      const { views, likes, shares, comments, engagementRate } = postMetrics(post.analytics);
 
       // viralScore comes from AI clip analysis stored on the content doc
       const clips = content.generatedContent?.shortVideos || [];

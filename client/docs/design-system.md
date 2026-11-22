@@ -1,7 +1,55 @@
 # Click UI — the design system, and how to build a page
 
-Written during the 2026-08 UI/UX overhaul. This is the short version of what
+Written during the 2026-08 UI/UX overhaul and expanded in 2026-11 with Click's
+personal **Kinetic Aperture** visual identity. This is the short version of what
 exists, what rule each piece enforces, and what is still inconsistent.
+
+---
+
+## Visual Identity: "Kinetic Aperture"
+
+Inspired by Google Design's Gemini AI visual design principles (directional
+energy gradients, foundational shape as a dynamic vessel, visible active
+thinking, intentional anticipation-then-release motion, and approachable
+softness), translated into Click's own creator-studio language:
+
+1. **Foundational Geometry — Open Aperture Arc + Directional Focus Cursor.**
+   Derived directly from `ClickLogo.tsx`: an open curved aperture cradling a
+   directional cursor prism. Expressive containers use `.click-vessel`
+   (`<Card variant="aperture" />` / `<Panel variant="aperture" />`) with
+   progressive `corner-shape: squircle` curvature and a crisp overhead specular
+   edge.
+2. **Spectrum Shift — Directional Energy Gradients.**
+   Rather than flat decorative fills, Click's gradients lead with a sharp,
+   luminous edge (`--click-energy-lead`) and diffuse softly at the tail
+   (`--click-energy-mid` → `--click-energy-tail` → transparent), interpolated in
+   `oklab`/`oklch` via `@supports`-guarded `--in-oklab` / `--in-oklch` tokens.
+   All tokens automatically re-tint with the active `html[data-swarm]` theme
+   (`coach`, `viral`, `trust`, `authority`).
+3. **Software-Wide Atmospheric Background (`<ClickAmbientCanvas />`).**
+   Mounted across the marketing landing (`variant="hero"`), dashboard shell
+   (`variant="app"`), auth routes via `AuthShell` (`variant="auth"`), and policy
+   pages via `LegalPage` (`variant="legal"`). Pure CSS + inline SVG (zero JS,
+   Server-Component-safe), combining:
+   - Deep optical base (`#060711` dark obsidian-indigo / `#f5f6fc` warm studio
+     alabaster)
+   - Three directional luminous ribbons drifting on the GPU compositor
+     (`transform`/`opacity` only, opted-in via
+     `@media (prefers-reduced-motion: no-preference)`, paused in Focus Mode and
+     Reduced Motion)
+   - Signature open-aperture hairline arcs echoing Click's logo
+   - Radially masked CSS micro-dot studio viewfinder reticle
+4. **Visible Active Thinking (`<ClickSignal />`).**
+   Used by `ClickLoadingState`, `ClickPresence`, and `ClickDynamicIsland`. Four
+   semantic states — `idle`, `thinking` (orbiting directional spectrum arc),
+   `synthesizing` (rippling radial waves), and `complete` — make Click's AI
+   feel alive, transparent, and distinctly *Click* instead of a generic spinner.
+5. **Intentional Motion & Accessibility.**
+   Physics-based CSS `linear()` easing tokens (`--click-ease-spring`,
+   `--click-ease-anticipation`) with `@supports not` `cubic-bezier` fallbacks
+   power tactile buttons (`.click-btn-energy`, `<Button variant="click" />`) and
+   vessels. Full `@media (forced-colors: active)` rules strip decorative layers
+   and restore system `Canvas`/`CanvasText`/`ButtonText` boundaries.
 
 ---
 

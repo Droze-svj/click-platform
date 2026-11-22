@@ -1,6 +1,7 @@
 'use client'
 
 import { AlertTriangle, RotateCcw, RefreshCw, Home, Zap } from 'lucide-react'
+import ClickAmbientCanvas from '../components/click/ClickAmbientCanvas'
 import './globals.css'
 
 export default function GlobalError({
@@ -30,17 +31,11 @@ export default function GlobalError({
   }
 
   return (
-    <html lang="en">
-      <body className="bg-[#07070f] text-white antialiased" suppressHydrationWarning>
-        <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
-          {/* Ambient background */}
-          <div className="fixed inset-0 pointer-events-none">
-            <div className="absolute top-0 left-1/4 w-[50vw] h-[50vh] bg-rose-600/6 blur-[160px] rounded-full" />
-            <div className="absolute bottom-0 right-1/4 w-[40vw] h-[40vh] bg-indigo-600/6 blur-[160px] rounded-full" />
-          </div>
-
-          {/* Grid texture */}
-          <div className="fixed inset-0 pointer-events-none opacity-[0.015] global-error-grid" />
+    <html lang="en" className="dark">
+      <body className="text-white antialiased" suppressHydrationWarning>
+        <div className="min-h-screen flex items-center justify-center p-6 relative overflow-x-clip">
+          {/* Click Kinetic Aperture background — pure CSS, zero runtime dependencies */}
+          <ClickAmbientCanvas variant="auth" />
 
           {/* Plain div with a CSS entrance, deliberately NOT framer-motion.
               global-error replaces the ROOT layout, so MotionProvider is not in
@@ -50,7 +45,7 @@ export default function GlobalError({
               depend on a lazily-loaded animation bundle. */}
           <div className="relative z-10 max-w-lg w-full ds-anim-rise">
             {/* Card */}
-            <div className="bg-white/[0.025] border border-white/[0.08] rounded-[3rem] p-10 shadow-2xl shadow-black/50 text-center backdrop-blur-xl">
+            <div className="click-vessel p-10 text-center">
 
               {/* Icon */}
               <div className="relative mx-auto mb-8 w-fit">

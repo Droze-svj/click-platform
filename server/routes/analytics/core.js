@@ -2,6 +2,7 @@ const express = require('express');
 const auth = require('../../middleware/auth');
 const asyncHandler = require('../../middleware/asyncHandler');
 const logger = require('../../utils/logger');
+const { postMetrics } = require('../../utils/postMetrics');
 const { generateContent: geminiGenerate } = require('../../utils/googleAI');
 const router = express.Router();
 
@@ -33,8 +34,8 @@ async function loadPublishedPostsFromMongo(userId, limit) {
 
 function toPostRow(r) {
   const a = r.analytics || {};
-  const b = a.engagementBreakdown || {};
-  const rate = (a.engagementRate && (a.engagementRate.byReach || a.engagementRate.byImpressions)) || 0;
+  const m = postMetrics(a);
+  const rate = (a.engagementRate && (a.engagementRate.byReach || a.engagementRate.byImpressions)) || m.engagementRate;
   const text = String((r.content && r.content.text) || '').trim();
   return {
     id: String(r._id),
@@ -42,10 +43,10 @@ function toPostRow(r) {
     text,
     platform: r.platform || 'other',
     postedAt: r.postedAt || null,
-    views: b.views || a.impressions || 0,
-    likes: b.likes || 0,
-    shares: b.shares || 0,
-    comments: b.comments || 0,
+    views: m.views,
+    likes: m.likes,
+    shares: m.shares,
+    comments: m.comments,
     engagementRate: Math.round(rate * 100) / 100,
   };
 }

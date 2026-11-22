@@ -225,7 +225,7 @@ export function LiveDemo() {
         </p>
       </div>
 
-      <div className="max-w-4xl mx-auto rounded-[2rem] md:rounded-[2.5rem] bg-surface-card border-2 border-surface-100 dark:border-white/10 p-5 sm:p-8 md:p-10 shadow-[0_40px_100px_rgba(0,0,0,0.35)] space-y-6">
+      <div className="max-w-4xl mx-auto click-vessel p-5 sm:p-8 md:p-10 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="w-9 h-9 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/25 flex items-center justify-center text-fuchsia-500 shrink-0">

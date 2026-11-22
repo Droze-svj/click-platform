@@ -7,6 +7,7 @@ import { Hero } from '../components/landing/Hero';
 import { LiveDemo } from '../components/landing/LiveDemo';
 import { HowItWorks } from '../components/landing/HowItWorks';
 import { LearningLoop } from '../components/landing/LearningLoop';
+import ClickAmbientCanvas from '../components/click/ClickAmbientCanvas';
 
 // Below-the-fold sections
 const Pricing = dynamic(
@@ -54,17 +55,14 @@ const STRUCTURED_DATA = {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-surface-page text-surface-900 dark:text-surface-50 selection:bg-primary-500/30 overflow-x-hidden font-inter bg-noise-grain">
+    <div className="min-h-screen text-surface-900 dark:text-surface-50 selection:bg-primary-500/30 overflow-x-clip font-inter">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
       />
 
-      {/* Static ambient color — no animation, no fake "live" signals. */}
-      <div aria-hidden="true" className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute top-[-5%] left-[-10%] w-[50%] h-[50%] bg-primary-600/10 blur-[160px] rounded-full opacity-60" />
-        <div className="absolute bottom-[-10%] right-[-5%] w-[50%] h-[50%] bg-fuchsia-600/10 blur-[180px] rounded-full opacity-30" />
-      </div>
+      {/* Click Kinetic Aperture — signature atmospheric background */}
+      <ClickAmbientCanvas variant="hero" />
 
       <Nav />
 

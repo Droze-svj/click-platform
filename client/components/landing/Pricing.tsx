@@ -83,7 +83,7 @@ export function Pricing() {
           ))}
         </div>
 
-        <details className="group mt-8 rounded-3xl bg-surface-card border-2 border-surface-100 dark:border-white/5 overflow-hidden">
+        <details className="group mt-8 ds-surface-card overflow-hidden">
           <summary className="cursor-pointer list-none flex items-center justify-center gap-2 px-6 py-4 text-sm font-bold text-surface-900 dark:text-white hover:text-primary-500 transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-primary-500/50 [&::-webkit-details-marker]:hidden">
             Compare plans in detail
             <ChevronDown className="w-4 h-4 motion-safe:transition-transform group-open:rotate-180" aria-hidden="true" />

@@ -43,6 +43,14 @@ const PreferencesContext = createContext<PreferencesContextType | null>(null)
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES)
   const [isLoaded, setIsLoaded] = useState(false)
+  // True once the server copy has been read (or there is none to read). Until
+  // then nothing is pushed: on a full page load the sync effect below used to
+  // PUT this device's cached/default language+theme 500 ms in, and when
+  // GET /user/settings took longer than that (cold server, slow phone) it
+  // overwrote the account's real choice — a creator using Click in Spanish
+  // signing in on a new device was switched back to English. It also cost a
+  // settings write on every page load.
+  const [serverChecked, setServerChecked] = useState(false)
   // Track the most-recent values we *wrote* to the server so we don't echo
   // server hydrates back at the server (causes a benign but wasteful loop).
   const lastServerSyncRef = useRef<string | null>(null)
@@ -69,7 +77,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     //    is actually logged in. Without a token we skip the call to avoid
     //    a guaranteed 401 every page load.
     const hasToken = typeof localStorage !== 'undefined' && !!localStorage.getItem('token')
-    if (!hasToken) return
+    if (!hasToken) { setServerChecked(true); return }
     apiGet<any>('/user/settings')
       .then((res: any) => {
         const serverPrefs = res?.data?.preferences || res?.preferences
@@ -92,7 +100,18 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
           return merged
         })
       })
-      .catch(() => { /* offline / 401 / Mongo unavailable — keep local */ })
+      .catch(() => {
+        // offline / 401 / Mongo unavailable — keep local, but don't push it
+        // either: the server copy may be newer. Only real changes sync.
+        setPreferences(prev => {
+          lastServerSyncRef.current = JSON.stringify({
+            language: prev.language,
+            theme: prev.isOledTheme ? 'oled' : 'auto',
+          })
+          return prev
+        })
+      })
+      .finally(() => setServerChecked(true))
   }, [])
 
   useEffect(() => {
@@ -100,6 +119,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     // Local cache update — always immediate, no debounce.
     localStorage.setItem('click-user-preferences', JSON.stringify(preferences))
 
+    if (!serverChecked) return
     // Server sync — debounce 500ms so a flurry of rapid changes (theme
     // toggle + language change) becomes one network call. Only push the
     // cross-device fields (language + theme).
@@ -124,7 +144,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     }, 500)
 
     return () => { if (syncTimerRef.current) clearTimeout(syncTimerRef.current) }
-  }, [preferences, isLoaded])
+  }, [preferences, isLoaded, serverChecked])
 
   // Stable identities. useTranslation's setLanguage is a useCallback over
   // updatePreference, and screens put setLanguage in their effect deps (the

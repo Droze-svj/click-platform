@@ -377,7 +377,10 @@ export default function VideoStudioPage() {
                     <div className="aspect-video relative bg-accent overflow-hidden border-b border-[var(--border-subtle)]">
                       {/* Neutral placeholder under the first frame — shows while it loads or when the browser can't decode it. */}
                       <Film size={32} className="absolute inset-0 m-auto text-theme-muted opacity-40" aria-hidden />
-                      <video src={getMediaUrl(video.originalFile?.url || '')} className="relative w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" preload="metadata" muted onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0 }} />
+                      {/* No file yet (still processing, or failed): src="" would make the browser re-request the page. */}
+                      {video.originalFile?.url && (
+                        <video src={getMediaUrl(video.originalFile.url)} className="relative w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" preload="metadata" muted onMouseEnter={e => e.currentTarget.play()} onMouseLeave={e => { e.currentTarget.pause(); e.currentTarget.currentTime = 0 }} />
+                      )}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                         <button type="button" onClick={() => router.push(editLink(video._id))} aria-label={tr('studio.openInEditor', 'Open {title} in editor', { title: video.title || 'video' })} title={tr('studio.openInEditor', 'Open {title} in editor', { title: video.title || 'video' })} className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-black shadow-lg transition-transform active:scale-95">
                           <Play size={28} className="ml-0.5 fill-current" aria-hidden />

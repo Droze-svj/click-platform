@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const app = require('../../../server/index');
 const User = require('../../../server/models/User');
 const OnboardingProgress = require('../../../server/models/OnboardingProgress');
+const Content = require('../../../server/models/Content');
 const { getJwtSecret } = require('../../../server/utils/jwtSecret');
 
 describe('GET /api/onboarding', () => {
@@ -28,5 +29,32 @@ describe('GET /api/onboarding', () => {
     const byId = Object.fromEntries(after.body.data.steps.map((s) => [s.id, s.completed]));
     expect(byId.profile).toBe(true);
     expect(byId.welcome).toBe(false);
+  });
+
+  it('counts what the creator already did elsewhere (niche, upload, connected account)', async () => {
+    await User.deleteMany({ email: 'onboarding-earned@example.com' });
+    const user = await new User({
+      email: 'onboarding-earned@example.com', password: 'password123', name: 'E', emailVerified: true,
+      niche: 'health',
+      oauth: { youtube: { connected: true } },
+    }).save();
+    await OnboardingProgress.deleteMany({ userId: user._id });
+    await Content.create({ userId: String(user._id), type: 'video', title: 'First upload', status: 'completed' });
+    const token = jwt.sign({ userId: String(user._id) }, getJwtSecret(), { expiresIn: '1h' });
+
+    const res = await request(app).get('/api/onboarding').set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    const byId = Object.fromEntries(res.body.data.steps.map((s) => [s.id, s.completed]));
+    expect(byId).toMatchObject({ welcome: true, profile: true, 'first-content': true, 'connect-social': true, complete: true });
+    expect(byId.captions).toBe(false);
+    expect(res.body.data.isComplete).toBe(true);
+    // Each step a creator can act on links somewhere.
+    const hrefs = Object.fromEntries(res.body.data.steps.map((s) => [s.id, s.href]));
+    expect(hrefs['connect-social']).toBe('/dashboard/social');
+    expect(hrefs['first-content']).toBe('/dashboard/video');
+
+    // Persisted, not recomputed into a different answer next time.
+    const saved = await OnboardingProgress.findOne({ userId: user._id }).lean();
+    expect(saved.completedSteps.map((c) => c.stepId)).toEqual(expect.arrayContaining(['profile', 'first-content', 'connect-social']));
   });
 });

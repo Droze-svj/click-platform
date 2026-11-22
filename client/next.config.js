@@ -38,10 +38,13 @@ const nextConfig = {
   // Retired routes. Config redirects answer before any page renders (a page
   // that calls redirect() tripped a hook-order error in Next's dev router).
   // /dashboard/agency showed fabricated metrics and has nothing real left;
-  // /dashboard/clips has no index view of its own.
+  // /dashboard/clips has no index view of its own. /dashboard/integrations read
+  // a never-filled CMS/CRM catalogue (nothing to connect); social accounts are
+  // connected on /dashboard/social, where the old links meant to send people.
   redirects: async () => [
     { source: '/dashboard/agency', destination: '/dashboard', permanent: false },
     { source: '/dashboard/clips', destination: '/dashboard/clips/hub', permanent: false },
+    { source: '/dashboard/integrations', destination: '/dashboard/social', permanent: false },
   ],
   rewrites: async () => {
     // Where the same-origin /api and /uploads proxy points: BACKEND_ORIGIN

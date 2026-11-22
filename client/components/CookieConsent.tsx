@@ -23,7 +23,7 @@ const STORAGE_KEY = 'click.cookieConsent.v1'
 type Choice = 'accepted' | 'rejected' | null
 
 export function CookieConsent() {
-  const { t } = useTranslation()
+  const { t, isLoading } = useTranslation()
   const [choice, setChoice] = useState<Choice>(null)
   const [mounted, setMounted] = useState(false)
 
@@ -57,7 +57,8 @@ export function CookieConsent() {
 
   // SSR: render nothing on the server so the banner doesn't flash for users
   // who've already chosen.
-  if (!mounted || choice !== null) return null
+  // Also wait for the translations, or the banner pops in empty.
+  if (!mounted || isLoading || choice !== null) return null
 
   // Both choices get the SAME button style, size and position weight: consent
   // rules (GDPR / ePrivacy guidance) require refusing to be as easy and as

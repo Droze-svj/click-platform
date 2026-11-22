@@ -96,7 +96,6 @@ const getZones = (t: (k: string) => string): Zone[] => [
       { path: '/dashboard/calendar/capacity', label: t('nav.capacity') || 'Capacity', icon: Gauge,       badge: 'New' },
       { path: '/dashboard/approvals/collaborate', label: t('nav.approvalThreads') || 'Approval Threads', icon: MessagesSquare, badge: null },
       { path: '/dashboard/recurring',     label: t('nav.recurring') || 'Recurring Posts', icon: Recycle,  badge: null },
-      { path: '/dashboard/integrations',  label: t('nav.integrations') || 'Integrations', icon: Plug,    badge: 'New' },
       { path: '/dashboard/workflows',     label: t('nav.workflows') || 'Automations', icon: Workflow,    badge: null },
     ],
   },

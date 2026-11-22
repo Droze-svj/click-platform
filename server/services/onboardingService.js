@@ -16,6 +16,7 @@ const ONBOARDING_STEPS = [
     id: 'profile',
     title: 'Complete Your Profile',
     description: 'Tell us about yourself and your niche',
+    href: '/dashboard/niche',
     component: 'ProfileStep',
     required: true,
   },
@@ -23,6 +24,7 @@ const ONBOARDING_STEPS = [
     id: 'first-content',
     title: 'Create Your First Content',
     description: 'Generate or upload your first piece of content',
+    href: '/dashboard/video',
     component: 'FirstContentStep',
     required: true,
   },
@@ -38,6 +40,7 @@ const ONBOARDING_STEPS = [
     id: 'connect-social',
     title: 'Connect Social Media',
     description: 'Link your social media accounts to start posting',
+    href: '/dashboard/social',
     component: 'ConnectSocialStep',
     required: false,
   },
@@ -45,6 +48,7 @@ const ONBOARDING_STEPS = [
     id: 'explore-features',
     title: 'Explore Features',
     description: 'Discover powerful features to enhance your content',
+    href: '/dashboard/features',
     component: 'ExploreFeaturesStep',
     required: false,
   },
@@ -56,6 +60,52 @@ const ONBOARDING_STEPS = [
     required: true,
   },
 ];
+
+const SOCIAL_PLATFORMS = ['twitter', 'tiktok', 'youtube', 'instagram', 'linkedin', 'facebook'];
+
+/**
+ * Steps the user has already done for real, wherever they did it. Before this,
+ * steps only completed when ticked by hand on the Get Started page, so a
+ * creator who had picked a niche, uploaded videos and connected accounts
+ * still saw "0/7" on every dashboard visit. Never throws: a failed lookup just
+ * means that step isn't auto-detected this time.
+ */
+async function detectEarnedSteps(userId) {
+  const earned = new Set();
+  try {
+    const User = require('../models/User');
+    const user = await User.findById(userId).select('niche oauth').lean();
+    if (user) {
+      if (user.niche && user.niche !== 'other') earned.add('profile');
+      const oauth = user.oauth || {};
+      if (SOCIAL_PLATFORMS.some((p) => oauth[p] && oauth[p].connected)) earned.add('connect-social');
+    }
+  } catch (error) {
+    logger.warn('Onboarding: user signals unavailable', { error: error.message, userId });
+  }
+  try {
+    const Content = require('../models/Content');
+    // Content.userId is a String field.
+    if (await Content.exists({ userId: String(userId) })) earned.add('first-content');
+  } catch (error) {
+    logger.warn('Onboarding: content signal unavailable', { error: error.message, userId });
+  }
+  // Anyone who has done a real step is past the welcome screen.
+  if (earned.size > 0) earned.add('welcome');
+  return earned;
+}
+
+function markRequiredComplete(progress) {
+  const requiredSteps = ONBOARDING_STEPS.filter((step) => step.required && step.id !== 'complete');
+  const doneIds = new Set(progress.completedSteps.map((cs) => cs.stepId));
+  if (requiredSteps.every((step) => doneIds.has(step.id))) {
+    if (!doneIds.has('complete')) progress.completedSteps.push({ stepId: 'complete', completedAt: new Date() });
+    if (!progress.completed) {
+      progress.completed = true;
+      progress.completedAt = new Date();
+    }
+  }
+}
 
 /**
  * Get or create onboarding progress
@@ -70,6 +120,20 @@ async function getOnboardingProgress(userId) {
         currentStep: 0,
       });
       await progress.save();
+    }
+
+    // Record steps the user has already done elsewhere in Click.
+    const earned = await detectEarnedSteps(userId);
+    const already = new Set((progress.completedSteps || []).map((cs) => cs.stepId));
+    const fresh = [...earned].filter((id) => !already.has(id));
+    if (fresh.length > 0) {
+      for (const stepId of fresh) progress.completedSteps.push({ stepId, completedAt: new Date() });
+      markRequiredComplete(progress);
+      try {
+        await progress.save();
+      } catch (error) {
+        logger.warn('Onboarding: could not save detected steps', { error: error.message, userId });
+      }
     }
 
     // Each step carries its own `completed` flag. The client reads

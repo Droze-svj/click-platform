@@ -99,7 +99,10 @@ export default function RootLayout({
         <meta name="twitter:image" content="/opengraph-image" />
 
         <link rel="icon" href="/favicon.ico" />
-        
+        {/* Start downloading the English strings with the HTML instead of
+            after hydration — every translated label waits for this file. */}
+        <link rel="preload" href="/i18n/locales/en.json" as="fetch" crossOrigin="anonymous" />
+
         {/* Anti-Flash Theme Script */}
         <script
           dangerouslySetInnerHTML={{
