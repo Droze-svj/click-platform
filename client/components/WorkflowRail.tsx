@@ -13,6 +13,7 @@ import {
   type WorkflowStage,
 } from '../contexts/WorkflowContext'
 import { useTranslation } from '../hooks/useTranslation'
+import { useAuth } from '../hooks/useAuth'
 import LanguagePicker from './LanguagePicker'
 import { m, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { ACCENT_PALETTES, resolveAccentKey, isSwarmMode, type SwarmMode } from '../lib/swarmTheme'
@@ -53,8 +54,18 @@ const STAGE_COPILOTS: Record<WorkflowStage, { actionRoute: string; color: string
 export default function WorkflowRail() {
   const pathname = usePathname()
   const router = useRouter()
-  const { state, setStage, setPlatform, completeStage } = useWorkflow()
+  const { state, setStage, setPlatform, completeStage, setNiche } = useWorkflow()
   const { t } = useTranslation()
+  const { user } = useAuth() as { user?: { niche?: string | null } | null }
+
+  // The rail's niche lived only in this browser's localStorage, filled when
+  // the Niche page was opened — so a creator with a saved niche saw "Set
+  // niche" on every new device, and the next account on a shared browser saw
+  // the previous one's niche. The signed-in account's niche wins.
+  const accountNiche = user?.niche && user.niche !== 'other' ? user.niche : null
+  useEffect(() => {
+    if (accountNiche && accountNiche !== state.niche) setNiche(accountNiche)
+  }, [accountNiche, state.niche, setNiche])
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [stageError, setStageError] = useState<string | null>(null)
   const [activeSwarm, setActiveSwarm] = useState<SwarmMode>('coach')
@@ -137,7 +148,7 @@ export default function WorkflowRail() {
         >
           <Sparkles size={12} className="text-indigo-400 group-hover:scale-110 transition-transform animate-pulse" />
           <span className="text-[10px] font-bold uppercase tracking-wider text-surface-900 dark:text-white">
-            {state.niche || 'Set niche'}
+            {state.niche || t('workflow.setNiche')}
           </span>
         </Link>
 

@@ -1,5 +1,6 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import React, { useState, useEffect, useRef } from 'react'
 import { m, AnimatePresence, useDragControls, useReducedMotion } from 'framer-motion'
 import { 
@@ -14,6 +15,7 @@ import { clickVoice, type ClickIntent } from '../../lib/clickVoice'
 import {
   ACCENT_PALETTES, SWARM_THEMES, SWARM_MODES, isSwarmMode, type SwarmMode,
 } from '../../lib/swarmTheme'
+import ClickSignal from './ClickSignal'
 
 // Icons are React component refs, so they stay local; everything else (label,
 // desc, voice, accent classes) comes from the shared swarmTheme module.
@@ -49,6 +51,7 @@ function NeuralSoundWave({ color }: { color: string }) {
 }
 
 export default function ClickDynamicIsland() {
+  const pathname = usePathname()
   const { t } = useTranslation()
   const [isExpanded, setIsExpanded] = useState(false)
   const [swarmMode, setSwarmMode] = useState<SwarmMode>('coach')
@@ -81,7 +84,11 @@ export default function ClickDynamicIsland() {
 
   const expandedWidth = Math.min(440, screenWidth - 32)
   // Narrower on phones: it floats over page content there.
-  const compactWidth = screenWidth < 640 ? Math.min(200, screenWidth - 32) : Math.min(280, screenWidth - 32)
+  // Phones/tablets: a 44px round button (icon only). The 200–280px pill sat
+  // over page content on every screen — headings, cards, form fields — since
+  // there is no free gutter beside the content below the lg breakpoint.
+  const isCompactIcon = screenWidth < 1024
+  const compactWidth = isCompactIcon ? 44 : Math.min(280, screenWidth - 32)
   
   // Hydrate custom swarm and drag coordinates from local storage
   useEffect(() => {
@@ -215,6 +222,10 @@ export default function ClickDynamicIsland() {
   const activeTheme = SWARM_THEMES[swarmMode]
   const ActiveIcon = SWARM_ICONS[swarmMode]
 
+  // The video editor is full-screen and has its own "AI coach" panel; the
+  // floating pill sat on top of the timeline there.
+  if (pathname && /^\/dashboard\/video\/edit\//.test(pathname)) return null
+
   return (
     // Bottom-right, above the phone tab bar. It used to sit fixed at the top
     // centre, on top of the dashboard header (the search box on desktop, the
@@ -240,10 +251,16 @@ export default function ClickDynamicIsland() {
           stiffness: 220, 
           damping: 24
         }}
-        className={`pointer-events-auto overflow-hidden bg-slate-950/80 backdrop-blur-2xl text-white select-none relative border transition-all duration-500 ${activeAccent.shadow} ${
-          isExpanded ? 'p-6' : 'px-4 py-2 h-11 flex items-center justify-between cursor-pointer hover:scale-[1.02] active:scale-[0.98]'
+        className={`pointer-events-auto overflow-hidden bg-slate-950/85 backdrop-blur-2xl text-white select-none relative border transition-all duration-500 before:content-[''] before:pointer-events-none before:absolute before:inset-x-6 before:top-0 before:h-px before:bg-gradient-to-r before:from-[var(--click-energy-lead)] before:via-[var(--click-energy-tail)] before:to-transparent ${activeAccent.shadow} ${
+          isExpanded ? 'p-6' : `${isCompactIcon ? 'p-0 justify-center' : 'px-4 py-2 justify-between'} h-11 flex items-center cursor-pointer hover:scale-[1.02] active:scale-[0.98]`
         }`}
         onClick={() => !isExpanded && setIsExpanded(true)}
+        role={isExpanded ? undefined : 'button'}
+        tabIndex={isExpanded ? undefined : 0}
+        aria-label={isExpanded ? undefined : 'Open Click Coach'}
+        onKeyDown={(e) => {
+          if (!isExpanded && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setIsExpanded(true) }
+        }}
       >
         <AnimatePresence mode="wait">
           {!isExpanded ? (
@@ -253,21 +270,17 @@ export default function ClickDynamicIsland() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex items-center justify-between w-full h-full"
+              className={`flex items-center w-full h-full ${isCompactIcon ? 'justify-center' : 'justify-between'}`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${activeAccent.gradient} p-[1px] flex items-center justify-center`}>
-                  <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center">
-                    <ActiveIcon className="w-3.5 h-3.5 text-slate-200 animate-pulse" />
-                  </div>
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-400">Click Coach</span>
+                <ClickSignal state={loadingChat ? 'synthesizing' : 'idle'} size="sm" />
+                <div className={`flex-col text-left ${isCompactIcon ? 'hidden' : 'flex'}`}>
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-300">Click Coach</span>
                   <span className="text-[10px] font-bold text-slate-300 truncate max-w-[140px] italic">{activeCopy}</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className={`items-center gap-2 ${isCompactIcon ? 'hidden' : 'flex'}`}>
                 <Command className="w-3.5 h-3.5 text-slate-400 opacity-60 group-hover:opacity-100" />
               </div>
             </m.div>
@@ -293,10 +306,10 @@ export default function ClickDynamicIsland() {
                   <GripHorizontal className="w-4 h-4 text-slate-400" />
                 </div>
                 <div className="flex items-center gap-3 mt-2">
-                  <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" />
+                  <ClickSignal state={loadingChat ? 'synthesizing' : 'idle'} size="md" />
                   <div>
                     <h3 className="text-sm font-black uppercase tracking-widest italic text-white leading-none">Click HUD</h3>
-                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-1">Your AI assistant</p>
+                    <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest mt-1">Your AI assistant</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mt-2">
@@ -321,7 +334,7 @@ export default function ClickDynamicIsland() {
                 <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
                   <ActiveIcon className="w-20 h-20 text-indigo-500" />
                 </div>
-                <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] font-black uppercase tracking-wider italic leading-none">
+                <span className="px-2 py-0.5 rounded bg-indigo-500/15 text-indigo-300 border border-indigo-400/25 text-[10px] font-black uppercase tracking-wider italic leading-none">
                   Context Insight
                 </span>
                 <p className="text-xs font-semibold text-slate-200 leading-relaxed italic">
@@ -399,10 +412,8 @@ export default function ClickDynamicIsland() {
                   )}
                   {loadingChat && (
                     <div className="flex gap-3 text-xs justify-start items-center" role="status" aria-label="Click is thinking">
-                      <div className={`w-5 h-5 rounded-full bg-gradient-to-r ${activeAccent.gradient} flex items-center justify-center`}>
-                        <RefreshCw className="w-3 h-3 text-white animate-spin" />
-                      </div>
-                      <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-slate-400 italic">
+                      <ClickSignal state="thinking" size="sm" />
+                      <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-slate-300 italic">
                         Click is thinking...
                       </div>
                     </div>

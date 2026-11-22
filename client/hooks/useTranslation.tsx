@@ -149,6 +149,10 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
       // "deepDiveAnalytics" → "Deep dive analytics". Previously we
       // returned the raw key, which is how `NAV.STRATEGIST` was
       // appearing in the sidebar.
+      // Note: don't return '' while the dictionaries load — lists keyed by
+      // their translated label would all share the key "". The first-paint
+      // window is kept short instead (en.json is preloaded in app/layout.tsx)
+      // and surfaces that pop in on load wait for `isLoading` themselves.
       const value = fallback !== undefined ? fallback : humanise(key)
       if (!params) return value
       // `{{name}}` interpolation. Missing params become empty strings

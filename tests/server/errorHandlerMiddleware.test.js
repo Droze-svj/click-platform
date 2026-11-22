@@ -163,6 +163,19 @@ describe('errorHandler middleware', () => {
     });
   });
 
+  it('treats a social account that is not connected as 409 PLATFORM_NOT_CONNECTED, not a 500', () => {
+    for (const message of [
+      'No YouTube account connected or token missing',
+      'Facebook account not connected',
+      'Instagram not connected',
+    ]) {
+      res.status.mockClear();
+      errorHandler(new Error(message), req, res, next);
+      expect(res.status).toHaveBeenCalledWith(409);
+      expect(res.jsonData).toMatchObject({ success: false, error: message, code: 'PLATFORM_NOT_CONNECTED' });
+    }
+  });
+
   it('handles Mongoose CastError as 400 Bad Request', () => {
     const err = new Error('Cast to ObjectId failed');
     err.name = 'CastError';

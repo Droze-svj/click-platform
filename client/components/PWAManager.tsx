@@ -174,7 +174,7 @@ export function PWAManager({ children }: { children: React.ReactNode }) {
             initial={{ opacity: 0, y: -50, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -50, scale: 0.95 }}
-            className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm px-6"
+            className="fixed top-8 inset-x-0 mx-auto z-[100] w-full max-w-sm px-6"
           >
             <div className="bg-indigo-600/90 dark:bg-indigo-600/80 backdrop-blur-2xl border border-white/20 p-5 rounded-[2rem] shadow-[0_20px_50px_rgba(79,70,229,0.3)] flex items-center gap-5 group">
               <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center relative overflow-hidden">

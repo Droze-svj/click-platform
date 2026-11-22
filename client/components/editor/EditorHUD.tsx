@@ -91,11 +91,13 @@ function HUDTooltip({
       <AnimatePresence>
         {show && (
           <m.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
+            // x: '-50%' lives in the motion values: a Tailwind -translate-x-1/2
+            // is overwritten by framer's inline transform (tooltip sat off-centre).
+            initial={{ opacity: 0, y: 4, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 4, x: '-50%' }}
             transition={{ duration: 0.12 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-[60] pointer-events-none"
+            className="absolute bottom-full left-1/2 mb-2 z-[60] pointer-events-none"
           >
             <div className="neural-hud-dropdown rounded-lg px-2.5 py-1.5 whitespace-nowrap border border-white/10">
               <div className="text-[11px] font-medium text-white">{label}</div>
@@ -263,7 +265,11 @@ const EditorHUD: React.FC<EditorHUDProps> = ({
       initial={reduceMotion ? false : { y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="absolute top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] sm:w-[calc(100%-3rem)] lg:w-[calc(100%-6rem)] neural-hud-max-w"
+      // Centred with inset-x-0 + mx-auto, not left-1/2 + -translate-x-1/2:
+      // framer-motion writes its own inline `transform` for the y animation,
+      // which wiped the Tailwind translate and pushed the bar ~half its width
+      // off the right edge (search box and controls clipped).
+      className="absolute top-4 inset-x-0 mx-auto z-50 w-[calc(100%-1.5rem)] sm:w-[calc(100%-3rem)] lg:w-[calc(100%-6rem)] neural-hud-max-w"
     >
       {/* ── Main bar ── */}
       <div ref={barRef} className="flex items-center gap-2 sm:gap-3 h-14 px-3 sm:px-4 rounded-2xl border border-white/10 neural-hud-bar overflow-visible">

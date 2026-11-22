@@ -287,6 +287,13 @@ const errorHandler = (err, req, res, next) => {
     if (/access denied|not authorized|unauthorized|forbidden|permission denied/.test(m)) {
       return res.status(403).json({ success: false, error: err.message, code: 'FORBIDDEN' });
     }
+    // A social account that isn't connected (or whose token is gone) is a
+    // normal state the creator fixes by reconnecting — not a server fault.
+    // Publishing from the editor surfaced these as 500 INTERNAL_ERROR. Not 401:
+    // the client treats 401 as "your Click session ended" and logs out.
+    if (/\bnot connected\b|token missing|no \w+ account connected/.test(m)) {
+      return res.status(409).json({ success: false, error: err.message, code: 'PLATFORM_NOT_CONNECTED' });
+    }
     if (/already exists|duplicate key|e11000/.test(m)) {
       return res.status(409).json({ success: false, error: 'Resource already exists', code: 'CONFLICT' });
     }

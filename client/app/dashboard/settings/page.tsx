@@ -406,7 +406,7 @@ export default function SettingsPage() {
                 <button
                   key={s.id} type="button" onClick={() => setActiveSection(s.id)}
                   className={cn(
-                    'flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    'flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                     activeSection === s.id ? 'bg-primary text-primary-foreground' : 'ds-surface-card text-theme-secondary hover:text-theme-primary'
                   )}
                 >

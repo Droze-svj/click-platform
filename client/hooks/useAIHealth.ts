@@ -72,7 +72,14 @@ export function useAIHealth(pollMs: number = DEFAULT_POLL_MS): AIHealth {
 
     const check = async () => {
       try {
-        const res = await apiGet<AIHealthResponse>('/health/ai', undefined, false)
+        // A 503 here IS the answer ("no provider key") with the same body —
+        // accept it as a response so the shared GET retry doesn't re-ask
+        // three times per poll and log it as an error.
+        const res = await apiGet<AIHealthResponse>(
+          '/health/ai',
+          { validateStatus: (s) => s === 200 || s === 503 },
+          false,
+        )
         apply(res?.ai)
       } catch (err: any) {
         // The probe answers "not configured" with a 503 + the same body, which

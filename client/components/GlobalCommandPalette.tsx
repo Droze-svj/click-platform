@@ -47,7 +47,6 @@ const COMMANDS: Command[] = [
   // === Publish ===
   { id: 'p-scheduler',     kind: 'page', group: 'Publish', labelKey: 'globalCommandPalette.cmdSchedulerLabel',     hintKey: 'globalCommandPalette.cmdSchedulerHint',     icon: Send,        href: '/dashboard/scheduler',      shortcut: 'G P', keywords: ['schedule','plan','queue'] },
   { id: 'p-calendar',      kind: 'page', group: 'Publish', labelKey: 'globalCommandPalette.cmdCalendarLabel',      hintKey: 'globalCommandPalette.cmdCalendarHint',      icon: Calendar,    href: '/dashboard/calendar',       keywords: ['calendar','dates','schedule'] },
-  { id: 'p-integrations',  kind: 'page', group: 'Publish', labelKey: 'globalCommandPalette.cmdIntegrationsLabel',  hintKey: 'globalCommandPalette.cmdIntegrationsHint',  icon: Plug,        href: '/dashboard/integrations',   keywords: ['connect','tiktok','instagram','youtube','x','linkedin','oauth'] },
   { id: 'p-workflows',     kind: 'page', group: 'Publish', labelKey: 'globalCommandPalette.cmdWorkflowsLabel',     hintKey: 'globalCommandPalette.cmdWorkflowsHint',     icon: RefreshCw,   href: '/dashboard/workflows',      keywords: ['workflow','automate','rules'] },
   { id: 'p-recycling',     kind: 'page', group: 'Publish', labelKey: 'globalCommandPalette.cmdRecyclingLabel',     hintKey: 'globalCommandPalette.cmdRecyclingHint',     icon: RefreshCw,   href: '/dashboard/recycling',      keywords: ['remix','repurpose','recycle'] },
 
@@ -57,7 +56,7 @@ const COMMANDS: Command[] = [
   { id: 'p-insights',      kind: 'page', group: 'Grow',    labelKey: 'globalCommandPalette.cmdInsightsLabel',      hintKey: 'globalCommandPalette.cmdInsightsHint',      icon: Brain,       href: '/dashboard/insights',       keywords: ['ai','smart','recommend'] },
   { id: 'p-marketing',     kind: 'page', group: 'Grow',    labelKey: 'globalCommandPalette.cmdMarketingLabel',     hintKey: 'globalCommandPalette.cmdMarketingHint',     icon: Megaphone,   href: '/dashboard/marketing-ai',   keywords: ['marketing','copy','strategy'] },
   { id: 'p-niche',         kind: 'page', group: 'Grow',    labelKey: 'globalCommandPalette.cmdNicheLabel',         hintKey: 'globalCommandPalette.cmdNicheHint',         icon: BookOpen,    href: '/dashboard/niche',          keywords: ['niche','research','audience'] },
-  { id: 'p-social',        kind: 'page', group: 'Grow',    labelKey: 'globalCommandPalette.cmdSocialLabel',        hintKey: 'globalCommandPalette.cmdSocialHint',        icon: Globe,       href: '/dashboard/social',         keywords: ['social','sync'] },
+  { id: 'p-social',        kind: 'page', group: 'Grow',    labelKey: 'globalCommandPalette.cmdSocialLabel',        hintKey: 'globalCommandPalette.cmdSocialHint',        icon: Globe,       href: '/dashboard/social',         keywords: ['social','sync','connect','integrations','tiktok','instagram','youtube','facebook','oauth'] },
 
   // === Manage ===
   { id: 'p-workspaces',    kind: 'page', group: 'Manage',  labelKey: 'globalCommandPalette.cmdWorkspacesLabel',    hintKey: 'globalCommandPalette.cmdWorkspacesHint',    icon: Boxes,       href: '/dashboard/workspaces',     keywords: ['brand','workspace','switch'] },
@@ -82,7 +81,7 @@ const COMMANDS: Command[] = [
   { id: 'a-new-team',      kind: 'create', group: 'Create',labelKey: 'globalCommandPalette.cmdNewTeamLabel',      hintKey: 'globalCommandPalette.cmdNewTeamHint',       icon: Plus,        href: '/dashboard/teams',          keywords: ['team','invite'] },
   { id: 'a-new-pack',      kind: 'create', group: 'Create',labelKey: 'globalCommandPalette.cmdNewPackLabel',      hintKey: 'globalCommandPalette.cmdNewPackHint',       icon: Wand2,       href: '/dashboard/video',          keywords: ['style','pack','bundle'] },
   { id: 'a-stock',         kind: 'create', group: 'Create',labelKey: 'globalCommandPalette.cmdStockLabel',        hintKey: 'globalCommandPalette.cmdStockHint',         icon: Library,     href: '/dashboard/video',          keywords: ['stock','broll','music','gif','sfx'] },
-  { id: 'a-connect',       kind: 'create', group: 'Create',labelKey: 'globalCommandPalette.cmdConnectLabel',      hintKey: 'globalCommandPalette.cmdConnectHint',       icon: Plug,        href: '/dashboard/integrations',   keywords: ['connect','tiktok','instagram','linkedin','x','oauth'] },
+  { id: 'a-connect',       kind: 'create', group: 'Create',labelKey: 'globalCommandPalette.cmdConnectLabel',      hintKey: 'globalCommandPalette.cmdConnectHint',       icon: Plug,        href: '/dashboard/social',         keywords: ['connect','tiktok','instagram','linkedin','x','oauth'] },
 ]
 
 // Display labels for group section headers. Group ids stay as logic literals
