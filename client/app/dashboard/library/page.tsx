@@ -228,7 +228,7 @@ export default function LibraryPage() {
 
           {/* Sidebar / Filters */}
           <aside className="lg:col-span-1">
-            <Panel variant="bento" className="space-y-7 sticky top-6">
+            <Panel variant="bento" className="space-y-7 sticky top-36">
 
               {/* Search */}
               <div className="relative">

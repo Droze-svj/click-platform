@@ -729,7 +729,11 @@ body {
 html {
   scroll-behavior: smooth;
   font-family: var(--font-family-sans);
+  /* clip, not hidden: `hidden` on both html and body made <body> a scroll
+     container that never scrolls, so every position: sticky on the site
+     silently stuck to nothing. `hidden` stays as the fallback. */
   overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
 }
 
@@ -744,6 +748,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
   min-height: 100dvh;
   min-height: 100vh;

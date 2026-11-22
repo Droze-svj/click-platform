@@ -112,7 +112,7 @@ export default function OneClickForgePage() {
 
           {/* Right Sidebar: History */}
           <aside className="xl:col-span-4">
-            <div className="ds-surface-card p-5 sm:p-6 flex flex-col xl:sticky xl:top-6">
+            <div className="ds-surface-card p-5 sm:p-6 flex flex-col xl:sticky xl:top-36">
               <header className="flex items-center gap-3 mb-5">
                 <div className="h-10 w-10 rounded-xl bg-accent text-theme-muted inline-flex items-center justify-center">
                   <History size={20} />

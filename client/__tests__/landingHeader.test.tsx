@@ -44,7 +44,7 @@ describe('landing header + hero', () => {
 
   it('page: one story, in order, with no fake-live or zero-proof sections', () => {
     const src = fs.readFileSync(path.join(__dirname, '../app/page.tsx'), 'utf8')
-    const order = ['<Nav />', '<Hero />', '<LiveDemo />', '<HowItWorks />', '<LearningLoop />', '<Pricing />', '<FAQ />', '<FinalCTA />', '<Footer />']
+    const order = ['<Nav />', '<Hero />', '<LiveDemo />', '<HowItWorks />', '<EditorCraft />', '<LearningLoop />', '<Pricing />', '<FAQ />', '<FinalCTA />', '<Footer />']
     const idx = order.map((tag) => src.indexOf(tag))
     expect(idx.every((i) => i > -1)).toBe(true)
     expect([...idx].sort((a, b) => a - b)).toEqual(idx)

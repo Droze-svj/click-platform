@@ -47,33 +47,42 @@ const FAQS = [
  */
 export function FAQ() {
   return (
-    <section id="faq" aria-labelledby="faq-heading" className="py-16 md:py-24 px-4 sm:px-6 relative font-inter scroll-mt-20">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-10">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary-500 mb-4">FAQ</p>
-          <h2 id="faq-heading" className="text-3xl md:text-5xl font-black tracking-tighter leading-tight text-balance text-surface-900 dark:text-white">
-            Questions creators ask
-          </h2>
-        </div>
+    <section id="faq" aria-labelledby="faq-heading" className="py-20 md:py-28 px-4 sm:px-6 relative font-inter scroll-mt-20">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] gap-10 lg:gap-16 items-start">
+          <div className="text-center lg:text-left lg:sticky lg:top-28">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary-500 mb-4">FAQ</p>
+            <h2 id="faq-heading" className="text-4xl md:text-6xl font-black tracking-tighter leading-[0.98] text-balance text-surface-900 dark:text-white mb-5">
+              Questions creators ask
+            </h2>
+            <p className="text-surface-600 dark:text-slate-300 text-base md:text-lg leading-relaxed">
+              Something else on your mind?{' '}
+              <a href="/contact" className="font-bold text-primary-600 dark:text-primary-300 underline decoration-primary-500/40 underline-offset-4 hover:decoration-primary-500">
+                Ask us directly
+              </a>
+              .
+            </p>
+          </div>
 
-        <div className="space-y-3">
-          {FAQS.map((f) => (
-            <details
-              key={f.q}
-              className="group ds-surface-card overflow-hidden open:border-primary-500/40 transition-colors"
-            >
-              <summary className="cursor-pointer list-none flex items-center justify-between gap-4 px-5 md:px-6 py-4 md:py-5 hover:bg-surface-900/[0.03] dark:hover:bg-white/[0.03] transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-primary-500/50 [&::-webkit-details-marker]:hidden">
-                <span className="font-bold text-base md:text-lg text-surface-900 dark:text-white">{f.q}</span>
-                <span
-                  aria-hidden="true"
-                  className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-surface-900/5 dark:bg-white/5 text-surface-500 dark:text-slate-400 group-open:bg-primary-500/20 group-open:text-primary-500 transition-colors"
-                >
-                  <Plus className="w-4 h-4 motion-safe:transition-transform group-open:rotate-45" />
-                </span>
-              </summary>
-              <p className="px-5 md:px-6 pb-5 text-surface-600 dark:text-slate-300 leading-relaxed text-[15px]">{f.a}</p>
-            </details>
-          ))}
+          <div className="space-y-3">
+            {FAQS.map((f) => (
+              <details
+                key={f.q}
+                className="group ds-surface-card overflow-hidden open:border-primary-500/40 transition-colors"
+              >
+                <summary className="cursor-pointer list-none flex items-center justify-between gap-4 px-5 md:px-6 py-4 md:py-5 hover:bg-surface-900/[0.03] dark:hover:bg-white/[0.03] transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-primary-500/50 [&::-webkit-details-marker]:hidden">
+                  <span className="font-bold text-base md:text-lg text-surface-900 dark:text-white">{f.q}</span>
+                  <span
+                    aria-hidden="true"
+                    className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-surface-900/5 dark:bg-white/5 text-surface-500 dark:text-slate-400 group-open:bg-primary-500/20 group-open:text-primary-500 transition-colors"
+                  >
+                    <Plus className="w-4 h-4 motion-safe:transition-transform group-open:rotate-45" />
+                  </span>
+                </summary>
+                <p className="px-5 md:px-6 pb-5 text-surface-600 dark:text-slate-300 leading-relaxed text-[15px]">{f.a}</p>
+              </details>
+            ))}
+          </div>
         </div>
       </div>
     </section>
