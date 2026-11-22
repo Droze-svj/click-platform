@@ -416,7 +416,7 @@ export default function SettingsPage() {
             </nav>
           ) : (
             <aside className="w-64 shrink-0">
-              <nav className="ds-surface-card p-2 rounded-2xl sticky top-6 space-y-1" aria-label={t('settingsPage.nav.aria')}>
+              <nav className="ds-surface-card p-2 rounded-2xl sticky top-36 space-y-1" aria-label={t('settingsPage.nav.aria')}>
                 {visibleSections.map(s => (
                   <button
                     key={s.id} type="button" onClick={() => setActiveSection(s.id)}

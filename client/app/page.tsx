@@ -10,6 +10,10 @@ import { LearningLoop } from '../components/landing/LearningLoop';
 import ClickAmbientCanvas from '../components/click/ClickAmbientCanvas';
 
 // Below-the-fold sections
+const EditorCraft = dynamic(
+  () => import('../components/landing/EditorCraft').then((m) => m.EditorCraft),
+  { ssr: true },
+);
 const Pricing = dynamic(
   () => import('../components/landing/Pricing').then((m) => m.Pricing),
   { ssr: true },
@@ -70,6 +74,7 @@ export default function LandingPage() {
         <Hero />
         <LiveDemo />
         <HowItWorks />
+        <EditorCraft />
         <LearningLoop />
         <Pricing />
         <FAQ />

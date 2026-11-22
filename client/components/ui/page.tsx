@@ -296,7 +296,7 @@ const DetailLayout = React.forwardRef<HTMLDivElement, DetailLayoutProps>(
         {children}
       </div>
       <aside className={cn("min-w-0", asidePosition === "left" && "lg:order-1")}>
-        <div className="lg:sticky lg:top-6 flex flex-col gap-4">{aside}</div>
+        <div className="lg:sticky lg:top-36 flex flex-col gap-4">{aside}</div>
       </aside>
     </div>
   )

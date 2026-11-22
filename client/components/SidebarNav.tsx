@@ -276,7 +276,7 @@ export default function SidebarNav() {
     <m.aside
       animate={{ width: collapsed ? 84 : 280 }}
       transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-      className="relative hidden lg:flex flex-shrink-0 h-screen flex-col ds-surface-card !rounded-none border-y-0 border-l-0 border-r border-[var(--glass-border)] backdrop-blur-xl overflow-hidden z-40"
+      className="sticky top-0 self-start hidden lg:flex flex-shrink-0 h-screen flex-col ds-surface-card !rounded-none border-y-0 border-l-0 border-r border-[var(--glass-border)] backdrop-blur-xl overflow-hidden z-40"
     >
       {/* ── Logo + Toggle ── */}
       <div className="flex items-center justify-between px-6 h-16 border-b border-[var(--glass-border)]">
