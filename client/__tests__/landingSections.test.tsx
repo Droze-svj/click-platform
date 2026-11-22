@@ -22,6 +22,21 @@ describe('hook checker demo', () => {
     expect(screen.getByText(/Example rewrite \(the numbers are placeholders\)/)).toBeInTheDocument()
   })
 
+  it('the checklist starts unchecked and follows the same rules as the score', () => {
+    render(<LiveDemo />)
+    const checks = screen.getByRole('heading', { level: 3, name: 'What it checks' }).closest('div')!.parentElement!
+    expect(within(checks).getAllByText(/not checked yet/)).toHaveLength(5)
+
+    // A strong preset passes every row and lands in the top band.
+    fireEvent.click(screen.getByRole('button', { name: /Strong example: .*5 IRA mistakes/ }))
+    expect(within(checks).getAllByText(/: passed/)).toHaveLength(5)
+    expect(screen.getByRole('img', { name: /Hook score \d+ out of 100, Strong/ })).toBeInTheDocument()
+
+    // Hype words fail their row and cost points.
+    fireEvent.change(screen.getByLabelText('Your opening line'), { target: { value: '5 IRA mistakes that cost me $14,000 amazing' } })
+    expect(within(checks).getByText('No hype words').textContent).toMatch(/missing/)
+  })
+
   it('niche buttons are toggle buttons and no niche cycles on its own', () => {
     render(<LiveDemo />)
     const fitness = screen.getByRole('button', { name: 'Fitness' })
